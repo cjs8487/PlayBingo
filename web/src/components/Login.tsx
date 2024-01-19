@@ -3,21 +3,30 @@ import { Box, Button, Link, Typography } from '@mui/material';
 import { Form, Formik } from 'formik';
 import NextLink from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { login } from '../actions/Session';
 import { useUserContext } from '../context/UserContext';
 import FormikTextField from './input/FormikTextField';
 
 interface LoginProps {
     useRouterBack?: boolean;
+    force?: boolean;
 }
 
-export default function Login({ useRouterBack }: LoginProps) {
-    const { checkSession } = useUserContext();
-
+export default function Login({ useRouterBack, force }: LoginProps) {
+    const { checkSession, user, logout } = useUserContext();
     const [error, setError] = useState('');
-
     const router = useRouter();
+
+    useEffect(() => {
+        if (force) {
+            logout(true);
+            return;
+        }
+        if (user) {
+            router.push('/');
+        }
+    }, [user, router, logout, force]);
 
     return (
         <>
