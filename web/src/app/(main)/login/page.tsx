@@ -1,7 +1,7 @@
 'use client';
 
 import { Box, Paper } from '@mui/material';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useContext, useEffect } from 'react';
 import Login from '../../../components/Login';
 import { UserContext } from '../../../context/UserContext';
@@ -17,6 +17,9 @@ export default function LoginPage() {
         }
     }, [user, router]);
 
+    const params = useSearchParams();
+    const force = !!params.get('force');
+
     return (
         <Box
             sx={{
@@ -27,7 +30,7 @@ export default function LoginPage() {
             }}
         >
             <Paper sx={{ px: 8, py: 4 }}>
-                <Login />
+                <Login force={force} />
             </Paper>
         </Box>
     );
