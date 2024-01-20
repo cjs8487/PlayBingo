@@ -19,7 +19,16 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useContext, useLayoutEffect } from 'react';
 import { UserContext } from '../../context/UserContext';
 
-const readableScopes = {};
+const readableScopes: {
+    [key: string]: string;
+} = {
+    'rooms:join': 'Create and join rooms',
+    'rooms:act': 'Take actions in rooms on your behalf',
+    'categories:moderate':
+        'Take moderation actions on categories you have permissions',
+    'profile:read': 'Access your account information',
+    'profile:write': 'Update your account information',
+};
 
 export default function Authorize() {
     const { user, current } = useContext(UserContext);
@@ -33,8 +42,6 @@ export default function Authorize() {
     const searchParams = useSearchParams();
     const clientId = searchParams.get('clientId');
     const scopes = searchParams.get('scopes');
-
-    console.log(user);
 
     if (!user) {
         return null;
@@ -118,12 +125,14 @@ export default function Authorize() {
                             {scopeList.map((scope) => (
                                 <ListItem
                                     key={scope}
-                                    sx={{ m: 0, px: 0, py: 0.5 }}
+                                    sx={{ m: 0, px: 0, py: 0.5, gap: 1 }}
                                 >
-                                    <ListItemIcon>
+                                    <ListItemIcon sx={{ minWidth: 0 }}>
                                         <CheckCircle />
                                     </ListItemIcon>
-                                    <ListItemText>{scope}</ListItemText>
+                                    <ListItemText>
+                                        {readableScopes[scope]}
+                                    </ListItemText>
                                 </ListItem>
                             ))}
                         </List>
