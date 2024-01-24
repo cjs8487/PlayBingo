@@ -132,6 +132,7 @@ model User {
   resetToken     PasswordReset?
   favoritedGames Game[]         @relation("GameFavorites")
   Player         Player[]
+  tokens         OAuthToken[]
 }
 
 model PasswordReset {
@@ -207,6 +208,27 @@ model ApiToken {
   active    Boolean   @default(true)
   createdOn DateTime  @default(now())
   revokedOn DateTime?
+}
+
+model OAuthClient {
+  id           String       @id @unique @default(cuid())
+  clientId     String       @unique
+  clientSecret String
+  name         String
+  redirectUris String[]
+  tokens       OAuthToken[]
+}
+
+model OAuthToken {
+  id                 String      @id @unique @default(cuid())
+  token              String      @unique
+  refreshToken       String      @unique
+  application        OAuthClient @relation(fields: [oAuthApplicationId], references: [id])
+  user               User        @relation(fields: [userId], references: [id])
+  scopes             String[]
+  expires            DateTime
+  oAuthApplicationId String
+  userId             String
 }
 
 enum RoomActionType {
