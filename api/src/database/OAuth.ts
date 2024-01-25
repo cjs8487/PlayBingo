@@ -109,3 +109,7 @@ export const getUserForToken = (token: string) => {
         select: { user: true },
     });
 };
+
+export const getTokenByRefreshToken = (refreshToken: string) => {
+    return prisma.oAuthToken.findUnique({ where: { refreshToken } });
+};
