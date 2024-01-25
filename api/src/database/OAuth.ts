@@ -15,6 +15,10 @@ export const createOauthClient = (name: string, redirectUris: string[]) => {
     });
 };
 
+export const getClient = (id: string) => {
+    return prisma.oAuthClient.findUnique({ where: { id } });
+};
+
 export const getClientById = (clientId: string) => {
     return prisma.oAuthClient.findUnique({ where: { clientId } });
 };
@@ -50,6 +54,10 @@ export const addRedirectUri = (clientId: string, redirectUri: string) => {
         where: { clientId },
         data: { redirectUris: { push: redirectUri } },
     });
+};
+
+export const deleteClient = (client: string) => {
+    return prisma.oAuthClient.delete({ where: { id: client } });
 };
 
 // token database functions
