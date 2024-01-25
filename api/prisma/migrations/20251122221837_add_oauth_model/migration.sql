@@ -16,7 +16,7 @@ CREATE TABLE "OAuthToken" (
     "refreshToken" TEXT NOT NULL,
     "scopes" TEXT[],
     "expires" TIMESTAMP(3) NOT NULL,
-    "oAuthApplicationId" TEXT NOT NULL,
+    "oAuthClientId" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
 
     CONSTRAINT "OAuthToken_pkey" PRIMARY KEY ("id")
@@ -37,8 +37,11 @@ CREATE UNIQUE INDEX "OAuthToken_token_key" ON "OAuthToken"("token");
 -- CreateIndex
 CREATE UNIQUE INDEX "OAuthToken_refreshToken_key" ON "OAuthToken"("refreshToken");
 
+-- CreateIndex
+CREATE UNIQUE INDEX "OAuthToken_userId_oAuthClientId_key" ON "OAuthToken"("userId", "oAuthClientId");
+
 -- AddForeignKey
-ALTER TABLE "OAuthToken" ADD CONSTRAINT "OAuthToken_oAuthApplicationId_fkey" FOREIGN KEY ("oAuthApplicationId") REFERENCES "OAuthClient"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "OAuthToken" ADD CONSTRAINT "OAuthToken_oAuthClientId_fkey" FOREIGN KEY ("oAuthClientId") REFERENCES "OAuthClient"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "OAuthToken" ADD CONSTRAINT "OAuthToken_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
