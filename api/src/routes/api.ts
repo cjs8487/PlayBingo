@@ -1,17 +1,17 @@
 import { Router } from 'express';
+import { readFile } from 'fs/promises';
 import { getUser } from '../database/Users';
+import tokens from './auth/ApiTokens';
 import auth from './auth/Auth';
 import connect from './connect/Connect';
 import connection from './connection/Connection';
 import games from './games/Games';
 import goals from './goals/Goals';
+import { requiresApiToken } from './middleware';
 import oauth from './oauth/OAuth';
 import registration from './registration/Registration';
 import rooms from './rooms/Rooms';
 import users from './users/Users';
-import { readFile } from 'fs/promises';
-import tokens from './auth/ApiTokens';
-import { requiresApiToken } from './middleware';
 
 const api = Router();
 
