@@ -191,15 +191,17 @@ model OAuthClient {
 }
 
 model OAuthToken {
-  id                 String      @id @unique @default(cuid())
-  token              String      @unique
-  refreshToken       String      @unique
-  application        OAuthClient @relation(fields: [oAuthApplicationId], references: [id])
-  user               User        @relation(fields: [userId], references: [id])
-  scopes             String[]
-  expires            DateTime
-  oAuthApplicationId String
-  userId             String
+  id            String      @id @unique @default(cuid())
+  token         String      @unique
+  refreshToken  String      @unique
+  client        OAuthClient @relation(fields: [oAuthClientId], references: [id])
+  user          User        @relation(fields: [userId], references: [id])
+  scopes        String[]
+  expires       DateTime
+  oAuthClientId String
+  userId        String
+
+  @@unique([userId, oAuthClientId])
 }
 
 enum RoomActionType {
