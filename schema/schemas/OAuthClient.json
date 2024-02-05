@@ -1,0 +1,13 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["id", "clientId", "name", "redirectUris"],
+    "description": "An incoming websocket message from the server telling the client of a change in room state or instructing it to take an action",
+    "properties": {
+        "id": {"type": "string"},
+        "clientId": {"type": "string"},
+        "name": {"type": "string"},
+        "redirectUris": {"type": "array", "items": {"type": "string"}}
+    }
+}
