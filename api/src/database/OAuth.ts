@@ -4,14 +4,21 @@ import { prisma } from './Database';
 const createClientSecret = () => randomBytes(16).toString();
 
 // client database functions
-export const createOauthClient = (name: string, redirectUris: string[]) => {
+export const createOAuthClient = (name: string, owner: string) => {
     return prisma.oAuthClient.create({
         data: {
             clientId: randomUUID(),
             clientSecret: createClientSecret(),
             name,
-            redirectUris,
+            owner: { connect: { id: owner } },
         },
+    });
+};
+
+export const getClients = (owner: string) => {
+    return prisma.oAuthClient.findMany({
+        select: { id: true, name: true, clientId: true },
+        where: { ownerId: owner },
     });
 };
 
