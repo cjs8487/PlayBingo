@@ -109,6 +109,7 @@ model User {
   favoritedGames Game[]         @relation("GameFavorites")
   Player         Player[]
   tokens         OAuthToken[]
+  ownedClients   OAuthClient[]
 }
 
 model PasswordReset {
@@ -187,7 +188,9 @@ model OAuthClient {
   clientSecret String
   name         String
   redirectUris String[]
+  owner        User         @relation(fields: [ownerId], references: [id])
   tokens       OAuthToken[]
+  ownerId      String
 }
 
 model OAuthToken {
