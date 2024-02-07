@@ -23,7 +23,25 @@ export const getClients = (owner: string) => {
 };
 
 export const getClient = (id: string) => {
-    return prisma.oAuthClient.findUnique({ where: { id } });
+    return prisma.oAuthClient.findUnique({
+        select: { id: true, name: true, clientId: true, redirectUris: true },
+        where: { id },
+    });
+};
+
+export const updateClient = (
+    id: string,
+    name?: string,
+    redirects?: string[],
+) => {
+    return prisma.oAuthClient.update({
+        where: { id },
+        data: {
+            name,
+            redirectUris: redirects,
+        },
+        select: { id: true, name: true, clientId: true, redirectUris: true },
+    });
 };
 
 export const getClientById = (clientId: string) => {

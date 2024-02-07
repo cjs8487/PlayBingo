@@ -31,7 +31,7 @@ export default async function OAuthApplication({
             <Typography variant="h3" sx={{ mb: 2 }}>
                 Edit OAuth Application
             </Typography>
-            <ApplicationForm application={application} />
+            <ApplicationForm id={id} application={application} />
         </Container>
     );
 }
