@@ -7,17 +7,27 @@ import FormikTextField from '../../../../../../components/input/FormikTextField'
 import CopyButton from './CopyButton';
 
 interface Props {
+    id: string;
     application: OAuthClient;
 }
 
-export default function ApplicationForm({ application }: Props) {
+export default function ApplicationForm({ id, application }: Props) {
     return (
         <Formik
             initialValues={{
                 name: application.name,
                 redirects: application.redirectUris,
             }}
-            onSubmit={() => {}}
+            onSubmit={async ({ name, redirects }) => {
+                const res = await fetch(`/api/oauth/${id}`, {
+                    method: 'POST',
+                    body: JSON.stringify({ name, redirects }),
+                });
+                if (!res.ok) {
+                    //TODO: handle error
+                    return;
+                }
+            }}
         >
             {({ values }) => (
                 <Form>
