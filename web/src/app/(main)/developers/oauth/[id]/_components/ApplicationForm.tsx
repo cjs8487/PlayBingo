@@ -5,6 +5,7 @@ import { OAuthClient } from '@playbingo/types';
 import { FieldArray, Form, Formik } from 'formik';
 import FormikTextField from '../../../../../../components/input/FormikTextField';
 import CopyButton from './CopyButton';
+import ClientSecret from './ClientSecret';
 
 interface Props {
     id: string;
@@ -79,7 +80,7 @@ export default function ApplicationForm({ id, application }: Props) {
                                     only see the secret once when it is
                                     generated.
                                 </Typography>
-                                <Button>Reset</Button>
+                                <ClientSecret application={application} />
                             </Box>
                         </Box>
                     </Box>

@@ -1,7 +1,7 @@
 import { randomBytes, randomUUID } from 'crypto';
 import { prisma } from './Database';
 
-const createClientSecret = () => randomBytes(16).toString();
+const createClientSecret = () => randomBytes(16).toString('base64url');
 
 // client database functions
 export const createOAuthClient = (name: string, owner: string) => {
@@ -64,13 +64,14 @@ export const authorizationMatch = async (
     return false;
 };
 
-export const resetClientSecret = (clientId: string) => {
+export const resetClientSecret = (id: string) => {
     return prisma.oAuthClient.update({
-        where: { clientId },
+        where: { id },
         data: {
             clientSecret: createClientSecret(),
             tokens: { deleteMany: {} },
         },
+        select: { clientSecret: true },
     });
 };
 
@@ -94,8 +95,8 @@ export const getToken = (user: string, client: string) => {
     });
 };
 
-const createAuthToken = () => randomBytes(32).toString();
-const createRefreshToken = () => randomBytes(16).toString();
+const createAuthToken = () => randomBytes(32).toString('base64url');
+const createRefreshToken = () => randomBytes(16).toString('base64url');
 const tokenExpiration = () => {
     const today = new Date();
     today.setDate(today.getDate() + 7);
