@@ -14,6 +14,7 @@ const mockCreateUser = jest.spyOn(prisma.user, 'create').mockResolvedValue({
     salt: new Uint8Array(),
     avatar: null,
     staff: false,
+    developer: false,
 });
 
 const mockFindUnique = jest
