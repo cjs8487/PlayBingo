@@ -57,6 +57,18 @@ async function main() {
         },
     });
     console.log(staff, owner, mod, player);
+    const developer = await prisma.user.upsert({
+        where: { email: 'developer@playbingo.gg' },
+        update: {},
+        create: {
+            email: 'developer@playbingo.gg',
+            username: 'developer',
+            password: passwordHash,
+            salt: salt,
+            developer: true,
+        },
+    });
+    console.log(staff, owner, mod, player, developer);
 
     console.log('Creating games and goals');
     await prisma.category.deleteMany();

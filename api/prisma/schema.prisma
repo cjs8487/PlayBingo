@@ -103,6 +103,7 @@ model User {
   salt           Bytes
   connections    Connection[]
   staff          Boolean        @default(false)
+  developer      Boolean        @default(false)
   ownedGames     Game[]         @relation("GameOwners")
   moderatedGames Game[]         @relation("GameModerators")
   resetToken     PasswordReset?
