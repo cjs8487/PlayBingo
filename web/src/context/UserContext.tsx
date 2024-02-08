@@ -33,6 +33,8 @@ export const UserContextProvider = ({ children }: React.PropsWithChildren) => {
     const [current, setCurrent] = useState(false);
     const router = useRouter();
 
+    console.log(user);
+
     const checkSession = useCallback(async () => {
         setCurrent(false);
         const res = await fetch('/api/me');

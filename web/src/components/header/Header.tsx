@@ -1,4 +1,5 @@
 'use client';
+import { Code } from '@mui/icons-material';
 import IconLogout from '@mui/icons-material/Logout';
 import MenuBookIcon from '@mui/icons-material/MenuBook';
 import Person from '@mui/icons-material/Person';
@@ -19,10 +20,10 @@ import {
 import NextLink from 'next/link';
 import { useContext, useState } from 'react';
 import { UserContext } from '../../context/UserContext';
+import { userAvatarUrl } from '../../lib/Utils';
 import LinkButton from '../LinkButton';
 import DesktopMenu from './DesktopMenu';
 import MobileMenu from './MobileMenu';
-import { userAvatarUrl } from '../../lib/Utils';
 
 export const pages = [
     { name: 'Games', path: '/games' },
@@ -106,6 +107,19 @@ export default function Header() {
                                         <Person />
                                     </ListItemIcon>
                                     <ListItemText>Staff Dashboard</ListItemText>
+                                </MenuItem>
+                            )}
+                            {user.developer && (
+                                <MenuItem
+                                    component={NextLink}
+                                    href="/developers/oauth"
+                                >
+                                    <ListItemIcon>
+                                        <Code />
+                                    </ListItemIcon>
+                                    <ListItemText>
+                                        Developer Portal
+                                    </ListItemText>
                                 </MenuItem>
                             )}
                             <Divider />
