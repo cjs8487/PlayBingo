@@ -21,6 +21,7 @@ import {
     GenerationListTransform,
 } from '@prisma/client';
 import { OPEN, WebSocket } from 'ws';
+import { roomCleanupInactive } from '../Environment';
 import { logError, logInfo, logWarn } from '../Logger';
 import { invalidateToken, RoomTokenPayload } from '../auth/RoomAuth';
 import {
@@ -45,6 +46,7 @@ import {
     CompletedLines,
     listToBoard,
 } from '../util/RoomUtils';
+import BoardGenerator from './generation/BoardGenerator';
 import {
     GeneratorGoal,
     GlobalGenerationState,
@@ -52,7 +54,6 @@ import {
 import { generateFullRandom, generateRandomTyped } from './generation/Random';
 import { generateSRLv5 } from './generation/SRLv5';
 import RacetimeHandler, { RaceData } from './integration/RacetimeHandler';
-import BoardGenerator from './generation/BoardGenerator';
 
 type RoomIdentity = {
     nickname: string;
@@ -132,6 +133,8 @@ export default class Room {
     racetimeEligible: boolean;
     racetimeHandler: RacetimeHandler;
 
+    lastMessage: number;
+
     constructor(
         name: string,
         game: string,
@@ -178,6 +181,8 @@ export default class Room {
 
         this.generatorConfig = generatorConfig;
         this.newGenerator = !!generatorConfig;
+
+        this.lastMessage = Date.now();
     }
 
     async generateBoard(options: BoardGenerationOptions) {
@@ -615,6 +620,7 @@ export default class Room {
     }
     //#endregion
 
+    //#region Send Messages
     sendChat(message: string): void;
     sendChat(message: ChatMessage): void;
 
@@ -668,6 +674,7 @@ export default class Room {
                 );
             }
         });
+        this.lastMessage = Date.now();
     }
 
     private checkWinConditions() {
@@ -841,6 +848,29 @@ export default class Room {
 
     logError(message: string, metadata?: { [k: string]: string }) {
         logError(message, { room: this.slug, ...metadata });
+    }
+    //#endregion
+
+    //#region Utilities
+    /**
+     * Determines if this room can be closed, which removes it from working memory because the room is no longer being
+     * used.
+     * @returns true if the room can be closed.
+     */
+    canClose() {
+        if (Date.now() - this.lastMessage > roomCleanupInactive) {
+            return this.connections.size <= 0;
+        }
+        return false;
+    }
+
+    /**
+     * Runs room level cleanup tasks and closes all open connections to the room
+     */
+    close() {
+        this.connections.forEach((connection) => {
+            connection.close();
+        });
     }
     //#endregion
 }
