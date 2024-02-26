@@ -13,6 +13,7 @@ import {
 } from '@playbingo/types';
 import { BingoMode } from '@prisma/client';
 import { OPEN, WebSocket } from 'ws';
+import { roomCleanupInactive } from '../Environment';
 import { logError, logInfo, logWarn } from '../Logger';
 import { invalidateToken, RoomTokenPayload } from '../auth/RoomAuth';
 import {
@@ -107,6 +108,7 @@ export default class Room {
 
     lastLineStatus: CompletedLines;
     completed: boolean;
+    lastMessage: number;
 
     racetimeEligible: boolean;
     racetimeHandler: RacetimeHandler;
@@ -153,6 +155,7 @@ export default class Room {
         this.hideCard = hideCard;
         this.lastLineStatus = {};
         this.completed = false;
+        this.lastMessage = Date.now();
     }
 
     async generateBoard(options: BoardGenerationOptions) {
@@ -515,6 +518,7 @@ export default class Room {
         }
         return false;
     }
+    //#endregion
 
     async handleRacetimeRoomCreated(url: string) {
         this.sendServerMessage({
@@ -566,6 +570,7 @@ export default class Room {
     }
     //#endregion
 
+    //#region Send Messages
     sendChat(message: string): void;
     sendChat(message: ChatMessage): void;
 
@@ -619,6 +624,7 @@ export default class Room {
                 );
             }
         });
+        this.lastMessage = Date.now();
     }
 
     private checkWinConditions() {
@@ -792,6 +798,29 @@ export default class Room {
 
     logError(message: string, metadata?: { [k: string]: string }) {
         logError(message, { room: this.slug, ...metadata });
+    }
+    //#endregion
+
+    //#region Utilities
+    /**
+     * Determines if this room can be closed, which removes it from working memory because the room is no longer being
+     * used.
+     * @returns true if the room can be closed.
+     */
+    canClose() {
+        if (Date.now() - this.lastMessage > roomCleanupInactive) {
+            return this.connections.size <= 0;
+        }
+        return false;
+    }
+
+    /**
+     * Runs room level cleanup tasks and closes all open connections to the room
+     */
+    close() {
+        this.connections.forEach((connection) => {
+            connection.close();
+        });
     }
     //#endregion
 }
