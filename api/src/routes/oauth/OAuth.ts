@@ -4,6 +4,7 @@ import {
     createOAuthClient,
     deleteClient,
     getClient,
+    getClientById,
     getClients,
     resetClientSecret,
     updateClient,
@@ -26,6 +27,20 @@ oauth.get('/clients', async (req, res) => {
     res.status(200).json(clients);
 });
 
+oauth.get('/client', async (req, res) => {
+    const { id } = req.query;
+    if (!id || typeof id !== 'string') {
+        res.status(400).send('Invalid client id');
+        return;
+    }
+
+    const client = await getClientById(id);
+    if (!client) {
+        res.sendStatus(404);
+        return;
+    }
+    res.status(200).json(client);
+});
 oauth.post('/client', async (req, res) => {
     if (!req.session.user) {
         res.sendStatus(401);
