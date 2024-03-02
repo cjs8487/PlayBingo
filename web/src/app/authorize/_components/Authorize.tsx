@@ -23,7 +23,7 @@ import NextLink from 'next/link';
 const readableScopes: {
     [key: string]: string;
 } = {
-    'rooms:join': 'Create and join rooms',
+    'rooms:join': 'Create and join rooms on your behalf',
     'rooms:act': 'Take actions in rooms on your behalf',
     'categories:moderate':
         'Take moderation actions on categories you have permissions',
