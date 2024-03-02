@@ -13,7 +13,7 @@ async function getClient(clientId: string): Promise<OAuthClient | undefined> {
 export default async function AuthorizePage({
     searchParams,
 }: PageProps<'/authorize'>) {
-    const { clientId, scopes } = await searchParams;
+    const { clientId, scopes, redirectUri } = await searchParams;
 
     if (!clientId) {
         return 'missing client id';
@@ -27,13 +27,23 @@ export default async function AuthorizePage({
     if (typeof scopes !== 'string') {
         return 'invalid scope list';
     }
-
-    const scopeList = scopes.split(' ');
+    if (!redirectUri) {
+        return 'missing redirect uri';
+    }
+    if (typeof redirectUri !== 'string') {
+        return 'invalid redirect uri';
+    }
 
     const client = await getClient(clientId);
     if (!client) {
         return 'invalid client id';
     }
+
+    if (!client.redirectUris.includes(redirectUri)) {
+        return 'unknown redirect uri';
+    }
+
+    const scopeList = scopes.split(' ');
 
     return <Authorize client={client} scopes={scopeList} />;
 }
