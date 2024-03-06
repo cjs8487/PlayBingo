@@ -45,6 +45,13 @@ export const updateClient = (
 };
 
 export const getClientById = (clientId: string) => {
+    return prisma.oAuthClient.findUnique({
+        where: { clientId },
+        select: { id: true, name: true, clientId: true, redirectUris: true },
+    });
+};
+
+export const getClientbyIdWithSecret = (clientId: string) => {
     return prisma.oAuthClient.findUnique({ where: { clientId } });
 };
 
@@ -53,7 +60,7 @@ export const authorizationMatch = async (
     clientSecret: string,
     redirectUri: string,
 ) => {
-    const client = await getClientById(clientId);
+    const client = await getClientbyIdWithSecret(clientId);
     if (client) {
         return (
             clientId === client.clientId &&

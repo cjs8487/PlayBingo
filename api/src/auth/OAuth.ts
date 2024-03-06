@@ -1,17 +1,17 @@
+import { randomBytes } from 'crypto';
 import oauth2orize from 'oauth2orize';
 import {
     authorizeClient,
-    getClientById,
+    getClient,
     getTokenByRefreshToken,
 } from '../database/OAuth';
-import { randomBytes } from 'crypto';
 
 export const server = oauth2orize.createServer();
 
 server.serializeClient((client, done) => done(null, client.id));
 
 server.deserializeClient(async (id, done) => {
-    const client = await getClientById(id);
+    const client = await getClient(id);
     if (!client) {
         return done(new Error('Unable to load client'));
     }
@@ -32,12 +32,12 @@ const codes: Record<
 server.grant(
     oauth2orize.grant.code(
         (client, redirectUri, user, res, req, locals, issued) => {
-            const code = randomBytes(8).toString();
+            const code = randomBytes(8).toString('base64url');
             codes[code] = {
                 clientId: client.clientId,
                 redirectUri,
                 userId: user.id,
-                scopes: res.scope.split(','),
+                scopes: req.scope,
             };
             return issued(null, code);
         },
@@ -53,7 +53,7 @@ server.exchange(
                 return issued(new Error('Invalid code'));
             }
             if (
-                client.id !== authCode.clientId ||
+                client.clientId !== authCode.clientId ||
                 redirectUri !== authCode.redirectUri
             ) {
                 return issued(null, false);
@@ -76,12 +76,12 @@ server.exchange(
             if (!token) {
                 return issued(new Error('Token not found'));
             }
-            if (client.id !== token.oAuthClientId) {
+            if (client.clientId !== token.oAuthClientId) {
                 return issued(new Error('Token not found'));
             }
             const newToken = await authorizeClient(
                 token.userId,
-                client.id,
+                client.clientId,
                 scope,
             );
             return issued(null, newToken.token, newToken.refreshToken);
