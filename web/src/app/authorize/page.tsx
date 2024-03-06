@@ -2,8 +2,13 @@ import { OAuthClient } from '@playbingo/types';
 import { serverGet } from '../ServerUtils';
 import Authorize from './_components/Authorize';
 
-async function getClient(clientId: string): Promise<OAuthClient | undefined> {
-    const res = await serverGet(`/api/oauth/client?id=${clientId}`);
+async function getClient(
+    clientId: string,
+    redirectUri: string,
+): Promise<{ transactionId: string; client: OAuthClient } | undefined> {
+    const res = await serverGet(
+        `/api/oauth/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code`,
+    );
     if (res.ok) {
         return res.json();
     }
@@ -34,10 +39,12 @@ export default async function AuthorizePage({
         return 'invalid redirect uri';
     }
 
-    const client = await getClient(clientId);
-    if (!client) {
-        return 'invalid client id';
+    const response = await getClient(clientId, redirectUri);
+    if (!response) {
+        return 'unable to start authorization flow';
     }
+
+    const { transactionId, client } = response;
 
     if (!client.redirectUris.includes(redirectUri)) {
         return 'unknown redirect uri';
@@ -45,5 +52,12 @@ export default async function AuthorizePage({
 
     const scopeList = scopes.split(' ');
 
-    return <Authorize client={client} scopes={scopeList} />;
+    return (
+        <Authorize
+            client={client}
+            scopes={scopeList}
+            redirectUri={redirectUri}
+            transactionId={transactionId}
+        />
+    );
 }

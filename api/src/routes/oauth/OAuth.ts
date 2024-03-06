@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, Request } from 'express';
 import { server } from '../../auth/OAuth';
 import {
     createOAuthClient,
@@ -9,14 +9,74 @@ import {
     resetClientSecret,
     updateClient,
 } from '../../database/OAuth';
+import { getUser } from '../../database/Users';
 import redirect from './redirect/Redirect';
+import { OAuthClient } from '@playbingo/types';
+
+interface OAuthRequest extends Request {
+    oauth2?: {
+        transactionID: string;
+        client: OAuthClient;
+    };
+}
 
 const oauth = Router();
 
 oauth.use('/redirect', redirect);
-
-oauth.post('/authorize', server.decision());
 oauth.get('/token', server.token(), server.errorHandler());
+
+oauth.get(
+    '/authorize',
+    (req, res, next) => {
+        if (!req.session.user) {
+            return res.sendStatus(401);
+        }
+        next();
+    },
+    server.authorization(async (clientId, redirectUri, scopes, type, done) => {
+        const client = await getClientById(clientId);
+        if (!client) {
+            return done(new Error('Invalid client id'));
+        }
+        if (!client.redirectUris.includes(redirectUri)) {
+            return done(new Error('Invalid redirect uri'));
+        }
+        return done(null, client, redirectUri);
+    }),
+    (req: OAuthRequest, res) => {
+        if (!req.oauth2) {
+            return res.status(500).send('Unable to read transaction data');
+        }
+        res.status(200).json({
+            transactionId: req.oauth2.transactionID,
+            client: req.oauth2.client,
+        });
+    },
+);
+
+oauth.post(
+    '/authorize',
+    async (req, res, next) => {
+        if (!req.session.user) {
+            return res.sendStatus(401);
+        }
+        req.user = (await getUser(req.session.user)) ?? undefined;
+        next();
+    },
+    server.decision(),
+);
+
+oauth.post(
+    '/token',
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    //@ts-ignore
+    async (req, res, next) => {
+        req.user = await getClientById(req.body.client_id);
+        next();
+    },
+    server.token(),
+    server.errorHandler(),
+);
 
 oauth.get('/clients', async (req, res) => {
     if (!req.session.user) {
