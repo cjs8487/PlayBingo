@@ -19,6 +19,8 @@ import { useRouter } from 'next/navigation';
 import { useLayoutEffect } from 'react';
 import { useUserContext } from '../../../context/UserContext';
 import NextLink from 'next/link';
+import LinkIcon from '@mui/icons-material/Link';
+import { alertError } from '../../../lib/Utils';
 
 const readableScopes: {
     [key: string]: string;
@@ -34,9 +36,16 @@ const readableScopes: {
 interface Props {
     client: OAuthClient;
     scopes: string[];
+    redirectUri: string;
+    transactionId: string;
 }
 
-export default function Authorize({ client, scopes }: Props) {
+export default function Authorize({
+    client,
+    scopes,
+    redirectUri,
+    transactionId,
+}: Props) {
     const { user, current } = useUserContext();
     const router = useRouter();
 
@@ -134,10 +143,45 @@ export default function Authorize({ client, scopes }: Props) {
                         recognize it. If you don&#39;t recognize it, you can
                         safely close this window.
                     </Typography>
+                    <Box sx={{ textAlign: 'left' }}>
+                        <LinkIcon />
+                        <Typography variant="caption">
+                            Once authorized, you will be redirected outside of
+                            bingo.gg to {redirectUri}
+                        </Typography>
+                    </Box>
                 </CardContent>
                 <CardActions>
                     <Box sx={{ width: '100%', py: 1 }}>
-                        <Button>Authorize</Button>
+                        <Button
+                            onClick={async () => {
+                                const res = await fetch(
+                                    '/api/oauth/authorize',
+                                    {
+                                        method: 'POST',
+                                        body: JSON.stringify({
+                                            transaction_id: transactionId,
+                                        }),
+                                        redirect: 'follow',
+                                    },
+                                );
+                                if (res.redirected) {
+                                    console.log('redirecting');
+                                    console.log(res);
+                                    router.push(res.url);
+                                }
+                                if (!res.ok) {
+                                    console.log('error');
+                                    const error = await res.text();
+                                    alertError(
+                                        `Unable to grant OAuth permissions - ${error}`,
+                                    );
+                                    return;
+                                }
+                            }}
+                        >
+                            Authorize
+                        </Button>
                     </Box>
                 </CardActions>
             </Card>
