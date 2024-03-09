@@ -49,12 +49,14 @@ server.exchange(
     oauth2orize.exchange.code(
         async (client, code, redirectUri, body, authInfo, issued) => {
             const authCode = codes[code];
+            const clientSecret = body.client_secret;
             if (!authCode) {
                 return issued(new Error('Invalid code'));
             }
             if (
                 client.clientId !== authCode.clientId ||
-                redirectUri !== authCode.redirectUri
+                redirectUri !== authCode.redirectUri ||
+                clientSecret !== client.clientSecret
             ) {
                 return issued(null, false);
             }
@@ -64,6 +66,7 @@ server.exchange(
                 client.id,
                 authCode.scopes,
             );
+            delete codes[code];
             return issued(null, token.token, token.refreshToken);
         },
     ),
