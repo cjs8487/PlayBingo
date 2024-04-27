@@ -24,7 +24,7 @@ export default async function ProfilePage() {
             <Typography variant="h4" mb={2}>
                 {user.username}
             </Typography>
-            {/* <Typography variant="h5" mb={1}>
+            <Typography variant="h5" mb={1}>
                 Account Info
             </Typography>
             <Formik initialValues={{}} onSubmit={() => {}}>
@@ -63,7 +63,7 @@ export default async function ProfilePage() {
                         Changing your password will end all login sessions.
                     </Typography>
                 </Box>
-            </Box> */}
+            </Box>
             <Box>
                 <Typography variant="h5" mb={1}>
                     Integrations
