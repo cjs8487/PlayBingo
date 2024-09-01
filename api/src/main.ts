@@ -1,29 +1,23 @@
-import Database, { Database as DB } from 'better-sqlite3';
-import SqliteStore from 'better-sqlite3-session-store';
 import bodyParser from 'body-parser';
-import express from 'express';
+import express, { Request, Response } from 'express';
 import session from 'express-session';
+import path from 'path';
 import { port, sessionSecret, testing } from './Environment';
 import { logDebug, logger, logInfo } from './Logger';
 import { allRooms, roomWebSocketServer } from './core/RoomServer';
 import { disconnect } from './database/Database';
 import api from './routes/api';
+import { healthCheckRouter } from './routes/healthCheck';
 import {
+    bodySizeHistogram,
     metricsRouter,
     requestDurationHistogram,
-    bodySizeHistogram,
 } from './routes/metrics';
-import path from 'path';
-import {
-    closeSessionDatabase,
-    removeSessionsForUser,
-    sessionStore,
-} from './util/Session';
-import { healthCheckRouter } from './routes/healthCheck';
-import * as console from 'console';
+import { closeSessionDatabase, sessionStore } from './util/Session';
 
 declare module 'express-session' {
     interface SessionData {
+        loggedIn: boolean;
         user?: string;
     }
 }
@@ -31,17 +25,24 @@ declare module 'express-session' {
 // export is needed for tests
 export const app = express();
 
-app.use(
-    session({
-        store: sessionStore,
-        secret: sessionSecret,
-        resave: false,
-        saveUninitialized: true,
-        cookie: { secure: !testing },
-        proxy: !testing,
-        unset: 'destroy',
-    }),
-);
+const sessionParser = session({
+    store: sessionStore,
+    secret: sessionSecret,
+    resave: false,
+    saveUninitialized: true,
+    cookie: { secure: !testing },
+    proxy: !testing,
+    unset: 'destroy',
+});
+
+app.use(sessionParser);
+
+app.use((req, res, next) => {
+    if (req.session.loggedIn === undefined) {
+        req.session.loggedIn = false;
+    }
+    next();
+});
 
 app.use(bodyParser.json());
 
@@ -109,9 +110,11 @@ server.on('upgrade', (req, socket, head) => {
             socket.destroy();
             return;
         }
-        roomWebSocketServer.handleUpgrade(req, socket, head, (ws) => {
-            roomWebSocketServer.emit('connection', ws, req);
-            logInfo(`Successfully upgraded connection for ${slug}`);
+        sessionParser(req as unknown as Request, {} as Response, () => {
+            roomWebSocketServer.handleUpgrade(req, socket, head, (ws) => {
+                roomWebSocketServer.emit('connection', ws, req);
+                logInfo(`Successfully upgraded connection for ${slug}`);
+            });
         });
     } else {
         logInfo('[websocket] Unknown upgrade path');

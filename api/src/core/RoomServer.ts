@@ -1,6 +1,14 @@
 import { RoomAction } from '@playbingo/types';
+import { Session, SessionData } from 'express-session';
+import 'http';
 import { WebSocketServer } from 'ws';
-import { hasPermission, verifyRoomToken } from '../auth/RoomAuth';
+import {
+    hasPermission,
+    invalidateToken,
+    verifyRoomToken,
+} from '../auth/RoomAuth';
+import { logWarn } from '../Logger';
+import { getSession } from '../util/Session';
 import Room from './Room';
 
 export const roomWebSocketServer: WebSocketServer = new WebSocketServer({
@@ -8,6 +16,12 @@ export const roomWebSocketServer: WebSocketServer = new WebSocketServer({
 });
 
 export const allRooms = new Map<string, Room>();
+
+declare module 'http' {
+    interface IncomingMessage {
+        session: Session & Partial<SessionData>;
+    }
+}
 
 roomWebSocketServer.on('connection', (ws, req) => {
     if (!req.url) {
@@ -37,8 +51,11 @@ roomWebSocketServer.on('connection', (ws, req) => {
     //     5 * 60 * 1000,
     // );
 
+    // security
+    const sessionId = req.session.id;
+
     // handlers
-    ws.on('message', (message) => {
+    ws.on('message', async (message) => {
         const messageString = message.toString();
 
         if (messageString === 'ping') {
@@ -58,6 +75,32 @@ roomWebSocketServer.on('connection', (ws, req) => {
             ws.send(JSON.stringify({ action: 'unauthorized' }));
             return;
         }
+
+        // authentication
+        if (payload.sessionId) {
+            if (payload.sessionId !== sessionId) {
+                logWarn(
+                    'Got a valid socket token with a session, but it does not match the initial request session',
+                );
+                ws.send(JSON.stringify({ action: 'unauthorized' }));
+                invalidateToken(action.authToken);
+                ws.close();
+                return;
+            }
+            const session = await getSession(payload.sessionId);
+            if (!session) {
+                // session no longer exists, this isn't really a problem, but we
+                // kill the socket connection anyway as a form of timeout. This
+                // also allows revoking open connections for a user by
+                // regenerating their session
+                ws.send(JSON.stringify({ action: 'unauthorized' }));
+                invalidateToken(action.authToken);
+                ws.close();
+                return;
+            }
+        }
+
+        // join handling
         if (action.action === 'join') {
             clearTimeout(timeout);
             ws.send(JSON.stringify(room.handleJoin(action, payload, ws)));
