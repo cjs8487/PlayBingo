@@ -44,6 +44,7 @@ api.post('/logout', requiresApiToken, (req, res, next) => {
         res.sendStatus(401);
         return;
     }
+    req.session.loggedIn = false;
     req.session.user = undefined;
     req.session.save((err) => {
         if (err) {

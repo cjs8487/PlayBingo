@@ -246,7 +246,11 @@ rooms.post('/:slug/authorize', (req, res) => {
         return;
     }
 
-    const token = createRoomToken(room, { isSpectating: spectator });
+    const token = createRoomToken(
+        room,
+        { isSpectating: spectator },
+        req.session.id,
+    );
     res.status(200).send({ authToken: token });
 });
 

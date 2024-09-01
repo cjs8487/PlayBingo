@@ -58,6 +58,20 @@ export const removeSessionsForUser = (user: string): Promise<void> => {
     });
 };
 
+export const getSession = (
+    sid: string,
+): Promise<SessionData | null | undefined> => {
+    return new Promise((resolve, reject) => {
+        sessionStore.get(sid, (err, ses) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(ses);
+            }
+        });
+    });
+};
+
 export const closeSessionDatabase = () => {
     sessionDb.close();
 };
