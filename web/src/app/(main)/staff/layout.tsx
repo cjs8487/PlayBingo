@@ -9,11 +9,13 @@ import { ConfirmProvider } from 'material-ui-confirm';
 interface StaffDashboardLayoutProps {
     logs: ReactNode;
     games: ReactNode;
+    tokens: ReactNode;
 }
 
 export default function StaffDashboardLayout({
     logs,
     games,
+    tokens,
 }: StaffDashboardLayoutProps) {
     const { user, loggedIn } = useUserContext();
 
@@ -26,7 +28,7 @@ export default function StaffDashboardLayout({
         notFound();
     }
 
-    const tabs = ['Logs', 'Games'];
+    const tabs = ['Logs', 'Games', 'Tokens'];
 
     return (
         <Container
@@ -54,6 +56,9 @@ export default function StaffDashboardLayout({
                     </TabPanel>
                     <TabPanel value="Games" sx={{ flexGrow: 1 }}>
                         {games}
+                    </TabPanel>
+                    <TabPanel value="Tokens" sx={{ flexGrow: 1 }}>
+                        {tokens}
                     </TabPanel>
                 </TabContext>
             </ConfirmProvider>
