@@ -29,6 +29,7 @@ export interface Game {
 export interface User {
   id: string;
   username: string;
+  email?: string;
   staff: boolean;
   racetimeConnected?: boolean;
 }

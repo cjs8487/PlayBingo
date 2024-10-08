@@ -1,7 +1,9 @@
-import { Box, Container, Typography } from '@mui/material';
+import { Box, Button, Container, Typography } from '@mui/material';
 import { redirect } from 'next/navigation';
-import RacetimeIntegration from './RacetimeIntegration';
 import { serverFetch } from '../../ServerUtils';
+import RacetimeIntegration from './RacetimeIntegration';
+import ProfileForm from './ProfileForm';
+import { me } from '../../../actions/Session';
 
 async function getUser() {
     const res = await serverFetch('/api/me');
@@ -13,7 +15,7 @@ async function getUser() {
 }
 
 export default async function ProfilePage() {
-    const user = await getUser();
+    const { ok, user } = await me();
 
     if (!user) {
         redirect('/');
@@ -27,30 +29,7 @@ export default async function ProfilePage() {
             <Typography variant="h5" mb={1}>
                 Account Info
             </Typography>
-            <Formik initialValues={{}} onSubmit={() => {}}>
-                <Form>
-                    <Box display="flex" flexDirection="column" rowGap={1}>
-                        <FormikTextField
-                            id="username"
-                            name="username"
-                            label="Username"
-                            size="small"
-                        />
-                        <FormikTextField
-                            id="email"
-                            name="email"
-                            label="Email"
-                            size="small"
-                        />
-                        <Box display="flex">
-                            <Box flexGrow={1} />
-                            <Button className="rounded-md bg-green-700 px-2 py-1">
-                                Update
-                            </Button>
-                        </Box>
-                    </Box>
-                </Form>
-            </Formik>
+            <ProfileForm user={user} />
             <Box mb={3}>
                 <Typography variant="h6" mb={1}>
                     Password
