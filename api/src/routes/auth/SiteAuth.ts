@@ -59,7 +59,7 @@ siteAuth.post('/login', async (req, res, next) => {
 siteAuth.post('/forgotPassword', async (req, res) => {
     const { email, username } = req.body;
     if (!email || !username) {
-        res.status(400);
+        res.sendStatus(400);
         return;
     }
     const user = await getUserByEmail(email);
