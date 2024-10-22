@@ -73,6 +73,7 @@ export default function Room() {
                             width: width,
                             height: height,
                             overflowY: 'auto',
+                            columnGap: 1,
                             p: 1,
                         }}
                     >
@@ -84,6 +85,7 @@ export default function Room() {
                             width: width,
                             height: height,
                             overflowY: 'auto',
+                            columnGap: 1,
                             p: 1,
                         }}
                     >
@@ -98,7 +100,6 @@ export default function Room() {
 function RoomXs() {
     return (
         <>
-            xs
             <Box>
                 <RoomInfo />
             </Box>
@@ -114,7 +115,7 @@ function RoomXs() {
             <Box>
                 <PlayerList />
             </Box>
-            <Box>
+            <Box maxHeight="100%">
                 <RoomChat />
             </Box>
         </>
@@ -124,25 +125,22 @@ function RoomXs() {
 function RoomSm() {
     return (
         <>
-            small
-            <Box display="flex" columnGap={2}>
-                <Box flexGrow={1}>
-                    <RoomInfo />
-                </Box>
-                <Box>
-                    <RacetimeCard />
-                </Box>
+            <Box flexGrow={1}>
+                <RoomInfo />
+            </Box>
+            <Box>
+                <RacetimeCard />
             </Box>
             <Box>
                 <PlayerInfo />
             </Box>
-            <Box maxWidth="80%" maxHeight="100">
+            <Box maxWidth="100%" maxHeight="100%">
                 <Board />
             </Box>
             <Box>
                 <PlayerList />
             </Box>
-            <Box>
+            <Box maxHeight="100%">
                 <RoomChat />
             </Box>
         </>
@@ -157,11 +155,11 @@ function RoomMd() {
                     <RoomInfo />
                 </Box>
                 <Box>
-                    <PlayerInfo />
+                    <RacetimeCard />
                 </Box>
             </Box>
             <Box>
-                <RacetimeCard />
+                <PlayerInfo />
             </Box>
             <Box
                 maxWidth="100%"
@@ -178,7 +176,7 @@ function RoomMd() {
                     <PlayerList />
                 </Box>
             </Box>
-            <Box px={4}>
+            <Box px={4} maxHeight="100%">
                 <RoomChat />
             </Box>
         </>
@@ -198,7 +196,12 @@ function RoomLg() {
             >
                 <Board />
             </Box>
-            <Box display="flex" flexDirection="column" rowGap={1}>
+            <Box
+                display="flex"
+                flexDirection="column"
+                rowGap={1}
+                maxHeight="100%"
+            >
                 <Box>
                     <RoomInfo />
                 </Box>
@@ -211,7 +214,7 @@ function RoomLg() {
                 <Box>
                     <PlayerList />
                 </Box>
-                <Box>
+                <Box maxHeight="100%">
                     <RoomChat />
                 </Box>
             </Box>
@@ -225,23 +228,23 @@ function RoomXl() {
             <Box flexGrow={1} maxWidth="50%" maxHeight="100%">
                 <Board />
             </Box>
-            <Box display="flex" flexDirection="column" rowGap={1}>
-                <Box display="flex" columnGap={1}>
-                    <Box flexGrow={1}>
+            <Box display="flex" columnGap={1}>
+                <Box display="flex" flexDirection="column" rowGap={1}>
+                    <Box>
                         <RoomInfo />
                     </Box>
-                    <RacetimeCard />
-                </Box>
-                <Box>
-                    <PlayerInfo />
-                </Box>
-                <Box display="flex" columnGap={1}>
                     <Box>
-                        <RoomChat />
+                        <RacetimeCard />
+                    </Box>
+                    <Box>
+                        <PlayerInfo />
                     </Box>
                     <Box>
                         <PlayerList />
                     </Box>
+                </Box>
+                <Box>
+                    <RoomChat />
                 </Box>
             </Box>
         </>
