@@ -115,7 +115,7 @@ function RoomXs() {
             <Box>
                 <PlayerList />
             </Box>
-            <Box maxHeight="100%">
+            <Box maxHeight="90%">
                 <RoomChat />
             </Box>
         </>
@@ -140,7 +140,7 @@ function RoomSm() {
             <Box>
                 <PlayerList />
             </Box>
-            <Box maxHeight="100%">
+            <Box maxHeight="90%">
                 <RoomChat />
             </Box>
         </>
@@ -176,7 +176,7 @@ function RoomMd() {
                     <PlayerList />
                 </Box>
             </Box>
-            <Box px={4} maxHeight="100%">
+            <Box px={4} maxHeight="90%">
                 <RoomChat />
             </Box>
         </>
@@ -201,6 +201,7 @@ function RoomLg() {
                 flexDirection="column"
                 rowGap={1}
                 maxHeight="100%"
+                sx={{ overflowY: 'auto' }}
             >
                 <Box>
                     <RoomInfo />
@@ -214,7 +215,7 @@ function RoomLg() {
                 <Box>
                     <PlayerList />
                 </Box>
-                <Box maxHeight="100%">
+                <Box maxHeight="85%">
                     <RoomChat />
                 </Box>
             </Box>
@@ -225,16 +226,31 @@ function RoomLg() {
 function RoomXl() {
     return (
         <>
-            <Box flexGrow={1} maxWidth="50%" maxHeight="100%">
+            <Box
+                flexGrow={1}
+                maxWidth="50%"
+                maxHeight="100%"
+                display="flex"
+                alignContent="center"
+                justifyContent="center"
+            >
                 <Board />
             </Box>
-            <Box display="flex" columnGap={1}>
-                <Box display="flex" flexDirection="column" rowGap={1}>
-                    <Box>
-                        <RoomInfo />
-                    </Box>
-                    <Box>
-                        <RacetimeCard />
+            <Box display="flex" columnGap={1} maxWidth="50%" maxHeight="100%">
+                <Box
+                    display="flex"
+                    flexDirection="column"
+                    rowGap={1}
+                    maxHeight="100%"
+                    sx={{ overflowY: 'auto' }}
+                >
+                    <Box display="flex" columnGap={1}>
+                        <Box>
+                            <RoomInfo />
+                        </Box>
+                        <Box>
+                            <RacetimeCard />
+                        </Box>
                     </Box>
                     <Box>
                         <PlayerInfo />
@@ -243,7 +259,7 @@ function RoomXl() {
                         <PlayerList />
                     </Box>
                 </Box>
-                <Box>
+                <Box flexGrow={1} maxWidth="40%">
                     <RoomChat />
                 </Box>
             </Box>
