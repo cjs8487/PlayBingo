@@ -1,5 +1,6 @@
 import { Goal } from '@prisma/client';
 import { shuffle } from '../../util/Array';
+import { GeneratorGoal } from './GeneratorCore';
 
 const lineCheckList: number[][] = [];
 lineCheckList[1] = [1, 2, 3, 4, 5, 10, 15, 20, 6, 12, 18, 24];
@@ -30,8 +31,11 @@ lineCheckList[23] = [2, 7, 12, 17, 20, 21, 23, 24];
 lineCheckList[24] = [20, 21, 22, 24, 3, 8, 13, 18];
 lineCheckList[25] = [0, 6, 12, 18, 20, 21, 22, 23, 19, 14, 9, 4];
 
-export const generateRandomTyped = (goalList: Goal[], seed?: number) => {
-    const bingoBoard: Goal[] = [];
+export const generateRandomTyped = (
+    goalList: GeneratorGoal[],
+    seed?: number,
+) => {
+    const bingoBoard: GeneratorGoal[] = [];
 
     let goals = goalList;
     shuffle(goals, seed);
@@ -61,8 +65,8 @@ export const generateRandomTyped = (goalList: Goal[], seed?: number) => {
     for (let i = 1; i <= 25; i++) {
         let j = 0,
             synergy = 0,
-            currentObj: Goal,
-            minSynObj: { synergy: number; value: Goal } | null = null;
+            currentObj: GeneratorGoal,
+            minSynObj: { synergy: number; value: GeneratorGoal } | null = null;
         do {
             currentObj = goals[j];
             synergy = checkLine(i, currentObj.categories);
@@ -75,12 +79,15 @@ export const generateRandomTyped = (goalList: Goal[], seed?: number) => {
             j++;
         } while (synergy != 0 && j < goals.length);
         bingoBoard[i] = minSynObj?.value;
-        goals = goals.filter((g) => g.id !== minSynObj?.value.id);
+        goals = goals.filter((g) => g.goal !== minSynObj?.value.goal);
     }
     return bingoBoard;
 };
 
-export const generateFullRandom = (goalList: Goal[], seed?: number) => {
+export const generateFullRandom = (
+    goalList: GeneratorGoal[],
+    seed?: number,
+) => {
     shuffle(goalList, seed);
     return goalList.splice(0, 25);
 };

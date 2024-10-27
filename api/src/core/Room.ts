@@ -1,4 +1,3 @@
-import { Goal } from '@prisma/client';
 import { OPEN, WebSocket } from 'ws';
 import { logError, logInfo, logWarn } from '../Logger';
 import { RoomTokenPayload, invalidateToken } from '../auth/RoomAuth';
@@ -37,6 +36,7 @@ import { listToBoard } from '../util/RoomUtils';
 import { generateFullRandom, generateRandomTyped } from './generation/Random';
 import { generateSRLv5 } from './generation/SRLv5';
 import RacetimeHandler, { RaceData } from './integration/RacetimeHandler';
+import { GeneratorGoal } from './generation/GeneratorCore';
 
 type RoomIdentity = {
     nickname: string;
@@ -139,8 +139,15 @@ export default class Room {
     async generateBoard(options: BoardGenerationOptions) {
         this.lastGenerationMode = options;
         const { mode, seed } = options;
-        const goals = await goalsForGame(this.gameSlug);
-        let goalList: Goal[];
+        const goals: GeneratorGoal[] = (await goalsForGame(this.gameSlug)).map(
+            (goal) => ({
+                goal: goal.goal,
+                description: goal.description,
+                categories: goal.categories.map((cat) => cat.name),
+                difficulty: goal.difficulty,
+            }),
+        );
+        let goalList: GeneratorGoal[];
         try {
             switch (mode) {
                 case BoardGenerationMode.SRLv5:
@@ -172,7 +179,7 @@ export default class Room {
                     for (let i = 0; i < numGroups; i++) {
                         emptyGroupedGoals.push([]);
                     }
-                    const groupedGoals = goals.reduce<Goal[][]>(
+                    const groupedGoals = goals.reduce<GeneratorGoal[][]>(
                         (curr, goal) => {
                             if (goal.difficulty && goal.difficulty > 0) {
                                 const grpIdx = Math.floor(

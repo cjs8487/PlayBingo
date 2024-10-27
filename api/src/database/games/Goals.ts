@@ -1,26 +1,46 @@
 import { Prisma } from '@prisma/client';
 import { prisma } from '../Database';
 import { logError } from '../../Logger';
+import { gameForSlug } from './Games';
 
 export const goalsForGame = (slug: string) => {
     return prisma.goal.findMany({
         where: { game: { slug } },
         orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+        include: { categories: true },
     });
 };
 
-export const createGoal = (
+export const createGoal = async (
     gameSlug: string,
     goal: string,
     description?: string,
     categories?: string[],
     difficulty?: number,
 ) => {
+    const gameId = (await gameForSlug(gameSlug))?.id;
+    if (!gameId) {
+        return undefined;
+    }
+
     return prisma.goal.create({
         data: {
             goal,
             description,
-            categories,
+            categories: {
+                connectOrCreate: categories?.map((cat) => ({
+                    create: {
+                        name: cat,
+                        game: { connect: { slug: gameSlug } },
+                    },
+                    where: {
+                        gameId_name: {
+                            gameId,
+                            name: cat,
+                        },
+                    },
+                })),
+            },
             difficulty,
             game: { connect: { slug: gameSlug } },
         },
