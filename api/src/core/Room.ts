@@ -139,14 +139,7 @@ export default class Room {
     async generateBoard(options: BoardGenerationOptions) {
         this.lastGenerationMode = options;
         const { mode, seed } = options;
-        const goals: GeneratorGoal[] = (await goalsForGame(this.gameSlug)).map(
-            (goal) => ({
-                goal: goal.goal,
-                description: goal.description,
-                categories: goal.categories.map((cat) => cat.name),
-                difficulty: goal.difficulty,
-            }),
-        );
+        const goals = await goalsForGame(this.gameSlug);
         let goalList: GeneratorGoal[];
         try {
             switch (mode) {

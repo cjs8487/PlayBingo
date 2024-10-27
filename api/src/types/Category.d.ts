@@ -6,12 +6,11 @@
  */
 
 /**
- * A single objective for a bingo game.
+ * The full goal category definition.
  */
-export interface Goal {
+export interface Category {
   id: string;
-  goal: string;
-  description: string;
-  difficulty?: number;
-  categories?: string[];
+  name: string;
+  gameId: string;
+  max: number;
 }

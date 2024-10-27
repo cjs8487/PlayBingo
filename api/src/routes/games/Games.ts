@@ -29,6 +29,7 @@ import {
     createGoal,
     goalsForGame,
     deleteAllGoalsForGame,
+    goalsForGameFull,
 } from '../../database/games/Goals';
 import { getUser, getUsersEligibleToModerateGame } from '../../database/Users';
 
@@ -139,9 +140,16 @@ games.post('/:slug', async (req, res) => {
     res.status(200).json(result);
 });
 
-games.get('/:slug/goals', async (req, res) => {
+games.get('/:slug/goals?includeFullCatData', async (req, res) => {
     const { slug } = req.params;
-    const goals = await goalsForGame(slug);
+    const { includeFullCatData } = req.query;
+
+    let goals;
+    if (includeFullCatData) {
+        goals = await goalsForGameFull(slug);
+    } else {
+        goals = await goalsForGame(slug);
+    }
     res.status(200).json(goals);
 });
 

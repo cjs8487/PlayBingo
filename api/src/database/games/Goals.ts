@@ -3,7 +3,20 @@ import { prisma } from '../Database';
 import { logError } from '../../Logger';
 import { gameForSlug } from './Games';
 
-export const goalsForGame = (slug: string) => {
+export const goalsForGame = async (slug: string) => {
+    const goals = await prisma.goal.findMany({
+        where: { game: { slug } },
+        orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+        include: { categories: true },
+    });
+
+    return goals.map((g) => ({
+        ...g,
+        categories: g.categories.map((c) => c.name),
+    }));
+};
+
+export const goalsForGameFull = (slug: string) => {
     return prisma.goal.findMany({
         where: { game: { slug } },
         orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
