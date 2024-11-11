@@ -7,6 +7,7 @@ export const allGames = async (user?: string) => {
         include: {
             owners: { select: { id: true } },
             moderators: { select: { id: true } },
+            difficultyVariants: { select: { name: true, goalAmounts: true } },
         },
     });
     if (user) {
@@ -35,6 +36,7 @@ export const gameForSlug = (slug: string) => {
             moderators: {
                 select: { id: true, username: true },
             },
+            difficultyVariants: { select: { name: true, goalAmounts: true } },
         },
     });
 };
@@ -99,6 +101,18 @@ export const updateGameCover = (slug: string, coverImage: string) => {
 
 export const updateSRLv5Enabled = (slug: string, enableSRLv5: boolean) => {
     return prisma.game.update({ where: { slug }, data: { enableSRLv5 } });
+};
+
+export const updateDifficultyVariantsEnabled = (
+    slug: string,
+    difficultyVariantsEnabled: boolean,
+) => {
+    return prisma.game.update({
+        where: { slug },
+        data: {
+            difficultyVariantsEnabled,
+        },
+    });
 };
 
 export const updateRacetimeCategory = (

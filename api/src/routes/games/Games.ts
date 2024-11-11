@@ -11,6 +11,7 @@ import {
     removeModerator,
     removeOwner,
     unfavoriteGame,
+    updateDifficultyVariantsEnabled,
     updateGameCover,
     updateGameName,
     updateRacetimeCategory,
@@ -70,8 +71,14 @@ games.post('/', async (req, res) => {
 
 games.post('/:slug', async (req, res) => {
     const { slug } = req.params;
-    const { name, coverImage, enableSRLv5, racetimeCategory, racetimeGoal } =
-        req.body;
+    const {
+        name,
+        coverImage,
+        enableSRLv5,
+        racetimeCategory,
+        racetimeGoal,
+        difficultyVariantsEnabled,
+    } = req.body;
 
     let result = undefined;
     if (name) {
@@ -88,6 +95,12 @@ games.post('/:slug', async (req, res) => {
     }
     if (racetimeGoal) {
         result = await updateRacetimeGoal(slug, racetimeGoal);
+    }
+    if (difficultyVariantsEnabled !== undefined) {
+        result = await updateDifficultyVariantsEnabled(
+            slug,
+            difficultyVariantsEnabled,
+        );
     }
 
     if (!result) {

@@ -115,6 +115,8 @@ export default function GameSettings({ gameData }: GameSettingsProps) {
                     enableSRLv5: gameData.enableSRLv5,
                     racetimeCategory: gameData.racetimeCategory,
                     racetimeGoal: gameData.racetimeGoal,
+                    difficultyVariantsEnabled:
+                        gameData.difficultyVariantsEnabled,
                 }}
                 onSubmit={async ({
                     name,
@@ -122,6 +124,7 @@ export default function GameSettings({ gameData }: GameSettingsProps) {
                     enableSRLv5,
                     racetimeCategory,
                     racetimeGoal,
+                    difficultyVariantsEnabled,
                 }) => {
                     const res = await fetch(`/api/games/${gameData.slug}`, {
                         method: 'POST',
@@ -134,6 +137,7 @@ export default function GameSettings({ gameData }: GameSettingsProps) {
                             enableSRLv5,
                             racetimeCategory,
                             racetimeGoal,
+                            difficultyVariantsEnabled,
                         }),
                     });
                     if (!res.ok) {
@@ -179,6 +183,25 @@ export default function GameSettings({ gameData }: GameSettingsProps) {
                                     value. It also tries to minimize synergy
                                     between goals in the same line by minimizing
                                     the category overlap.
+                                </Typography>
+                            </HoverIcon>
+                        </Box>
+                        <Box display="flex" alignItems="center">
+                            <FormikSwitch
+                                id="game-difficulty-variants-switch"
+                                label="Enable Difficulty Variants"
+                                name="difficultyVariantsEnabled"
+                            />
+                            <HoverIcon icon={<Info />}>
+                                <Typography variant="caption">
+                                    Difficulty varaints are a special type of
+                                    variants that modify generation instead of
+                                    the goal list. Difficulty variants modify
+                                    how many goals from a given difficulty are
+                                    selected during generation, which can impact
+                                    the difficulty or length of the final board.
+                                    When a difficulty variant is chosen, only
+                                    the Random generation mode is available.
                                 </Typography>
                             </HoverIcon>
                         </Box>
