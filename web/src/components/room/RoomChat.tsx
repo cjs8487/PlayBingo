@@ -12,7 +12,7 @@ export default function RoomChat() {
     const chatDivRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
-        chatDivRef.current?.scrollIntoView(false);
+        chatDivRef.current?.scrollTo(0, chatDivRef.current.scrollHeight);
     }, [messages]);
 
     return (
@@ -32,6 +32,7 @@ export default function RoomChat() {
                     overflowY: 'auto',
                     px: 1,
                 }}
+                ref={chatDivRef}
             >
                 {messages.map((message, index) => (
                     <div key={index}>
@@ -56,7 +57,6 @@ export default function RoomChat() {
                         })}
                     </div>
                 ))}
-                <div ref={chatDivRef} />
             </Box>
             <Box display="flex" columnGap={1}>
                 <TextField
