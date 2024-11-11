@@ -55,7 +55,7 @@ export default function NewGame() {
                         alertError(`Unable to create game - ${error}`);
                         return;
                     }
-                    router.push('/');
+                    router.push(`/games/${values.slug}`);
                 }}
             >
                 <Form>
