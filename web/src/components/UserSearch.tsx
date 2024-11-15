@@ -55,10 +55,10 @@ export default function UserSearch({
         setSearchString('');
         close();
     }, [submit, selected, close]);
-    
+
     const theme = useTheme();
     const fullScreen = useMediaQuery(theme.breakpoints.down('sm'));
-    
+
     if (!users || isLoading) {
         return null;
     }
@@ -118,7 +118,7 @@ export default function UserSearch({
                                         );
                                     },
                                 ),
-                                Item: ({children, ...props}) => {
+                                Item: ({ children, ...props }) => {
                                     return (
                                         <ListItem
                                             {...props}
