@@ -17,7 +17,8 @@
         "racetimeCategory": {"type": "string"},
         "racetimeGoal": {"type": "string"},
         "difficultyVariantsEnabled": {"type": "boolean"},
-        "difficultyVariants": {"type": "array", "items": {"$ref": "#/$defs/DifficultyVariant" }}
+        "difficultyVariants": {"type": "array", "items": {"$ref": "#/$defs/DifficultyVariant" }},
+        "difficultyGroups": {"type": "number"}
     },
     "$defs": {
         "DifficultyVariant": {

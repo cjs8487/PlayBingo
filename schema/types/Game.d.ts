@@ -22,6 +22,7 @@ export interface Game {
   racetimeGoal?: string;
   difficultyVariantsEnabled?: boolean;
   difficultyVariants?: DifficultyVariant[];
+  difficultyGroups?: number;
 }
 export interface User {
   id: string;
