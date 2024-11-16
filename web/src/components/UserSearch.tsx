@@ -10,16 +10,17 @@ import {
     ListItem,
     ListItemButton,
     ListItemIcon,
-    ListItemText, TextField,
+    ListItemText,
+    TextField,
     useMediaQuery,
     useTheme,
 } from '@mui/material';
-import {forwardRef, useCallback, useState} from 'react';
+import { forwardRef, useCallback, useState } from 'react';
 import AutoSizer from 'react-virtualized-auto-sizer';
-import {Virtuoso} from 'react-virtuoso';
-import {useApi} from '../lib/Hooks';
-import {alertError} from '../lib/Utils';
-import {User} from '../types/User';
+import { Virtuoso } from 'react-virtuoso';
+import { useApi } from '../lib/Hooks';
+import { alertError } from '../lib/Utils';
+import { User } from '../types/User';
 
 interface UserSearchProps {
     isOpen: boolean;
@@ -29,26 +30,26 @@ interface UserSearchProps {
 }
 
 export default function UserSearch({
-                                       isOpen,
-                                       close,
-                                       submit,
-                                       listPath,
-                                   }: UserSearchProps) {
+    isOpen,
+    close,
+    submit,
+    listPath,
+}: UserSearchProps) {
     const {
         data: users,
         isLoading,
         error,
     } = useApi<User[]>(listPath ?? '/api/users');
-    
+
     const [selected, setSelected] = useState<string[]>([]);
     const [searchString, setSearchString] = useState('');
-    
+
     const cancel = useCallback(() => {
         setSelected([]);
-        setSearchString('')
+        setSearchString('');
         close();
     }, [close]);
-    
+
     const onSubmit = useCallback(() => {
         submit(selected);
         setSelected([]);
@@ -62,21 +63,24 @@ export default function UserSearch({
     if (!users || isLoading) {
         return null;
     }
-    
+
     if (error) {
         alertError("Couldn't load user list.");
         return null;
     }
-    
+
     let listedUsers = (users as User[])
         .toSorted((a, b) => a.username.localeCompare(b.username))
         .filter((user) => {
             if (!searchString || searchString.length === 0) {
-                return true
+                return true;
             }
-            return user.username.startsWith(searchString) || user.username.includes(searchString)
-        })
-    
+            return (
+                user.username.startsWith(searchString) ||
+                user.username.includes(searchString)
+            );
+        });
+
     return (
         <Dialog
             onClose={close}
@@ -86,7 +90,7 @@ export default function UserSearch({
             fullWidth
         >
             <DialogTitle>User Search</DialogTitle>
-            <DialogContent sx={{minHeight: '300px'}}>
+            <DialogContent sx={{ minHeight: '300px' }}>
                 <TextField
                     type="text"
                     label="Search"
@@ -94,15 +98,15 @@ export default function UserSearch({
                     sx={{ width: '33%' }}
                 />
                 <AutoSizer>
-                    {({height, width}) => (
+                    {({ height, width }) => (
                         <Virtuoso<User>
                             height={height}
                             width={width}
-                            style={{height, width}}
+                            style={{ height, width }}
                             components={{
                                 // eslint-disable-next-line react/display-name
                                 List: forwardRef(
-                                    ({style, children}, listRef) => {
+                                    ({ style, children }, listRef) => {
                                         return (
                                             <List
                                                 style={{
