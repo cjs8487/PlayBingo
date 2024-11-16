@@ -11,6 +11,7 @@ import {
     ListItemButton,
     ListItemIcon,
     ListItemText,
+    TextField,
     useMediaQuery,
     useTheme,
 } from '@mui/material';
@@ -41,15 +42,18 @@ export default function UserSearch({
     } = useApi<User[]>(listPath ?? '/api/users');
 
     const [selected, setSelected] = useState<string[]>([]);
+    const [searchString, setSearchString] = useState('');
 
     const cancel = useCallback(() => {
         setSelected([]);
+        setSearchString('');
         close();
     }, [close]);
 
     const onSubmit = useCallback(() => {
         submit(selected);
         setSelected([]);
+        setSearchString('');
         close();
     }, [submit, selected, close]);
 
@@ -65,6 +69,18 @@ export default function UserSearch({
         return null;
     }
 
+    let listedUsers = (users as User[])
+        .toSorted((a, b) => a.username.localeCompare(b.username))
+        .filter((user) => {
+            if (!searchString || searchString.length === 0) {
+                return true;
+            }
+            return (
+                user.username.startsWith(searchString) ||
+                user.username.includes(searchString)
+            );
+        });
+
     return (
         <Dialog
             onClose={close}
@@ -75,6 +91,12 @@ export default function UserSearch({
         >
             <DialogTitle>User Search</DialogTitle>
             <DialogContent sx={{ minHeight: '300px' }}>
+                <TextField
+                    type="text"
+                    label="Search"
+                    onChange={(e) => setSearchString(e.target.value)}
+                    sx={{ width: '33%' }}
+                />
                 <AutoSizer>
                     {({ height, width }) => (
                         <Virtuoso<User>
@@ -114,7 +136,7 @@ export default function UserSearch({
                                     );
                                 },
                             }}
-                            data={users}
+                            data={listedUsers}
                             itemContent={(index, user) => (
                                 <ListItemButton
                                     onClick={() => {
