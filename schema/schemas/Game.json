@@ -26,6 +26,7 @@
             "additionalProperties": false,
             "required": ["name"],
             "properties": {
+                "id": {"type": "string"},
                 "name": {"type": "string"},
                 "goalAmounts": {"type": "array", "items": {"type": "number"}}
             }

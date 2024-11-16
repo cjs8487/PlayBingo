@@ -40,7 +40,7 @@ model Variant {
   name        String
   description String
   goals       GoalVariant[]
-  Game        Game?         @relation(fields: [gameId], references: [id])
+  game        Game?         @relation(fields: [gameId], references: [id])
   gameId      String?
 }
 
@@ -70,7 +70,7 @@ model DifficultyVariant {
   id          String  @id @unique @default(cuid())
   name        String
   goalAmounts Int[]
-  Game        Game?   @relation(fields: [gameId], references: [id])
+  game        Game?   @relation(fields: [gameId], references: [id])
   gameId      String?
 }
 

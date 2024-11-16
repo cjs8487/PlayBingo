@@ -31,6 +31,7 @@ export interface User {
   racetimeConnected?: boolean;
 }
 export interface DifficultyVariant {
+  id?: string;
   name: string;
   goalAmounts?: number[];
 }

@@ -4,12 +4,6 @@ import {
     IconButton,
     List,
     ListItem,
-    Table,
-    TableBody,
-    TableCell,
-    TableContainer,
-    TableHead,
-    TableRow,
     Typography,
 } from '@mui/material';
 import { DifficultyVariant, Game } from '../../types/Game';
@@ -17,19 +11,24 @@ import Add from '@mui/icons-material/Add';
 import Edit from '@mui/icons-material/Edit';
 import Check from '@mui/icons-material/Check';
 import Close from '@mui/icons-material/Close';
+import Delete from '@mui/icons-material/Delete';
 import { FieldArray, Form, Formik } from 'formik';
 import FormikTextField from '../input/FormikTextField';
 import NumberInput from '../input/NumberInput';
 import { useState } from 'react';
 import { useList } from 'react-use';
+import { mutate } from 'swr';
+import { alertError } from '../../lib/Utils';
 
 interface DifficultyVariantEditRowProps {
+    slug: string;
     variant: DifficultyVariant;
     disabled: boolean;
     done: () => void;
 }
 
 function DificultyVariantEditRow({
+    slug,
     variant,
     disabled,
     done,
@@ -37,7 +36,30 @@ function DificultyVariantEditRow({
     return (
         <Formik
             initialValues={{ ...variant }}
-            onSubmit={() => {
+            onSubmit={async ({ name, goalAmounts }) => {
+                let res: Response;
+                if (variant.id) {
+                    res = await fetch(
+                        `/api/games/${slug}/difficultyVariants/${variant.id}`,
+                        {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ name, goalAmounts }),
+                        },
+                    );
+                } else {
+                    res = await fetch(`/api/games/${slug}/difficultyVariants`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ name, goalAmounts }),
+                    });
+                }
+
+                if (!res.ok) {
+                    alertError(`Unable to save difficulty variant`);
+                    return;
+                }
+                mutate(`/api/games/${slug}`);
                 done();
             }}
             validateOnChange={false}
@@ -92,10 +114,11 @@ function DificultyVariantEditRow({
 }
 
 interface DificultyVariantRow {
+    slug: string;
     variant: DifficultyVariant;
 }
 
-function DifficultyVariantRow({ variant }: DificultyVariantRow) {
+function DifficultyVariantRow({ slug, variant }: DificultyVariantRow) {
     const [edit, setEdit] = useState(false);
 
     return (
@@ -108,6 +131,7 @@ function DifficultyVariantRow({ variant }: DificultyVariantRow) {
         >
             <Box display="flex" columnGap={1} alignItems="center">
                 <DificultyVariantEditRow
+                    slug={slug}
                     variant={variant}
                     disabled={!edit}
                     done={() => setEdit(false)}
@@ -117,6 +141,26 @@ function DifficultyVariantRow({ variant }: DificultyVariantRow) {
                         <Edit />
                     </IconButton>
                 )}
+                <IconButton
+                    edge="end"
+                    onClick={async () => {
+                        const res = await fetch(
+                            `/api/games/${slug}/difficultyVariants/${variant.id}`,
+                            {
+                                method: 'DELETE',
+                                headers: { 'Content-Type': 'application/json' },
+                            },
+                        );
+
+                        if (!res.ok) {
+                            alertError(`Unable to delete difficulty variant`);
+                            return;
+                        }
+                        mutate(`/api/games/${slug}`);
+                    }}
+                >
+                    <Delete />
+                </IconButton>
             </Box>
         </ListItem>
     );
@@ -127,35 +171,88 @@ interface VariantsProps {
 }
 
 export default function Variants({ gameData }: VariantsProps) {
-    const [difficultyVariants, { push }] = useList<DifficultyVariant>(
-        gameData.difficultyVariants ?? [],
-    );
-    if (!gameData.difficultyVariantsEnabled) {
+    if (!gameData.difficultyVariantsEnabled || !gameData.difficultyVariants) {
         return null;
     }
+
+    console.log('render');
 
     return (
         <>
             <Typography variant="h6">Difficulty Variants</Typography>
             <List>
-                {difficultyVariants.map((variant) => (
+                {gameData.difficultyVariants.map((variant) => (
                     <DifficultyVariantRow
-                        key={variant.name}
+                        key={variant.id}
+                        slug={gameData.slug}
                         variant={variant}
                     />
                 ))}
-            </List>
-
-            <Box>
-                <Button
-                    startIcon={<Add />}
-                    onClick={() => {
-                        push({ name: '', goalAmounts: [0, 0, 0, 0] });
+                <Formik
+                    initialValues={{
+                        name: '',
+                        goalAmounts: Array(gameData.difficultyGroups).fill(0),
                     }}
+                    onSubmit={async ({ name, goalAmounts }) => {
+                        const res = await fetch(
+                            `/api/games/${gameData.slug}/difficultyVariants`,
+                            {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ name, goalAmounts }),
+                            },
+                        );
+
+                        if (!res.ok) {
+                            alertError(`Unable to save difficulty variant`);
+                            return;
+                        }
+                        mutate(`/api/games/${gameData.slug}`);
+                    }}
+                    validateOnChange={false}
                 >
-                    Add Variant
-                </Button>
-            </Box>
+                    {({ values, resetForm }) => (
+                        <Form>
+                            <Box
+                                display="flex"
+                                columnGap={1}
+                                alignItems="center"
+                            >
+                                <FormikTextField name="name" label="Name" />
+                                <FieldArray name="goalAmounts">
+                                    {() =>
+                                        values.goalAmounts?.map((_, index) => (
+                                            <NumberInput
+                                                key={index}
+                                                name={`goalAmounts.${index}`}
+                                                label={`${index + 1}`}
+                                                min={0}
+                                                max={25}
+                                            />
+                                        ))
+                                    }
+                                </FieldArray>
+                                <IconButton
+                                    edge="end"
+                                    onClick={() => {
+                                        resetForm();
+                                    }}
+                                    color="error"
+                                >
+                                    <Close />
+                                </IconButton>
+                                <IconButton
+                                    type="submit"
+                                    edge="end"
+                                    color="success"
+                                >
+                                    <Check />
+                                </IconButton>
+                            </Box>
+                        </Form>
+                    )}
+                </Formik>
+            </List>
         </>
     );
 }
