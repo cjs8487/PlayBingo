@@ -38,7 +38,7 @@ function GenerationModeSelectField() {
     const {
         values: { game },
     } = useFormikContext<{ game: string }>();
-    const [field, meta] = useField<string>('generationMode');
+    const [field] = useField<string>('generationMode');
 
     const modes = useAsync(async () => {
         if (!game) {
@@ -54,6 +54,9 @@ function GenerationModeSelectField() {
         const modes = ['Random'];
         if (gameData.enableSRLv5) {
             modes.push('SRLv5');
+        }
+        if (gameData.difficultyVariantsEnabled) {
+            modes.push('Difficulty');
         }
         return modes;
     }, [game]);
@@ -84,6 +87,59 @@ function GenerationModeSelectField() {
     );
 }
 
+function DifficultySelectField() {
+    const {
+        values: { game, generationMode },
+    } = useFormikContext<{ game: string; generationMode: string }>();
+    const [field] = useField<string>('difficulty');
+
+    const difficulties = useAsync(async () => {
+        if (!game) {
+            return [];
+        }
+
+        const res = await fetch(`/api/games/${game}`);
+        if (!res.ok) {
+            return [];
+        }
+        const gameData: Game = await res.json();
+        return gameData.difficultyVariantsEnabled
+            ? (gameData.difficultyVariants ?? [])
+            : [];
+    }, [game]);
+
+    if (
+        difficulties.loading ||
+        difficulties.error ||
+        !difficulties.value ||
+        difficulties.value.length === 0 ||
+        generationMode !== 'Difficulty'
+    ) {
+        return null;
+    }
+
+    return (
+        <FormControl>
+            <InputLabel id="difficulty-label">Difficulty</InputLabel>
+            <Select
+                id="difficulty"
+                labelId="difficulty-label"
+                name="difficulty"
+                value={field.value}
+                onBlur={field.onBlur}
+                onChange={field.onChange}
+                fullWidth
+            >
+                {difficulties.value.map((difficulty) => (
+                    <MenuItem key={difficulty.id} value={difficulty.id}>
+                        {difficulty.name}
+                    </MenuItem>
+                ))}
+            </Select>
+        </FormControl>
+    );
+}
+
 export default function RoomCreateForm() {
     const { data: games, isLoading } = useApi<Game[]>('/api/games');
     const router = useRouter();
@@ -107,6 +163,7 @@ export default function RoomCreateForm() {
                 mode: '',
                 seed: undefined,
                 generationMode: '',
+                difficulty: '',
             }}
             validationSchema={roomValidationSchema}
             onSubmit={async (values) => {
@@ -183,6 +240,8 @@ export default function RoomCreateForm() {
                         />
                     </div>
                 </div> */}
+                    <GenerationModeSelectField />
+                    <DifficultySelectField />
                     <Accordion>
                         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                             Advanced Generation Options
@@ -202,7 +261,6 @@ export default function RoomCreateForm() {
                                 inputMode="numeric"
                                 fullWidth
                             />
-                            <GenerationModeSelectField />
                         </AccordionDetails>
                     </Accordion>
                     <Box display="flex">

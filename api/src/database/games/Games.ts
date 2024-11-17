@@ -256,3 +256,12 @@ export const deleteDifficultyVariant = (id: string) => {
         where: { id: id },
     });
 };
+
+export const getDifficultyVariant = (id: string) => {
+    return prisma.difficultyVariant.findUnique({ where: { id } });
+};
+
+export const getDifficultyGroupCount = async (slug: string) => {
+    return (await prisma.game.findUnique({ where: { slug } }))
+        ?.difficultyGroups;
+};
