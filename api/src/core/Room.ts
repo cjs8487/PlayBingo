@@ -159,11 +159,15 @@ export default class Room {
                         return max;
                     }, 0);
                     const groupSize = maxDifficulty / numGroups;
+                    const emptyGroupedGoals = [];
+                    for (let i = 0; i < numGroups; i++) {
+                        emptyGroupedGoals.push([]);
+                    }
                     const groupedGoals = goals.reduce<Goal[][]>(
                         (curr, goal) => {
                             if (goal.difficulty && goal.difficulty > 0) {
                                 const grpIdx = Math.floor(
-                                    goal.difficulty / groupSize,
+                                    (goal.difficulty - 1) / groupSize,
                                 );
 
                                 goal.goal = `${goal.goal} (${goal.difficulty} => ${grpIdx})`;
@@ -173,12 +177,12 @@ export default class Room {
                             }
                             return curr;
                         },
-                        Array(numGroups).fill([]),
+                        emptyGroupedGoals,
                     );
                     goalList = [];
                     groupedGoals.forEach((group, index) => {
                         shuffle(group);
-                        const toAdd = goals.splice(
+                        const toAdd = group.splice(
                             0,
                             variant.goalAmounts[index],
                         );
