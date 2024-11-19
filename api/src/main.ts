@@ -15,7 +15,8 @@ declare module 'express-session' {
     }
 }
 
-const app = express();
+// export is needed for tests
+export const app = express();
 
 // configure session store
 const sessionDb: DB = new Database('sessions.db');
