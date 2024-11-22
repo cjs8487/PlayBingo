@@ -15,7 +15,6 @@
     "ts-node": {
         "esm": true
     },
-    "include": ["src/**/*.ts", "src/**/*.d.ts", "src/main.ts", "prisma/seed.ts", "src/tests/*.test.ts"],
-    "exclude": [
-        "src/tests/**/*", "src/coverage/**/*"]
+    "include": ["src/**/*.ts", "src/**/*.d.ts", "src/main.ts", "prisma/seed.ts"],
+    "exclude": ["src/coverage/**/*"]
 }

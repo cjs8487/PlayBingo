@@ -15,7 +15,7 @@
         "db:generate-client": "prisma generate",
         "docker:up": "docker compose up -d",
         "docker:down": "docker compose down",
-        "test": "npm run docker:up && npm run db:migrate && jest -i"
+        "test": "jest --config=./build/src/tests/test.config.js"
     },
     "author": "",
     "license": "ISC",
@@ -47,6 +47,7 @@
         "@types/jsonwebtoken": "^9.0.5",
         "@types/node": "^18.18.0",
         "@types/nodemailer-express-handlebars": "^4.0.5",
+        "@types/supertest": "^6.0.2",
         "@types/ws": "^8.5.10",
         "@typescript-eslint/eslint-plugin": "^6.13.2",
         "@typescript-eslint/parser": "^6.13.2",
