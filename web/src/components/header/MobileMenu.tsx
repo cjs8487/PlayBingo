@@ -3,6 +3,9 @@ import { Box, IconButton, Menu, MenuItem, Typography } from '@mui/material';
 import { useState } from 'react';
 import { pages } from './Header';
 import Link from 'next/link';
+import logo from '../../images/playbingologo.png';
+import LinkButton from '../LinkButton';
+import Image from 'next/image';
 
 export default function MobileMenu() {
     const [anchorElNav, setAnchorElNav] = useState<null | HTMLElement>(null);
@@ -16,7 +19,7 @@ export default function MobileMenu() {
     };
     return (
         <>
-            <Box display="flex" justifyItems="center" mr={1}>
+            <Box display="flex" justifyItems="center">
                 <IconButton
                     size="large"
                     aria-label="account of current user"
@@ -53,21 +56,9 @@ export default function MobileMenu() {
                     ))}
                 </Menu>
             </Box>
-            <Typography
-                variant="h5"
-                noWrap
-                component={Link}
-                href="/"
-                sx={{
-                    fontFamily: 'monospace',
-                    fontWeight: 700,
-                    letterSpacing: '.1rem',
-                    color: 'inherit',
-                    textDecoration: 'none',
-                }}
-            >
-                PlayBingo
-            </Typography>
+            <LinkButton href="/">
+                <Image src={logo} alt="PlayBingo logo" height={52} />
+            </LinkButton>
             <Box flexGrow={1} />
         </>
     );
