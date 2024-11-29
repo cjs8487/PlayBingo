@@ -23,6 +23,7 @@ import { Game } from '../../types/Game';
 import HoverIcon from '../HoverIcon';
 import FormikSwitch from '../input/FormikSwitch';
 import FormikTextField from '../input/FormikTextField';
+import NumberInput from '../input/NumberInput';
 
 async function validateRacetimeCategory(value: string) {
     if (value) {
@@ -115,6 +116,9 @@ export default function GameSettings({ gameData }: GameSettingsProps) {
                     enableSRLv5: gameData.enableSRLv5,
                     racetimeCategory: gameData.racetimeCategory,
                     racetimeGoal: gameData.racetimeGoal,
+                    difficultyVariantsEnabled:
+                        gameData.difficultyVariantsEnabled,
+                    difficultyGroups: gameData.difficultyGroups ?? 0,
                 }}
                 onSubmit={async ({
                     name,
@@ -122,6 +126,8 @@ export default function GameSettings({ gameData }: GameSettingsProps) {
                     enableSRLv5,
                     racetimeCategory,
                     racetimeGoal,
+                    difficultyVariantsEnabled,
+                    difficultyGroups,
                 }) => {
                     const res = await fetch(`/api/games/${gameData.slug}`, {
                         method: 'POST',
@@ -134,6 +140,8 @@ export default function GameSettings({ gameData }: GameSettingsProps) {
                             enableSRLv5,
                             racetimeCategory,
                             racetimeGoal,
+                            difficultyVariantsEnabled,
+                            difficultyGroups,
                         }),
                     });
                     if (!res.ok) {
@@ -181,6 +189,58 @@ export default function GameSettings({ gameData }: GameSettingsProps) {
                                     the category overlap.
                                 </Typography>
                             </HoverIcon>
+                        </Box>
+                        <Box display="flex" alignItems="center" columnGap={3}>
+                            <Box display="flex" alignItems="center">
+                                <FormikSwitch
+                                    id="game-difficulty-variants-switch"
+                                    label="Enable Difficulty Variants"
+                                    name="difficultyVariantsEnabled"
+                                />
+                                <HoverIcon icon={<Info />}>
+                                    <Typography variant="caption">
+                                        Difficulty varaints are a special type
+                                        of variants that modify generation
+                                        instead of the goal list. Difficulty
+                                        variants modify how many goals from a
+                                        given difficulty are selected during
+                                        generation, which can impact the
+                                        difficulty or length of the final board.
+                                        When a difficulty variant is chosen,
+                                        only the Random generation mode is
+                                        available.
+                                    </Typography>
+                                </HoverIcon>
+                            </Box>
+                            <Box
+                                display="flex"
+                                alignItems="center"
+                                columnGap={1}
+                            >
+                                <NumberInput
+                                    name="difficultyGroups"
+                                    label="Difficulty Groups"
+                                    min={0}
+                                    max={25}
+                                />
+                                <HoverIcon icon={<Info />}>
+                                    <Typography variant="caption">
+                                        Difficulty groups is the number of
+                                        groups goals are grouped into for
+                                        generating a board for a difficulty
+                                        variant. The available goal difficulties
+                                        will be split into equal sized groups
+                                        based on this number. For example, if
+                                        there are 5 groups and 25 difficulties,
+                                        every 5 difficulties would be a group
+                                        (1-5, 6-10, etc.). Setting this to 0 is
+                                        equivalent to disabling difficulty
+                                        variants, as the generator will be
+                                        unable to generate a board with 0
+                                        groups.
+                                    </Typography>
+                                </HoverIcon>
+                            </Box>
                         </Box>
                         {gameData.racetimeBeta && <RacetimeSettings />}
                         <Box pt={1} display="flex">

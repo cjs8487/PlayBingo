@@ -15,6 +15,21 @@
         "enableSRLv5": {"type": "boolean"},
         "racetimeBeta": {"type": "boolean"},
         "racetimeCategory": {"type": "string"},
-        "racetimeGoal": {"type": "string"}
+        "racetimeGoal": {"type": "string"},
+        "difficultyVariantsEnabled": {"type": "boolean"},
+        "difficultyVariants": {"type": "array", "items": {"$ref": "#/$defs/DifficultyVariant" }},
+        "difficultyGroups": {"type": "number"}
+    },
+    "$defs": {
+        "DifficultyVariant": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name"],
+            "properties": {
+                "id": {"type": "string"},
+                "name": {"type": "string"},
+                "goalAmounts": {"type": "array", "items": {"type": "number"}}
+            }
+        }
     }
 }

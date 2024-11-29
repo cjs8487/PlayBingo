@@ -13,7 +13,7 @@ export default function FormikSwitch({ id, name, label }: FormikSwitchProps) {
         <FormControlLabel
             control={
                 <Switch
-                    value={field.value}
+                    checked={field.value}
                     onChange={(e) => helpers.setValue(e.target.checked)}
                     onBlur={field.onBlur}
                 />
