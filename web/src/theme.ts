@@ -1,6 +1,5 @@
 'use client';
 import { createTheme } from '@mui/material/styles';
-import zIndex from '@mui/material/styles/zIndex';
 import { Roboto } from 'next/font/google';
 
 const roboto = Roboto({
@@ -13,7 +12,7 @@ const theme = createTheme({
     palette: {
         mode: 'dark',
         primary: {
-            main: '#627fbe',
+            main: '#b769fa',
         },
         secondary: {
             main: '#600011',
