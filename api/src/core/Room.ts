@@ -169,8 +169,6 @@ export default class Room {
                                 const grpIdx = Math.floor(
                                     (goal.difficulty - 1) / groupSize,
                                 );
-
-                                goal.goal = `${goal.goal} (${goal.difficulty} => ${grpIdx})`;
                                 if (grpIdx < numGroups) {
                                     curr[grpIdx].push(goal);
                                 }
