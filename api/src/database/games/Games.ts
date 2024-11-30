@@ -82,7 +82,25 @@ export const createGame = async (
 };
 
 export const deleteGame = (slug: string) => {
-    return prisma.game.delete({ where: { slug } });
+    return prisma.$transaction([
+        prisma.goalVariant.deleteMany({
+            where: { variant: { game: { slug } } },
+        }),
+        prisma.variant.deleteMany({ where: { game: { slug } } }),
+        prisma.goal.deleteMany({ where: { game: { slug } } }),
+        prisma.difficultyVariant.deleteMany({ where: { game: { slug } } }),
+        prisma.game.update({
+            where: { slug },
+            data: {
+                owners: { set: [] },
+                moderators: { set: [] },
+                usersFavorited: { set: [] },
+            },
+        }),
+        prisma.roomAction.deleteMany({ where: { room: { game: { slug } } } }),
+        prisma.room.deleteMany({ where: { game: { slug } } }),
+        prisma.game.delete({ where: { slug } }),
+    ]);
 };
 
 export const goalCount = async (slug: string) => {
