@@ -5,11 +5,11 @@
  * and run json-schema-to-typescript to regenerate this file.
  */
 
-/**
- * An incoming websocket message from the server telling the client of a change in room state or instructing it to take an action
- */
-export interface Board {
+export type Board = RevealedBoard | HiddenBoard;
+
+export interface RevealedBoard {
   board: Cell[][];
+  hidden?: false;
 }
 /**
  * An incoming websocket message from the server telling the client of a change in room state or instructing it to take an action
@@ -18,4 +18,7 @@ export interface Cell {
   goal: string;
   description: string;
   colors: string[];
+}
+export interface HiddenBoard {
+  hidden: true;
 }

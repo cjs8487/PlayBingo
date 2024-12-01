@@ -2,9 +2,25 @@
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "type": "object",
     "additionalProperties": false,
-    "required": ["board"],
-    "description": "An incoming websocket message from the server telling the client of a change in room state or instructing it to take an action",
-    "properties": {
-        "board": {"type": "array", "items": {"type": "array", "items": {"$ref": "./Cell.json"}}}
+    "anyOf": [
+        {"$ref": "#/$defs/RevealedBoard"},
+        {"$ref": "#/$defs/HiddenBoard"}
+    ],
+    "$defs": {
+        "RevealedBoard": {
+            "additionalProperties": false,
+            "required": ["board"],
+            "properties": {
+                "board": {"type": "array", "items": {"type": "array", "items": {"$ref": "./Cell.json"}}},
+                "hidden": { "enum": [ false ]}
+            }
+        },
+        "HiddenBoard": {
+            "additionalProperties": false,
+            "required": ["hidden"],
+            "properties": {
+                "hidden": { "enum": [ true ]}
+            }
+        }
     }
 }
