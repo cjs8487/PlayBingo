@@ -102,6 +102,12 @@ roomWebSocketServer.on('connection', (ws, req) => {
             case 'newCard':
                 room.handleNewCard(action);
                 break;
+            case 'revealCard':
+                const board = room.handleRevealCard(payload);
+                if (board) {
+                    ws.send(JSON.stringify({ action: 'syncBoard', board }));
+                }
+                break;
         }
     });
     ws.on('close', () => {

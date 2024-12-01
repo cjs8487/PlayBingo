@@ -14,7 +14,8 @@
         {"$ref": "#/$defs/MarkAction"},
         {"$ref": "#/$defs/UnmarkAction"},
         {"$ref": "#/$defs/ChangeColorAction"},
-        {"$ref": "#/$defs/NewCardAction"}
+        {"$ref": "#/$defs/NewCardAction"},
+        {"$ref": "#/$defs/RevealCardAction"}
     ],
     "$defs": {
         "JoinAction": {
@@ -110,6 +111,13 @@
                             "difficulty": {"type": "string"}
                     }
                 }
+            }
+        },
+        "RevealCardAction": {
+            "required": ["action"],
+            "additionalProperties": false,
+            "properties": {
+                "action": "revealCard"
             }
         }
     }

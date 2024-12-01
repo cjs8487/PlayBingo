@@ -22,9 +22,9 @@ import {
     UnmarkAction,
 } from '../types/RoomAction';
 import {
-    Board,
     ChatMessage,
     Player,
+    RevealedBoard,
     ServerMessage,
 } from '../types/ServerMessage';
 import { shuffle } from '../util/Array';
@@ -83,10 +83,11 @@ export default class Room {
     password: string;
     slug: string;
     connections: Map<string, WebSocket>;
-    board: Board;
+    board: RevealedBoard;
     identities: Map<string, RoomIdentity>;
     chatHistory: ChatMessage[];
     id: string;
+    hideCard: boolean;
 
     lastGenerationMode: BoardGenerationOptions;
 
@@ -100,6 +101,7 @@ export default class Room {
         slug: string,
         password: string,
         id: string,
+        hideCard: boolean,
         racetimeEligible: boolean,
         racetimeUrl?: string,
     ) {
@@ -120,11 +122,14 @@ export default class Room {
 
         this.board = {
             board: [],
+            hidden: false,
         };
 
         if (racetimeUrl) {
             this.racetimeHandler.connect(racetimeUrl);
         }
+
+        this.hideCard = hideCard;
     }
 
     async generateBoard(options: BoardGenerationOptions) {
@@ -273,7 +278,7 @@ export default class Room {
         addJoinAction(this.id, identity.nickname, identity.color).then();
         return {
             action: 'connected',
-            board: this.board,
+            board: this.hideCard ? { hidden: true } : this.board,
             chatHistory: this.chatHistory,
             nickname: identity.nickname,
             color: identity.color,
@@ -484,6 +489,21 @@ export default class Room {
             },
         });
     }
+
+    handleRevealCard(payload: RoomTokenPayload) {
+        const identity = this.identities.get(payload.uuid);
+        if (!identity) {
+            return null;
+        }
+        this.sendChat([
+            {
+                contents: identity.nickname,
+                color: identity.color,
+            },
+            'has revealed the card.',
+        ]);
+        return this.board;
+    }
     //#endregion
 
     sendChat(message: string): void;
@@ -509,7 +529,10 @@ export default class Room {
     }
 
     sendSyncBoard() {
-        this.sendServerMessage({ action: 'syncBoard', board: this.board });
+        this.sendServerMessage({
+            action: 'syncBoard',
+            board: this.hideCard ? { hidden: true } : this.board,
+        });
     }
 
     sendRaceData(data: RaceData) {

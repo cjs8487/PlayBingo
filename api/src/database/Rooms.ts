@@ -8,6 +8,7 @@ export const createRoom = (
     game: string,
     isPrivate: boolean,
     password: string,
+    hideCard: boolean,
 ) => {
     return prisma.room.create({
         data: {
@@ -16,6 +17,7 @@ export const createRoom = (
             private: isPrivate,
             game: { connect: { id: game } },
             password,
+            hideCard,
         },
     });
 };

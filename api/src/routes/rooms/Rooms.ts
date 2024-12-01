@@ -61,6 +61,7 @@ rooms.post('/', async (req, res) => {
         password,
         /*variant, mode,*/ generationMode,
         difficulty,
+        hideCard,
     } = req.body;
 
     if (!name || !game || !nickname /*|| !variant || !mode*/) {
@@ -88,7 +89,14 @@ rooms.post('/', async (req, res) => {
         slugList[randomInt(0, slugList.length)]
     }-${randomInt(1000, 10000)}`;
 
-    const dbRoom = await createRoom(slug, name, gameData.id, false, password);
+    const dbRoom = await createRoom(
+        slug,
+        name,
+        gameData.id,
+        false,
+        password,
+        hideCard,
+    );
     const room = new Room(
         name,
         gameData.name,
@@ -96,6 +104,7 @@ rooms.post('/', async (req, res) => {
         slug,
         password,
         dbRoom.id,
+        hideCard,
         gameData.racetimeBeta &&
             !!gameData.racetimeCategory &&
             !!gameData.racetimeGoal,
@@ -152,6 +161,7 @@ rooms.get('/:slug', async (req, res) => {
         dbRoom.slug,
         dbRoom.password ?? '',
         dbRoom.id,
+        dbRoom.hideCard,
         (dbRoom.game.racetimeBeta &&
             !!dbRoom.game.racetimeCategory &&
             !!dbRoom.game.racetimeGoal) ||

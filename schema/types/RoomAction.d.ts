@@ -16,6 +16,7 @@ export type RoomAction = (
   | UnmarkAction
   | ChangeColorAction
   | NewCardAction
+  | RevealCardAction
 ) & {
   /**
    * JWT for the room obtained from the server
@@ -65,4 +66,7 @@ export interface NewCardAction {
     mode: string;
     difficulty?: string;
   };
+}
+export interface RevealCardAction {
+  action: "revealCard";
 }
