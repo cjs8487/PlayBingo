@@ -21,6 +21,7 @@ import * as yup from 'yup';
 import { useApi } from '../lib/Hooks';
 import FormikSelectFieldAutocomplete from './input/FormikSelectFieldAutocomplete';
 import FormikTextField from './input/FormikTextField';
+import FormikSwitch from './input/FormikSwitch';
 
 const roomValidationSchema = yup.object().shape({
     name: yup.string().required('Room name is required'),
@@ -164,6 +165,7 @@ export default function RoomCreateForm() {
                 seed: undefined,
                 generationMode: '',
                 difficulty: '',
+                hideCard: false,
             }}
             validationSchema={roomValidationSchema}
             onSubmit={async (values) => {
@@ -242,6 +244,11 @@ export default function RoomCreateForm() {
                 </div> */}
                     <GenerationModeSelectField />
                     <DifficultySelectField />
+                    <FormikSwitch
+                        id="hide-card"
+                        name="hideCard"
+                        label="Hide card initially?"
+                    />
                     <Accordion>
                         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                             Advanced Generation Options
