@@ -9,7 +9,7 @@ import {
     useState,
     useSyncExternalStore,
 } from 'react';
-import { useLatest } from 'react-use';
+import { useLatest, useList } from 'react-use';
 import useWebSocket from 'react-use-websocket';
 import {
     emitBoardUpdate,
@@ -21,6 +21,7 @@ import { Board, Cell } from '../types/Board';
 import { RoomData } from '../types/RoomData';
 import { ChatMessage, Player, ServerMessage } from '../types/ServerMessage';
 import { alertError } from '../lib/Utils';
+import { number } from 'yup';
 
 const websocketBase = (process.env.NEXT_PUBLIC_API_PATH ?? '').replace(
     'http',
@@ -49,6 +50,7 @@ interface RoomContext {
     roomData?: RoomData;
     nickname: string;
     players: Player[];
+    starredGoals: number[];
     connect: (
         nickname: string,
         password: string,
@@ -64,6 +66,7 @@ interface RoomContext {
     joinRacetimeRoom: () => void;
     racetimeReady: () => void;
     racetimeUnready: () => void;
+    toggleGoalStar: (row: number, col: number) => void;
 }
 
 export const RoomContext = createContext<RoomContext>({
@@ -73,6 +76,7 @@ export const RoomContext = createContext<RoomContext>({
     color: 'blue',
     nickname: '',
     players: [],
+    starredGoals: [],
     async connect() {
         return { success: false };
     },
@@ -87,6 +91,7 @@ export const RoomContext = createContext<RoomContext>({
     joinRacetimeRoom() {},
     racetimeReady() {},
     racetimeUnready() {},
+    toggleGoalStar() {},
 });
 
 interface RoomContextProps {
@@ -106,6 +111,8 @@ export function RoomContextProvider({ slug, children }: RoomContextProps) {
     const [roomData, setRoomData] = useState<RoomData>();
     const [loading, setLoading] = useState(true);
     const [players, setPlayers] = useState<Player[]>([]);
+
+    const [starredGoals, { push, clear, filter }] = useList<number>([]);
 
     const latestConnectionStatus = useLatest(connectionStatusState);
     const connectionStatus = latestConnectionStatus.current;
@@ -388,6 +395,17 @@ export function RoomContextProvider({ slug, children }: RoomContextProps) {
             return;
         }
     }, [roomData, authToken]);
+    const toggleGoalStar = useCallback(
+        (row: number, col: number) => {
+            const index = row * 5 + col;
+            if (starredGoals.includes(index)) {
+                filter((idx) => idx !== index);
+            } else {
+                push(index);
+            }
+        },
+        [starredGoals, push, filter],
+    );
 
     // effects
     // slug changed, try to establish initial connection from storage
@@ -441,6 +459,7 @@ export function RoomContextProvider({ slug, children }: RoomContextProps) {
                 roomData,
                 nickname,
                 players,
+                starredGoals,
                 connect,
                 sendChatMessage,
                 markGoal,
@@ -453,6 +472,7 @@ export function RoomContextProvider({ slug, children }: RoomContextProps) {
                 joinRacetimeRoom,
                 racetimeReady,
                 racetimeUnready,
+                toggleGoalStar,
             }}
         >
             {children}
