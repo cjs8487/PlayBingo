@@ -101,6 +101,7 @@ export default class Room {
         slug: string,
         password: string,
         id: string,
+        hideCard: boolean,
         racetimeEligible: boolean,
         racetimeUrl?: string,
     ) {
@@ -128,7 +129,7 @@ export default class Room {
             this.racetimeHandler.connect(racetimeUrl);
         }
 
-        this.hideCard = true;
+        this.hideCard = hideCard;
     }
 
     async generateBoard(options: BoardGenerationOptions) {
