@@ -46,7 +46,7 @@ rooms.get('/', async (req, res) => {
         res.json(
             (await getFullRoomList()).map((room) => ({
                 name: room.name,
-                game: room.game.name,
+                game: room.game?.name ?? 'Deleted Game',
                 slug: room.slug,
             })),
         );
@@ -147,12 +147,12 @@ rooms.get('/:slug', async (req, res) => {
     }
     const room = new Room(
         dbRoom.name,
-        dbRoom.game.name,
-        dbRoom.game.slug,
+        dbRoom.game?.name ?? 'Deleted Game',
+        dbRoom.game?.slug ?? '',
         dbRoom.slug,
         dbRoom.password ?? '',
         dbRoom.id,
-        (dbRoom.game.racetimeBeta &&
+        (dbRoom.game?.racetimeBeta &&
             !!dbRoom.game.racetimeCategory &&
             !!dbRoom.game.racetimeGoal) ||
             !!dbRoom.racetimeRoom,

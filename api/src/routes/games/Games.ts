@@ -6,6 +6,7 @@ import {
     createDifficultyVariant,
     createGame,
     deleteDifficultyVariant,
+    deleteGame,
     favoriteGame,
     gameForSlug,
     isModerator,
@@ -413,6 +414,23 @@ games.delete('/:slug/difficultyVariants/:id', async (req, res) => {
 
     const result = await deleteDifficultyVariant(id);
     res.status(200).send(result);
+});
+
+games.delete('/:slug', async (req, res) => {
+    if (!req.session.user) {
+        res.sendStatus(401);
+        return;
+    }
+
+    const { slug } = req.params;
+
+    if (!isOwner(slug, req.session.user)) {
+        res.sendStatus(403);
+        return;
+    }
+
+    const result = await deleteGame(slug);
+    res.status(200).json(result);
 });
 
 export default games;

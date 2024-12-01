@@ -18,12 +18,15 @@ import {
 } from 'formik';
 import { useAsync } from 'react-use';
 import { mutate } from 'swr';
-import { alertError } from '../../lib/Utils';
+import { alertError, notifyMessage } from '../../lib/Utils';
 import { Game } from '../../types/Game';
 import HoverIcon from '../HoverIcon';
 import FormikSwitch from '../input/FormikSwitch';
 import FormikTextField from '../input/FormikTextField';
 import NumberInput from '../input/NumberInput';
+import Delete from '@mui/icons-material/Delete';
+import { useConfirm } from 'material-ui-confirm';
+import { useRouter } from 'next/navigation';
 
 async function validateRacetimeCategory(value: string) {
     if (value) {
@@ -104,11 +107,49 @@ interface GameSettingsProps {
 }
 
 export default function GameSettings({ gameData }: GameSettingsProps) {
+    const confirm = useConfirm();
+    const router = useRouter();
     return (
         <div>
-            <Typography variant="h5" align="center">
-                Game Settings
-            </Typography>
+            <Box display="flex">
+                <Typography variant="h5" align="center" flexGrow={1}>
+                    Game Settings
+                </Typography>
+                <Button
+                    sx={{ float: 'right' }}
+                    color="error"
+                    startIcon={<Delete />}
+                    onClick={async () => {
+                        try {
+                            await confirm({
+                                title: 'Delete game?',
+                                description:
+                                    'Are you sure you want to delete this game? This cannot be undone.',
+                                confirmationText: 'Delete',
+                                confirmationButtonProps: {
+                                    color: 'error',
+                                },
+                            });
+                            const res = await fetch(
+                                `/api/games/${gameData.slug}`,
+                                { method: 'DELETE' },
+                            );
+                            if (!res.ok) {
+                                alertError(
+                                    `Unable to delete game - ${await res.text()}`,
+                                );
+                                return;
+                            }
+                            router.push('/games');
+                            notifyMessage('Game deleted');
+                        } catch {
+                            // do nothing when dialog is canceled/dismissed
+                        }
+                    }}
+                >
+                    Delete Game
+                </Button>
+            </Box>
             <Formik
                 initialValues={{
                     name: gameData.name,

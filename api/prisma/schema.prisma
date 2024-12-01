@@ -112,8 +112,8 @@ model Room {
   private      Boolean
   password     String?
   history      RoomAction[]
-  game         Game         @relation(fields: [gameId], references: [id])
-  gameId       String
+  game         Game?        @relation(fields: [gameId], references: [id])
+  gameId       String?
   board        String[]
   racetimeRoom String?
 }
