@@ -98,7 +98,6 @@ export const deleteGame = (slug: string) => {
             },
         }),
         prisma.roomAction.deleteMany({ where: { room: { game: { slug } } } }),
-        prisma.room.deleteMany({ where: { game: { slug } } }),
         prisma.game.delete({ where: { slug } }),
     ]);
 };
