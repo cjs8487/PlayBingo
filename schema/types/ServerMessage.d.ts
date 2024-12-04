@@ -46,6 +46,9 @@ export type ServerMessage = (
       players: Player[];
       racetimeConnection: RacetimeConnection;
     }
+  | {
+      action: "forbidden";
+    }
 ) & {
   players?: Player[];
 };

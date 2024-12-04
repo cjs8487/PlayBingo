@@ -54,6 +54,7 @@ interface RoomContext {
     connect: (
         nickname: string,
         password: string,
+        spectator: boolean,
     ) => Promise<{ success: boolean; message?: string }>;
     sendChatMessage: (message: string) => void;
     markGoal: (row: number, col: number) => void;
@@ -265,11 +266,11 @@ export function RoomContextProvider({ slug, children }: RoomContextProps) {
         [sendJsonMessage],
     );
     const connect = useCallback(
-        async (nickname: string, password: string) => {
+        async (nickname: string, password: string, spectator: boolean) => {
             const res = await fetch(`/api/rooms/${slug}/authorize`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ password }),
+                body: JSON.stringify({ password, spectator }),
             });
             if (!res.ok) {
                 if (res.status === 403) {

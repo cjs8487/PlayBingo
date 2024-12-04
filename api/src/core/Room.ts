@@ -279,10 +279,14 @@ export default class Room {
                 return { action: 'unauthorized' };
             }
         }
-        this.sendChat([
-            { contents: identity.nickname, color: identity.color },
-            ' has joined.',
-        ]);
+        if (auth.isSpectating) {
+            this.sendChat(`${identity.nickname} is now spectating`);
+        } else {
+            this.sendChat([
+                { contents: identity.nickname, color: identity.color },
+                ' has joined.',
+            ]);
+        }
 
         this.connections.set(auth.uuid, socket);
         addJoinAction(this.id, identity.nickname, identity.color).then();

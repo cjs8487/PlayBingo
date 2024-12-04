@@ -1,5 +1,5 @@
 import { WebSocketServer } from 'ws';
-import { verifyRoomToken } from '../auth/RoomAuth';
+import { hasPermission, verifyRoomToken } from '../auth/RoomAuth';
 import { RoomAction } from '../types/RoomAction';
 import Room from './Room';
 
@@ -61,6 +61,11 @@ roomWebSocketServer.on('connection', (ws, req) => {
         if (action.action === 'join') {
             clearTimeout(timeout);
             ws.send(JSON.stringify(room.handleJoin(action, payload, ws)));
+        }
+
+        // helpers
+        if (!hasPermission(action.action, payload)) {
+            return ws.send(JSON.stringify({ action: 'forbidden' }));
         }
 
         switch (action.action) {
