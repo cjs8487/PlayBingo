@@ -49,6 +49,7 @@ rooms.post('/', async (req, res) => {
         /*variant, mode,*/ generationMode,
         difficulty,
         hideCard,
+        spectator,
     } = req.body;
 
     if (!name || !game || !nickname /*|| !variant || !mode*/) {
@@ -128,7 +129,7 @@ rooms.post('/', async (req, res) => {
     await room.generateBoard(genMode);
     allRooms.set(slug, room);
 
-    const token = createRoomToken(room);
+    const token = createRoomToken(room, { isSpectating: spectator });
 
     res.status(200).json({ slug, authToken: token });
 });
@@ -221,7 +222,7 @@ rooms.get('/:slug', async (req, res) => {
 
 rooms.post('/:slug/authorize', (req, res) => {
     const { slug } = req.params;
-    const { password } = req.body;
+    const { password, spectator } = req.body;
     const room = allRooms.get(slug);
     if (!room) {
         res.sendStatus(404);
@@ -231,7 +232,8 @@ rooms.post('/:slug/authorize', (req, res) => {
         res.sendStatus(403);
         return;
     }
-    const token = createRoomToken(room);
+
+    const token = createRoomToken(room, { isSpectating: spectator });
     res.status(200).send({ authToken: token });
 });
 

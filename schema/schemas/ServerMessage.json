@@ -76,6 +76,13 @@
                 "players":  {"type": "array", "items": {"$ref": "./Player.json"}},
                 "racetimeConnection": {"$ref": "./RoomData.json#/$defs/RacetimeConnection"}
             }
+        },
+        {
+            "required": ["action"],
+            "additionalProperties": false,
+            "properties": {
+                "action": "forbidden"
+            }
         }
     ]
 }
