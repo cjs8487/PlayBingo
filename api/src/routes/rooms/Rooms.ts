@@ -131,7 +131,10 @@ rooms.post('/', async (req, res) => {
     await room.generateBoard(options);
     allRooms.set(slug, room);
 
-    const token = createRoomToken(room, { isSpectating: spectator });
+    const token = createRoomToken(room, {
+        isSpectating: spectator,
+        isMonitor: true,
+    });
 
     res.status(200).json({ slug, authToken: token });
 });
