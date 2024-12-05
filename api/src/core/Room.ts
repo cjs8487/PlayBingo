@@ -42,6 +42,8 @@ type RoomIdentity = {
     nickname: string;
     color: string;
     racetimeId?: string;
+    spectator: boolean;
+    monitor: boolean;
 };
 
 export enum BoardGenerationMode {
@@ -255,6 +257,8 @@ export default class Room {
                           finishTime: rtUser.finish_time ?? undefined,
                       }
                     : { connected: false },
+                spectator: i.spectator,
+                monitor: i.monitor,
             });
         });
         return players;
@@ -271,6 +275,8 @@ export default class Room {
             identity = {
                 nickname: action.payload.nickname,
                 color: 'blue',
+                spectator: auth.isSpectating,
+                monitor: auth.isMonitor,
             };
             this.identities.set(auth.uuid, identity);
         } else {

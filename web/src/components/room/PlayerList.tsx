@@ -4,8 +4,15 @@ import { Box, Card, CardContent, CardHeader, Typography } from '@mui/material';
 import { Duration } from 'luxon';
 
 export default function PlayerList() {
-    const { players, roomData, joinRacetimeRoom } = useContext(RoomContext);
+    const {
+        players: allPlayers,
+        roomData,
+        joinRacetimeRoom,
+    } = useContext(RoomContext);
     const racetimeConnected = !!roomData?.racetimeConnection?.url;
+
+    const players = allPlayers.filter((p) => !p.spectator);
+    const spectators = allPlayers.filter((p) => p.spectator);
 
     return (
         <Card
@@ -58,6 +65,18 @@ export default function PlayerList() {
                                     )}
                                 </>
                             )}
+                        </Box>
+                    ))}
+                </Box>
+                <Typography variant="h6" pb={1}>
+                    Spectators
+                </Typography>
+                <Box display="flex" flexDirection="column" rowGap={3}>
+                    {spectators.map((player) => (
+                        <Box key={player.nickname}>
+                            <Box display="flex" columnGap={2}>
+                                <Typography>{player.nickname}</Typography>
+                            </Box>
                         </Box>
                     ))}
                 </Box>
