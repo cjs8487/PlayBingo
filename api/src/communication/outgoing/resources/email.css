@@ -1,0 +1,11 @@
+.mainCard {
+    background-color: lightgrey;
+    padding: 12px 24px 12px 24px;
+    border-radius: 8px;
+    border: 1px solid grey;
+    box-shadow: rgba(149, 157, 165, 0.2) 0px 8px 24px;
+}
+
+.smallText {
+    font-size: small;
+}
