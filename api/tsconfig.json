@@ -10,10 +10,22 @@
         "outDir": "build",
         "baseUrl": "./src",
         "declarationMap": true,
+        "types": [
+            "node"
+        ]
     },
     "ts-node": {
         "esm": true
     },
-    "include": ["src/**/*.ts", "src/**/*.d.ts", "src/main.ts", "prisma/seed.ts"],
-    "exclude": ["src/__tests__/**/*", "src/coverage/**/*"]
+    "include": [
+        "src/**/*.ts",
+        "src/**/*.d.ts",
+        "src/main.ts",
+        "prisma/seed.ts",
+        "prisma/ready.ts"
+    ],
+    "exclude": [
+        "src/__tests__/**/*",
+        "src/coverage/**/*"
+    ]
 }
