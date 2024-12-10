@@ -3,3 +3,6 @@ build-api:
 
 build-web:
 	cd web && docker build -t bingo-web:local -f Containerfile . 
+
+compose:
+	docker compose up --build
