@@ -1,0 +1,16 @@
+FROM node:20
+
+WORKDIR /api
+
+COPY tsconfig.json package.json package-lock.json ./
+COPY ./prisma ./prisma
+COPY .eslintrc ./
+COPY .prettierignore ./
+
+RUN npm i && npm i -g tsx
+
+
+COPY ./src ./src
+COPY start.sh ./
+
+CMD [ "bash", "start.sh" ]
