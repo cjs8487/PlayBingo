@@ -17,6 +17,8 @@ services:
       # SMTP_USER: your-email-address
       # SMTP_PASSWORD: your-email-password
       PORT: 8000
+    # volumes:
+    #   - ./api:/api
     depends_on:
       - database # Optional if you have a database container defined separately
 
@@ -29,6 +31,9 @@ services:
       - "3000:3000" # Map container port to host port
     environment:
       NEXT_PUBLIC_API_PATH: http://api:8000 # Assuming the API service runs on this URL
+      NEXT_PUBLIC_SOCKET_PATH: "ws://localhost:8000" # this needs to be routable from the client
+    # volumes:
+    #   - ./web:/web
     depends_on:
       - api
 
