@@ -6,6 +6,12 @@ const prisma = new PrismaClient();
 async function main() {
     console.log('Seeding database');
 
+    const users = await prisma.user.findMany()
+    if (users.length != 0) {
+        console.log('Database already has some users, skipping seeding')
+        return
+    }
+
     console.log('Creating users');
     await prisma.user.deleteMany();
     const salt = randomBytes(16);
@@ -338,9 +344,8 @@ async function main() {
         },
         ...Array.from({ length: 54 }).map((_, i) => ({
             goal: `Side Quest ${i + 27}`,
-            description: `Complete side quest number ${
-                i + 27
-            } for extra rewards.`,
+            description: `Complete side quest number ${i + 27
+                } for extra rewards.`,
             categories: [realisticCategories[i % realisticCategories.length]],
             difficulty: ((i + 1) % 25) + 1,
         })),

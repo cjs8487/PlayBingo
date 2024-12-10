@@ -22,10 +22,7 @@ import { RoomData } from '../types/RoomData';
 import { ChatMessage, Player, ServerMessage } from '../types/ServerMessage';
 import { alertError } from '../lib/Utils';
 
-const websocketBase = (process.env.NEXT_PUBLIC_API_PATH ?? '').replace(
-    'http',
-    'ws',
-);
+const websocketBase = (process.env.NEXT_PUBLIC_SOCKET_PATH ?? '')
 
 export enum ConnectionStatus {
     UNINITIALIZED, // the room connection is uninitialized and there is no authentication data present
@@ -76,17 +73,17 @@ export const RoomContext = createContext<RoomContext>({
     async connect() {
         return { success: false };
     },
-    sendChatMessage(message) {},
-    markGoal(row, col) {},
-    unmarkGoal(row, col) {},
-    changeColor() {},
-    regenerateCard() {},
-    disconnect() {},
-    createRacetimeRoom() {},
-    updateRacetimeRoom() {},
-    joinRacetimeRoom() {},
-    racetimeReady() {},
-    racetimeUnready() {},
+    sendChatMessage(message) { },
+    markGoal(row, col) { },
+    unmarkGoal(row, col) { },
+    changeColor() { },
+    regenerateCard() { },
+    disconnect() { },
+    createRacetimeRoom() { },
+    updateRacetimeRoom() { },
+    joinRacetimeRoom() { },
+    racetimeReady() { },
+    racetimeUnready() { },
 });
 
 interface RoomContextProps {
@@ -239,7 +236,7 @@ export function RoomContextProvider({ slug, children }: RoomContextProps) {
             },
         },
         connectionStatus === ConnectionStatus.CONNECTING ||
-            connectionStatus === ConnectionStatus.CONNECTED,
+        connectionStatus === ConnectionStatus.CONNECTED,
     );
 
     // actions

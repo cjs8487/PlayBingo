@@ -39,6 +39,7 @@ function.
 
 ##### Web
 - NEXT_PUBLIC_API_PATH is the url that the api service is running at
+- NEXT_PUBLIC_SOCKET_PATH is the url that the web socket is available at
   
 #### Optional
 ##### API

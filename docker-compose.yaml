@@ -1,0 +1,53 @@
+version: "3.9"
+
+services:
+  api:
+    build:
+      context: ./api
+      dockerfile: Containerfile
+    container_name: api
+    ports:
+      - "8000:8000" # Map container port to host port
+    environment:
+      ROOM_TOKEN_SECRET: your-room-token-secret
+      SESSION_SECRET: your-session-secret
+      CLIENT_URL: http://web:3000 # Assuming the Web service runs on this URL
+      DATABASE_URL: postgres://devuser:devpassword@database:5432/devdb
+      # SMTP_HOST: your-smtp-host
+      # SMTP_USER: your-email-address
+      # SMTP_PASSWORD: your-email-password
+      PORT: 8000
+    # volumes:
+    #   - ./api:/api
+    depends_on:
+      - database # Optional if you have a database container defined separately
+
+  web:
+    build:
+      context: ./web
+      dockerfile: Containerfile
+    container_name: web
+    ports:
+      - "3000:3000" # Map container port to host port
+    environment:
+      NEXT_PUBLIC_API_PATH: http://api:8000 # Assuming the API service runs on this URL
+      NEXT_PUBLIC_SOCKET_PATH: "ws://localhost:8000" # this needs to be routable from the client
+    # volumes:
+    #   - ./web:/web
+    depends_on:
+      - api
+
+  database:
+    image: postgres:latest
+    container_name: database
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: devuser
+      POSTGRES_PASSWORD: devpassword
+      POSTGRES_DB: devdb
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
