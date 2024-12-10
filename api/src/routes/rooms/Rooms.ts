@@ -71,9 +71,12 @@ rooms.post('/', async (req, res) => {
         return;
     }
 
-    const slug = `${randomWord(slugAdjectives)}-${randomWord(
-        slugNouns,
-    )}-${randomInt(1000, 10000)}`;
+    const adj = randomWord(slugAdjectives);
+    const noun = randomWord(
+        gameData.slugWords.length > 0 ? gameData.slugWords : slugNouns,
+    );
+    const num = randomInt(1000, 10000);
+    const slug = `${adj}-${noun}-${num}`;
 
     const dbRoom = await createRoom(slug, name, gameData.id, false, password);
     const room = new Room(

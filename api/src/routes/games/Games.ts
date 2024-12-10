@@ -20,6 +20,7 @@ import {
     updateGameName,
     updateRacetimeCategory,
     updateRacetimeGoal,
+    updateSlugWords,
     updateSRLv5Enabled,
 } from '../../database/games/Games';
 import {
@@ -83,6 +84,7 @@ games.post('/:slug', async (req, res) => {
         racetimeGoal,
         difficultyVariantsEnabled,
         difficultyGroups,
+        slugWords,
     } = req.body;
 
     let result = undefined;
@@ -109,6 +111,18 @@ games.post('/:slug', async (req, res) => {
     }
     if (difficultyGroups) {
         result = await updateDifficultyGroups(slug, difficultyGroups);
+    }
+    if (slugWords) {
+        if (!Array.isArray(slugWords)) {
+            return res.status(400).send('Incorrect slug word format');
+        }
+        if (slugWords.length < 50) {
+            return res.status(400).send('Not enough slug words provided');
+        }
+        if (!slugWords.every((word) => word.match(/^[a-zA-Z]*$/))) {
+            return res.status(400).send('Slug words can only contain letters');
+        }
+        result = await updateSlugWords(slug, slugWords);
     }
 
     if (!result) {

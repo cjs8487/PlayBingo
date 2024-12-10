@@ -23,6 +23,7 @@ export interface Game {
   difficultyVariantsEnabled?: boolean;
   difficultyVariants?: DifficultyVariant[];
   difficultyGroups?: number;
+  slugWords?: string[];
 }
 export interface User {
   id: string;
