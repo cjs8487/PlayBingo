@@ -18,7 +18,8 @@
         "racetimeGoal": {"type": "string"},
         "difficultyVariantsEnabled": {"type": "boolean"},
         "difficultyVariants": {"type": "array", "items": {"$ref": "#/$defs/DifficultyVariant" }},
-        "difficultyGroups": {"type": "number"}
+        "difficultyGroups": {"type": "number"},
+        "slugWords": {"type": "array", "items": {"type": "string"}}
     },
     "$defs": {
         "DifficultyVariant": {
