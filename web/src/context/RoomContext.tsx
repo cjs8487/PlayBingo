@@ -252,7 +252,6 @@ export function RoomContextProvider({ slug, children }: RoomContextProps) {
     );
     const connect = useCallback(
         async (nickname: string, password: string) => {
-            console.log("I'm connecting")
             const res = await fetch(`/api/rooms/${slug}/authorize`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -273,7 +272,6 @@ export function RoomContextProvider({ slug, children }: RoomContextProps) {
             setConnectionStatus(ConnectionStatus.CONNECTING);
             setNickname(nickname);
             join(token.authToken, nickname);
-            console.log("I've finished connecting")
             return { success: true };
         },
         [slug, join],
