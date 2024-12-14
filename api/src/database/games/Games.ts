@@ -19,11 +19,13 @@ export const allGames = async (user?: string) => {
                 where: { id: user },
             })
         )?.favoritedGames.map((game) => game.id);
-        return games.map((game) => ({
-            ...game,
-            favorited: favorites?.includes(game.id),
-            isMod: isModerator(game.slug, user),
-        }));
+        return await Promise.all(
+            games.map(async (game) => ({
+                ...game,
+                favorited: favorites?.includes(game.id),
+                isMod: await isModerator(game.slug, user),
+            }))
+        )
     }
     return games.map((game) => ({ ...game, favorite: false }));
 };
