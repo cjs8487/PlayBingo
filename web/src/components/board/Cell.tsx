@@ -4,6 +4,7 @@ import { useCallback, useContext } from 'react';
 import { RoomContext } from '../../context/RoomContext';
 import { Cell } from '../../types/Cell';
 import TextFit from '../TextFit';
+import Star from '@mui/icons-material/Star';
 
 interface CellProps {
     cell: Cell;
@@ -17,7 +18,8 @@ export default function BoardCell({
     col,
 }: CellProps) {
     // context
-    const { color, markGoal, unmarkGoal } = useContext(RoomContext);
+    const { color, markGoal, unmarkGoal, starredGoals, toggleGoalStar } =
+        useContext(RoomContext);
 
     // callbacks
     const toggleSpace = useCallback(() => {
@@ -30,6 +32,7 @@ export default function BoardCell({
 
     // calculations
     const colorPortion = 360 / colors.length;
+    const isStarred = starredGoals.includes(row * 5 + col);
 
     return (
         <Tooltip
@@ -67,6 +70,10 @@ export default function BoardCell({
                     },
                 }}
                 onClick={toggleSpace}
+                onContextMenu={(e) => {
+                    toggleGoalStar(row, col);
+                    e.preventDefault();
+                }}
             >
                 <Box
                     sx={{
@@ -103,6 +110,11 @@ export default function BoardCell({
                         }}
                     />
                 ))}
+                {isStarred && (
+                    <Box sx={{ position: 'absolute', right: 0 }}>
+                        <Star />
+                    </Box>
+                )}
             </Box>
         </Tooltip>
     );
