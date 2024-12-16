@@ -161,6 +161,10 @@ export const updateRacetimeGoal = (slug: string, racetimeGoal: string) => {
     return prisma.game.update({ where: { slug }, data: { racetimeGoal } });
 };
 
+export const updateSlugWords = (slug: string, slugWords: string[]) => {
+    return prisma.game.update({ where: { slug }, data: { slugWords } });
+};
+
 export const getRacetimeConfiguration = (slug: string) => {
     return prisma.game.findUnique({
         select: { racetimeCategory: true, racetimeGoal: true },

@@ -2,21 +2,24 @@ import Info from '@mui/icons-material/Info';
 import {
     Box,
     Button,
+    Chip,
     FormControl,
     InputLabel,
     MenuItem,
     Select,
+    TextField,
     Typography,
 } from '@mui/material';
 import {
     ErrorMessage,
     Field,
+    FieldArray,
     Form,
     Formik,
     useField,
     useFormikContext,
 } from 'formik';
-import { useAsync } from 'react-use';
+import { useAsync, useList } from 'react-use';
 import { mutate } from 'swr';
 import { alertError, notifyMessage } from '../../lib/Utils';
 import { Game } from '../../types/Game';
@@ -160,6 +163,7 @@ export default function GameSettings({ gameData }: GameSettingsProps) {
                     difficultyVariantsEnabled:
                         gameData.difficultyVariantsEnabled,
                     difficultyGroups: gameData.difficultyGroups ?? 0,
+                    slugWords: gameData.slugWords?.join('\n') ?? '',
                 }}
                 onSubmit={async ({
                     name,
@@ -169,6 +173,7 @@ export default function GameSettings({ gameData }: GameSettingsProps) {
                     racetimeGoal,
                     difficultyVariantsEnabled,
                     difficultyGroups,
+                    slugWords,
                 }) => {
                     const res = await fetch(`/api/games/${gameData.slug}`, {
                         method: 'POST',
@@ -183,6 +188,7 @@ export default function GameSettings({ gameData }: GameSettingsProps) {
                             racetimeGoal,
                             difficultyVariantsEnabled,
                             difficultyGroups,
+                            slugWords: slugWords.split('\n'),
                         }),
                     });
                     if (!res.ok) {
@@ -284,6 +290,51 @@ export default function GameSettings({ gameData }: GameSettingsProps) {
                             </Box>
                         </Box>
                         {gameData.racetimeBeta && <RacetimeSettings />}
+                        <Box>
+                            <Box display="flex" columnGap={1}>
+                                <Typography>Slug Words</Typography>
+                                <HoverIcon icon={<Info />}>
+                                    <Typography variant="caption">
+                                        Custom list of words to be used when
+                                        generating room URLs for this category.
+                                        Replaces the second word of the slug,
+                                        which is normally a noun. If provided,
+                                        you must provide at least 50 unique
+                                        words to use, and will completely
+                                        replace the default list. The more words
+                                        you supply, the lower the chance that
+                                        there is a room name collision during
+                                        generation.
+                                    </Typography>
+                                </HoverIcon>
+                            </Box>
+                            <FormikTextField
+                                id="game-slug-words"
+                                name="slugWords"
+                                label=""
+                                rows={7}
+                                multiline
+                                fullWidth
+                                validate={(value: string) => {
+                                    const words = value.split('\n');
+                                    if (words.length < 50) {
+                                        return 'At least 50 words are required';
+                                    }
+                                    let error = '';
+                                    words.forEach((word) => {
+                                        if (!word.match(/^[a-zA-Z]*$/)) {
+                                            error =
+                                                'Slug words can only contain letters';
+                                        }
+                                    });
+                                    return error;
+                                }}
+                            />
+                            <Typography variant="caption">
+                                Enter each word on a new line. No numbers or
+                                special characters are allowed.
+                            </Typography>
+                        </Box>
                         <Box pt={1} display="flex">
                             <Box flexGrow={1} />
                             <Button

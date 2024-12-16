@@ -15,23 +15,10 @@ import { gameForSlug, goalCount } from '../../database/games/Games';
 import { chunk } from '../../util/Array';
 import actions from './Actions';
 import { logWarn } from '../../Logger';
+import { randomWord, slugAdjectives, slugNouns } from '../../util/Words';
 
 const MIN_ROOM_GOALS_REQUIRED = 25;
 const rooms = Router();
-
-const slugList = [
-    'cool',
-    'nimble',
-    'weak',
-    'feeling',
-    'fire',
-    'rapid',
-    'messy',
-    'living',
-    'mill',
-    'flour',
-    'wheat',
-];
 
 rooms.get('/', async (req, res) => {
     const { inactive } = req.query;
@@ -84,9 +71,12 @@ rooms.post('/', async (req, res) => {
         return;
     }
 
-    const slug = `${slugList[randomInt(0, slugList.length)]}-${
-        slugList[randomInt(0, slugList.length)]
-    }-${randomInt(1000, 10000)}`;
+    const adj = randomWord(slugAdjectives);
+    const noun = randomWord(
+        gameData.slugWords.length > 0 ? gameData.slugWords : slugNouns,
+    );
+    const num = randomInt(1000, 10000);
+    const slug = `${adj}-${noun}-${num}`;
 
     const dbRoom = await createRoom(slug, name, gameData.id, false, password);
     const room = new Room(
