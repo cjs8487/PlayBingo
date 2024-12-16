@@ -28,6 +28,9 @@ export const emitBoardUpdate = (event: BoardEvent) => {
             board = event.board;
             break;
         case 'cell':
+            if (board.hidden) {
+                break;
+            }
             const newCells = board.board.map((row) => row.map((cell) => cell));
             newCells[event.row][event.col] = event.cell;
             board = { board: newCells };
