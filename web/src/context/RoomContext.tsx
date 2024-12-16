@@ -67,6 +67,7 @@ interface RoomContext {
     racetimeReady: () => void;
     racetimeUnready: () => void;
     toggleGoalStar: (row: number, col: number) => void;
+    revealCard: () => void;
 }
 
 export const RoomContext = createContext<RoomContext>({
@@ -92,6 +93,7 @@ export const RoomContext = createContext<RoomContext>({
     racetimeReady() {},
     racetimeUnready() {},
     toggleGoalStar() {},
+    revealCard() {},
 });
 
 interface RoomContextProps {
@@ -406,6 +408,9 @@ export function RoomContextProvider({ slug, children }: RoomContextProps) {
         },
         [starredGoals, push, filter],
     );
+    const revealCard = useCallback(() => {
+        sendJsonMessage({ action: 'revealCard', authToken });
+    }, [sendJsonMessage, authToken]);
 
     // effects
     // slug changed, try to establish initial connection from storage
@@ -473,6 +478,7 @@ export function RoomContextProvider({ slug, children }: RoomContextProps) {
                 racetimeReady,
                 racetimeUnready,
                 toggleGoalStar,
+                revealCard,
             }}
         >
             {children}

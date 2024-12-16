@@ -4,7 +4,32 @@ import Cell from './Cell';
 import { Box } from '@mui/material';
 
 export default function Board() {
-    const { board } = useContext(RoomContext);
+    const { board, revealCard } = useContext(RoomContext);
+
+    if (board.hidden) {
+        return (
+            <Box
+                sx={{
+                    aspectRatio: '1 / 1',
+                    maxHeight: '100%',
+                    maxWidth: '100%',
+                    border: 1,
+                    borderColor: 'divider',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    cursor: 'pointer',
+                    ':hover': {
+                        background: (theme) => theme.palette.action.hover,
+                    },
+                }}
+                onClick={revealCard}
+            >
+                Click to reveal card
+            </Box>
+        );
+    }
+
     return (
         <Box
             sx={{

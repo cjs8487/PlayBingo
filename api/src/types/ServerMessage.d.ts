@@ -56,6 +56,7 @@ export type ChatMessage = (
       color: string;
     }
 )[];
+export type Board = RevealedBoard | HiddenBoard;
 
 /**
  * An incoming websocket message from the server telling the client of a change in room state or instructing it to take an action
@@ -65,11 +66,12 @@ export interface Cell {
   description: string;
   colors: string[];
 }
-/**
- * An incoming websocket message from the server telling the client of a change in room state or instructing it to take an action
- */
-export interface Board {
+export interface RevealedBoard {
   board: Cell[][];
+  hidden?: false;
+}
+export interface HiddenBoard {
+  hidden: true;
 }
 /**
  * Basic information about a room
