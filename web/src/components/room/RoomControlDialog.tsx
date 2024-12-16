@@ -151,25 +151,27 @@ export default function RoomControlDialog({
                         </Button>
                     </Box>
                 </Box>
-                <Box pt={2}>
-                    <Button
-                        onClick={() => {
-                            const data = board.board
-                                .map((row) =>
-                                    row.map((cell) => ({
-                                        name: cell.goal,
-                                    })),
-                                )
-                                .flat();
-                            copyToClipboard(JSON.stringify(data));
-                            toast(
-                                'Copied bingosync goal list for this board to your clipboard',
-                            );
-                        }}
-                    >
-                        Export to Bingosync
-                    </Button>
-                </Box>
+                {!board.hidden && (
+                    <Box pt={2}>
+                        <Button
+                            onClick={() => {
+                                const data = board.board
+                                    .map((row) =>
+                                        row.map((cell) => ({
+                                            name: cell.goal,
+                                        })),
+                                    )
+                                    .flat();
+                                copyToClipboard(JSON.stringify(data));
+                                toast(
+                                    'Copied bingosync goal list for this board to your clipboard',
+                                );
+                            }}
+                        >
+                            Export to Bingosync
+                        </Button>
+                    </Box>
+                )}
             </DialogContent>
         </Dialog>
     );
