@@ -215,7 +215,9 @@ export default class Room {
         this.sendSyncBoard();
         setRoomBoard(
             this.id,
-            this.board.board.flat().map((cell) => cell.goal),
+            this.board.board
+                .flat()
+                .map((cell) => `${cell.goal}::${cell.description}`),
         );
     }
 

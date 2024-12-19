@@ -161,8 +161,8 @@ rooms.get('/:slug', async (req, res) => {
     room.board = {
         board: chunk(
             dbRoom.board.map((goal) => ({
-                goal,
-                description: '',
+                goal: goal.split('::')[0],
+                description: goal.split('::')[1] ?? '',
                 colors: [],
             })),
             5,
