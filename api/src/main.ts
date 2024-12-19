@@ -8,6 +8,7 @@ import { logDebug, logger, logInfo } from './Logger';
 import { allRooms, roomWebSocketServer } from './core/RoomServer';
 import { disconnect } from './database/Database';
 import api from './routes/api';
+import { metricsRouter, requestDurationHistogram } from './routes/metrics';
 
 declare module 'express-session' {
     interface SessionData {
@@ -38,6 +39,19 @@ app.use(
     }),
 );
 
+// Tracking duration of requests
+app.use((req, res, next) => {
+    const stopTimer = requestDurationHistogram.startTimer();
+    res.on('finish', () => {
+        stopTimer({
+            route: req.route ? req.route.path : req.path,
+            method: req.method,
+            status_code: res.statusCode,
+        });
+    });
+    next();
+});
+
 // request logger
 app.use((req, res, next) => {
     const profiler = logger.startTimer();
@@ -59,6 +73,7 @@ app.use((req, res, next) => {
 app.use(bodyParser.json());
 
 app.use('/api', api);
+app.use('/metrics', metricsRouter);
 
 const server = app.listen(port, () => {
     logInfo(`API application listening on port ${port}`);
