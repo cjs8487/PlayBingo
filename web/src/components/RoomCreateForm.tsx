@@ -249,6 +249,11 @@ export default function RoomCreateForm() {
                         name="hideCard"
                         label="Hide card initially?"
                     />
+                    <FormikSwitch
+                        name="spectator"
+                        id="spectator"
+                        label="Join as spectator?"
+                    />
                     <Accordion>
                         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                             Advanced Generation Options

@@ -40,6 +40,8 @@ type RoomIdentity = {
     nickname: string;
     color: string;
     racetimeId?: string;
+    spectator: boolean;
+    monitor: boolean;
 };
 
 export enum BoardGenerationMode {
@@ -247,6 +249,8 @@ export default class Room {
                           finishTime: rtUser.finish_time ?? undefined,
                       }
                     : { connected: false },
+                spectator: i.spectator,
+                monitor: i.monitor,
             });
         });
         return players;
@@ -263,6 +267,8 @@ export default class Room {
             identity = {
                 nickname: action.payload.nickname,
                 color: 'blue',
+                spectator: auth.isSpectating,
+                monitor: auth.isMonitor,
             };
             this.identities.set(auth.uuid, identity);
         } else {
@@ -271,10 +277,14 @@ export default class Room {
                 return { action: 'unauthorized' };
             }
         }
-        this.sendChat([
-            { contents: identity.nickname, color: identity.color },
-            ' has joined.',
-        ]);
+        if (auth.isSpectating) {
+            this.sendChat(`${identity.nickname} is now spectating`);
+        } else {
+            this.sendChat([
+                { contents: identity.nickname, color: identity.color },
+                ' has joined.',
+            ]);
+        }
 
         this.connections.set(auth.uuid, socket);
         addJoinAction(this.id, identity.nickname, identity.color).then();
