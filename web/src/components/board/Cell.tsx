@@ -34,6 +34,8 @@ export default function BoardCell({
     const colorPortion = 360 / colors.length;
     const isStarred = starredGoals.includes(row * 5 + col);
 
+    console.log(description);
+
     return (
         <Tooltip
             title={description}
@@ -63,7 +65,7 @@ export default function BoardCell({
                     borderColor: 'divider',
                     transition: 'all',
                     transitionDuration: 300,
-                    background: 'background.default',
+                    background: (theme) => theme.palette.background.default,
                     ':hover': {
                         zIndex: 10,
                         scale: '110%',
