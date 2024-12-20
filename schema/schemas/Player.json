@@ -2,7 +2,7 @@
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "type": "object",
     "additionalProperties": false,
-    "required": ["nickname", "color", "goalCount", "racetimeStatus"],
+    "required": ["nickname", "color", "goalCount", "racetimeStatus", "spectator", "monitor"],
     "properties": {
         "nickname": {"type": "string"},
         "color": {"type": "string"},
@@ -10,7 +10,9 @@
         "racetimeStatus": {"oneOf": [
             {"$ref": "#/$defs/RacetimeStatusDisconnected"},
             {"$ref": "#/$defs/RacetimeStatusConnected"}
-        ]}
+        ]},
+        "spectator": {"type": "boolean"},
+        "monitor": {"type": "boolean"}
     },
     "$defs": {
         "RacetimeStatusDisconnected": {
