@@ -64,11 +64,13 @@ siteAuth.post('/forgotPassword', async (req, res) => {
     }
     const user = await getUserByEmail(email);
     if (!user) {
-        res.sendStatus(400);
+        res.status(400);
+        res.send('Wrong email or username')
         return;
     }
     if (username !== user.username) {
-        res.sendStatus(400);
+        res.status(400);
+        res.send('Wrong email or username')
         return;
     }
 
