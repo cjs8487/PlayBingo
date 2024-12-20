@@ -19,7 +19,8 @@
         "difficultyVariantsEnabled": {"type": "boolean"},
         "difficultyVariants": {"type": "array", "items": {"$ref": "#/$defs/DifficultyVariant" }},
         "difficultyGroups": {"type": "number"},
-        "slugWords": {"type": "array", "items": {"type": "string"}}
+        "slugWords": {"type": "array", "items": {"type": "string"}},
+        "useTypedRandom": {"type": "boolean"}
     },
     "$defs": {
         "DifficultyVariant": {
