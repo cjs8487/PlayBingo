@@ -1,6 +1,6 @@
 'use client';
 import { Formik, Form, Field, ErrorMessage, FastField } from 'formik';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import * as yup from 'yup';
 import { alertError } from '../../../lib/Utils';
 import { Box, Button, Container, Typography } from '@mui/material';
@@ -28,6 +28,7 @@ const validationSchema = yup.object({
 export default function ResetPassword() {
     const params = useSearchParams();
     const token = params.get('token');
+    const router = useRouter();
 
     if (!token) {
         return null;
@@ -58,6 +59,7 @@ export default function ResetPassword() {
                         );
                         return;
                     }
+                    router.push('/login')
                 }}
             >
                 {({ isValid, isSubmitting, values: { password } }) => (
