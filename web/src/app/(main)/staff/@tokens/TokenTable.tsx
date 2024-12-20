@@ -79,7 +79,9 @@ export default function TokenTable({ tokens }: TokenTableProps) {
                     ))}
                     <TableRow>
                         <TableCell colSpan={4}>
-                            <CreateTokenForm />
+                            <CreateTokenForm
+                                existingValues={tokens.map((t) => t.name)}
+                            />
                         </TableCell>
                     </TableRow>
                 </TableBody>
