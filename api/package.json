@@ -15,7 +15,7 @@
         "db:generate-client": "prisma generate",
         "docker:up": "docker compose up -d",
         "docker:down": "docker compose down",
-        "test": "jest --config=./build/src/tests/test.config.js"
+        "test": "jest --config=./build/src/tests/test.config.js --forceExit"
     },
     "author": "",
     "license": "ISC",
