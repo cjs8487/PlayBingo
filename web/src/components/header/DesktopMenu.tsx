@@ -1,26 +1,15 @@
 import { Box, Button, Typography } from '@mui/material';
 import { pages } from './Header';
 import LinkButton from '../LinkButton';
+import Image from 'next/image';
+import logo from '../../images/playbingologo.png';
 
 export default function DesktopMenu() {
     return (
         <>
-            <Typography
-                variant="h6"
-                noWrap
-                component={LinkButton}
-                href="/"
-                sx={{
-                    fontFamily: 'monospace',
-                    fontWeight: 700,
-                    letterSpacing: '.1rem',
-                    color: 'inherit',
-                    textDecoration: 'none',
-                    textTransform: 'none',
-                }}
-            >
-                PlayBingo
-            </Typography>
+            <LinkButton href="/">
+                <Image src={logo} alt="PlayBingo logo" height={52} />
+            </LinkButton>
             <Box sx={{ flexGrow: 1 }} />
             <Box display="flex">
                 {pages.map((page) => (

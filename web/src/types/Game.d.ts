@@ -20,10 +20,18 @@ export interface Game {
   racetimeBeta?: boolean;
   racetimeCategory?: string;
   racetimeGoal?: string;
+  difficultyVariantsEnabled?: boolean;
+  difficultyVariants?: DifficultyVariant[];
+  difficultyGroups?: number;
 }
 export interface User {
   id: string;
   username: string;
   staff: boolean;
   racetimeConnected?: boolean;
+}
+export interface DifficultyVariant {
+  id?: string;
+  name: string;
+  goalAmounts?: number[];
 }

@@ -18,11 +18,15 @@ import {
 } from 'formik';
 import { useAsync } from 'react-use';
 import { mutate } from 'swr';
-import { alertError } from '../../lib/Utils';
+import { alertError, notifyMessage } from '../../lib/Utils';
 import { Game } from '../../types/Game';
 import HoverIcon from '../HoverIcon';
 import FormikSwitch from '../input/FormikSwitch';
 import FormikTextField from '../input/FormikTextField';
+import NumberInput from '../input/NumberInput';
+import Delete from '@mui/icons-material/Delete';
+import { useConfirm } from 'material-ui-confirm';
+import { useRouter } from 'next/navigation';
 
 async function validateRacetimeCategory(value: string) {
     if (value) {
@@ -103,11 +107,49 @@ interface GameSettingsProps {
 }
 
 export default function GameSettings({ gameData }: GameSettingsProps) {
+    const confirm = useConfirm();
+    const router = useRouter();
     return (
         <div>
-            <Typography variant="h5" align="center">
-                Game Settings
-            </Typography>
+            <Box display="flex">
+                <Typography variant="h5" align="center" flexGrow={1}>
+                    Game Settings
+                </Typography>
+                <Button
+                    sx={{ float: 'right' }}
+                    color="error"
+                    startIcon={<Delete />}
+                    onClick={async () => {
+                        try {
+                            await confirm({
+                                title: 'Delete game?',
+                                description:
+                                    'Are you sure you want to delete this game? This cannot be undone.',
+                                confirmationText: 'Delete',
+                                confirmationButtonProps: {
+                                    color: 'error',
+                                },
+                            });
+                            const res = await fetch(
+                                `/api/games/${gameData.slug}`,
+                                { method: 'DELETE' },
+                            );
+                            if (!res.ok) {
+                                alertError(
+                                    `Unable to delete game - ${await res.text()}`,
+                                );
+                                return;
+                            }
+                            router.push('/games');
+                            notifyMessage('Game deleted');
+                        } catch {
+                            // do nothing when dialog is canceled/dismissed
+                        }
+                    }}
+                >
+                    Delete Game
+                </Button>
+            </Box>
             <Formik
                 initialValues={{
                     name: gameData.name,
@@ -115,6 +157,9 @@ export default function GameSettings({ gameData }: GameSettingsProps) {
                     enableSRLv5: gameData.enableSRLv5,
                     racetimeCategory: gameData.racetimeCategory,
                     racetimeGoal: gameData.racetimeGoal,
+                    difficultyVariantsEnabled:
+                        gameData.difficultyVariantsEnabled,
+                    difficultyGroups: gameData.difficultyGroups ?? 0,
                 }}
                 onSubmit={async ({
                     name,
@@ -122,6 +167,8 @@ export default function GameSettings({ gameData }: GameSettingsProps) {
                     enableSRLv5,
                     racetimeCategory,
                     racetimeGoal,
+                    difficultyVariantsEnabled,
+                    difficultyGroups,
                 }) => {
                     const res = await fetch(`/api/games/${gameData.slug}`, {
                         method: 'POST',
@@ -134,6 +181,8 @@ export default function GameSettings({ gameData }: GameSettingsProps) {
                             enableSRLv5,
                             racetimeCategory,
                             racetimeGoal,
+                            difficultyVariantsEnabled,
+                            difficultyGroups,
                         }),
                     });
                     if (!res.ok) {
@@ -181,6 +230,58 @@ export default function GameSettings({ gameData }: GameSettingsProps) {
                                     the category overlap.
                                 </Typography>
                             </HoverIcon>
+                        </Box>
+                        <Box display="flex" alignItems="center" columnGap={3}>
+                            <Box display="flex" alignItems="center">
+                                <FormikSwitch
+                                    id="game-difficulty-variants-switch"
+                                    label="Enable Difficulty Variants"
+                                    name="difficultyVariantsEnabled"
+                                />
+                                <HoverIcon icon={<Info />}>
+                                    <Typography variant="caption">
+                                        Difficulty varaints are a special type
+                                        of variants that modify generation
+                                        instead of the goal list. Difficulty
+                                        variants modify how many goals from a
+                                        given difficulty are selected during
+                                        generation, which can impact the
+                                        difficulty or length of the final board.
+                                        When a difficulty variant is chosen,
+                                        only the Random generation mode is
+                                        available.
+                                    </Typography>
+                                </HoverIcon>
+                            </Box>
+                            <Box
+                                display="flex"
+                                alignItems="center"
+                                columnGap={1}
+                            >
+                                <NumberInput
+                                    name="difficultyGroups"
+                                    label="Difficulty Groups"
+                                    min={0}
+                                    max={25}
+                                />
+                                <HoverIcon icon={<Info />}>
+                                    <Typography variant="caption">
+                                        Difficulty groups is the number of
+                                        groups goals are grouped into for
+                                        generating a board for a difficulty
+                                        variant. The available goal difficulties
+                                        will be split into equal sized groups
+                                        based on this number. For example, if
+                                        there are 5 groups and 25 difficulties,
+                                        every 5 difficulties would be a group
+                                        (1-5, 6-10, etc.). Setting this to 0 is
+                                        equivalent to disabling difficulty
+                                        variants, as the generator will be
+                                        unable to generate a board with 0
+                                        groups.
+                                    </Typography>
+                                </HoverIcon>
+                            </Box>
                         </Box>
                         {gameData.racetimeBeta && <RacetimeSettings />}
                         <Box pt={1} display="flex">

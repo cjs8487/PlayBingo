@@ -3,7 +3,10 @@ import {
     addModerators,
     addOwners,
     allGames,
+    createDifficultyVariant,
     createGame,
+    deleteDifficultyVariant,
+    deleteGame,
     favoriteGame,
     gameForSlug,
     isModerator,
@@ -11,6 +14,9 @@ import {
     removeModerator,
     removeOwner,
     unfavoriteGame,
+    updateDifficultyGroups,
+    updateDifficultyVariant,
+    updateDifficultyVariantsEnabled,
     updateGameCover,
     updateGameName,
     updateRacetimeCategory,
@@ -70,8 +76,15 @@ games.post('/', async (req, res) => {
 
 games.post('/:slug', async (req, res) => {
     const { slug } = req.params;
-    const { name, coverImage, enableSRLv5, racetimeCategory, racetimeGoal } =
-        req.body;
+    const {
+        name,
+        coverImage,
+        enableSRLv5,
+        racetimeCategory,
+        racetimeGoal,
+        difficultyVariantsEnabled,
+        difficultyGroups,
+    } = req.body;
 
     let result = undefined;
     if (name) {
@@ -88,6 +101,15 @@ games.post('/:slug', async (req, res) => {
     }
     if (racetimeGoal) {
         result = await updateRacetimeGoal(slug, racetimeGoal);
+    }
+    if (difficultyVariantsEnabled !== undefined) {
+        result = await updateDifficultyVariantsEnabled(
+            slug,
+            difficultyVariantsEnabled,
+        );
+    }
+    if (difficultyGroups) {
+        result = await updateDifficultyGroups(slug, difficultyGroups);
     }
 
     if (!result) {
@@ -337,6 +359,78 @@ games.delete('/:slug/favorite', (req, res) => {
     unfavoriteGame(slug, req.session.user);
 
     res.sendStatus(200);
+});
+
+games.post('/:slug/difficultyVariants', async (req, res) => {
+    if (!req.session.user) {
+        res.sendStatus(401);
+        return;
+    }
+
+    const { slug } = req.params;
+
+    if (!slug || !(await isOwner(slug, req.session.user))) {
+        res.sendStatus(403);
+        return;
+    }
+
+    const { name, goalAmounts } = req.body;
+
+    const result = await createDifficultyVariant(slug, name, goalAmounts);
+
+    res.status(200).send(result);
+});
+
+games.post('/:slug/difficultyVariants/:id', async (req, res) => {
+    if (!req.session.user) {
+        res.sendStatus(401);
+        return;
+    }
+
+    const { slug, id } = req.params;
+    if (!slug || !(await isOwner(slug, req.session.user))) {
+        res.sendStatus(403);
+        return;
+    }
+
+    const { name, goalAmounts } = req.body;
+
+    const result = await updateDifficultyVariant(id, name, goalAmounts);
+
+    res.status(200).send(result);
+});
+
+games.delete('/:slug/difficultyVariants/:id', async (req, res) => {
+    if (!req.session.user) {
+        res.sendStatus(401);
+        return;
+    }
+
+    const { slug, id } = req.params;
+    if (!slug || !(await isOwner(slug, req.session.user))) {
+        res.sendStatus(403);
+        return;
+    }
+
+    const result = await deleteDifficultyVariant(id);
+    res.status(200).send(result);
+});
+
+games.delete('/:slug', async (req, res) => {
+    if (!req.session.user) {
+        res.sendStatus(401);
+        return;
+    }
+
+    const { slug } = req.params;
+
+    if (!isOwner(slug, req.session.user)) {
+        res.sendStatus(403);
+        return;
+    }
+
+    const result = await deleteGame(slug);
+    res.status(200).json(result);
 });
 
 export default games;

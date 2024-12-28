@@ -11,6 +11,8 @@ import PermissionsManagement from '../../../../components/game/PermissionsManage
 import GoalManagement from '../../../../components/game/goals/GoalManagement';
 import { GoalManagerContextProvider } from '../../../../context/GoalManagerContext';
 import { alertError } from '../../../../lib/Utils';
+import Variants from '../../../../components/game/Variants';
+import { ConfirmProvider } from 'material-ui-confirm';
 
 export default function GamePage({
     params: { slug },
@@ -48,6 +50,9 @@ export default function GamePage({
 
     const tabs = ['Goals'];
     if (isOwner) {
+        if (gameData.difficultyVariantsEnabled) {
+            tabs.push('Variants');
+        }
         tabs.push('Permissions');
         tabs.push('Settings');
     }
@@ -124,11 +129,16 @@ export default function GamePage({
                         <GoalManagement />
                     </GoalManagerContextProvider>
                 </TabPanel>
+                <TabPanel value="Variants">
+                    <Variants gameData={gameData} />
+                </TabPanel>
                 <TabPanel value="Permissions">
                     <PermissionsManagement slug={slug} gameData={gameData} />
                 </TabPanel>
                 <TabPanel value="Settings">
-                    <GameSettings gameData={gameData} />
+                    <ConfirmProvider>
+                        <GameSettings gameData={gameData} />
+                    </ConfirmProvider>
                 </TabPanel>
             </TabContext>
         </Container>

@@ -1,7 +1,10 @@
 import { randomInt } from 'crypto';
 import { Router } from 'express';
 import { createRoomToken } from '../../auth/RoomAuth';
-import Room, { BoardGenerationMode } from '../../core/Room';
+import Room, {
+    BoardGenerationMode,
+    BoardGenerationOptions,
+} from '../../core/Room';
 import { allRooms } from '../../core/RoomServer';
 import {
     createRoom,
@@ -11,6 +14,7 @@ import {
 import { gameForSlug, goalCount } from '../../database/games/Games';
 import { chunk } from '../../util/Array';
 import actions from './Actions';
+import { logWarn } from '../../Logger';
 
 const MIN_ROOM_GOALS_REQUIRED = 25;
 const rooms = Router();
@@ -42,7 +46,7 @@ rooms.get('/', async (req, res) => {
         res.json(
             (await getFullRoomList()).map((room) => ({
                 name: room.name,
-                game: room.game.name,
+                game: room.game?.name ?? 'Deleted Game',
                 slug: room.slug,
             })),
         );
@@ -56,6 +60,7 @@ rooms.post('/', async (req, res) => {
         nickname,
         password,
         /*variant, mode,*/ generationMode,
+        difficulty,
     } = req.body;
 
     if (!name || !game || !nickname /*|| !variant || !mode*/) {
@@ -95,14 +100,30 @@ rooms.post('/', async (req, res) => {
             !!gameData.racetimeCategory &&
             !!gameData.racetimeGoal,
     );
-    let genMode;
+    const genMode: BoardGenerationOptions = {
+        mode: BoardGenerationMode.RANDOM,
+    } as BoardGenerationOptions; // necessary cast to avoid auto-narrowing
+    let useDefault = true;
     if (generationMode) {
-        genMode = generationMode;
-    } else {
-        if (gameData.enableSRLv5) {
-            genMode = BoardGenerationMode.SRLv5;
+        genMode.mode = generationMode as BoardGenerationMode;
+        if (genMode.mode === BoardGenerationMode.DIFFICULTY) {
+            if (difficulty) {
+                genMode.difficulty = difficulty;
+                useDefault = false;
+            } else {
+                logWarn(
+                    `Unable to generate using dificulty variants for ${slug}, falling back to default mode.`,
+                );
+            }
         } else {
-            genMode = BoardGenerationMode.RANDOM;
+            useDefault = false;
+        }
+    }
+    if (useDefault) {
+        if (gameData.enableSRLv5) {
+            genMode.mode = BoardGenerationMode.SRLv5;
+        } else {
+            genMode.mode = BoardGenerationMode.RANDOM;
         }
     }
     await room.generateBoard(genMode);
@@ -126,12 +147,12 @@ rooms.get('/:slug', async (req, res) => {
     }
     const room = new Room(
         dbRoom.name,
-        dbRoom.game.name,
-        dbRoom.game.slug,
+        dbRoom.game?.name ?? 'Deleted Game',
+        dbRoom.game?.slug ?? '',
         dbRoom.slug,
         dbRoom.password ?? '',
         dbRoom.id,
-        (dbRoom.game.racetimeBeta &&
+        (dbRoom.game?.racetimeBeta &&
             !!dbRoom.game.racetimeCategory &&
             !!dbRoom.game.racetimeGoal) ||
             !!dbRoom.racetimeRoom,

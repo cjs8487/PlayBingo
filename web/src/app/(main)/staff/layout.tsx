@@ -4,13 +4,16 @@ import { Container, Typography, Box, Tab } from '@mui/material';
 import { notFound } from 'next/navigation';
 import { ReactNode, useState } from 'react';
 import { useUserContext } from '../../../context/UserContext';
+import { ConfirmProvider } from 'material-ui-confirm';
 
 interface StaffDashboardLayoutProps {
     logs: ReactNode;
+    games: ReactNode;
 }
 
 export default function StaffDashboardLayout({
     logs,
+    games,
 }: StaffDashboardLayoutProps) {
     const { user, loggedIn } = useUserContext();
 
@@ -23,7 +26,7 @@ export default function StaffDashboardLayout({
         notFound();
     }
 
-    const tabs = ['Logs'];
+    const tabs = ['Logs', 'Games'];
 
     return (
         <Container
@@ -34,21 +37,26 @@ export default function StaffDashboardLayout({
                 flexDirection: 'column',
             }}
         >
-            <Typography textAlign="center" variant="h4">
-                Staff Dashboard
-            </Typography>
-            <TabContext value={tab}>
-                <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-                    <TabList onChange={handleChange}>
-                        {tabs.map((tab) => (
-                            <Tab key={tab} label={tab} value={tab} />
-                        ))}
-                    </TabList>
-                </Box>
-                <TabPanel value="Logs" sx={{ flexGrow: 1 }}>
-                    {logs}
-                </TabPanel>
-            </TabContext>
+            <ConfirmProvider>
+                <Typography textAlign="center" variant="h4">
+                    Staff Dashboard
+                </Typography>
+                <TabContext value={tab}>
+                    <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+                        <TabList onChange={handleChange}>
+                            {tabs.map((tab) => (
+                                <Tab key={tab} label={tab} value={tab} />
+                            ))}
+                        </TabList>
+                    </Box>
+                    <TabPanel value="Logs" sx={{ flexGrow: 1 }}>
+                        {logs}
+                    </TabPanel>
+                    <TabPanel value="Games" sx={{ flexGrow: 1 }}>
+                        {games}
+                    </TabPanel>
+                </TabContext>
+            </ConfirmProvider>
         </Container>
     );
 }

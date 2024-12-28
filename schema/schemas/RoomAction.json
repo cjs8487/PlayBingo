@@ -101,8 +101,15 @@
             "additionalProperties": false,
             "properties": {
                 "action": "newCard",
-                "seed": {"type": "number"},
-                "generationMode": {"type": "string"}
+                "options": {
+                        "required": ["mode"],
+                        "additionalProperties": false,
+                        "properties": {
+                            "seed": {"type": "number"},
+                            "mode": {"type": "string"},
+                            "difficulty": {"type": "string"}
+                    }
+                }
             }
         }
     }

@@ -7,8 +7,8 @@
         "seed": "ts-node prisma/seed.ts"
     },
     "scripts": {
+        "dev": "tsc-watch --noClear --onSuccess \"node build/src/main.js\"",
         "build": "tsc",
-        "dev": "tsc-watch --noClear --onSuccess \"node build/main.js\"",
         "db:reset": "prisma migrate reset",
         "db:migrate": "prisma migrate dev",
         "db:seed": "prisma db seed",

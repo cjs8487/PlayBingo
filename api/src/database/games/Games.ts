@@ -7,6 +7,9 @@ export const allGames = async (user?: string) => {
         include: {
             owners: { select: { id: true } },
             moderators: { select: { id: true } },
+            difficultyVariants: {
+                select: { id: true, name: true, goalAmounts: true },
+            },
         },
     });
     if (user) {
@@ -34,6 +37,9 @@ export const gameForSlug = (slug: string) => {
             },
             moderators: {
                 select: { id: true, username: true },
+            },
+            difficultyVariants: {
+                select: { id: true, name: true, goalAmounts: true },
             },
         },
     });
@@ -76,7 +82,24 @@ export const createGame = async (
 };
 
 export const deleteGame = (slug: string) => {
-    return prisma.game.delete({ where: { slug } });
+    return prisma.$transaction([
+        prisma.goalVariant.deleteMany({
+            where: { variant: { game: { slug } } },
+        }),
+        prisma.variant.deleteMany({ where: { game: { slug } } }),
+        prisma.goal.deleteMany({ where: { game: { slug } } }),
+        prisma.difficultyVariant.deleteMany({ where: { game: { slug } } }),
+        prisma.game.update({
+            where: { slug },
+            data: {
+                owners: { set: [] },
+                moderators: { set: [] },
+                usersFavorited: { set: [] },
+            },
+        }),
+        prisma.roomAction.deleteMany({ where: { room: { game: { slug } } } }),
+        prisma.game.delete({ where: { slug } }),
+    ]);
 };
 
 export const goalCount = async (slug: string) => {
@@ -99,6 +122,30 @@ export const updateGameCover = (slug: string, coverImage: string) => {
 
 export const updateSRLv5Enabled = (slug: string, enableSRLv5: boolean) => {
     return prisma.game.update({ where: { slug }, data: { enableSRLv5 } });
+};
+
+export const updateDifficultyVariantsEnabled = (
+    slug: string,
+    difficultyVariantsEnabled: boolean,
+) => {
+    return prisma.game.update({
+        where: { slug },
+        data: {
+            difficultyVariantsEnabled,
+        },
+    });
+};
+
+export const updateDifficultyGroups = (
+    slug: string,
+    difficultyGroups: number,
+) => {
+    return prisma.game.update({
+        where: { slug },
+        data: {
+            difficultyGroups,
+        },
+    });
 };
 
 export const updateRacetimeCategory = (
@@ -191,4 +238,47 @@ export const unfavoriteGame = async (slug: string, user: string) => {
         where: { id: user },
         data: { favoritedGames: { disconnect: { slug } } },
     });
+};
+
+export const createDifficultyVariant = (
+    slug: string,
+    name: string,
+    goalAmounts: number[],
+) => {
+    return prisma.difficultyVariant.create({
+        data: {
+            name,
+            goalAmounts,
+            game: { connect: { slug } },
+        },
+    });
+};
+
+export const updateDifficultyVariant = (
+    id: string,
+    name: string,
+    goalAmounts: number[],
+) => {
+    return prisma.difficultyVariant.update({
+        where: { id: id },
+        data: {
+            name,
+            goalAmounts,
+        },
+    });
+};
+
+export const deleteDifficultyVariant = (id: string) => {
+    return prisma.difficultyVariant.delete({
+        where: { id: id },
+    });
+};
+
+export const getDifficultyVariant = (id: string) => {
+    return prisma.difficultyVariant.findUnique({ where: { id } });
+};
+
+export const getDifficultyGroupCount = async (slug: string) => {
+    return (await prisma.game.findUnique({ where: { slug } }))
+        ?.difficultyGroups;
 };
