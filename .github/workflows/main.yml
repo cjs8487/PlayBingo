@@ -10,14 +10,23 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:13
+        ports:
+          - '5432:5432'
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: bingogg
     env:
-        DATABASE_URL: postgres://postgres:password@localhost:5432/bingogg
-        SESSION_SECRET: test
-        ROOM_TOKEN_SECRET: test
+      DATABASE_URL: postgres://postgres:password@localhost:5432/bingogg
+      SESSION_SECRET: test
+      ROOM_TOKEN_SECRET: test
 
     strategy:
       matrix:
-        node-version: [18.x, 20.x, 22.x] # Define a matrix of Node.js versions to test. There will be 3 jobs for 18.x, 20.x, 22.x.
+        node-version: [ 18.x, 20.x, 22.x ] # Define a matrix of Node.js versions to test. There will be 3 jobs for 18.x, 20.x, 22.x.
 
     steps:
       - name: Checkout code
@@ -43,14 +52,10 @@ jobs:
         working-directory: ./api
         run: npm run build # Compile the TypeScript code.
 
-      - name: Start DB
-        working-directory: ./api
-        run: docker compose up -d
-
       - name: Migrate DB Schema
         working-directory: ./api
         run: npm run db:migrate
 
       - name: Run tests
         working-directory: ./api
-        run: npm test # Step 4: Run tests using the specified Node.js version.
+        run: npm run test # Step 4: Run tests using the specified Node.js version.
