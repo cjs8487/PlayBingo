@@ -274,7 +274,7 @@ export default class Room {
         if (action.payload) {
             identity = {
                 nickname: action.payload.nickname,
-                color: 'blue',
+                color: auth.isSpectating ? '' : 'blue',
                 spectator: auth.isSpectating,
                 monitor: auth.isMonitor,
             };
@@ -524,7 +524,7 @@ export default class Room {
                 contents: identity.nickname,
                 color: identity.color,
             },
-            'has revealed the card.',
+            ' has revealed the card.',
         ]);
         return this.board;
     }
