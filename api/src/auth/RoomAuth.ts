@@ -4,24 +4,21 @@ import { roomTokenSecret } from '../Environment';
 import { randomUUID } from 'crypto';
 import { RoomAction } from '../types/RoomAction';
 
-export type RoomTokenPayload = {
-    roomSlug: string;
-    uuid: string;
+type Permissions = {
     isSpectating: boolean;
     isMonitor: boolean;
 };
 
-type Permissions = Partial<{
-    [P in keyof RoomTokenPayload as RoomTokenPayload[P] extends boolean
-        ? P
-        : never]: RoomTokenPayload[P];
-}>;
+export type RoomTokenPayload = {
+    roomSlug: string;
+    uuid: string;
+} & Permissions;
 
 const tokenStore: string[] = [];
 
 export const createRoomToken = (
     room: Room,
-    { isSpectating, isMonitor }: Permissions,
+    { isSpectating, isMonitor }: Partial<Permissions>,
 ) => {
     const payload: RoomTokenPayload = {
         roomSlug: room.slug,
