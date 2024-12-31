@@ -69,7 +69,8 @@ export const hasPermission = (
         case 'unmark':
             return !payload.isSpectating;
         case 'newCard':
-            return payload.isMonitor;
+            return true;
+        // return payload.isMonitor;
         case 'changeColor':
             return !payload.isSpectating;
         default:
