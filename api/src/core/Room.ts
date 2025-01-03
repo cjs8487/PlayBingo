@@ -134,13 +134,13 @@ export default class Room {
 
     async generateBoard(options: BoardGenerationOptions) {
         this.lastGenerationMode = options;
-        const { mode } = options;
+        const { mode, seed } = options;
         const goals = await goalsForGame(this.gameSlug);
         let goalList: Goal[];
         try {
             switch (mode) {
                 case BoardGenerationMode.SRLv5:
-                    goalList = generateSRLv5(goals);
+                    goalList = generateSRLv5(goals, seed);
                     goalList.shift();
                     break;
                 case BoardGenerationMode.DIFFICULTY:
@@ -429,7 +429,11 @@ export default class Room {
 
     handleNewCard(action: NewCardAction) {
         if (action.options) {
-            this.generateBoard(action.options as BoardGenerationOptions);
+            const options = action.options;
+            if (!options.mode) {
+                options.mode = this.lastGenerationMode.mode;
+            }
+            this.generateBoard(options as BoardGenerationOptions);
         } else {
             // TODO: we should probably generate a new seed before generating
             // the board from the previous settings

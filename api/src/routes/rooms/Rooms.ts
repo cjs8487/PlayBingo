@@ -49,6 +49,7 @@ rooms.post('/', async (req, res) => {
         /*variant, mode,*/ generationMode,
         difficulty,
         hideCard,
+        seed,
     } = req.body;
 
     if (!name || !game || !nickname /*|| !variant || !mode*/) {
@@ -99,15 +100,15 @@ rooms.post('/', async (req, res) => {
             !!gameData.racetimeCategory &&
             !!gameData.racetimeGoal,
     );
-    const genMode: BoardGenerationOptions = {
+    const options: BoardGenerationOptions = {
         mode: BoardGenerationMode.RANDOM,
     } as BoardGenerationOptions; // necessary cast to avoid auto-narrowing
     let useDefault = true;
     if (generationMode) {
-        genMode.mode = generationMode as BoardGenerationMode;
-        if (genMode.mode === BoardGenerationMode.DIFFICULTY) {
+        options.mode = generationMode as BoardGenerationMode;
+        if (options.mode === BoardGenerationMode.DIFFICULTY) {
             if (difficulty) {
-                genMode.difficulty = difficulty;
+                options.difficulty = difficulty;
                 useDefault = false;
             } else {
                 logWarn(
@@ -120,12 +121,13 @@ rooms.post('/', async (req, res) => {
     }
     if (useDefault) {
         if (gameData.enableSRLv5) {
-            genMode.mode = BoardGenerationMode.SRLv5;
+            options.mode = BoardGenerationMode.SRLv5;
         } else {
-            genMode.mode = BoardGenerationMode.RANDOM;
+            options.mode = BoardGenerationMode.RANDOM;
         }
     }
-    await room.generateBoard(genMode);
+    options.seed = seed;
+    await room.generateBoard(options);
     allRooms.set(slug, room);
 
     const token = createRoomToken(room);

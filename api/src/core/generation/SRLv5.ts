@@ -83,7 +83,7 @@ function difficulty(i: number, seed: number) {
 export const generateSRLv5 = (goals: Goal[], seedIn?: number): Goal[] => {
     // const LANG = opts.lang || 'name';
     // const MODE = opts.mode || 'normal';
-    const seed = seedIn || Math.ceil(999999 * Math.random());
+    const seed = seedIn ?? Math.ceil(999999 * Math.random());
 
     const bingoList = goals.reduce<Goal[][]>((acc, val) => {
         if (!val.difficulty) {
