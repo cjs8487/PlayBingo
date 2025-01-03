@@ -32,6 +32,10 @@ import {
     goalsForGameFull,
 } from '../../database/games/Goals';
 import { getUser, getUsersEligibleToModerateGame } from '../../database/Users';
+import {
+    createCateogry,
+    getCategories,
+} from '../../database/games/GoalCategories';
 
 const games = Router();
 
@@ -459,5 +463,42 @@ games.delete('/:slug', async (req, res) => {
     const result = await deleteGame(slug);
     res.status(200).json(result);
 });
+
+games
+    .route('/:slug/categories')
+    .get(async (req, res) => {
+        const { slug } = req.params;
+
+        const categories = await getCategories(slug);
+        categories.sort((a, b) => (a.name > b.name ? 1 : -1));
+        res.status(200).json(
+            categories.map((cat) => ({
+                id: cat.id,
+                name: cat.name,
+                max: cat.max,
+                goalCount: cat._count.goals,
+            })),
+        );
+    })
+    .post(async (req, res) => {
+        const { slug } = req.params;
+
+        if (!req.session.user) {
+            return res.sendStatus(401);
+        }
+        if (!isModerator(slug, req.session.user)) {
+            return res.sendStatus(403);
+        }
+
+        const { name, max } = req.body;
+        if (!name && !max) {
+            return res.status(400).send('Missing required fields');
+        }
+        if (max !== undefined && Number.isNaN(Number(max))) {
+            return res.status(400).send('Invalid value for max');
+        }
+        const cat = await createCateogry(name, max);
+        res.status(200).json(cat);
+    });
 
 export default games;

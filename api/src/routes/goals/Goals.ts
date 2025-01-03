@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { isModerator } from '../../database/games/Games';
 import { deleteGoal, editGoal, gameForGoal } from '../../database/games/Goals';
 import upload from './Upload';
+import goalCategories from './GoalCategories';
 
 const goals = Router();
 
@@ -88,5 +89,6 @@ goals.delete('/:id', async (req, res) => {
 });
 
 goals.use('/upload', upload);
+goals.use('/categories', goalCategories);
 
 export default goals;
