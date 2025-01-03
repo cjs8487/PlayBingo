@@ -198,11 +198,11 @@ export default class Room {
                         );
                         throw new Error();
                     }
-                    shuffle(goalList);
+                    shuffle(goalList, seed);
                     break;
                 case BoardGenerationMode.RANDOM:
                 default:
-                    shuffle(goals);
+                    shuffle(goals, seed);
                     goalList = goals.splice(0, 25);
                     break;
             }
