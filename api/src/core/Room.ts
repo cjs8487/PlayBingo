@@ -36,7 +36,11 @@ import { listToBoard } from '../util/RoomUtils';
 import { generateFullRandom, generateRandomTyped } from './generation/Random';
 import { generateSRLv5 } from './generation/SRLv5';
 import RacetimeHandler, { RaceData } from './integration/RacetimeHandler';
-import { GeneratorGoal } from './generation/GeneratorCore';
+import {
+    GeneratorGoal,
+    GlobalGenerationState,
+} from './generation/GeneratorCore';
+import { getCategories } from '../database/games/GoalCategories';
 
 type RoomIdentity = {
     nickname: string;
@@ -141,10 +145,19 @@ export default class Room {
         const { mode, seed } = options;
         const goals = await goalsForGame(this.gameSlug);
         let goalList: GeneratorGoal[];
+        const categories = await getCategories(this.gameSlug);
+        const categoryMaxes: { [k: string]: number } = {};
+        categories.forEach((cat) => {
+            categoryMaxes[cat.name] = cat.max <= 0 ? -1 : cat.max;
+        });
+        const globalState: GlobalGenerationState = {
+            useCategoryMaxes: categories.some((cat) => cat.max > 0),
+            categoryMaxes,
+        };
         try {
             switch (mode) {
                 case BoardGenerationMode.SRLv5:
-                    goalList = generateSRLv5(goals, seed);
+                    goalList = generateSRLv5(goals, globalState, seed);
                     goalList.shift();
                     break;
                 case BoardGenerationMode.DIFFICULTY:

@@ -4,3 +4,8 @@ export interface GeneratorGoal {
     categories: string[];
     difficulty: number | null;
 }
+
+export interface GlobalGenerationState {
+    useCategoryMaxes: boolean;
+    categoryMaxes: { [k: string]: number };
+}

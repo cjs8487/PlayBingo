@@ -1,5 +1,5 @@
 import prand from 'pure-rand';
-import { GeneratorGoal } from './GeneratorCore';
+import { GeneratorGoal, GlobalGenerationState } from './GeneratorCore';
 
 const lineCheckList: number[][] = [];
 lineCheckList[1] = [1, 2, 3, 4, 5, 10, 15, 20, 6, 12, 18, 24];
@@ -82,6 +82,7 @@ function difficulty(i: number, seed: number) {
  */
 export const generateSRLv5 = (
     goals: GeneratorGoal[],
+    globalState: GlobalGenerationState,
     seedIn?: number,
 ): GeneratorGoal[] => {
     // const LANG = opts.lang || 'name';
@@ -150,7 +151,20 @@ export const generateSRLv5 = (
             }
             j++;
         } while (synergy != 0 && j < bingoList[getDifficulty].length);
-        bingoBoard[i] = minSynObj?.value;
+        const goal = minSynObj?.value;
+        bingoBoard[i] = goal;
+        if (globalState.useCategoryMaxes) {
+            goal.categories.forEach((cat) => {
+                globalState.categoryMaxes[cat]--;
+                if (globalState.categoryMaxes[cat] === 0) {
+                    for (let k = 1; k <= 25; k++) {
+                        bingoList[k] = bingoList[k].filter(
+                            (g) => !g.categories.includes(cat),
+                        );
+                    }
+                }
+            });
+        }
     }
     return bingoBoard;
 };
