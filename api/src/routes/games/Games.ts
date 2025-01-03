@@ -140,7 +140,7 @@ games.post('/:slug', async (req, res) => {
     res.status(200).json(result);
 });
 
-games.get('/:slug/goals?includeFullCatData', async (req, res) => {
+games.get('/:slug/goals', async (req, res) => {
     const { slug } = req.params;
     const { includeFullCatData } = req.query;
 
