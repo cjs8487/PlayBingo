@@ -3,7 +3,7 @@ import { Paper } from '@mui/material';
 import { ReactNode, useState } from 'react';
 
 interface HoverIconProps {
-    icon: JSX.Element;
+    icon: ReactNode;
     children: ReactNode;
 }
 

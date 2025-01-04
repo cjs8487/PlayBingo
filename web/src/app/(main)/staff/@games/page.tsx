@@ -55,43 +55,52 @@ export default function StaffGamesTab() {
     const [dialogContent, setDialogContent] = useState<ReactNode>(null);
     const confirmDialogRef = useRef<DialogRef | null>(null);
 
-    const onDeleteClick = useCallback((game: Game) => {
-        setDialogContent(
-            <>
-                <DialogTitle>Delete {game.name}?</DialogTitle>
-                <DialogContent>
-                    <DialogContentText>
-                        Are you sure you want to permnaently delete {game.name}{' '}
-                        and all associated data? This cannot be undone.
-                    </DialogContentText>
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => confirmDialogRef.current?.close()}>
-                        Cancel
-                    </Button>
-                    <Button
-                        color="error"
-                        onClick={async () => {
-                            const res = await fetch(`/api/games/${game.slug}`, {
-                                method: 'DELETE',
-                            });
-                            if (!res.ok) {
-                                alertError(
-                                    `Failed to delete ${game.name} - ${await res.text()}`,
+    const onDeleteClick = useCallback(
+        (game: Game) => {
+            setDialogContent(
+                <>
+                    <DialogTitle>Delete {game.name}?</DialogTitle>
+                    <DialogContent>
+                        <DialogContentText>
+                            Are you sure you want to permnaently delete{' '}
+                            {game.name} and all associated data? This cannot be
+                            undone.
+                        </DialogContentText>
+                    </DialogContent>
+                    <DialogActions>
+                        <Button
+                            onClick={() => confirmDialogRef.current?.close()}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            color="error"
+                            onClick={async () => {
+                                const res = await fetch(
+                                    `/api/games/${game.slug}`,
+                                    {
+                                        method: 'DELETE',
+                                    },
                                 );
-                                return;
-                            }
-                            mutate();
-                            confirmDialogRef.current?.close();
-                        }}
-                    >
-                        Delete
-                    </Button>
-                </DialogActions>
-            </>,
-        );
-        confirmDialogRef.current?.open();
-    }, []);
+                                if (!res.ok) {
+                                    alertError(
+                                        `Failed to delete ${game.name} - ${await res.text()}`,
+                                    );
+                                    return;
+                                }
+                                mutate();
+                                confirmDialogRef.current?.close();
+                            }}
+                        >
+                            Delete
+                        </Button>
+                    </DialogActions>
+                </>,
+            );
+            confirmDialogRef.current?.open();
+        },
+        [mutate],
+    );
 
     if (isLoading || !games || error) {
         return null;
