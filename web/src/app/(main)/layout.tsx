@@ -26,7 +26,7 @@ export default function CoreLayout({ children }: { children: ReactNode }) {
                     fontSize: '13px',
                 }}
             >
-                This website uses cookies to provide some parts of it&#39;s
+                This website uses cookies to provide some parts of its
                 functionality.
             </CookieConsent>
             <Box flexGrow={1} height="100%" display="flex">
