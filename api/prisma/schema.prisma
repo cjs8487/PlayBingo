@@ -56,28 +56,34 @@ model Variant {
 }
 
 model Game {
-  id                        String              @id @unique @default(cuid())
-  name                      String
-  slug                      String              @unique
-  coverImage                String?
-  variants                  Variant[]
-  goals                     Goal[]
-  owners                    User[]              @relation("GameOwners")
-  moderators                User[]              @relation("GameModerators")
-  createdAt                 DateTime            @default(now())
-  updatedAt                 DateTime            @updatedAt
-  enableSRLv5               Boolean             @default(false)
-  rooms                     Room[]
-  racetimeCategory          String?
-  racetimeGoal              String?
-  racetimeBeta              Boolean             @default(false)
-  usersFavorited            User[]              @relation("GameFavorites")
-  difficultyVariantsEnabled Boolean             @default(false)
-  difficultyVariants        DifficultyVariant[]
-  difficultyGroups          Int?
-  slugWords                 String[]            @default([])
-  useTypedRandom            Boolean             @default(false)
-  goalCategories            Category[]
+  id                          String                        @id @unique @default(cuid())
+  name                        String
+  slug                        String                        @unique
+  coverImage                  String?
+  variants                    Variant[]
+  goals                       Goal[]
+  owners                      User[]                        @relation("GameOwners")
+  moderators                  User[]                        @relation("GameModerators")
+  createdAt                   DateTime                      @default(now())
+  updatedAt                   DateTime                      @updatedAt
+  enableSRLv5                 Boolean                       @default(false)
+  rooms                       Room[]
+  racetimeCategory            String?
+  racetimeGoal                String?
+  racetimeBeta                Boolean                       @default(false)
+  usersFavorited              User[]                        @relation("GameFavorites")
+  difficultyVariantsEnabled   Boolean                       @default(false)
+  difficultyVariants          DifficultyVariant[]
+  difficultyGroups            Int?
+  slugWords                   String[]                      @default([])
+  useTypedRandom              Boolean                       @default(false)
+  goalCategories              Category[]
+  generationListMode          GenerationListMode            @default(NONE)
+  generationListTransform     GenerationListTransform       @default(NONE)
+  generationBoardLayout       GenerationBoardLayout         @default(NONE)
+  generationGoalSelection     GenerationGoalSelection       @default(RANDOM)
+  generationGoalRestrictions  GenerationGoalRestriction[]   @default([])
+  generationGlobalAdjustments GenerationGlobalAdjustments[] @default([])
 }
 
 model DifficultyVariant {
@@ -172,4 +178,34 @@ enum BingoMode {
   LINES
   BLACKOUT
   LOCKOUT
+}
+
+// board generation enums
+enum GenerationListMode {
+  NONE
+}
+
+enum GenerationListTransform {
+  NONE
+}
+
+enum GenerationBoardLayout {
+  NONE
+  SRLv5
+  ISAAC
+}
+
+enum GenerationGoalSelection {
+  RANDOM
+  DIFFICULTY
+}
+
+enum GenerationGoalRestriction {
+  LINE_TYPE_EXCLUSION // minimize type overlap between goals in same line
+}
+
+enum GenerationGlobalAdjustments {
+  NONE // make no adjustments to goal list after selecting/placing a goal
+  SYNERGIZE // add an additional copy of each goal sharing a type to increase final synergy
+  BOARD_TYPE_MAX // enforce a maximum number of goals of a specific type in the board
 }

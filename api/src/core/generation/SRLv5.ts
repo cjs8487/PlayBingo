@@ -30,7 +30,7 @@ lineCheckList[23] = [2, 7, 12, 17, 20, 21, 23, 24];
 lineCheckList[24] = [20, 21, 22, 24, 3, 8, 13, 18];
 lineCheckList[25] = [0, 6, 12, 18, 20, 21, 22, 23, 19, 14, 9, 4];
 
-function difficulty(i: number, seed: number) {
+export function difficulty(i: number, seed: number) {
     let Num3 = seed % 1000;
     let Rem8 = Num3 % 8;
     let Rem4 = Math.floor(Rem8 / 2);

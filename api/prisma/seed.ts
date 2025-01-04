@@ -1,5 +1,10 @@
 import { pbkdf2Sync, randomBytes } from 'crypto';
-import { PrismaClient } from '@prisma/client';
+import {
+    GenerationBoardLayout,
+    GenerationGoalRestriction,
+    GenerationGoalSelection,
+    PrismaClient,
+} from '@prisma/client';
 
 const prisma = new PrismaClient();
 
@@ -57,6 +62,7 @@ async function main() {
     await prisma.category.deleteMany();
     await prisma.goal.deleteMany();
     await prisma.game.deleteMany();
+
     const categories = [
         'Category 1',
         'Category 2',
@@ -116,6 +122,10 @@ async function main() {
             racetimeBeta: false,
             owners: { connect: [{ id: owner.id }] },
             moderators: { connect: [{ id: mod.id }] },
+            generationBoardLayout: GenerationBoardLayout.SRLv5,
+            generationGoalRestrictions: [
+                GenerationGoalRestriction.LINE_TYPE_EXCLUSION,
+            ],
         },
     });
     await prisma.category.createMany({
@@ -727,6 +737,11 @@ async function main() {
                 'summit',
                 'tundra',
             ],
+            generationBoardLayout: GenerationBoardLayout.SRLv5,
+            generationGoalRestrictions: [
+                GenerationGoalRestriction.LINE_TYPE_EXCLUSION,
+            ],
+            generationGoalSelection: GenerationGoalSelection.DIFFICULTY,
         },
     });
     await prisma.category.createMany({
