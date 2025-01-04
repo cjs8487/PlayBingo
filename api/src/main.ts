@@ -8,12 +8,23 @@ import { logDebug, logger, logInfo } from './Logger';
 import { allRooms, roomWebSocketServer } from './core/RoomServer';
 import { disconnect } from './database/Database';
 import api from './routes/api';
+import BoardGenerator from './core/generation/BoardGenerator';
+import { listToBoard } from './util/RoomUtils';
 
 declare module 'express-session' {
     interface SessionData {
         user?: string;
     }
 }
+
+const generator = new BoardGenerator('epic');
+const func = async () => {
+    await generator.init();
+    await generator.reset();
+    generator.generateBoard();
+    console.log(listToBoard(generator.board));
+};
+func();
 
 // export is needed for tests
 export const app = express();
