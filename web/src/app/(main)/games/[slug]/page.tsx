@@ -12,7 +12,6 @@ import GoalManagement from '../../../../components/game/goals/GoalManagement';
 import { GoalManagerContextProvider } from '../../../../context/GoalManagerContext';
 import { alertError } from '../../../../lib/Utils';
 import Variants from '../../../../components/game/Variants';
-import { ConfirmProvider } from 'material-ui-confirm';
 import GoalCategories from '../../../../components/game/GoalCategories';
 
 export default function GamePage({
@@ -143,9 +142,7 @@ export default function GamePage({
                     <PermissionsManagement slug={slug} gameData={gameData} />
                 </TabPanel>
                 <TabPanel value="Settings">
-                    <ConfirmProvider>
-                        <GameSettings gameData={gameData} />
-                    </ConfirmProvider>
+                    <GameSettings gameData={gameData} />
                 </TabPanel>
             </TabContext>
         </Container>
