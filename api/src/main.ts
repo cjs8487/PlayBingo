@@ -1,32 +1,37 @@
-import Database, { Database as DB } from 'better-sqlite3';
-import SqliteStore from 'better-sqlite3-session-store';
 import bodyParser from 'body-parser';
+import * as console from 'console';
 import express from 'express';
 import session from 'express-session';
+import path from 'path';
 import { port, sessionSecret, testing } from './Environment';
 import { logDebug, logger, logInfo } from './Logger';
 import { allRooms, roomWebSocketServer } from './core/RoomServer';
+import BoardGenerator from './core/generation/BoardGenerator';
 import { disconnect } from './database/Database';
 import api from './routes/api';
+import { healthCheckRouter } from './routes/healthCheck';
 import {
+    bodySizeHistogram,
     metricsRouter,
     requestDurationHistogram,
-    bodySizeHistogram,
 } from './routes/metrics';
-import path from 'path';
-import {
-    closeSessionDatabase,
-    removeSessionsForUser,
-    sessionStore,
-} from './util/Session';
-import { healthCheckRouter } from './routes/healthCheck';
-import * as console from 'console';
+import { listToBoard } from './util/RoomUtils';
+import { closeSessionDatabase, sessionStore } from './util/Session';
 
 declare module 'express-session' {
     interface SessionData {
         user?: string;
     }
 }
+
+const generator = new BoardGenerator('epic');
+const func = async () => {
+    await generator.init();
+    await generator.reset();
+    generator.generateBoard();
+    console.log(listToBoard(generator.board));
+};
+func();
 
 // export is needed for tests
 export const app = express();
