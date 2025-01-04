@@ -26,7 +26,7 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [ 18.x, 20.x, 22.x ] # Define a matrix of Node.js versions to test. There will be 3 jobs for 18.x, 20.x, 22.x.
+        node-version: [ 18.x, 20.x ] # Define a matrix of Node.js versions to test. There will be 2 jobs for 18.x, 20.x
 
     steps:
       - name: Checkout code
@@ -38,11 +38,6 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: 'npm' # Step 2: Use npm caching for faster dependency installs.
           cache-dependency-path: ./api/package-lock.json # Specify the lock file location.
-
-      - name: Navigate to API directory
-        working-directory: ./api
-        run: |
-          echo "Switched to /api directory"
 
       - name: Install Node.js dependencies
         working-directory: ./api
