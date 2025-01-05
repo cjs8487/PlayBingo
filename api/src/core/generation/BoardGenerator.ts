@@ -112,7 +112,6 @@ export default class BoardGenerator {
             },
             {},
         );
-        console.log(this.groupedGoals);
 
         // goal placement
         for (let i = 0; i < 25; i++) {
