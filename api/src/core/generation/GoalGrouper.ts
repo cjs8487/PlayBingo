@@ -15,18 +15,15 @@ export const createGoalGrouper = (strategy: GenerationGoalSelection) => {
 };
 
 const difficulty: GoalGrouper = (generator) => {
-    generator.groupedGoals = generator.goals.reduce<{ [k: number]: Goal[] }>(
-        (curr, goal) => {
-            const diff = goal.difficulty ?? 0;
-            if (curr[diff]) {
-                curr[diff].push(goal);
-            } else {
-                curr[diff] = [goal];
-            }
-            return curr;
-        },
-        {},
-    );
+    generator.groupedGoals = generator.goals.reduce<Goal[][]>((curr, goal) => {
+        const diff = goal.difficulty ?? 0;
+        if (curr[diff]) {
+            curr[diff].push(goal);
+        } else {
+            curr[diff] = [goal];
+        }
+        return curr;
+    }, []);
 };
 
 const random: GoalGrouper = (generator) => {
