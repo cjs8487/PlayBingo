@@ -8,8 +8,6 @@ import {
     Goal,
 } from '@prisma/client';
 import BoardGenerator from '../../core/generation/BoardGenerator';
-import { prismaMock } from '../prisma';
-import exp from 'constants';
 
 const categories = [
     'Category 1',
@@ -85,10 +83,64 @@ describe('Board Layout', () => {
             [],
         );
 
-        it('throws not implemented', () => {
-            expect(() => {
-                generator.generateBoardLayout();
-            }).toThrow('Not implemented');
+        it('Generates 1-25', () => {
+            generator.reset();
+            generator.generateBoardLayout();
+            const layout = generator.layout;
+            expect(layout).toHaveLength(25);
+            for (let i = 1; i <= 25; i++) {
+                expect(layout).toContain(i);
+            }
+        });
+
+        it('Generates a valid magic square', () => {
+            generator.reset();
+            generator.generateBoardLayout();
+            const layout = generator.layout;
+            const n = 5;
+            const magicNum = n * ((n ** 2 + 1) / 2);
+
+            //rows
+            for (let i = 0; i < n; i++) {
+                const base = n * i;
+                expect(
+                    layout[base] +
+                        layout[base + 1] +
+                        layout[base + 2] +
+                        layout[base + 3] +
+                        layout[base + 4],
+                ).toBe(magicNum);
+            }
+
+            // columns
+            for (let i = 0; i < n; i++) {
+                expect(
+                    layout[i] +
+                        layout[i + n] +
+                        layout[i + 2 * n] +
+                        layout[i + 3 * n] +
+                        layout[i + 4 * n],
+                ).toBe(magicNum);
+            }
+
+            // diagonals
+            expect(
+                layout[0] + layout[6] + layout[12] + layout[18] + layout[24],
+            ).toBe(magicNum);
+            expect(
+                layout[4] + layout[8] + layout[12] + layout[16] + layout[20],
+            ).toBe(magicNum);
+        });
+
+        it('Generates the same square given a seed', () => {
+            generator.reset(12345);
+            generator.generateBoardLayout();
+            const layout = generator.layout;
+            const expected = [
+                19, 12, 1, 10, 23, 6, 25, 18, 14, 2, 13, 4, 7, 21, 20, 22, 16,
+                15, 3, 9, 5, 8, 24, 17, 11,
+            ];
+            expect(layout).toEqual(expected);
         });
     });
 
