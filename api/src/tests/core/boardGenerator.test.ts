@@ -23,7 +23,10 @@ const goals: Goal[] = Array.from({ length: 100 }).map((_, i) => ({
     id: `${i}`,
     goal: `Goal ${i + 1}`,
     description: `Description for Goal ${i + 1}`,
-    categories: [categories[i % categories.length]],
+    categories: [
+        categories[i % categories.length],
+        categories[(i + 1) % categories.length],
+    ],
     difficulty: (i % 25) + 1,
     createdAt: new Date(),
     updatedAt: new Date(),
@@ -260,10 +263,57 @@ describe('Global Adjustments', () => {
             [GenerationGlobalAdjustments.SYNERGIZE],
         );
 
-        it('throws not implemented', () => {
-            expect(() => {
-                generator.adjustGoalList();
-            }).toThrow('Not implemented');
+        it('Duplicates goals that share a category', () => {
+            generator.reset();
+            generator.groupedGoals = [[goals[1]]];
+            generator.adjustGoalList(goals[0]);
+            expect(generator.groupedGoals[0]).toHaveLength(2);
+        });
+
+        it('Duplicates multiple goals in group', () => {
+            generator.reset();
+            generator.groupedGoals = [
+                [goals[1], goals[8]],
+                [goals[2]],
+                [goals[15], goals[22], goals[29]],
+            ];
+            generator.adjustGoalList(goals[0]);
+            expect(generator.groupedGoals[0]).toHaveLength(4);
+            expect(generator.groupedGoals[2]).toHaveLength(6);
+        });
+
+        it('Duplicates a goal with multiple shared categories multiple times', () => {
+            generator.reset();
+            generator.groupedGoals = [[goals[7]], [goals[14], goals[21]]];
+            generator.adjustGoalList(goals[0]);
+            expect(generator.groupedGoals[0]).toHaveLength(3);
+            expect(generator.groupedGoals[1]).toHaveLength(6);
+        });
+
+        it('Duplicates a mixed group correctly', () => {
+            generator.reset();
+            generator.groupedGoals = [
+                [goals[1], goals[7]],
+                [goals[14], goals[15], goals[21]],
+            ];
+            generator.adjustGoalList(goals[0]);
+            expect(generator.groupedGoals[0]).toHaveLength(5);
+            expect(generator.groupedGoals[1]).toHaveLength(8);
+        });
+
+        it('Does not duplicate goals that share no categories', () => {
+            generator.reset();
+            generator.groupedGoals = [
+                [goals[2]],
+                [goals[1], goals[3]],
+                [goals[4], goals[7]],
+                [goals[5], goals[14], goals[8], goals[11]],
+            ];
+            generator.adjustGoalList(goals[0]);
+            expect(generator.groupedGoals[0]).toHaveLength(1);
+            expect(generator.groupedGoals[1]).toHaveLength(3);
+            expect(generator.groupedGoals[2]).toHaveLength(4);
+            expect(generator.groupedGoals[3]).toHaveLength(7);
         });
     });
 
@@ -280,7 +330,7 @@ describe('Global Adjustments', () => {
 
         it('throws not implemented', () => {
             expect(() => {
-                generator.adjustGoalList();
+                generator.adjustGoalList(goals[0]);
             }).toThrow('Not implemented');
         });
     });

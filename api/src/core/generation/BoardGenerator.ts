@@ -38,7 +38,7 @@ export default class BoardGenerator {
     seed: number;
     allGoals: Goal[] = [];
     goals: Goal[] = [];
-    groupedGoals: { [k: number]: Goal[] } = {};
+    groupedGoals: Goal[][] = [];
     layout: number[] = [];
     board: Goal[] = [];
 
@@ -79,7 +79,7 @@ export default class BoardGenerator {
     async reset(seed?: number) {
         this.seed = seed ?? Math.ceil(999999 * Math.random());
         this.goals = [...this.allGoals];
-        this.groupedGoals = {};
+        this.groupedGoals = [];
         this.layout = [];
         this.board = [];
     }
@@ -129,7 +129,7 @@ export default class BoardGenerator {
         return goals;
     }
 
-    adjustGoalList() {
-        this.globalAdjustments.forEach((f) => f(this));
+    adjustGoalList(lastPlaced: Goal) {
+        this.globalAdjustments.forEach((f) => f(this, lastPlaced));
     }
 }
