@@ -1,13 +1,19 @@
-import { GenerationGoalRestriction } from '@prisma/client';
+import { GenerationGoalRestriction, Goal } from '@prisma/client';
 import BoardGenerator from './BoardGenerator';
 
 export type GoalPlacementRestriction = (generator: BoardGenerator) => void;
 
-export const createRestriction = (strategy: GenerationGoalRestriction) => {
+export const createPlacementRestriction = (
+    strategy: GenerationGoalRestriction,
+) => {
     switch (strategy) {
         case 'LINE_TYPE_EXCLUSION':
-            throw Error('Not implemented');
+            return preferDistinctTypesInLine;
         default:
             throw Error('Unknwon GenerationGoalRestriction');
     }
+};
+
+const preferDistinctTypesInLine: GoalPlacementRestriction = (generator) => {
+    throw Error('Not implemented');
 };

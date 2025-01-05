@@ -3,13 +3,14 @@ import BoardGenerator from './BoardGenerator';
 
 export type BoardLayoutGenerator = (generator: BoardGenerator) => void;
 
-export const createGenerator = (strategy: GenerationBoardLayout) => {
+export const createLayoutGenerator = (strategy: GenerationBoardLayout) => {
     switch (strategy) {
         case 'NONE':
             return noLayout;
         case 'SRLv5':
+            return magicSquare;
         case 'ISAAC':
-            throw Error('Not implemented');
+            return staticDifficulty;
         default:
             throw Error('Unknown GenerationListMode strategy');
     }
@@ -17,4 +18,12 @@ export const createGenerator = (strategy: GenerationBoardLayout) => {
 
 const noLayout: BoardLayoutGenerator = (generator) => {
     generator.layout = new Array(25).fill(0);
+};
+
+const magicSquare: BoardLayoutGenerator = (generator) => {
+    throw Error('Not implemented');
+};
+
+const staticDifficulty: BoardLayoutGenerator = (generator) => {
+    throw Error('Not implemented');
 };
