@@ -3,12 +3,26 @@ import {
     Game,
     GenerationBoardLayout,
     GenerationGoalSelection,
+    GenerationListMode,
+    GenerationListTransform,
+    GenerationGlobalAdjustments,
+    GenerationGoalRestriction,
 } from '@prisma/client';
 import { gameForSlug } from '../../database/games/Games';
 import { goalsForGame } from '../../database/games/Goals';
 import { difficulty } from './SRLv5';
-
-const NOT_INITIALIZED = 'Generator not properly initialized';
+import { createPruner, GoalListPruner } from './GoalListPruner';
+import { createTransformer, GoalListTransformer } from './GoalListTransformer';
+import {
+    BoardLayoutGenerator,
+    createLayoutGenerator,
+} from './BoardLayoutGenerator';
+import {
+    createPlacementRestriction,
+    GoalPlacementRestriction,
+} from './GoalPlacementRestriction';
+import { createGlobalAdjustment, GlobalAdjustment } from './GlobalAdjustments';
+import { createGoalGrouper, GoalGrouper } from './GoalGrouper';
 
 const lineCheckList: number[][] = [];
 lineCheckList[0] = [1, 2, 3, 4, 5, 10, 15, 20, 6, 12, 18, 24];
@@ -39,46 +53,55 @@ lineCheckList[22] = [2, 7, 12, 17, 20, 21, 23, 24];
 lineCheckList[23] = [20, 21, 22, 24, 3, 8, 13, 18];
 lineCheckList[24] = [0, 6, 12, 18, 20, 21, 22, 23, 19, 14, 9, 4];
 
-//TODO: implement strategy pattern to improve readability of this class
-
 /**
  *
  */
 export default class BoardGenerator {
-    slug: string;
-    initialized: boolean = false;
-    game?: Game;
+    goalListPruner: GoalListPruner;
+    goalListTransformer: GoalListTransformer;
+    layoutGenerator: BoardLayoutGenerator;
+    goalGrouper: GoalGrouper;
+    placementRestrictions: GoalPlacementRestriction[];
+    globalAdjustments: GlobalAdjustment[];
+
     allGoals: Goal[] = [];
     goals: Goal[] = [];
     groupedGoals: { [k: number]: Goal[] } = {};
     layout: number[] = [];
     board: Goal[] = [];
 
-    constructor(slug: string) {
-        this.slug = slug;
-    }
-
-    async init() {
-        const game = await gameForSlug(this.slug);
-        if (!game) {
-            throw Error('Unknown game');
+    constructor(
+        goals: Goal[],
+        pruneStrategy: GenerationListMode,
+        transformStrategy: GenerationListTransform,
+        layoutStrategy: GenerationBoardLayout,
+        selectionStrategy: GenerationGoalSelection,
+        placementStrategies: GenerationGoalRestriction[],
+        adjustmentStrategies: GenerationGlobalAdjustments[],
+    ) {
+        // input validation
+        if (layoutStrategy === GenerationBoardLayout.NONE) {
+            if (selectionStrategy !== GenerationGoalSelection.RANDOM) {
+                // random generation is the only mode that works with no board
+                // layout precalcualtion
+                throw Error('Invalid configuration');
+            }
         }
 
-        this.game = game;
-
-        if (!this.validateGeneratorConfig()) {
-            throw Error('Invalid game generator configuration');
-        }
-
-        this.allGoals = await goalsForGame(this.slug);
-
-        this.initialized = true;
+        this.allGoals = goals;
+        this.goalListPruner = createPruner(pruneStrategy);
+        this.goalListTransformer = createTransformer(transformStrategy);
+        this.layoutGenerator = createLayoutGenerator(layoutStrategy);
+        this.goalGrouper = createGoalGrouper(selectionStrategy);
+        this.placementRestrictions = placementStrategies.map((s) =>
+            createPlacementRestriction(s),
+        );
+        this.globalAdjustments = adjustmentStrategies.map((s) =>
+            createGlobalAdjustment(s),
+        );
     }
 
     async reset() {
-        if (!this.initialized) {
-            await this.init();
-        }
         this.goals = [...this.allGoals];
         this.groupedGoals = {};
         this.layout = [];
@@ -86,9 +109,6 @@ export default class BoardGenerator {
     }
 
     async generateBoard() {
-        if (!this.initialized || !this.game) {
-            throw Error(NOT_INITIALIZED);
-        }
         // get the goal list to be used in generation
         this.pruneGoalList();
         this.transformGoals();
@@ -97,90 +117,50 @@ export default class BoardGenerator {
         this.generateBoardLayout();
 
         // preprocessing
-        const useDiff =
-            this.game.generationGoalSelection ===
-            GenerationGoalSelection.DIFFICULTY;
-        this.groupedGoals = this.goals.reduce<{ [k: number]: Goal[] }>(
-            (curr, goal) => {
-                const diff = useDiff ? goal.difficulty ?? 0 : 0;
-                if (curr[diff]) {
-                    curr[diff].push(goal);
-                } else {
-                    curr[diff] = [goal];
-                }
-                return curr;
-            },
-            {},
-        );
+        // const useDiff =
+        //     this.game.generationGoalSelection ===
+        //     GenerationGoalSelection.DIFFICULTY;
+        // this.groupedGoals = this.goals.reduce<{ [k: number]: Goal[] }>(
+        //     (curr, goal) => {
+        //         const diff = useDiff ? goal.difficulty ?? 0 : 0;
+        //         if (curr[diff]) {
+        //             curr[diff].push(goal);
+        //         } else {
+        //             curr[diff] = [goal];
+        //         }
+        //         return curr;
+        //     },
+        //     {},
+        // );
 
         // goal placement
-        for (let i = 0; i < 25; i++) {
-            const goals = this.validGoalsForCell(i);
-            const goal = goals.pop();
-            if (!goal) {
-                throw Error('Unable to place goal');
-            }
-            this.board[i] = goal;
-        }
-    }
-
-    validateGeneratorConfig() {
-        if (!this.game) {
-            throw Error(NOT_INITIALIZED);
-        }
-        if (this.game.generationBoardLayout === GenerationBoardLayout.NONE) {
-            if (
-                this.game.generationGoalSelection !==
-                GenerationGoalSelection.RANDOM
-            ) {
-                // random generation is the only mode that works with no board
-                // layout precalcualtion
-                return false;
-            }
-        }
-        return true;
+        // for (let i = 0; i < 25; i++) {
+        //     const goals = this.validGoalsForCell(i);
+        //     const goal = goals.pop();
+        //     if (!goal) {
+        //         throw Error('Unable to place goal');
+        //     }
+        //     this.board[i] = goal;
+        // }
     }
 
     pruneGoalList() {
-        if (!this.initialized || !this.game || !this.goals) {
-            throw Error(NOT_INITIALIZED);
-        }
-        switch (this.game.generationListMode) {
-            case 'NONE':
-                break;
-            default:
-                throw Error('Unknown GenerationListMode');
-        }
+        this.goalListPruner(this);
     }
 
     transformGoals() {
-        if (!this.initialized || !this.game || !this.goals) {
-            throw Error(NOT_INITIALIZED);
-        }
-        switch (this.game.generationListTransform) {
-            case 'NONE':
-                break;
-            default:
-                throw Error('Unknown GenerationListMode');
-        }
+        this.goalListTransformer(this);
     }
 
     generateBoardLayout() {
-        if (!this.initialized || !this.game) {
-            throw Error(NOT_INITIALIZED);
-        }
-        switch (this.game.generationBoardLayout) {
-            case 'NONE':
-                this.layout = new Array(25).fill(0);
-                break;
-            case 'SRLv5':
-                for (let i = 0; i < 25; i++) {
-                    this.layout[i] = difficulty(i + 1, 0);
-                }
-                break;
-            default:
-                throw Error('Unknown GenerationListMode');
-        }
+        this.layoutGenerator(this);
+        // for (let i = 0; i < 25; i++) {
+        //     this.layout[i] = difficulty(i + 1, 0);
+        // }
+    }
+
+    groupGoals() {
+        this.goalGrouper(this);
     }
 
     checkLine(i: number, typesA: string[]) {
@@ -207,51 +187,27 @@ export default class BoardGenerator {
     }
 
     validGoalsForCell(cell: number) {
-        if (!this.initialized || !this.game || !this.goals) {
-            throw Error(NOT_INITIALIZED);
-        }
-        let goals: Goal[] = [...this.groupedGoals[this.layout[cell]]];
-        this.game.generationGoalRestrictions.forEach((adj) => {
-            switch (adj) {
-                case 'LINE_TYPE_EXCLUSION':
-                    // minimizes the type overlap with already placed goals
-                    let minSyn = Number.MAX_VALUE;
-                    let synGoals: Goal[] = [];
-                    goals.forEach((g) => {
-                        const synergy = this.checkLine(cell, g.categories);
-                        if (synergy === minSyn) {
-                            goals.push(g);
-                        } else if (synergy < minSyn) {
-                            synGoals = [g];
-                            minSyn = synergy;
-                        }
-                    });
-                    goals = synGoals;
-                    break;
-                default:
-                    throw Error('Unknown GenerationGoalRestriction');
-            }
-        });
-        return goals;
+        this.placementRestrictions.forEach((f) => f(this));
+
+        // let goals: Goal[] = [...this.groupedGoals[this.layout[cell]]];
+        // // minimizes the type overlap with already placed goals
+        // let minSyn = Number.MAX_VALUE;
+        // let synGoals: Goal[] = [];
+        // goals.forEach((g) => {
+        //     const synergy = this.checkLine(cell, g.categories);
+        //     if (synergy === minSyn) {
+        //         goals.push(g);
+        //     } else if (synergy < minSyn) {
+        //         synGoals = [g];
+        //         minSyn = synergy;
+        //     }
+        // });
+        // goals = synGoals;
+
+        // return goals;
     }
 
-    adjustGoalList(chosenGoal: Goal) {
-        if (!this.initialized || !this.game || !this.goals) {
-            throw Error(NOT_INITIALIZED);
-        }
-        this.game.generationGlobalAdjustments.forEach((adj) => {
-            switch (adj) {
-                case 'NONE':
-                    break;
-                case 'SYNERGIZE':
-                    // TODO: duplicate goals in the goal
-                    break;
-                case 'BOARD_TYPE_MAX':
-                    // TODO: update global data and remove goals if needed
-                    break;
-                default:
-                    throw Error('Unknown GenerationGlobalAdjustment');
-            }
-        });
+    adjustGoalList() {
+        this.globalAdjustments.forEach((f) => f(this));
     }
 }

@@ -25,15 +25,6 @@ declare module 'express-session' {
     }
 }
 
-const generator = new BoardGenerator('epic');
-const func = async () => {
-    await generator.init();
-    await generator.reset();
-    generator.generateBoard();
-    console.log(listToBoard(generator.board));
-};
-func();
-
 // export is needed for tests
 export const app = express();
 
