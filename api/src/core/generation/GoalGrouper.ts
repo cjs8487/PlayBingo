@@ -1,4 +1,4 @@
-import { GenerationGoalSelection } from '@prisma/client';
+import { GenerationGoalSelection, Goal } from '@prisma/client';
 import BoardGenerator from './BoardGenerator';
 
 export type GoalGrouper = (generator: BoardGenerator) => void;
@@ -15,7 +15,18 @@ export const createGoalGrouper = (strategy: GenerationGoalSelection) => {
 };
 
 const difficulty: GoalGrouper = (generator) => {
-    throw Error('Not implemented');
+    generator.groupedGoals = generator.goals.reduce<{ [k: number]: Goal[] }>(
+        (curr, goal) => {
+            const diff = goal.difficulty ?? 0;
+            if (curr[diff]) {
+                curr[diff].push(goal);
+            } else {
+                curr[diff] = [goal];
+            }
+            return curr;
+        },
+        {},
+    );
 };
 
 const random: GoalGrouper = (generator) => {
