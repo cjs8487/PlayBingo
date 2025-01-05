@@ -9,6 +9,7 @@ import {
 } from '@prisma/client';
 import BoardGenerator from '../../core/generation/BoardGenerator';
 import { prismaMock } from '../prisma';
+import exp from 'constants';
 
 const categories = [
     'Category 1',
@@ -50,6 +51,29 @@ describe('List Pruning', () => {});
 describe('Goal Transformation', () => {});
 
 describe('Board Layout', () => {
+    describe('No Layout', () => {
+        const generator = new BoardGenerator(
+            goals,
+            GenerationListMode.NONE,
+            GenerationListTransform.NONE,
+            GenerationBoardLayout.NONE,
+            GenerationGoalSelection.RANDOM,
+            [],
+            [],
+        );
+
+        it('Generates a zero-filled array', () => {
+            generator.generateBoardLayout();
+            const layout = generator.layout;
+            expect(layout).toHaveLength(25);
+            expect(layout).toContain(0);
+            expect(layout).not.toContain(1);
+            layout.forEach((v) => {
+                expect(v).toBe(0);
+            });
+        });
+    });
+
     describe('Magic Square', () => {
         const generator = new BoardGenerator(
             goals,
