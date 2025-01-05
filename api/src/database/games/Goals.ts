@@ -63,7 +63,7 @@ export const deleteGoal = async (id: string) => {
     }
 };
 
-type GoalInput = {
+export type GoalInput = {
     goal: string;
     description?: string;
     categories?: string[];
@@ -92,7 +92,7 @@ export const gameForGoal = async (goalId: string) => {
     });
 
     return goal?.game;
-}
+};
 
 export const deleteAllGoalsForGame = async (gameSlug: string) => {
     try {
@@ -104,7 +104,9 @@ export const deleteAllGoalsForGame = async (gameSlug: string) => {
         if (e instanceof Prisma.PrismaClientKnownRequestError) {
             logError(`Database Known Client error - ${e.message}`);
         } else {
-            logError('An unknown error occurred while attempting a database operation');
+            logError(
+                'An unknown error occurred while attempting a database operation',
+            );
         }
         return false;
     }
