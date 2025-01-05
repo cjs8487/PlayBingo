@@ -15,9 +15,11 @@ const categories = [
     'Category 3',
     'Category 4',
     'Category 5',
+    'Category 6',
+    'Category 7',
 ];
 
-const goals: Goal[] = Array.from({ length: 25 }).map((_, i) => ({
+const goals: Goal[] = Array.from({ length: 100 }).map((_, i) => ({
     id: `${i}`,
     goal: `Goal ${i + 1}`,
     description: `Description for Goal ${i + 1}`,
@@ -193,10 +195,12 @@ describe('Goal Grouping', () => {
             [],
         );
 
-        it('throws not implemented', () => {
-            expect(() => {
-                generator.groupGoals();
-            }).toThrow('Not implemented');
+        it('Correctly groups goals with difficulties', () => {
+            generator.reset();
+            generator.groupGoals();
+            for (let i = 1; i <= 25; i++) {
+                expect(generator.groupedGoals).toHaveProperty(`${i}`);
+            }
         });
     });
 });
@@ -213,10 +217,33 @@ describe('Goal Restriction', () => {
             [],
         );
 
-        it('throws not implemented', () => {
-            expect(() => {
-                generator.validGoalsForCell(0);
-            }).toThrow('Not implemented');
+        it('Prefers to place goals of differing types in the same row', () => {
+            generator.reset();
+            generator.generateBoardLayout();
+            generator.groupGoals();
+            let goals = generator.validGoalsForCell(0);
+            expect(goals).toEqual(generator.groupedGoals[generator.layout[0]]);
+            const g = goals.pop();
+            if (!g) {
+                return fail();
+            }
+            generator.board[0] = g;
+            let restrictedGoals = generator.validGoalsForCell(1);
+            // the sample goals only have one category each so we can just
+            // expect categories[0] to not equal
+            restrictedGoals.forEach((r) => {
+                expect(r.categories[0]).not.toEqual(g.categories[0]);
+            });
+
+            restrictedGoals = generator.validGoalsForCell(5);
+            restrictedGoals.forEach((r) => {
+                expect(r.categories[0]).not.toEqual(g.categories[0]);
+            });
+
+            restrictedGoals = generator.validGoalsForCell(12);
+            restrictedGoals.forEach((r) => {
+                expect(r.categories[0]).not.toEqual(g.categories[0]);
+            });
         });
     });
 });
