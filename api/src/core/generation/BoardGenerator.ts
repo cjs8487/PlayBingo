@@ -64,6 +64,7 @@ export default class BoardGenerator {
     placementRestrictions: GoalPlacementRestriction[];
     globalAdjustments: GlobalAdjustment[];
 
+    seed: number;
     allGoals: Goal[] = [];
     goals: Goal[] = [];
     groupedGoals: { [k: number]: Goal[] } = {};
@@ -78,6 +79,7 @@ export default class BoardGenerator {
         selectionStrategy: GenerationGoalSelection,
         placementStrategies: GenerationGoalRestriction[],
         adjustmentStrategies: GenerationGlobalAdjustments[],
+        seed?: number,
     ) {
         // input validation
         if (layoutStrategy === GenerationBoardLayout.NONE) {
@@ -99,9 +101,12 @@ export default class BoardGenerator {
         this.globalAdjustments = adjustmentStrategies.map((s) =>
             createGlobalAdjustment(s),
         );
+
+        this.seed = seed ?? Math.ceil(999999 * Math.random());
     }
 
-    async reset() {
+    async reset(seed?: number) {
+        this.seed = seed ?? Math.ceil(999999 * Math.random());
         this.goals = [...this.allGoals];
         this.groupedGoals = {};
         this.layout = [];
@@ -154,9 +159,6 @@ export default class BoardGenerator {
 
     generateBoardLayout() {
         this.layoutGenerator(this);
-        // for (let i = 0; i < 25; i++) {
-        //     this.layout[i] = difficulty(i + 1, 0);
-        // }
     }
 
     groupGoals() {
