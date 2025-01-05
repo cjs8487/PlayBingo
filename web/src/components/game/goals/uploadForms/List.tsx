@@ -43,6 +43,10 @@ export function ListUploadForm({ slug, close }: UploadFormProps) {
                     multiline
                     rows={10}
                     fullWidth
+                    placeholder={
+                        '[\n    "Goal text",\n    "Another goal text",\n    {\n        "goal": "You can also specify additional properties like this",\n        "description": "Extended information about the goal",\n        "categories":["Short", "Item"],\n        "difficulty": 1\n    }\n]'
+                    }
+                    shrinkLabel
                 />
                 <Box mt={2} display="flex">
                     <Button type="button" color="error" onClick={close}>
