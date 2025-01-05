@@ -205,7 +205,6 @@ enum GenerationGoalRestriction {
 }
 
 enum GenerationGlobalAdjustments {
-  NONE // make no adjustments to goal list after selecting/placing a goal
   SYNERGIZE // add an additional copy of each goal sharing a type to increase final synergy
   BOARD_TYPE_MAX // enforce a maximum number of goals of a specific type in the board
 }

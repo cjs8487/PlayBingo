@@ -10,8 +10,6 @@ export const createGlobalAdjustment = (
     strategy: GenerationGlobalAdjustments,
 ) => {
     switch (strategy) {
-        case 'NONE':
-            return noAdjustment;
         case 'SYNERGIZE':
             return synergize;
         case 'BOARD_TYPE_MAX':
@@ -20,8 +18,6 @@ export const createGlobalAdjustment = (
             throw Error('Unknown GenerationListMode strategy');
     }
 };
-
-const noAdjustment: GlobalAdjustment = () => {};
 
 const synergize: GlobalAdjustment = (generator, lastPlaced) => {
     for (let i = 0; i < generator.groupedGoals.length; i++) {
