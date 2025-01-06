@@ -8,6 +8,7 @@ import {
     Goal,
 } from '@prisma/client';
 import BoardGenerator from '../../core/generation/BoardGenerator';
+import { GeneratorGoal } from '../../core/generation/GeneratorCore';
 
 const categories = [
     'Category 1',
@@ -19,8 +20,7 @@ const categories = [
     'Category 7',
 ];
 
-const goals: Goal[] = Array.from({ length: 100 }).map((_, i) => ({
-    id: `${i}`,
+const goals: GeneratorGoal[] = Array.from({ length: 100 }).map((_, i) => ({
     goal: `Goal ${i + 1}`,
     description: `Description for Goal ${i + 1}`,
     categories: [
@@ -28,9 +28,6 @@ const goals: Goal[] = Array.from({ length: 100 }).map((_, i) => ({
         categories[(i + 1) % categories.length],
     ],
     difficulty: (i % 25) + 1,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    gameId: '1',
 }));
 
 describe('BoardGenerator initialization', () => {

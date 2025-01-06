@@ -1,11 +1,12 @@
 import { GenerationGoalRestriction, Goal } from '@prisma/client';
 import BoardGenerator from './BoardGenerator';
+import { GeneratorGoal } from './GeneratorCore';
 
 export type GoalPlacementRestriction = (
     generator: BoardGenerator,
     cell: number,
-    goals: Goal[],
-) => Goal[];
+    goals: GeneratorGoal[],
+) => GeneratorGoal[];
 
 export const createPlacementRestriction = (
     strategy: GenerationGoalRestriction,
@@ -54,7 +55,7 @@ const preferDistinctTypesInLine: GoalPlacementRestriction = (
 ) => {
     // minimizes the type overlap with already placed goals
     let minSyn = Number.MAX_VALUE;
-    let synGoals: Goal[] = [];
+    let synGoals: GeneratorGoal[] = [];
     goals.forEach((g) => {
         let synergy = 0;
         for (let j = 0; j < lineCheckList[cell].length; j++) {
