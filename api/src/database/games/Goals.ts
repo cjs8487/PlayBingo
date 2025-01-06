@@ -104,16 +104,37 @@ export type GoalInput = {
 };
 
 export const createGoals = async (slug: string, goals: GoalInput[]) => {
-    await prisma.game.update({
-        where: { slug },
-        data: {
-            goals: {
-                createMany: {
-                    data: goals,
+    const gameId = (await gameForSlug(slug))?.id;
+    if (!gameId) {
+        return undefined;
+    }
+
+    await prisma.$transaction(
+        goals.map((g) =>
+            prisma.goal.create({
+                data: {
+                    goal: g.goal,
+                    description: g.description,
+                    categories: {
+                        connectOrCreate: g.categories?.map((cat) => ({
+                            create: {
+                                name: cat,
+                                game: { connect: { slug: slug } },
+                            },
+                            where: {
+                                gameId_name: {
+                                    gameId,
+                                    name: cat,
+                                },
+                            },
+                        })),
+                    },
+                    difficulty: g.difficulty,
+                    game: { connect: { slug: slug } },
                 },
-            },
-        },
-    });
+            }),
+        ),
+    );
 };
 
 export const gameForGoal = async (goalId: string) => {
