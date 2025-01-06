@@ -23,6 +23,7 @@ import {
 } from './GoalPlacementRestriction';
 import { createGlobalAdjustment, GlobalAdjustment } from './GlobalAdjustments';
 import { createGoalGrouper, GoalGrouper } from './GoalGrouper';
+import { GeneratorGoal } from './GeneratorCore';
 
 /**
  *
@@ -36,14 +37,14 @@ export default class BoardGenerator {
     globalAdjustments: GlobalAdjustment[];
 
     seed: number;
-    allGoals: Goal[] = [];
-    goals: Goal[] = [];
-    groupedGoals: Goal[][] = [];
+    allGoals: GeneratorGoal[] = [];
+    goals: GeneratorGoal[] = [];
+    groupedGoals: GeneratorGoal[][] = [];
     layout: number[] = [];
-    board: Goal[] = [];
+    board: GeneratorGoal[] = [];
 
     constructor(
-        goals: Goal[],
+        goals: GeneratorGoal[],
         pruneStrategy: GenerationListMode,
         transformStrategy: GenerationListTransform,
         layoutStrategy: GenerationBoardLayout,
@@ -130,7 +131,7 @@ export default class BoardGenerator {
         return goals;
     }
 
-    adjustGoalList(lastPlaced: Goal) {
+    adjustGoalList(lastPlaced: GeneratorGoal) {
         this.globalAdjustments.forEach((f) => f(this, lastPlaced));
     }
 }

@@ -1,9 +1,10 @@
 import { GenerationGlobalAdjustments, Goal } from '@prisma/client';
 import BoardGenerator from './BoardGenerator';
+import { GeneratorGoal } from './GeneratorCore';
 
 export type GlobalAdjustment = (
     generator: BoardGenerator,
-    lastPlaced: Goal,
+    lastPlaced: GeneratorGoal,
 ) => void;
 
 export const createGlobalAdjustment = (
