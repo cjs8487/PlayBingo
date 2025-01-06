@@ -35,6 +35,8 @@ interface FormikTextFieldProps {
     multiline?: boolean;
     rows?: number;
     validate?: FieldValidator;
+    placeholder?: string;
+    shrinkLabel?: boolean;
 }
 
 export default function FormikTextField({
@@ -53,6 +55,8 @@ export default function FormikTextField({
     multiline,
     rows,
     validate,
+    placeholder,
+    shrinkLabel,
 }: FormikTextFieldProps) {
     const [field, meta] = useField<string>({ name, validate });
     return (
@@ -75,6 +79,8 @@ export default function FormikTextField({
             disabled={disabled}
             multiline={multiline}
             rows={rows}
+            placeholder={placeholder}
+            InputLabelProps={{ shrink: shrinkLabel }}
         />
     );
 }

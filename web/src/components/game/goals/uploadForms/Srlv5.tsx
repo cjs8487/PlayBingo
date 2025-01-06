@@ -68,6 +68,10 @@ export function SRLv5UploadForm({ slug, close }: UploadFormProps) {
                     multiline
                     rows={10}
                     fullWidth
+                    placeholder={
+                        'bingoList[1] = [\n    {name: "Difficulty 1 Goal", types: ["Short", "Category 2"]},\n    {name: "3 Items", types: ["Items"]},\n    ...\n];\nbingoList[2] = [\n    {name: "Difficulty 2 Goal", types: ["Category 3"]}\n    ...\n];\n...'
+                    }
+                    shrinkLabel
                 />
                 <Box mt={2} display="flex">
                     <Button type="button" color="error" onClick={close}>
