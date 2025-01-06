@@ -180,10 +180,10 @@ describe('Goal Grouping', () => {
             [],
         );
 
-        it('throws not implemented', () => {
-            expect(() => {
-                generator.groupGoals();
-            }).toThrow('Not implemented');
+        it('Puts all goals into group 0', () => {
+            generator.reset();
+            generator.groupGoals();
+            expect(generator.groupedGoals[0]).toEqual(generator.goals);
         });
     });
 
