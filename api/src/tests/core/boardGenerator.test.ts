@@ -335,3 +335,21 @@ describe('Global Adjustments', () => {
         });
     });
 });
+
+describe('Full Generation', () => {
+    const generator = new BoardGenerator(
+        goals,
+        GenerationListMode.NONE,
+        GenerationListTransform.NONE,
+        GenerationBoardLayout.NONE,
+        GenerationGoalSelection.RANDOM,
+        [],
+        [],
+    );
+
+    it('Successfully generates a fully random board', () => {
+        generator.reset();
+        expect(() => generator.generateBoard()).not.toThrow();
+        expect(generator.board).toHaveLength(25);
+    });
+});
