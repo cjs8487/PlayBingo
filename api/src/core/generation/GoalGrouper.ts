@@ -27,5 +27,5 @@ const difficulty: GoalGrouper = (generator) => {
 };
 
 const random: GoalGrouper = (generator) => {
-    throw Error('Not implemented');
+    generator.groupedGoals = [[...generator.goals]];
 };
