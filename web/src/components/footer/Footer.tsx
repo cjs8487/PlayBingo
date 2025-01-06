@@ -48,7 +48,8 @@ function LargeFooter() {
                     ))}
                 </Box>
                 <Typography variant="caption">
-                    © Copyright 2024 - 2024 Bingothon | All Rights Reserved |{' '}
+                    © Copyright 2024 - {new Date().getFullYear()} Bingothon |
+                    All Rights Reserved |{' '}
                     <Link href="/legal/privacy" component={NextLink}>
                         Privacy Policy
                     </Link>
@@ -93,7 +94,8 @@ function SmallFooter() {
                     ))}
                 </Box>
                 <Typography variant="caption">
-                    © Copyright 2024 - 2024 Bingothon | All Rights Reserved
+                    © Copyright 2024 - {new Date().getFullYear()} Bingothon |
+                    All Rights Reserved
                 </Typography>
             </Box>
             <Box display="flex">
