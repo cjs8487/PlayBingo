@@ -13,6 +13,7 @@ import { GoalManagerContextProvider } from '../../../../context/GoalManagerConte
 import { alertError } from '../../../../lib/Utils';
 import Variants from '../../../../components/game/Variants';
 import { ConfirmProvider } from 'material-ui-confirm';
+import GoalCategories from '../../../../components/game/GoalCategories';
 
 export default function GamePage({
     params: { slug },
@@ -49,6 +50,9 @@ export default function GamePage({
     }
 
     const tabs = ['Goals'];
+    if (canModerate) {
+        tabs.push('Goal Categories');
+    }
     if (isOwner) {
         if (gameData.difficultyVariantsEnabled) {
             tabs.push('Variants');
@@ -128,6 +132,9 @@ export default function GamePage({
                     >
                         <GoalManagement />
                     </GoalManagerContextProvider>
+                </TabPanel>
+                <TabPanel value="Goal Categories">
+                    <GoalCategories gameData={gameData} />
                 </TabPanel>
                 <TabPanel value="Variants">
                     <Variants gameData={gameData} />

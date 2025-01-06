@@ -6,12 +6,11 @@
  */
 
 /**
- * A single objective for a bingo game.
+ * A grouper for goals, used during some board generation mechanics.
  */
-export interface Goal {
+export interface GoalCategory {
   id: string;
-  goal: string;
-  description: string;
-  difficulty?: number;
-  categories?: string[];
+  name: string;
+  max?: number;
+  goalCount: number;
 }

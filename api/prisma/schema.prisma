@@ -12,16 +12,28 @@ datasource db {
 }
 
 model Goal {
-  id          String        @id @unique @default(cuid())
-  goal        String
-  description String?
-  categories  String[]
-  difficulty  Int?
-  game        Game          @relation(fields: [gameId], references: [id])
-  variants    GoalVariant[]
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
-  gameId      String
+  id            String        @id @unique @default(cuid())
+  goal          String
+  description   String?
+  oldCategories String[]
+  categories    Category[]    @relation("GoalCategories")
+  difficulty    Int?
+  game          Game          @relation(fields: [gameId], references: [id])
+  variants      GoalVariant[]
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  gameId        String
+}
+
+model Category {
+  id     String @id @unique @default(cuid())
+  game   Game   @relation(fields: [gameId], references: [id])
+  name   String
+  goals  Goal[] @relation("GoalCategories")
+  max    Int    @default(0)
+  gameId String
+
+  @@unique([gameId, name])
 }
 
 model GoalVariant {
@@ -66,6 +78,7 @@ model Game {
   difficultyGroups          Int?
   slugWords                 String[]            @default([])
   useTypedRandom            Boolean             @default(false)
+  goalCategories            Category[]
 }
 
 model DifficultyVariant {

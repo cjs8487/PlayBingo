@@ -6,7 +6,7 @@
  */
 
 /**
- * An incoming websocket message from the server telling the client of a change in room state or instructing it to take an action
+ * A single objective for a bingo game.
  */
 export interface Goal {
   id: string;

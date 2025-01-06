@@ -3,7 +3,7 @@
     "type": "object",
     "additionalProperties": false,
     "required": ["id", "goal", "description"],
-    "description": "An incoming websocket message from the server telling the client of a change in room state or instructing it to take an action",
+    "description": "A single objective for a bingo game.",
     "properties": {
         "id": {"type": "string"},
         "goal": {"type": "string"},
