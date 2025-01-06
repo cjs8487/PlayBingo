@@ -164,6 +164,7 @@ export default function GameSettings({ gameData }: GameSettingsProps) {
                         gameData.difficultyVariantsEnabled,
                     difficultyGroups: gameData.difficultyGroups ?? 0,
                     slugWords: gameData.slugWords?.join('\n') ?? '',
+                    useTypedRandom: gameData.useTypedRandom,
                 }}
                 onSubmit={async ({
                     name,
@@ -174,6 +175,7 @@ export default function GameSettings({ gameData }: GameSettingsProps) {
                     difficultyVariantsEnabled,
                     difficultyGroups,
                     slugWords,
+                    useTypedRandom,
                 }) => {
                     const res = await fetch(`/api/games/${gameData.slug}`, {
                         method: 'POST',
@@ -189,6 +191,7 @@ export default function GameSettings({ gameData }: GameSettingsProps) {
                             difficultyVariantsEnabled,
                             difficultyGroups,
                             slugWords: slugWords.split('\n'),
+                            useTypedRandom,
                         }),
                     });
                     if (!res.ok) {
@@ -288,6 +291,22 @@ export default function GameSettings({ gameData }: GameSettingsProps) {
                                     </Typography>
                                 </HoverIcon>
                             </Box>
+                        </Box>
+                        <Box display="flex" alignItems="center">
+                            <FormikSwitch
+                                id="game-typed-random-switch"
+                                label="Enable Category-Random Generation"
+                                name="useTypedRandom"
+                            />
+                            <HoverIcon icon={<Info />}>
+                                <Typography variant="caption">
+                                    Category-Random generation allows random
+                                    generation to apply the typed restrictions
+                                    of SRLv5 generation, which attempts to
+                                    minimize the category overlap of each line.
+                                    Category-Random replaces Random generation.
+                                </Typography>
+                            </HoverIcon>
                         </Box>
                         {gameData.racetimeBeta && <RacetimeSettings />}
                         <Box>

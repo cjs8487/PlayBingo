@@ -90,7 +90,6 @@ export default function GoalEditor({
     categories,
     canModerate,
 }: GoalEditorProps) {
-    console.log(goal);
     return (
         <Formik
             initialValues={{

@@ -65,6 +65,7 @@ model Game {
   difficultyVariants        DifficultyVariant[]
   difficultyGroups          Int?
   slugWords                 String[]            @default([])
+  useTypedRandom            Boolean             @default(false)
 }
 
 model DifficultyVariant {

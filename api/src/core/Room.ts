@@ -14,6 +14,7 @@ import {
 import {
     getDifficultyGroupCount,
     getDifficultyVariant,
+    useTypedRandom,
 } from '../database/games/Games';
 import { goalsForGame } from '../database/games/Goals';
 import {
@@ -33,7 +34,7 @@ import {
 } from '../types/ServerMessage';
 import { shuffle } from '../util/Array';
 import { listToBoard } from '../util/RoomUtils';
-import { generateFullRandom } from './generation/Random';
+import { generateFullRandom, generateRandomTyped } from './generation/Random';
 import { generateSRLv5 } from './generation/SRLv5';
 import RacetimeHandler, { RaceData } from './integration/RacetimeHandler';
 
@@ -202,6 +203,13 @@ export default class Room {
                     shuffle(goalList, seed);
                     break;
                 case BoardGenerationMode.RANDOM:
+                    if (await useTypedRandom(this.game)) {
+                        goalList = generateRandomTyped(goals, seed);
+                        goalList.shift();
+                    } else {
+                        goalList = generateFullRandom(goals, seed);
+                    }
+                    break;
                 default:
                     goalList = generateFullRandom(goals, seed);
                     break;

@@ -23,6 +23,7 @@ import {
     updateRacetimeGoal,
     updateSlugWords,
     updateSRLv5Enabled,
+    updateUseTypedRandom,
 } from '../../database/games/Games';
 import {
     createGoal,
@@ -86,6 +87,7 @@ games.post('/:slug', async (req, res) => {
         difficultyVariantsEnabled,
         difficultyGroups,
         slugWords,
+        useTypedRandom,
     } = req.body;
 
     let result = undefined;
@@ -124,6 +126,9 @@ games.post('/:slug', async (req, res) => {
             return res.status(400).send('Slug words can only contain letters');
         }
         result = await updateSlugWords(slug, slugWords);
+    }
+    if (useTypedRandom !== undefined) {
+        result = await updateUseTypedRandom(slug, !!useTypedRandom);
     }
 
     if (!result) {
