@@ -1,6 +1,11 @@
 'use client';
 import {
     Box,
+    Button,
+    DialogActions,
+    DialogContent,
+    DialogContentText,
+    DialogTitle,
     IconButton,
     Table,
     TableBody,
@@ -10,14 +15,15 @@ import {
     TableProps,
     TableRow,
 } from '@mui/material';
-import { forwardRef } from 'react';
+import { forwardRef, ReactNode, useCallback, useRef, useState } from 'react';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import { TableVirtuoso } from 'react-virtuoso';
 import { useApi } from '../../../../lib/Hooks';
 import { Game } from '../../../../types/Game';
 import Delete from '@mui/icons-material/Delete';
-import { useConfirm } from 'material-ui-confirm';
-import { alertError } from '../../../../lib/Utils';
+import { alertError, notifyMessage } from '../../../../lib/Utils';
+import router from 'next/router';
+import Dialog, { DialogRef } from '../../../../components/Dialog';
 
 const Scroller = forwardRef<HTMLDivElement>(function Scroller(props, ref) {
     return <TableContainer {...props} ref={ref} />;
@@ -46,7 +52,55 @@ export default function StaffGamesTab() {
         mutate,
     } = useApi<Game[]>('/api/games');
 
-    const confirm = useConfirm();
+    const [dialogContent, setDialogContent] = useState<ReactNode>(null);
+    const confirmDialogRef = useRef<DialogRef | null>(null);
+
+    const onDeleteClick = useCallback(
+        (game: Game) => {
+            setDialogContent(
+                <>
+                    <DialogTitle>Delete {game.name}?</DialogTitle>
+                    <DialogContent>
+                        <DialogContentText>
+                            Are you sure you want to permnaently delete{' '}
+                            {game.name} and all associated data? This cannot be
+                            undone.
+                        </DialogContentText>
+                    </DialogContent>
+                    <DialogActions>
+                        <Button
+                            onClick={() => confirmDialogRef.current?.close()}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            color="error"
+                            onClick={async () => {
+                                const res = await fetch(
+                                    `/api/games/${game.slug}`,
+                                    {
+                                        method: 'DELETE',
+                                    },
+                                );
+                                if (!res.ok) {
+                                    alertError(
+                                        `Failed to delete ${game.name} - ${await res.text()}`,
+                                    );
+                                    return;
+                                }
+                                mutate();
+                                confirmDialogRef.current?.close();
+                            }}
+                        >
+                            Delete
+                        </Button>
+                    </DialogActions>
+                </>,
+            );
+            confirmDialogRef.current?.open();
+        },
+        [mutate],
+    );
 
     if (isLoading || !games || error) {
         return null;
@@ -87,33 +141,8 @@ export default function StaffGamesTab() {
                                     </TableCell>
                                     <TableCell>
                                         <IconButton
-                                            onClick={async () => {
-                                                try {
-                                                    await confirm({
-                                                        title: `Delete ${game.name}?`,
-                                                        description: `Are you sure you want to permnaently delete ${game.name} and all associated data? This cannot be undone.`,
-                                                        confirmationButtonProps:
-                                                            {
-                                                                color: 'error',
-                                                            },
-                                                        confirmationText:
-                                                            'Delete',
-                                                    });
-
-                                                    const res = await fetch(
-                                                        `/api/games/${game.slug}`,
-                                                        { method: 'DELETE' },
-                                                    );
-                                                    if (!res.ok) {
-                                                        alertError(
-                                                            `Failed to delete ${game.name} - ${await res.text()}`,
-                                                        );
-                                                        return;
-                                                    }
-                                                    mutate();
-                                                } catch {
-                                                    // do nothing
-                                                }
+                                            onClick={() => {
+                                                onDeleteClick(game);
                                             }}
                                         >
                                             <Delete />
@@ -125,6 +154,7 @@ export default function StaffGamesTab() {
                     )}
                 </AutoSizer>
             </Box>
+            <Dialog ref={confirmDialogRef}>{dialogContent}</Dialog>
         </Box>
     );
 }

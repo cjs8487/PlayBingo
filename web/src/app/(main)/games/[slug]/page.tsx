@@ -5,21 +5,26 @@ import { TabContext, TabList, TabPanel } from '@mui/lab';
 import { Box, Container, Link, Tab, Typography } from '@mui/material';
 import Image from 'next/image';
 import NextLink from 'next/link';
-import { useLayoutEffect, useState } from 'react';
+import { useLayoutEffect, useState, use } from 'react';
 import GameSettings from '../../../../components/game/GameSettings';
 import PermissionsManagement from '../../../../components/game/PermissionsManagement';
 import GoalManagement from '../../../../components/game/goals/GoalManagement';
 import { GoalManagerContextProvider } from '../../../../context/GoalManagerContext';
 import { alertError } from '../../../../lib/Utils';
 import Variants from '../../../../components/game/Variants';
-import { ConfirmProvider } from 'material-ui-confirm';
 import GoalCategories from '../../../../components/game/GoalCategories';
 
-export default function GamePage({
-    params: { slug },
-}: {
-    params: { slug: string };
-}) {
+export default function GamePage(
+    props: {
+        params: Promise<{ slug: string }>;
+    }
+) {
+    const params = use(props.params);
+
+    const {
+        slug
+    } = params;
+
     const { data: gameData, isLoading } = useApi<Game>(`/api/games/${slug}`);
 
     const [isOwner, setIsOwner] = useState(false);
@@ -143,9 +148,7 @@ export default function GamePage({
                     <PermissionsManagement slug={slug} gameData={gameData} />
                 </TabPanel>
                 <TabPanel value="Settings">
-                    <ConfirmProvider>
-                        <GameSettings gameData={gameData} />
-                    </ConfirmProvider>
+                    <GameSettings gameData={gameData} />
                 </TabPanel>
             </TabContext>
         </Container>

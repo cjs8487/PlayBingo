@@ -3,6 +3,10 @@ import {
     Box,
     Button,
     Chip,
+    DialogActions,
+    DialogContent,
+    DialogContentText,
+    DialogTitle,
     FormControl,
     InputLabel,
     MenuItem,
@@ -28,8 +32,9 @@ import FormikSwitch from '../input/FormikSwitch';
 import FormikTextField from '../input/FormikTextField';
 import NumberInput from '../input/NumberInput';
 import Delete from '@mui/icons-material/Delete';
-import { useConfirm } from 'material-ui-confirm';
 import { useRouter } from 'next/navigation';
+import Dialog, { DialogRef } from '../Dialog';
+import { useRef } from 'react';
 
 async function validateRacetimeCategory(value: string) {
     if (value) {
@@ -110,8 +115,9 @@ interface GameSettingsProps {
 }
 
 export default function GameSettings({ gameData }: GameSettingsProps) {
-    const confirm = useConfirm();
     const router = useRouter();
+    const confirmDialogRef = useRef<DialogRef | null>(null);
+
     return (
         <div>
             <Box display="flex">
@@ -123,31 +129,7 @@ export default function GameSettings({ gameData }: GameSettingsProps) {
                     color="error"
                     startIcon={<Delete />}
                     onClick={async () => {
-                        try {
-                            await confirm({
-                                title: 'Delete game?',
-                                description:
-                                    'Are you sure you want to delete this game? This cannot be undone.',
-                                confirmationText: 'Delete',
-                                confirmationButtonProps: {
-                                    color: 'error',
-                                },
-                            });
-                            const res = await fetch(
-                                `/api/games/${gameData.slug}`,
-                                { method: 'DELETE' },
-                            );
-                            if (!res.ok) {
-                                alertError(
-                                    `Unable to delete game - ${await res.text()}`,
-                                );
-                                return;
-                            }
-                            router.push('/games');
-                            notifyMessage('Game deleted');
-                        } catch {
-                            // do nothing when dialog is canceled/dismissed
-                        }
+                        confirmDialogRef.current?.open();
                     }}
                 >
                     Delete Game
@@ -367,6 +349,39 @@ export default function GameSettings({ gameData }: GameSettingsProps) {
                     </Box>
                 </Form>
             </Formik>
+            <Dialog ref={confirmDialogRef}>
+                <DialogTitle>Delete game?</DialogTitle>
+                <DialogContent>
+                    <DialogContentText>
+                        Are you sure you want to delete this game? This cannot
+                        be undone.
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => confirmDialogRef.current?.close()}>
+                        Cancel
+                    </Button>
+                    <Button
+                        color="error"
+                        onClick={async () => {
+                            const res = await fetch(
+                                `/api/games/${gameData.slug}`,
+                                { method: 'DELETE' },
+                            );
+                            if (!res.ok) {
+                                alertError(
+                                    `Unable to delete game - ${await res.text()}`,
+                                );
+                                return;
+                            }
+                            router.push('/games');
+                            notifyMessage('Game deleted');
+                        }}
+                    >
+                        Delete
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </div>
     );
 }

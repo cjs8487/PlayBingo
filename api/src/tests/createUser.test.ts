@@ -1,6 +1,6 @@
 import request from 'supertest';
 import { app } from '../main';
-import type http from 'http';
+import http from 'http';
 
 let server: http.Server;
 
@@ -9,7 +9,7 @@ beforeAll(() => {
     server = app.listen(0);
 });
 
-afterAll( async () => {
+afterAll(async () => {
     // Close the server after tests
     await server.close();
 });
@@ -24,7 +24,7 @@ describe('Basic Test to create a new user', () => {
                 password: 'password',
             })
             .expect(201);
-        
+
         expect(res.status).toBe(201);
     });
 });
