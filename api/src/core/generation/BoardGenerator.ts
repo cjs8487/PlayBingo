@@ -84,7 +84,7 @@ export default class BoardGenerator {
         this.board = [];
     }
 
-    async generateBoard() {
+    generateBoard() {
         // get the goal list to be used in generation
         this.pruneGoalList();
         this.transformGoals();
@@ -93,16 +93,17 @@ export default class BoardGenerator {
         this.generateBoardLayout();
 
         // preprocessing
+        this.groupGoals();
 
         // goal placement
-        // for (let i = 0; i < 25; i++) {
-        //     const goals = this.validGoalsForCell(i);
-        //     const goal = goals.pop();
-        //     if (!goal) {
-        //         throw Error('Unable to place goal');
-        //     }
-        //     this.board[i] = goal;
-        // }
+        for (let i = 0; i < 25; i++) {
+            const goals = this.validGoalsForCell(i);
+            const goal = goals.pop();
+            if (!goal) {
+                throw Error('Unable to place goal');
+            }
+            this.board[i] = goal;
+        }
     }
 
     pruneGoalList() {
