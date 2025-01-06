@@ -346,8 +346,7 @@ export function RoomContextProvider({ slug, children }: RoomContextProps) {
             sendJsonMessage({
                 action: 'newCard',
                 authToken,
-                seed,
-                generationMode,
+                options: { seed, mode: generationMode },
             });
         },
         [authToken, sendJsonMessage],
