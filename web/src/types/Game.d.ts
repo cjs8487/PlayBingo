@@ -24,6 +24,7 @@ export interface Game {
   difficultyVariants?: DifficultyVariant[];
   difficultyGroups?: number;
   slugWords?: string[];
+  useTypedRandom?: boolean;
 }
 export interface User {
   id: string;

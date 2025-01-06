@@ -69,7 +69,6 @@ export default function RoomControlDialog({
                         generationMode: '',
                     }}
                     onSubmit={({ seed, generationMode }) => {
-                        console.log(generationMode);
                         regenerateCard({
                             seed,
                             generationMode,

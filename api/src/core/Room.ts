@@ -11,6 +11,11 @@ import {
     addUnmarkAction,
     setRoomBoard,
 } from '../database/Rooms';
+import {
+    getDifficultyGroupCount,
+    getDifficultyVariant,
+    useTypedRandom,
+} from '../database/games/Games';
 import { goalsForGame } from '../database/games/Goals';
 import {
     ChangeColorAction,
@@ -29,12 +34,9 @@ import {
 } from '../types/ServerMessage';
 import { shuffle } from '../util/Array';
 import { listToBoard } from '../util/RoomUtils';
+import { generateFullRandom, generateRandomTyped } from './generation/Random';
 import { generateSRLv5 } from './generation/SRLv5';
 import RacetimeHandler, { RaceData } from './integration/RacetimeHandler';
-import {
-    getDifficultyGroupCount,
-    getDifficultyVariant,
-} from '../database/games/Games';
 
 type RoomIdentity = {
     nickname: string;
@@ -201,9 +203,15 @@ export default class Room {
                     shuffle(goalList, seed);
                     break;
                 case BoardGenerationMode.RANDOM:
+                    if (await useTypedRandom(this.game)) {
+                        goalList = generateRandomTyped(goals, seed);
+                        goalList.shift();
+                    } else {
+                        goalList = generateFullRandom(goals, seed);
+                    }
+                    break;
                 default:
-                    shuffle(goals, seed);
-                    goalList = goals.splice(0, 25);
+                    goalList = generateFullRandom(goals, seed);
                     break;
             }
         } catch (e) {

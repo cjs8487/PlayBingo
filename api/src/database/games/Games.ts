@@ -150,6 +150,10 @@ export const updateDifficultyGroups = (
     });
 };
 
+export const updateUseTypedRandom = (slug: string, useTypedRandom: boolean) => {
+    return prisma.game.update({ where: { slug }, data: { useTypedRandom } });
+};
+
 export const updateRacetimeCategory = (
     slug: string,
     racetimeCategory: string,
@@ -287,4 +291,11 @@ export const getDifficultyVariant = (id: string) => {
 export const getDifficultyGroupCount = async (slug: string) => {
     return (await prisma.game.findUnique({ where: { slug } }))
         ?.difficultyGroups;
+};
+
+export const useTypedRandom = async (slug: string) => {
+    return (
+        (await prisma.game.findUnique({ where: { slug } }))?.useTypedRandom ??
+        false
+    );
 };
