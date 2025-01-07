@@ -1,4 +1,5 @@
 import {
+    Category,
     GenerationBoardLayout,
     GenerationGlobalAdjustments,
     GenerationGoalRestriction,
@@ -10,22 +11,19 @@ import {
 import BoardGenerator from '../../core/generation/BoardGenerator';
 import { GeneratorGoal } from '../../core/generation/GeneratorCore';
 
-const categories = [
-    'Category 1',
-    'Category 2',
-    'Category 3',
-    'Category 4',
-    'Category 5',
-    'Category 6',
-    'Category 7',
-];
+const categories: Category[] = Array.from({ length: 7 }).map((_, i) => ({
+    gameId: '1',
+    id: `${i}`,
+    max: i % 7,
+    name: `Category ${i + 1}`,
+}));
 
 const goals: GeneratorGoal[] = Array.from({ length: 100 }).map((_, i) => ({
     goal: `Goal ${i + 1}`,
     description: `Description for Goal ${i + 1}`,
     categories: [
-        categories[i % categories.length],
-        categories[(i + 1) % categories.length],
+        categories[i % categories.length].name,
+        categories[(i + 1) % categories.length].name,
     ],
     difficulty: (i % 25) + 1,
 }));
@@ -35,6 +33,7 @@ describe('BoardGenerator initialization', () => {
         expect(() => {
             new BoardGenerator(
                 goals,
+                categories,
                 GenerationListMode.NONE,
                 GenerationListTransform.NONE,
                 GenerationBoardLayout.NONE,
@@ -54,6 +53,7 @@ describe('Board Layout', () => {
     describe('No Layout', () => {
         const generator = new BoardGenerator(
             goals,
+            categories,
             GenerationListMode.NONE,
             GenerationListTransform.NONE,
             GenerationBoardLayout.NONE,
@@ -77,6 +77,7 @@ describe('Board Layout', () => {
     describe('Magic Square', () => {
         const generator = new BoardGenerator(
             goals,
+            categories,
             GenerationListMode.NONE,
             GenerationListTransform.NONE,
             GenerationBoardLayout.SRLv5,
@@ -149,6 +150,7 @@ describe('Board Layout', () => {
     describe('Static Placement (Isaac)', () => {
         const generator = new BoardGenerator(
             goals,
+            categories,
             GenerationListMode.NONE,
             GenerationListTransform.NONE,
             GenerationBoardLayout.ISAAC,
@@ -183,6 +185,7 @@ describe('Goal Grouping', () => {
     describe('Random Placement', () => {
         const generator = new BoardGenerator(
             goals,
+            categories,
             GenerationListMode.NONE,
             GenerationListTransform.NONE,
             GenerationBoardLayout.SRLv5,
@@ -201,6 +204,7 @@ describe('Goal Grouping', () => {
     describe('Difficulty Placement', () => {
         const generator = new BoardGenerator(
             goals,
+            categories,
             GenerationListMode.NONE,
             GenerationListTransform.NONE,
             GenerationBoardLayout.SRLv5,
@@ -223,6 +227,7 @@ describe('Goal Restriction', () => {
     describe('Line Type Exclusion', () => {
         const generator = new BoardGenerator(
             goals,
+            categories,
             GenerationListMode.NONE,
             GenerationListTransform.NONE,
             GenerationBoardLayout.SRLv5,
@@ -266,6 +271,7 @@ describe('Global Adjustments', () => {
     describe('Synergize', () => {
         const generator = new BoardGenerator(
             goals,
+            categories,
             GenerationListMode.NONE,
             GenerationListTransform.NONE,
             GenerationBoardLayout.SRLv5,
@@ -331,6 +337,7 @@ describe('Global Adjustments', () => {
     describe('Max Goals of Type in Board', () => {
         const generator = new BoardGenerator(
             goals,
+            categories,
             GenerationListMode.NONE,
             GenerationListTransform.NONE,
             GenerationBoardLayout.SRLv5,
@@ -339,10 +346,62 @@ describe('Global Adjustments', () => {
             [GenerationGlobalAdjustments.BOARD_TYPE_MAX],
         );
 
-        it('throws not implemented', () => {
-            expect(() => {
-                generator.adjustGoalList(goals[0]);
-            }).toThrow('Not implemented');
+        it('Adjusts the maximums in global state', () => {
+            generator.reset();
+            generator.groupedGoals = [[goals[1]]];
+            const cat = categories[1].name;
+            generator.categoryMaxes[cat] = 1;
+            generator.adjustGoalList(goals[0]);
+            expect(generator.categoryMaxes[cat]).toBe(0);
+        });
+
+        it('Removes all goals with a category after reaching 0', () => {
+            generator.reset();
+            generator.groupedGoals = [[goals[1]], [goals[7], goals[8]]];
+            const cat = categories[1].name;
+            generator.categoryMaxes[cat] = 1;
+            generator.adjustGoalList(goals[0]);
+            expect(generator.groupedGoals[0]).toHaveLength(0);
+            expect(generator.groupedGoals[1]).toHaveLength(0);
+        });
+
+        it('Does not remove goals with no matching category', () => {
+            generator.reset();
+            generator.groupedGoals = [[goals[11], goals[19]]];
+            const cat = categories[1].name;
+            generator.categoryMaxes[cat] = 1;
+            generator.adjustGoalList(goals[0]);
+            expect(generator.groupedGoals[0]).toHaveLength(2);
+            expect(generator.groupedGoals[0][0]).toStrictEqual(goals[11]);
+            expect(generator.groupedGoals[0][1]).toStrictEqual(goals[19]);
+        });
+
+        it('Correctly handles a group containing both batching and non-matching categories', () => {
+            generator.reset();
+            generator.groupedGoals = [[goals[7], goals[11], goals[8]]];
+            const cat = categories[1].name;
+            generator.categoryMaxes[cat] = 1;
+            generator.adjustGoalList(goals[0]);
+            expect(generator.groupedGoals[0]).toHaveLength(1);
+            expect(generator.groupedGoals[0][0]).toStrictEqual(goals[11]);
+        });
+
+        it('Does not change the order of goals in the groups', () => {
+            generator.reset();
+            generator.groupedGoals = [
+                [goals[19], goals[12]],
+                [goals[1], goals[13], goals[7], goals[4], goals[20]],
+            ];
+            const cat = categories[1].name;
+            generator.categoryMaxes[cat] = 1;
+            generator.adjustGoalList(goals[0]);
+            expect(generator.groupedGoals[0]).toHaveLength(2);
+            expect(generator.groupedGoals[0][0]).toStrictEqual(goals[19]);
+            expect(generator.groupedGoals[0][1]).toStrictEqual(goals[12]);
+            expect(generator.groupedGoals[1]).toHaveLength(3);
+            expect(generator.groupedGoals[1][0]).toStrictEqual(goals[13]);
+            expect(generator.groupedGoals[1][1]).toStrictEqual(goals[4]);
+            expect(generator.groupedGoals[1][2]).toStrictEqual(goals[20]);
         });
     });
 });
@@ -350,6 +409,7 @@ describe('Global Adjustments', () => {
 describe('Full Generation', () => {
     const generator = new BoardGenerator(
         goals,
+        categories,
         GenerationListMode.NONE,
         GenerationListTransform.NONE,
         GenerationBoardLayout.NONE,
