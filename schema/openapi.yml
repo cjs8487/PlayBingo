@@ -167,6 +167,31 @@ components:
         racetimeGoal:
           type: string
           description: The name of the connected racetime goal
+        difficultyVariantsEnabled:
+          type: boolean
+          description: If the game has enabled difficulty variants
+        difficultyVariants:
+          type: array
+          description: The game's configured difficulty variants
+          items:
+            $ref: "#/components/schemas/difficultyVariant"
+        difficultyGroups:
+          type: number
+          description:
+            The number of unique difficulty groups used in difficulty
+            variant generation
+        slugWords:
+          type: array
+          description:
+            Custom slug words (typically nouns) used for room
+            identifiers for this game
+          items:
+            type: string
+        useTypedRandom:
+          type: boolean
+          description:
+            If this game should consider goal types during
+            generation, mimicking SRLv5's line logic
     goal:
       type: object
       description:
@@ -186,7 +211,7 @@ components:
             Long form description of the goal. Usually used to explain
             additional, detailed information about the task and how to
             accomplish it
-        difficultly:
+        difficulty:
           type: number
           description:
             Difficulty rating of the goal. Meaning depends on the generator the
@@ -198,6 +223,20 @@ components:
           description:
             List of category types that the goal belongs to. Used by generators
             to prevent overly-synergistic lines
+    difficultyVariant:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The variant's unique internal identifier.
+        name:
+          type: string
+          description: The name of the variant.
+        goalAmounts:
+          type: array
+          description: The number of goals in each difficulty group to use during generation.
+          items:
+            type: number
 paths:
   /me:
     get:
