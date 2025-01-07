@@ -487,4 +487,19 @@ describe('Full Generation', () => {
         const board2 = generator.board;
         expect(board1).toEqual(board2);
     });
+
+    it('Generates a board with maximum restrictions', () => {
+        const generator = new BoardGenerator(
+            goals,
+            categories,
+            GenerationListMode.NONE,
+            GenerationListTransform.NONE,
+            GenerationBoardLayout.SRLv5,
+            GenerationGoalSelection.DIFFICULTY,
+            [GenerationGoalRestriction.LINE_TYPE_EXCLUSION],
+            [GenerationGlobalAdjustments.BOARD_TYPE_MAX],
+        );
+        generator.reset();
+        expect(() => generator.generateBoard()).not.toThrow();
+    });
 });
