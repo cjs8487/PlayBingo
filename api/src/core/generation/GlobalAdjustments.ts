@@ -39,6 +39,15 @@ const synergize: GlobalAdjustment = (generator, lastPlaced) => {
     }
 };
 
-const boardTypeMax: GlobalAdjustment = (generator) => {
-    throw Error('Not implemented');
+const boardTypeMax: GlobalAdjustment = (generator, lastPlaced) => {
+    lastPlaced.categories.forEach((cat) => {
+        generator.categoryMaxes[cat]--;
+        if (generator.categoryMaxes[cat] === 0) {
+            generator.groupedGoals.forEach((group, index) => {
+                generator.groupedGoals[index] = group.filter(
+                    (g) => !g.categories.includes(cat),
+                );
+            });
+        }
+    });
 };
