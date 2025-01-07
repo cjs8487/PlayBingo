@@ -157,10 +157,24 @@ describe('Board Layout', () => {
             [],
         );
 
-        it('throws not implemented', () => {
-            expect(() => {
-                generator.generateBoardLayout();
-            }).toThrow('Not implemented');
+        const correctLayout = [
+            [2, 3, 1, 1, 2],
+            [3, 1, 2, 2, 1],
+            [1, 2, 4, 2, 1],
+            [2, 1, 2, 1, 3],
+            [1, 2, 1, 3, 2],
+        ].flat();
+
+        it('Generates the correct layout', () => {
+            generator.reset();
+            generator.generateBoardLayout();
+            expect(generator.layout).toEqual(correctLayout);
+        });
+
+        it('Is unaffected by seed', () => {
+            generator.reset(12345);
+            generator.generateBoardLayout();
+            expect(generator.layout).toEqual(correctLayout);
         });
     });
 });
