@@ -7,6 +7,7 @@ import {
     GenerationListTransform,
     GenerationGlobalAdjustments,
     GenerationGoalRestriction,
+    Category,
 } from '@prisma/client';
 import { gameForSlug } from '../../database/games/Games';
 import { goalsForGame } from '../../database/games/Goals';
@@ -29,6 +30,7 @@ import { GeneratorGoal } from './GeneratorCore';
  *
  */
 export default class BoardGenerator {
+    // generation strategies
     goalListPruner: GoalListPruner;
     goalListTransformer: GoalListTransformer;
     layoutGenerator: BoardLayoutGenerator;
@@ -36,15 +38,21 @@ export default class BoardGenerator {
     placementRestrictions: GoalPlacementRestriction[];
     globalAdjustments: GlobalAdjustment[];
 
+    // core generation elements
     seed: number;
     allGoals: GeneratorGoal[] = [];
+    categories: Category[];
     goals: GeneratorGoal[] = [];
     groupedGoals: GeneratorGoal[][] = [];
     layout: number[] = [];
     board: GeneratorGoal[] = [];
 
+    // global state
+    categoryMaxes: { [k: string]: number } = {};
+
     constructor(
         goals: GeneratorGoal[],
+        categories: Category[],
         pruneStrategy: GenerationListMode,
         transformStrategy: GenerationListTransform,
         layoutStrategy: GenerationBoardLayout,
@@ -63,6 +71,7 @@ export default class BoardGenerator {
         }
 
         this.allGoals = goals;
+        this.categories = categories;
         this.goalListPruner = createPruner(pruneStrategy);
         this.goalListTransformer = createTransformer(transformStrategy);
         this.layoutGenerator = createLayoutGenerator(layoutStrategy);
@@ -75,6 +84,9 @@ export default class BoardGenerator {
         );
 
         this.seed = seed ?? Math.ceil(999999 * Math.random());
+        categories.forEach((cat) => {
+            this.categoryMaxes[cat.name] = cat.max <= 0 ? -1 : cat.max;
+        });
     }
 
     async reset(seed?: number) {
@@ -83,6 +95,7 @@ export default class BoardGenerator {
         this.groupedGoals = [];
         this.layout = [];
         this.board = [];
+        this.categoryMaxes = {};
     }
 
     generateBoard() {
