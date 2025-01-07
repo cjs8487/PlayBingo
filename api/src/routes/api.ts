@@ -11,6 +11,7 @@ import rooms from './rooms/Rooms';
 import users from './users/Users';
 import { readFile } from 'fs/promises';
 import tokens from './auth/ApiTokens';
+import { requiresApiToken } from './middleware';
 
 const api = Router();
 
@@ -59,7 +60,7 @@ api.post('/logout', (req, res, next) => {
     });
 });
 
-api.get('/logs', async (req, res) => {
+api.get('/logs', requiresApiToken, async (req, res) => {
     if (!req.session.user) {
         res.sendStatus(401);
         return;

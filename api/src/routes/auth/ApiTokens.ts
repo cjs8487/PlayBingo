@@ -8,8 +8,11 @@ import {
     revokeToken,
     tokenExists,
 } from '../../database/auth/ApiTokens';
+import { requiresApiToken } from '../middleware';
 
 const tokens = Router();
+
+tokens.use(requiresApiToken);
 
 tokens.get('/', async (req, res) => {
     if (!req.session.user) {

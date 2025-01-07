@@ -52,3 +52,14 @@ export const revokeToken = async (id: string) => {
 export const tokenExists = async (id: string) => {
     return !!prisma.apiToken.findUnique({ where: { id } });
 };
+
+export const validateToken = async (token: string) => {
+    const tokenObj = await prisma.apiToken.findUnique({ where: { token } });
+    if (!tokenObj) {
+        return false;
+    }
+    if (tokenObj.revokedOn && new Date() < tokenObj.revokedOn) {
+        return false;
+    }
+    return tokenObj.active;
+};

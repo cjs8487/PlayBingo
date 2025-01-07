@@ -24,6 +24,7 @@ export const serverFetch = async (path: string, init?: RequestInit) => {
         headers: {
             ...(init?.headers ?? {}),
             'Content-Type': 'application/json',
+            'PlayBingo-Api-Key': process.env.API_KEY ?? '',
             // forward client cookies
             cookie: cookies()
                 .getAll()
