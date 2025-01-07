@@ -404,6 +404,24 @@ describe('Global Adjustments', () => {
             expect(generator.groupedGoals[1][2]).toStrictEqual(goals[20]);
         });
     });
+
+    it('removes the placed goal from the goal list', () => {
+        const generator = new BoardGenerator(
+            goals,
+            categories,
+            GenerationListMode.NONE,
+            GenerationListTransform.NONE,
+            GenerationBoardLayout.NONE,
+            GenerationGoalSelection.RANDOM,
+            [],
+            [],
+        );
+        generator.reset();
+        generator.adjustGoalList(goals[0]);
+        generator.groupedGoals.forEach((group) => {
+            expect(group).not.toContain(goals[0]);
+        });
+    });
 });
 
 describe('Full Generation', () => {
@@ -422,5 +440,51 @@ describe('Full Generation', () => {
         generator.reset();
         expect(() => generator.generateBoard()).not.toThrow();
         expect(generator.board).toHaveLength(25);
+    });
+
+    it('Successfully generates an SRLv5 style board', () => {
+        const generator = new BoardGenerator(
+            goals,
+            categories,
+            GenerationListMode.NONE,
+            GenerationListTransform.NONE,
+            GenerationBoardLayout.SRLv5,
+            GenerationGoalSelection.DIFFICULTY,
+            [GenerationGoalRestriction.LINE_TYPE_EXCLUSION],
+            [],
+        );
+        generator.reset();
+        expect(() => generator.generateBoard()).not.toThrow();
+        expect(generator.board).toHaveLength(25);
+    });
+
+    it('Generates the same board given the same seed (Random)', () => {
+        generator.reset(12345);
+        generator.generateBoard();
+        const board1 = generator.board;
+        generator.reset(12345);
+        generator.generateBoard();
+        const board2 = generator.board;
+        expect(board1).toEqual(board2);
+    });
+
+    it('Generates the same board given the same seed (SRLv5)', () => {
+        const generator = new BoardGenerator(
+            goals,
+            categories,
+            GenerationListMode.NONE,
+            GenerationListTransform.NONE,
+            GenerationBoardLayout.SRLv5,
+            GenerationGoalSelection.DIFFICULTY,
+            [GenerationGoalRestriction.LINE_TYPE_EXCLUSION],
+            [],
+        );
+        generator.reset(12345);
+        generator.generateBoard();
+        const board1 = generator.board;
+        generator.reset(12345);
+        generator.generateBoard();
+        const board2 = generator.board;
+        expect(board1).toEqual(board2);
     });
 });

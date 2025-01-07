@@ -25,6 +25,7 @@ import {
 import { createGlobalAdjustment, GlobalAdjustment } from './GlobalAdjustments';
 import { createGoalGrouper, GoalGrouper } from './GoalGrouper';
 import { GeneratorGoal } from './GeneratorCore';
+import { shuffle } from '../../util/Array';
 
 /**
  *
@@ -108,6 +109,9 @@ export default class BoardGenerator {
 
         // preprocessing
         this.groupGoals();
+        this.groupedGoals.forEach((group) => {
+            shuffle(group, this.seed);
+        });
 
         // goal placement
         for (let i = 0; i < 25; i++) {
@@ -117,6 +121,7 @@ export default class BoardGenerator {
                 throw Error('Unable to place goal');
             }
             this.board[i] = goal;
+            this.adjustGoalList(goal);
         }
     }
 
@@ -145,6 +150,11 @@ export default class BoardGenerator {
     }
 
     adjustGoalList(lastPlaced: GeneratorGoal) {
+        this.groupedGoals.forEach((group, index) => {
+            this.groupedGoals[index] = group.filter(
+                (g) => g.goal !== lastPlaced.goal,
+            );
+        });
         this.globalAdjustments.forEach((f) => f(this, lastPlaced));
     }
 }
