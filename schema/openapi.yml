@@ -475,7 +475,7 @@ paths:
         - name: slug
           in: path
           required: true
-          description: The slug of the desired game
+          description: The unique identifier for the game.
           schema:
             type: string
       responses:
@@ -497,7 +497,7 @@ paths:
         - name: slug
           in: path
           required: true
-          description: The slug of the desired game
+          description: The unique identifier for the game.
           schema:
             type: string
       security:
@@ -511,6 +511,25 @@ paths:
                 $ref: "#/components/schemas/game"
         400:
           $ref: "#/components/responses/errorBadRequest"
+    delete:
+      summary: Delete a game
+      description: Deletes the game identified by the provided slug.
+      tags:
+        - games
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The unique identifier for the game.
+      responses:
+        200:
+          description: OK
+        401:
+          $ref: "#/components/responses/errorUnauthorized"
+        403:
+          $ref: "#/components/responses/errorForbidden"
   /games/{slug}/goals:
     get:
       summary: Get goals for a game
@@ -522,7 +541,7 @@ paths:
         - name: slug
           in: path
           required: true
-          description: The slug of the desired game
+          description: The unique identifier for the game.
           schema:
             type: string
       responses:
@@ -544,7 +563,7 @@ paths:
         - name: slug
           in: path
           required: true
-          description: The slug of the desired game
+          description: The unique identifier for the game.
           schema:
             type: string
       responses:
@@ -556,7 +575,453 @@ paths:
                 $ref: "#/components/schemas/goal"
         400:
           $ref: "#/components/responses/errorBadRequest"
+  /games/{slug}/eligibleMods:
+    get:
+      summary: Get eligible moderators
+      description: Returns the list of users eligible to be a moderator or owner of the game.
+      tags:
+          - games
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The unique identifier for the game.
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/user"
 
+  /games/{slug}/owners:
+    post:
+      summary: Add game owners
+      description: Adds new owners to the game.
+      tags:
+        - games
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The unique identifier for the game.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - users
+              properties:
+                users:
+                  type: array
+                  items:
+                    type: string
+                  description: List of user IDs to add as owners.
+      responses:
+        200:
+          description: OK
+        400:
+          $ref: "#/components/responses/errorBadRequest"
+        401:
+          $ref: "#/components/responses/errorUnauthorized"
+        403:
+          $ref: "#/components/responses/errorForbidden"
 
-      
-                  
+    delete:
+      summary: Remove game owners
+      description:
+        Removes the specified owner from the game. A game must always have at
+        least one owner, and the last remaining owner cannot be removed with
+        this endpoint.
+      tags:
+        - games
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The unique identifier for the game.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - user
+              properties:
+                user:
+                  type: string
+                  description: The user ID to remove as an owner.
+      responses:
+        200:
+          description: OK
+        400:
+          $ref: "#/components/responses/errorBadRequest"
+        401:
+          $ref: "#/components/responses/errorUnauthorized"
+        403:
+          $ref: "#/components/responses/errorForbidden"
+        404:
+          $ref: "#/components/responses/errorNotFound"
+
+  /games/{slug}/moderators:
+    post:
+      summary: Add game moderators
+      description: Adds new moderators to the game.
+      tags:
+        - games
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The unique identifier for the game.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - users
+              properties:
+                users:
+                  type: array
+                  items:
+                    type: string
+                  description: List of user IDs to add as moderators.
+      responses:
+        200:
+          description: OK
+        400:
+          $ref: "#/components/responses/errorBadRequest"
+        401:
+          $ref: "#/components/responses/errorUnauthorized"
+        403:
+          $ref: "#/components/responses/errorForbidden"
+
+    delete:
+      summary: Remove game moderators
+      description: Removes the specified moderator from the game.
+      tags:
+        - games
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The unique identifier for the game.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - user
+              properties:
+                user:
+                  type: string
+                  description: The user ID to remove as a moderator.
+      responses:
+        200:
+          description: OK
+        400:
+          $ref: "#/components/responses/errorBadRequest"
+        401:
+          $ref: "#/components/responses/errorUnauthorized"
+        403:
+          $ref: "#/components/responses/errorForbidden"
+        404:
+          $ref: "#/components/responses/errorNotFound"
+
+  /games/{slug}/permissions:
+    get:
+      summary: Get user permissions
+      description: Determines the currently logged-in user's permissions for the game.
+      tags:
+        - games
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The unique identifier for the game.
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  isOwner:
+                    type: boolean
+                    description: Whether the user is an owner of the game.
+                  canModerate:
+                    type: boolean
+                    description: Whether the user can moderate the game.
+        401:
+          $ref: "#/components/responses/errorUnauthorized"
+
+  /games/{slug}/deleteAllGoals:
+    delete:
+      summary: Delete all game goals
+      description: Deletes all goals for the game.
+      tags:
+        - games
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The unique identifier for the game.
+      responses:
+        200:
+          description: OK
+        400:
+          $ref: "#/components/responses/errorBadRequest"
+        401:
+          $ref: "#/components/responses/errorUnauthorized"
+        403:
+          $ref: "#/components/responses/errorForbidden"
+        500:
+          $ref: "#/components/responses/errorServer"
+  /games/{slug}/favorite:
+    post:
+      summary: Favorite a game
+      description:
+        Adds the game to the favorites of the currently logged-in user.
+      tags:
+        - games
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The unique identifier for the game.
+      responses:
+        200:
+          description: OK
+        401:
+          $ref: "#/components/responses/errorUnauthorized"
+    delete:
+      summary: Unfavorite a game
+      description:
+        Removes the game from the favorites of the currently logged-in user.
+      tags:
+        - games
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The unique identifier for the game.
+      responses:
+        200:
+          description: OK
+        401:
+          $ref: "#/components/responses/errorUnauthorized"
+  /games/{slug}/difficultyVariants:
+    post:
+      summary: Create a difficulty variant
+      description: Creates a new difficulty variant for the game.
+      tags:
+        - games
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The unique identifier for the game.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - goalAmounts
+              properties:
+                name:
+                  type: string
+                  description: The name of the difficulty variant.
+                goalAmounts:
+                  type: array
+                  items:
+                    type: number
+                  description: The number of goals in each difficulty group.
+      responses:
+        200:
+          description: OK
+        400:
+          $ref: "#/components/responses/errorBadRequest"
+        401:
+          $ref: "#/components/responses/errorUnauthorized"
+        403:
+          $ref: "#/components/responses/errorForbidden"
+
+  /games/{slug}/difficultyVariants/{id}:
+    post:
+      summary: Update a difficulty variant
+      description: Updates the specified difficulty variant for the game.
+      tags:
+        - games
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The unique identifier for the game.
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The unique identifier for the difficulty variant.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - goalAmounts
+              properties:
+                name:
+                  type: string
+                  description: The name of the difficulty variant.
+                goalAmounts:
+                  type: array
+                  items:
+                    type: number
+                  description: The number of goals in each difficulty group.
+      responses:
+        200:
+          description: OK
+        400:
+          $ref: "#/components/responses/errorBadRequest"
+        401:
+          $ref: "#/components/responses/errorUnauthorized"
+        403:
+          $ref: "#/components/responses/errorForbidden"
+
+    delete:
+      summary: Delete a difficulty variant
+      description: Deletes the specified difficulty variant from the game.
+      tags:
+        - games
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The unique identifier for the game.
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The unique identifier for the difficulty variant.
+      responses:
+        200:
+          description: OK
+        401:
+          $ref: "#/components/responses/errorUnauthorized"
+        403:
+          $ref: "#/components/responses/errorForbidden"
+  /games/{slug}/categories:
+    get:
+      summary: Get game categories
+      description: Retrieves the list of categories for the game.
+      tags:
+        - games
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The unique identifier for the game.
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      description: The unique identifier for the category.
+                    name:
+                      type: string
+                      description: The name of the category.
+                    max:
+                      type: integer
+                      description: The maximum number of goals allowed in the category.
+                    goalCount:
+                      type: integer
+                      description: The number of goals in the category.
+        401:
+          $ref: "#/components/responses/errorUnauthorized"
+
+    post:
+      summary: Create a category
+      description: Creates a new category for the game.
+      tags:
+        - games
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The unique identifier for the game.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+              properties:
+                name:
+                  type: string
+                  description: The name of the category.
+                max:
+                  type: integer
+                  description: The maximum number of goals allowed in the category.
+      responses:
+        200:
+          description: OK
+        400:
+          $ref: "#/components/responses/errorBadRequest"
+        401:
+          $ref: "#/components/responses/errorUnauthorized"
+        403:
+          $ref: "#/components/responses/errorForbidden"
