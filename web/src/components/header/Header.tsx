@@ -1,4 +1,7 @@
 'use client';
+import IconLogout from '@mui/icons-material/Logout';
+import MenuBookIcon from '@mui/icons-material/MenuBook';
+import Person from '@mui/icons-material/Person';
 import {
     AppBar,
     Avatar,
@@ -13,14 +16,12 @@ import {
     Tooltip,
     Typography,
 } from '@mui/material';
-import IconLogout from '@mui/icons-material/Logout';
+import NextLink from 'next/link';
 import { useContext, useState } from 'react';
 import { UserContext } from '../../context/UserContext';
 import LinkButton from '../LinkButton';
 import DesktopMenu from './DesktopMenu';
 import MobileMenu from './MobileMenu';
-import Person from '@mui/icons-material/Person';
-import NextLink from 'next/link';
 
 export const pages = [
     { name: 'Games', path: '/games' },
@@ -54,7 +55,6 @@ export default function Header() {
                 <Box sx={{ display: { xs: 'flex', md: 'none' }, flexGrow: 1 }}>
                     <MobileMenu />
                 </Box>
-
                 {user ? (
                     <Box sx={{ flexGrow: 0 }}>
                         <Tooltip title="Open user menu">
@@ -99,6 +99,13 @@ export default function Header() {
                                     <ListItemText>Staff Dashboard</ListItemText>
                                 </MenuItem>
                             )}
+                            <Divider />
+                            <MenuItem component={NextLink} href="/docs">
+                                <ListItemIcon>
+                                    <MenuBookIcon />
+                                </ListItemIcon>
+                                <ListItemText>Documentation</ListItemText>
+                            </MenuItem>
                             <Divider />
                             <MenuItem onClick={handleLogout}>
                                 <ListItemIcon>

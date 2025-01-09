@@ -8,6 +8,7 @@ import { logDebug, logger, logInfo } from './Logger';
 import { allRooms, roomWebSocketServer } from './core/RoomServer';
 import { disconnect } from './database/Database';
 import api from './routes/api';
+import path from 'path';
 
 declare module 'express-session' {
     interface SessionData {
@@ -60,6 +61,8 @@ app.use((req, res, next) => {
 app.use(bodyParser.json());
 
 app.use('/api', api);
+
+app.use('/api/docs', express.static(path.join(__dirname, '..', '..', 'docs')));
 
 const server = app.listen(port, () => {
     logInfo(`API application listening on port ${port}`);

@@ -58,6 +58,11 @@ components:
           description:
             Flag indicating if the user has connected their account to
             racetime.gg in order to use the integration
+        staff:
+          type: boolean
+          description:
+            Flag indicating if the user is a member of the PlayBingo staff team,
+            which grants them special permissions.
     roomData:
       type: object
       required:
