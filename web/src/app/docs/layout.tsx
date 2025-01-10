@@ -28,7 +28,9 @@ export default function DocsLayout({
                     <Box flexGrow={1} />
                     <Box display="flex">
                         <LinkButton href="/docs">API Docs</LinkButton>
-                        <LinkButton href="/docs">Websocket</LinkButton>
+                        <LinkButton href="/docs/websocket">
+                            Websocket
+                        </LinkButton>
                     </Box>
                     <DocUserMenu />
                 </Toolbar>
