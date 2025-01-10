@@ -9,7 +9,7 @@ of the WebSocket protocol between versions. The protocol version will not be
 incremented according to semantic versioning rules unless there is an extreme
 case.**
 
-###### Current Protocol Version: v1
+**Current Protocol Version: v1**
 
 Whenever a breaking change is introduced to the protocol, the version number
 will be incremented. Non-breaking changes may result in a minor version update.
@@ -42,11 +42,7 @@ like racetime.gg integration.
 Once the `join` message is sent, you should receive a `connected` message from
 the server, indicating a successful join and providing the current room state.
 
-## Message Anatomy
-Messages in PlayBingo are encoded in JSON, with no plans to support alternative
-encodings.
-
-### Server Messages
+## Server Messages
 Server messages notify clients about changes in the room state or instruct
 clients to perform actions. In Protocol v1, server messages are broadcast to all
 open connections, except for `connected` messages, which are sent only to the
@@ -69,9 +65,7 @@ information has changed:
 }
 ```
 
-#### Server Message Types
-
-##### Connected
+### Connected
 Sent after a successful `join` action. This message contains identity
 information and the current room state.
 
@@ -103,11 +97,11 @@ information and the current room state.
 }
 ```
 
-##### Chat
+### Chat
 Indicates that a chat message was added to the room. Messages can be user-sent
 or system-generated.
 
-###### Sample Message
+**Sample Message**
 ```json
 {
   "action": "chat",
@@ -120,11 +114,11 @@ or system-generated.
 }
 ```
 
-##### Cell Update
+### Cell Update
 Sent when the data for a specific cell changes (e.g., marked or unmarked). The
 message includes the updated cell data.
 
-###### Sample Message
+**Sample Message**
 ```json
 {
   "action": "cellUpdate",
@@ -136,12 +130,13 @@ message includes the updated cell data.
     "colors": ["green", "#ff0000"]
   }
 }
+```
 
-##### Sync Board
+### Sync Board
 Sent when the entire board, or a large portion of it, is updated. The message
 contains the new board state.
 
-###### Sample Message
+**Sample Message**
 ```json
 {
   "action": "syncBoard",
@@ -164,22 +159,22 @@ contains the new board state.
 }
 ```
 
-##### Unauthorized
+### Unauthorized
 Indicates that an action could not be performed due to invalid or expired
 authorization.
 
-###### Sample Message
+**Sample Message**
 ```json
 {
   "action": "unauthorized"
 }
 ```
 
-##### Disconnected
+### Disconnected
 Sent when a connection is closed by the server, typically in response to a
 `leave` action or timeout.
 
-###### Sample Message
+**Sample Message**
 
 ```json
 {
@@ -187,10 +182,10 @@ Sent when a connection is closed by the server, typically in response to a
 }
 ```
 
-##### Update Room Data
+### Update Room Data
 Notifies clients of updates to core room information.
 
-###### Sample Message
+**Sample Message**
 ```json
 {
   "action": "updateRoomData",
@@ -203,11 +198,11 @@ Notifies clients of updates to core room information.
 }
 ```
 
-##### Sync Race Data
+### Sync Race Data
 Indicates updates related to racetime.gg integration, such as a change in
 connection status or chat messages.
 
-###### Sample Message
+**Sample Message**
 ```json
 {
   "action": "syncRaceData",
@@ -236,7 +231,7 @@ connection status or chat messages.
 }
 ```
 
-### Room Actions
+## Room Actions
 Room actions are sent by clients to change the state of the room. The absence of
 a corresponding server message typically indicates that the action failed.
 
@@ -250,9 +245,7 @@ Room actions follow the same base format as server messages:
 
 If additional inputs are required, they are provided in the `payload` field.
 
-#### Room Action Types
-
-##### Join
+### Join
 Activates the WebSocket connection to the room. The server uses the provided
 nickname to identify the connection.
 
@@ -268,7 +261,7 @@ nickname to identify the connection.
 }
 ```
 
-##### Leave
+### Leave
 Terminates the WebSocket connection. The client will no longer receive messages,
 but any inflight messages may still be delivered.
 
@@ -281,7 +274,7 @@ but any inflight messages may still be delivered.
 }
 ```
 
-##### Chat
+### Chat
 Sends a chat message to the room. All messages sent this way will appear as if
 they are from the associated player.
 
@@ -297,7 +290,7 @@ they are from the associated player.
 }
 ```
 
-##### Mark
+### Mark
 Marks the specified cell for the player. If the cell is already marked, the
 action does nothing.
 
@@ -314,7 +307,7 @@ action does nothing.
 }
 ```
 
-##### Unmark
+### Unmark
 Unmarks the specified cell for the player. If the cell is not marked, the action
 does nothing.
 
@@ -331,7 +324,7 @@ does nothing.
 }
 ```
 
-##### Change Color
+### Change Color
 Changes the player's selected color. The color must be a valid CSS color or hex
 code.
 
@@ -347,7 +340,7 @@ code.
 }
 ```
 
-##### New Card
+### New Card
 Regenerates the room's bingo card. If parameters are not provided, the previous
 values will be reused, except for the seed, which will be randomized if left
 blank.

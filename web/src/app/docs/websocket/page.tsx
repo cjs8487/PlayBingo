@@ -1,7 +1,32 @@
-import { Box } from '@mui/material';
-import ReactMarkdown from 'react-markdown';
+import { Box, Typography } from '@mui/material';
+import { ClassAttributes, HTMLAttributes } from 'react';
+import ReactMarkdown, { ExtraProps } from 'react-markdown';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { a11yDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
+
+function MarkdownHeader({
+    children,
+    node,
+    ...props
+}: ClassAttributes<HTMLHeadingElement> &
+    HTMLAttributes<HTMLHeadingElement> &
+    ExtraProps) {
+    return (
+        <Typography
+            variant={node?.tagName as Extract<'variant', typeof Typography>}
+            pb={1}
+            mb={2}
+            mt={4}
+            sx={{
+                borderBottom: 1,
+                borderBottomColor: 'grey.700',
+            }}
+            {...props}
+        >
+            {children}
+        </Typography>
+    );
+}
 
 async function getMarkdown() {
     const res = await fetch(
@@ -12,9 +37,8 @@ async function getMarkdown() {
 
 export default async function WebsocketDocs() {
     const markdown = await getMarkdown();
-    console.log(markdown);
     return (
-        <Box px={4}>
+        <Box px={8}>
             <ReactMarkdown
                 components={{
                     code({ node, className, children, ...props }) {
@@ -33,6 +57,55 @@ export default async function WebsocketDocs() {
                             <code className={className} {...props}>
                                 {children}
                             </code>
+                        );
+                    },
+                    h1({ children, ...props }) {
+                        return (
+                            <MarkdownHeader {...props}>
+                                {children}
+                            </MarkdownHeader>
+                        );
+                    },
+                    h2({ children, ...props }) {
+                        return (
+                            <MarkdownHeader {...props}>
+                                {children}
+                            </MarkdownHeader>
+                        );
+                    },
+                    h3({ children, ...props }) {
+                        return (
+                            <MarkdownHeader {...props}>
+                                {children}
+                            </MarkdownHeader>
+                        );
+                    },
+                    h4({ children, ...props }) {
+                        return (
+                            <MarkdownHeader {...props}>
+                                {children}
+                            </MarkdownHeader>
+                        );
+                    },
+                    h5({ children, ...props }) {
+                        return (
+                            <MarkdownHeader {...props}>
+                                {children}
+                            </MarkdownHeader>
+                        );
+                    },
+                    h6({ children, ...props }) {
+                        return (
+                            <MarkdownHeader {...props}>
+                                {children}
+                            </MarkdownHeader>
+                        );
+                    },
+                    p({ children, ...props }) {
+                        return (
+                            <Typography mb={1} {...props}>
+                                {children}
+                            </Typography>
                         );
                     },
                 }}
