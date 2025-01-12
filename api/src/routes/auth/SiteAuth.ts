@@ -10,8 +10,11 @@ import {
     initiatePasswordReset,
     validatePasswordReset,
 } from '../../database/Users';
+import { requiresApiToken } from '../middleware';
 
 const siteAuth = Router();
+
+siteAuth.use(requiresApiToken);
 
 siteAuth.post('/login', async (req, res, next) => {
     const { username, password } = req.body;
@@ -65,12 +68,12 @@ siteAuth.post('/forgotPassword', async (req, res) => {
     const user = await getUserByEmail(email);
     if (!user) {
         res.status(400);
-        res.send('Wrong email or username')
+        res.send('Wrong email or username');
         return;
     }
     if (username !== user.username) {
         res.status(400);
-        res.send('Wrong email or username')
+        res.send('Wrong email or username');
         return;
     }
 
