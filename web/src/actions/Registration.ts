@@ -36,3 +36,27 @@ export async function register(
         status: res.status,
     };
 }
+
+export async function emailAvailable(email: string) {
+    const res = await serverFetch(
+        `/api/registration/checkEmail?email=${email}`,
+    );
+
+    if (!res.ok) {
+        return false;
+    }
+    const { valid } = await res.json();
+    return valid;
+}
+
+export async function usernameAvailable(username: string) {
+    const res = await serverFetch(
+        `/api/registration/checkUsername?name=${username}`,
+    );
+
+    if (!res.ok) {
+        return false;
+    }
+    const { valid } = await res.json();
+    return valid;
+}

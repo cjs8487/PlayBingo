@@ -8,7 +8,11 @@ import { UserContext } from '../../../context/UserContext';
 import { alertError } from '../../../lib/Utils';
 import FormikTextField from '../../../components/input/FormikTextField';
 import { Box, Button, Link, Paper, Typography } from '@mui/material';
-import { register } from '../../../actions/Registration';
+import {
+    emailAvailable,
+    register,
+    usernameAvailable,
+} from '../../../actions/Registration';
 
 const validationSchema = yup.object({
     email: yup
@@ -18,19 +22,7 @@ const validationSchema = yup.object({
         .test(
             'isAvailable',
             'An account is already registered with that email.',
-            async (email) => {
-                const res = await fetch(
-                    `/api/registration/checkEmail?email=${email}`,
-                );
-                if (!res.ok) {
-                    return false;
-                }
-                const data = await res.json();
-                if (data.valid) {
-                    return true;
-                }
-                return false;
-            },
+            emailAvailable,
         ),
     username: yup
         .string()
@@ -44,24 +36,7 @@ const validationSchema = yup.object({
         .test(
             'isAvailable',
             'An account with that username already exists.',
-            async (username, ctx) => {
-                const res = await fetch(
-                    `/api/registration/checkUsername?name=${username}`,
-                );
-                if (!res.ok) {
-                    return ctx.createError({
-                        message: 'Unable to validate username availability.',
-                    });
-                }
-                const data = await res.json();
-                if (!data.valid) {
-                    if (data.reason) {
-                        return ctx.createError({ message: data.reason });
-                    }
-                    return false;
-                }
-                return true;
-            },
+            usernameAvailable,
         ),
     password: yup
         .string()
