@@ -26,7 +26,7 @@ export const serverFetch = async (path: string, init?: RequestInit) => {
             'Content-Type': 'application/json',
             'PlayBingo-Api-Key': process.env.API_KEY ?? '',
             // forward client cookies
-            cookie: cookies()
+            cookie: (await cookies())
                 .getAll()
                 .map((c) => `${c.name}=${c.value}`)
                 .join('; '),
@@ -34,14 +34,16 @@ export const serverFetch = async (path: string, init?: RequestInit) => {
     });
 
     // forward response cookies to the client
-    parser(res.headers.getSetCookie()).forEach((cookie) => {
-        cookies().set({
-            name: cookie.name,
-            value: cookie.value,
-            httpOnly: cookie.httpOnly,
-            path: cookie.path,
-        });
-    });
+    await Promise.all(
+        parser(res.headers.getSetCookie()).map(async (cookie) => {
+            (await cookies()).set({
+                name: cookie.name,
+                value: cookie.value,
+                httpOnly: cookie.httpOnly,
+                path: cookie.path,
+            });
+        }),
+    );
 
     return res;
 };
