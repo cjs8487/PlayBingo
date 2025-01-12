@@ -39,7 +39,7 @@ api.get('/me', async (req, res) => {
     res.status(200).send(user);
 });
 
-api.post('/logout', (req, res, next) => {
+api.post('/logout', requiresApiToken, (req, res, next) => {
     if (!req.session.user) {
         res.sendStatus(401);
         return;
