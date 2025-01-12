@@ -1,5 +1,6 @@
 import { randomUUID } from 'crypto';
 import { prisma } from '../Database';
+import { eApiKey } from '../../Environment';
 
 export const getAllTokens = async () => {
     const tokens = await prisma.apiToken.findMany({
@@ -54,6 +55,9 @@ export const tokenExists = async (id: string) => {
 };
 
 export const validateToken = async (token: string) => {
+    if (eApiKey && token === eApiKey) {
+        return true;
+    }
     const tokenObj = await prisma.apiToken.findUnique({ where: { token } });
     if (!tokenObj) {
         return false;
