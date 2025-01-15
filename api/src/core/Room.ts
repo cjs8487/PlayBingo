@@ -32,7 +32,7 @@ import {
     ServerMessage,
 } from '../types/ServerMessage';
 import { shuffle } from '../util/Array';
-import { listToBoard } from '../util/RoomUtils';
+import { checkCompletedLines, listToBoard } from '../util/RoomUtils';
 import { generateFullRandom, generateRandomTyped } from './generation/Random';
 import { generateSRLv5 } from './generation/SRLv5';
 import RacetimeHandler, { RaceData } from './integration/RacetimeHandler';
@@ -41,6 +41,7 @@ import {
     GlobalGenerationState,
 } from './generation/GeneratorCore';
 import { getCategories } from '../database/games/GoalCategories';
+import { BingoMode } from '@prisma/client';
 
 type RoomIdentity = {
     nickname: string;
@@ -96,6 +97,8 @@ export default class Room {
     chatHistory: ChatMessage[];
     id: string;
     hideCard: boolean;
+    bingoMode: BingoMode;
+    lineCount: number;
 
     lastGenerationMode: BoardGenerationOptions;
 
@@ -110,6 +113,8 @@ export default class Room {
         password: string,
         id: string,
         hideCard: boolean,
+        bingoMode: BingoMode,
+        lineCount: number,
         racetimeEligible: boolean,
         racetimeUrl?: string,
     ) {
@@ -122,6 +127,8 @@ export default class Room {
         this.connections = new Map();
         this.chatHistory = [];
         this.id = id;
+        this.bingoMode = bingoMode;
+        this.lineCount = lineCount;
 
         this.lastGenerationMode = { mode: BoardGenerationMode.RANDOM };
 
@@ -400,6 +407,7 @@ export default class Room {
             row,
             col,
         ).then();
+        this.checkWinConditions();
     }
 
     handleUnmark(
@@ -427,6 +435,7 @@ export default class Room {
             unRow,
             unCol,
         ).then();
+        this.checkWinConditions();
     }
 
     handleChangeColor(
@@ -596,6 +605,21 @@ export default class Room {
                 );
             }
         });
+    }
+
+    private checkWinConditions() {
+        switch (this.bingoMode) {
+            case 'LINES':
+                const lines = checkCompletedLines(this.board.board);
+                this.identities.forEach((identity) => {
+                    // identity.goalComplete = lines[identity.color];
+                });
+                break;
+            case 'BLACKOUT':
+            case 'LOCKOUT':
+            default:
+                break;
+        }
     }
 
     //#region Racetime Integration
