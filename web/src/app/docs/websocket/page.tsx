@@ -45,14 +45,15 @@ export default async function WebsocketDocs() {
                         const match = /language-(\w+)/.exec(className || '');
                         return match ? (
                             <SyntaxHighlighter
-                                children={String(children).replace(/\n$/, '')}
                                 //@ts-ignore for some reason ts doesn't like
                                 //this line
                                 style={a11yDark}
                                 language={match[1]}
                                 PreTag="div"
                                 {...props}
-                            />
+                            >
+                                {String(children).replace(/\n$/, '')}
+                            </SyntaxHighlighter>
                         ) : (
                             <code className={className} {...props}>
                                 {children}
