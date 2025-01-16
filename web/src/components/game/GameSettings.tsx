@@ -172,7 +172,8 @@ export default function GameSettings({ gameData }: GameSettingsProps) {
                             racetimeGoal,
                             difficultyVariantsEnabled,
                             difficultyGroups,
-                            slugWords: slugWords.split('\n'),
+                            slugWords:
+                                slugWords === '' ? [] : slugWords.split('\n'),
                             useTypedRandom,
                         }),
                     });
@@ -317,11 +318,18 @@ export default function GameSettings({ gameData }: GameSettingsProps) {
                                 multiline
                                 fullWidth
                                 validate={(value: string) => {
+                                    if (value === '') {
+                                        return;
+                                    }
                                     const words = value.split('\n');
+                                    console.log(words.length);
+                                    if (words.length === 0) {
+                                        return;
+                                    }
                                     if (words.length < 50) {
                                         return 'At least 50 words are required';
                                     }
-                                    let error = '';
+                                    let error;
                                     words.forEach((word) => {
                                         if (!word.match(/^[a-zA-Z]*$/)) {
                                             error =

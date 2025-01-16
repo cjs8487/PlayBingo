@@ -124,13 +124,18 @@ games.post('/:slug', async (req, res) => {
         if (!Array.isArray(slugWords)) {
             return res.status(400).send('Incorrect slug word format');
         }
-        if (slugWords.length < 50) {
-            return res.status(400).send('Not enough slug words provided');
+        console.log(slugWords);
+        if (slugWords.length > 0) {
+            if (slugWords.length < 50) {
+                return res.status(400).send('Not enough slug words provided');
+            }
+            if (!slugWords.every((word) => word.match(/^[a-zA-Z]*$/))) {
+                return res
+                    .status(400)
+                    .send('Slug words can only contain letters');
+            }
+            result = await updateSlugWords(slug, slugWords);
         }
-        if (!slugWords.every((word) => word.match(/^[a-zA-Z]*$/))) {
-            return res.status(400).send('Slug words can only contain letters');
-        }
-        result = await updateSlugWords(slug, slugWords);
     }
     if (useTypedRandom !== undefined) {
         result = await updateUseTypedRandom(slug, !!useTypedRandom);
