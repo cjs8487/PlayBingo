@@ -10,6 +10,7 @@ export const createRoom = (
     password: string,
     hideCard: boolean,
     bingoMode: BingoMode,
+    lineCount: number = 1,
 ) => {
     return prisma.room.create({
         data: {
@@ -20,6 +21,7 @@ export const createRoom = (
             password,
             hideCard,
             bingoMode,
+            lineCount,
         },
     });
 };

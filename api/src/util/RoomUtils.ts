@@ -13,7 +13,7 @@ export const listToBoard = (list: GeneratorGoal[]) => {
     );
 };
 
-type CompletedLines = { [color: string]: number };
+export type CompletedLines = { [color: string]: number };
 
 export const checkCompletedLines = (grid: Cell[][]): CompletedLines => {
     const numRows = grid.length;

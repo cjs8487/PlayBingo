@@ -43,7 +43,7 @@ const roomValidationSchema = yup.object().shape({
     mode: yup
         .string()
         .required('Game mode is required')
-        .oneOf(['lines', 'blackout', 'lockout'], 'Invalid game mode'),
+        .oneOf(['LINES', 'BLACKOUT', 'LOCKOUT'], 'Invalid game mode'),
 });
 
 function GenerationModeSelectField() {
@@ -247,17 +247,17 @@ export default function RoomCreateForm() {
                                 name="mode"
                                 label="Game Mode"
                                 options={[
-                                    { value: 'lines', label: 'Lines' },
-                                    { value: 'blackout', label: 'Blackout' },
-                                    { value: 'lockout', label: 'Lockout' },
+                                    { value: 'LINES', label: 'Lines' },
+                                    { value: 'BLACKOUT', label: 'Blackout' },
+                                    { value: 'LOCKOUT', label: 'Lockout' },
                                 ]}
                                 sx={{ flexGrow: 1 }}
                             />
-                            {mode === 'lines' && (
+                            {mode === 'LINES' && (
                                 <NumberInput
                                     name="lineCount"
                                     label="Lines"
-                                    disabled={mode !== 'lines'}
+                                    disabled={mode !== 'LINES'}
                                 />
                             )}
                         </Box>

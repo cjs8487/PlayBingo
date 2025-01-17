@@ -32,7 +32,11 @@ import {
     ServerMessage,
 } from '../types/ServerMessage';
 import { shuffle } from '../util/Array';
-import { checkCompletedLines, listToBoard } from '../util/RoomUtils';
+import {
+    checkCompletedLines,
+    CompletedLines,
+    listToBoard,
+} from '../util/RoomUtils';
 import { generateFullRandom, generateRandomTyped } from './generation/Random';
 import { generateSRLv5 } from './generation/SRLv5';
 import RacetimeHandler, { RaceData } from './integration/RacetimeHandler';
@@ -49,6 +53,7 @@ type RoomIdentity = {
     racetimeId?: string;
     spectator: boolean;
     monitor: boolean;
+    goalComplete: boolean;
 };
 
 export enum BoardGenerationMode {
@@ -102,6 +107,8 @@ export default class Room {
 
     lastGenerationMode: BoardGenerationOptions;
 
+    lastLineStatus: CompletedLines;
+
     racetimeEligible: boolean;
     racetimeHandler: RacetimeHandler;
 
@@ -145,6 +152,7 @@ export default class Room {
         }
 
         this.hideCard = hideCard;
+        this.lastLineStatus = {};
     }
 
     async generateBoard(options: BoardGenerationOptions) {
@@ -297,6 +305,7 @@ export default class Room {
                 color: auth.isSpectating ? '' : 'blue',
                 spectator: auth.isSpectating,
                 monitor: auth.isMonitor,
+                goalComplete: false,
             };
             this.identities.set(auth.uuid, identity);
         } else {
@@ -610,10 +619,32 @@ export default class Room {
     private checkWinConditions() {
         switch (this.bingoMode) {
             case 'LINES':
-                const lines = checkCompletedLines(this.board.board);
+                const lineCounts = checkCompletedLines(this.board.board);
+                Object.keys(lineCounts).forEach((color) => {});
                 this.identities.forEach((identity) => {
-                    // identity.goalComplete = lines[identity.color];
+                    const { color, nickname, goalComplete } = identity;
+                    if (lineCounts[color] > this.lastLineStatus[color]) {
+                        this.sendChat([
+                            { contents: nickname, color },
+                            ' has completed a line',
+                        ]);
+                    }
+                    if (!goalComplete && lineCounts[color] >= this.lineCount) {
+                        this.sendChat([
+                            { contents: nickname, color },
+                            ' has completed the goal!',
+                        ]);
+                        identity.goalComplete = true;
+                    }
+                    if (goalComplete && lineCounts[color] < this.lineCount) {
+                        identity.goalComplete = false;
+                        this.sendChat([
+                            { contents: nickname, color },
+                            ' has no longer completed the goal.',
+                        ]);
+                    }
                 });
+                this.lastLineStatus = lineCounts;
                 break;
             case 'BLACKOUT':
             case 'LOCKOUT':
