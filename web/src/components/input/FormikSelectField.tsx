@@ -33,7 +33,6 @@ export function FormikSelectField({
     const [field, meta, helpers] = useField<string | null>(name);
 
     const error = meta.touched && !!meta.error;
-    console.log(error);
 
     return (
         <FormControl sx={sx}>
