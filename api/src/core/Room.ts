@@ -653,6 +653,40 @@ export default class Room {
                 break;
             case 'BLACKOUT':
             case 'LOCKOUT':
+                this.identities.forEach((identity) => {
+                    const goalCount = this.board.board.reduce((prev, row) => {
+                        return (
+                            prev +
+                            row.reduce((p, cell) => {
+                                if (cell.colors.includes(identity.color)) {
+                                    return p + 1;
+                                }
+                                return p;
+                            }, 0)
+                        );
+                    }, 0);
+                    if (!identity.goalComplete && goalCount >= 13) {
+                        this.sendChat([
+                            {
+                                contents: identity.nickname,
+                                color: identity.color,
+                            },
+                            ' has achieved lockout!',
+                        ]);
+                        identity.goalComplete = true;
+                    }
+                    if (identity.goalComplete && goalCount < 13) {
+                        this.sendChat([
+                            {
+                                contents: identity.nickname,
+                                color: identity.color,
+                            },
+                            ' no longer has lockout.',
+                        ]);
+                        identity.goalComplete = false;
+                    }
+                });
+                break;
             default:
                 break;
         }
