@@ -26,7 +26,7 @@ describe('Win Conditions', () => {
         board[0][3].colors = ['blue'];
         board[0][4].colors = ['blue'];
         const winStatus = checkCompletedLines(board);
-        expect(winStatus).toStrictEqual({ blue: true });
+        expect(winStatus).toStrictEqual({ blue: 1 });
     });
 
     it('Correctly detects single rows with additional values on the board', () => {
@@ -43,9 +43,9 @@ describe('Win Conditions', () => {
         board[2][2].colors = ['green', 'blue'];
         const winStatus = checkCompletedLines(board);
         expect(winStatus).toStrictEqual({
-            blue: true,
-            red: false,
-            green: false,
+            blue: 1,
+            red: 0,
+            green: 0,
         });
     });
 
@@ -67,9 +67,9 @@ describe('Win Conditions', () => {
         board[4][3].colors = ['red', 'green'];
         const winStatus = checkCompletedLines(board);
         expect(winStatus).toStrictEqual({
-            blue: true,
-            green: false,
-            red: false,
+            blue: 2,
+            green: 0,
+            red: 0,
         });
     });
 
@@ -81,7 +81,7 @@ describe('Win Conditions', () => {
         board[3][0].colors = ['blue'];
         board[4][0].colors = ['blue'];
         const winStatus = checkCompletedLines(board);
-        expect(winStatus).toStrictEqual({ blue: true });
+        expect(winStatus).toStrictEqual({ blue: 1 });
     });
 
     it('Correctly detects single column with additional values on the board', () => {
@@ -98,9 +98,9 @@ describe('Win Conditions', () => {
         board[2][2].colors = ['green', 'blue'];
         const winStatus = checkCompletedLines(board);
         expect(winStatus).toStrictEqual({
-            blue: true,
-            red: false,
-            green: false,
+            blue: 1,
+            red: 0,
+            green: 0,
         });
     });
 
@@ -119,12 +119,11 @@ describe('Win Conditions', () => {
         board[2][2].colors = ['green', 'blue'];
         board[3][1].colors = ['blue', 'red', 'green'];
         board[4][2].colors = ['red'];
-        board[4][3].colors = ['red', 'green'];
         const winStatus = checkCompletedLines(board);
         expect(winStatus).toStrictEqual({
-            blue: true,
-            green: false,
-            red: false,
+            blue: 2,
+            green: 0,
+            red: 0,
         });
     });
 
@@ -136,7 +135,7 @@ describe('Win Conditions', () => {
         board[3][3].colors = ['blue'];
         board[4][4].colors = ['blue'];
         const winStatus = checkCompletedLines(board);
-        expect(winStatus).toStrictEqual({ blue: true });
+        expect(winStatus).toStrictEqual({ blue: 1 });
     });
 
     it('Correctly detects the antiDiagonal', () => {
@@ -147,7 +146,7 @@ describe('Win Conditions', () => {
         board[3][1].colors = ['blue'];
         board[4][0].colors = ['blue'];
         const winStatus = checkCompletedLines(board);
-        expect(winStatus).toStrictEqual({ blue: true });
+        expect(winStatus).toStrictEqual({ blue: 1 });
     });
 
     it('Correctly detects mixed lines and colors', () => {
@@ -173,11 +172,11 @@ describe('Win Conditions', () => {
         board[4][3].colors = ['red', 'green', 'orange'];
         const winStatus = checkCompletedLines(board);
         expect(winStatus).toStrictEqual({
-            blue: true,
-            green: true,
-            red: false,
-            orange: false,
-            yellow: false,
+            blue: 2,
+            green: 2,
+            red: 0,
+            orange: 0,
+            yellow: 0,
         });
     });
 });

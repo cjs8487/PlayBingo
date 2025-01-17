@@ -13,7 +13,7 @@ export const listToBoard = (list: GeneratorGoal[]) => {
     );
 };
 
-type CompletedLines = { [color: string]: boolean };
+type CompletedLines = { [color: string]: number };
 
 export const checkCompletedLines = (grid: Cell[][]): CompletedLines => {
     const numRows = grid.length;
@@ -27,9 +27,9 @@ export const checkCompletedLines = (grid: Cell[][]): CompletedLines => {
         ),
     );
 
-    const updateCompletion = (lineColors: Set<string>) => {
+    const incrementLineCount = (lineColors: Set<string>) => {
         for (const color of lineColors) {
-            completedLines[color] = true;
+            completedLines[color] = (completedLines[color] || 0) + 1;
         }
     };
 
@@ -43,7 +43,7 @@ export const checkCompletedLines = (grid: Cell[][]): CompletedLines => {
                 }
             }
         }
-        updateCompletion(commonColors);
+        incrementLineCount(commonColors);
     }
 
     // Check columns
@@ -51,13 +51,13 @@ export const checkCompletedLines = (grid: Cell[][]): CompletedLines => {
         const commonColors = new Set(grid[0]?.[col]?.colors || []);
         for (let row = 0; row < numRows; row++) {
             const cell = grid[row][col];
-            for (const color of [...commonColors]) {
+            for (const color of commonColors) {
                 if (!cell.colors.includes(color)) {
                     commonColors.delete(color);
                 }
             }
         }
-        updateCompletion(commonColors);
+        incrementLineCount(commonColors);
     }
 
     // Check diagonals (top-left to bottom-right)
@@ -71,7 +71,7 @@ export const checkCompletedLines = (grid: Cell[][]): CompletedLines => {
                 }
             }
         }
-        updateCompletion(mainDiagonalColors);
+        incrementLineCount(mainDiagonalColors);
 
         // Check anti-diagonal (top-right to bottom-left)
         const antiDiagonalColors = new Set(
@@ -85,13 +85,13 @@ export const checkCompletedLines = (grid: Cell[][]): CompletedLines => {
                 }
             }
         }
-        updateCompletion(antiDiagonalColors);
+        incrementLineCount(antiDiagonalColors);
     }
 
     // Ensure all colors are included in the result
     allColors.forEach((color) => {
         if (!(color in completedLines)) {
-            completedLines[color] = false;
+            completedLines[color] = 0;
         }
     });
 
