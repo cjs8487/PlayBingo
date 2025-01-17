@@ -399,6 +399,11 @@ export default class Room {
         const { row, col } = action.payload;
         if (row === undefined || col === undefined) return;
         if (this.board.board[row][col].colors.includes(identity.color)) return;
+        if (
+            this.bingoMode === BingoMode.LOCKOUT &&
+            this.board.board[row][col].colors.length > 0
+        )
+            return;
         this.board.board[row][col].colors.push(identity.color);
         this.board.board[row][col].colors.sort((a, b) => a.localeCompare(b));
         this.sendCellUpdate(row, col);
