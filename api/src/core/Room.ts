@@ -108,6 +108,7 @@ export default class Room {
     lastGenerationMode: BoardGenerationOptions;
 
     lastLineStatus: CompletedLines;
+    completed: boolean;
 
     racetimeEligible: boolean;
     racetimeHandler: RacetimeHandler;
@@ -153,6 +154,7 @@ export default class Room {
 
         this.hideCard = hideCard;
         this.lastLineStatus = {};
+        this.completed = false;
     }
 
     async generateBoard(options: BoardGenerationOptions) {
@@ -718,6 +720,13 @@ export default class Room {
             default:
                 break;
         }
+        let allComplete = true;
+        this.identities.forEach((i) => {
+            if (!i.spectator && !i.goalComplete) {
+                allComplete = false;
+            }
+        });
+        this.completed = allComplete;
     }
 
     //#region Racetime Integration
