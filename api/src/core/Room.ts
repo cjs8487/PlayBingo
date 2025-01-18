@@ -652,6 +652,34 @@ export default class Room {
                 this.lastLineStatus = lineCounts;
                 break;
             case 'BLACKOUT':
+                this.identities.forEach((identity) => {
+                    const hasBlackout = this.board.board.every((row) =>
+                        row.every((cell) =>
+                            cell.colors.includes(identity.color),
+                        ),
+                    );
+                    if (hasBlackout && !identity.goalComplete) {
+                        identity.goalComplete = true;
+                        this.sendChat([
+                            {
+                                color: identity.color,
+                                contents: identity.nickname,
+                            },
+                            ' has achieved blackout!',
+                        ]);
+                    }
+                    if (!hasBlackout && identity.goalComplete) {
+                        identity.goalComplete = false;
+                        this.sendChat([
+                            {
+                                color: identity.color,
+                                contents: identity.nickname,
+                            },
+                            ' no longer has blackout',
+                        ]);
+                    }
+                });
+                break;
             case 'LOCKOUT':
                 this.identities.forEach((identity) => {
                     const goalCount = this.board.board.reduce((prev, row) => {
