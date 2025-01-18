@@ -20,7 +20,7 @@ export enum SortOptions {
 }
 
 interface SearchParams {
-    sort: SortOptions | null;
+    sort: SortOptions;
     reverse: boolean;
     search: string;
     shownCats: string[];
@@ -58,7 +58,12 @@ const GoalManagerContext = createContext<GoalManagerContext>({
     goals: [],
     shownGoals: [],
     catList: [],
-    searchParams: { sort: null, reverse: false, search: '', shownCats: [] },
+    searchParams: {
+        sort: SortOptions.DEFAULT,
+        reverse: false,
+        search: '',
+        shownCats: [],
+    },
     settings: {
         showDetails: true,
     },
@@ -100,7 +105,7 @@ export function GoalManagerContextProvider({
     const [catList, setCatList] = useState<string[]>([]);
     const [newGoal, setNewGoal] = useState(false);
     // search params
-    const [sort, setSort] = useState<SortOptions | null>(null);
+    const [sort, setSort] = useState<SortOptions>(SortOptions.DEFAULT);
     const [shownCats, setShownCats] = useState<string[]>([]);
     const [reverse, setReverse] = useState(false);
     const [search, setSearch] = useState('');

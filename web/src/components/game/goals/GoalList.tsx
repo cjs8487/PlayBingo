@@ -35,16 +35,10 @@ function GoalListItemSecondary({ goal }: { goal: Goal }) {
             {goal.difficulty && (
                 <>
                     <Typography variant="body2" component="span">
-                        Difficulty:{' '}
+                        Difficulty: {goal.difficulty}
                     </Typography>
-                    {goal.difficulty}
                 </>
             )}
-            <Box pt={0.5}>
-                {goal.categories?.map((cat) => (
-                    <Chip key={cat} label={cat} size="small" sx={{ mr: 0.5 }} />
-                ))}
-            </Box>
         </>
     );
 }
@@ -82,7 +76,7 @@ export default function GoalList() {
                 Item: ({ children, ...props }) => {
                     return (
                         <ListItemHiddenSecondary
-                            components={{ Root: 'div' }}
+                            slots={{ root: 'div' }}
                             disableGutters
                             disablePadding
                             {...props}
@@ -119,14 +113,26 @@ export default function GoalList() {
                         selected={selectedGoal === goal}
                         divider
                     >
-                        <ListItemText
-                            primary={goal.goal}
-                            secondary={
-                                showDetails && (
-                                    <GoalListItemSecondary goal={goal} />
-                                )
-                            }
-                        />
+                        <Box>
+                            <ListItemText
+                                primary={goal.goal}
+                                secondary={
+                                    showDetails && (
+                                        <GoalListItemSecondary goal={goal} />
+                                    )
+                                }
+                            />
+                            <Box pb={0.5}>
+                                {goal.categories?.map((cat) => (
+                                    <Chip
+                                        key={cat}
+                                        label={cat}
+                                        size="small"
+                                        sx={{ mr: 0.5 }}
+                                    />
+                                ))}
+                            </Box>
+                        </Box>
                     </ListItemButton>
                     {canModerate && (
                         <ListItemSecondaryAction>

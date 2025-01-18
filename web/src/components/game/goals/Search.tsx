@@ -14,7 +14,6 @@ import {
     TextField,
     Tooltip,
 } from '@mui/material';
-import { reverse } from 'dns';
 import {
     SortOptions,
     useGoalManagerContext,
@@ -50,8 +49,9 @@ export default function GoalSearch() {
                     }}
                     disableCloseOnSelect
                     renderOption={(props, option, { selected }) => {
+                        const { key, ...optionProps } = props;
                         return (
-                            <li {...props}>
+                            <li key={key} {...optionProps}>
                                 <Checkbox
                                     icon={icon}
                                     checkedIcon={checkedIcon}
