@@ -19,7 +19,13 @@ globalThis.fetch = async (path: URL | RequestInfo, init?: RequestInit) => {
     return res;
 };
 
-export default function CoreLayout({ children }: { children: ReactNode }) {
+export default function CoreLayout({
+    children,
+    modal,
+}: {
+    children: ReactNode;
+    modal: ReactNode;
+}) {
     return (
         <Box
             sx={{
@@ -46,6 +52,7 @@ export default function CoreLayout({ children }: { children: ReactNode }) {
             </Box>
             <Footer />
             <ToastContainer />
+            {modal}
         </Box>
     );
 }
