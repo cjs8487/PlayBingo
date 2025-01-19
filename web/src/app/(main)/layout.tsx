@@ -7,7 +7,13 @@ import 'react-toastify/dist/ReactToastify.css';
 import Footer from '../../components/footer/Footer';
 import Header from '../../components/header/Header';
 
-export default function CoreLayout({ children }: { children: ReactNode }) {
+export default function CoreLayout({
+    children,
+    modal,
+}: {
+    children: ReactNode;
+    modal: ReactNode;
+}) {
     return (
         <Box
             sx={{
@@ -32,13 +38,15 @@ export default function CoreLayout({ children }: { children: ReactNode }) {
             <Box
                 sx={{
                     flexGrow: 1,
-                    height: "100%",
-                    display: "flex"
-                }}>
+                    height: '100%',
+                    display: 'flex',
+                }}
+            >
                 {children}
             </Box>
             <Footer />
             <ToastContainer />
+            {modal}
         </Box>
     );
 }
