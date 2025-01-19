@@ -11,6 +11,7 @@ export const allGames = async (user?: string) => {
                 select: { id: true, name: true, goalAmounts: true },
             },
         },
+        orderBy: { name: 'asc' },
     });
     if (user) {
         const favorites = (
@@ -24,8 +25,8 @@ export const allGames = async (user?: string) => {
                 ...game,
                 favorited: favorites?.includes(game.id),
                 isMod: await isModerator(game.slug, user),
-            }))
-        )
+            })),
+        );
     }
     return games.map((game) => ({ ...game, favorite: false }));
 };

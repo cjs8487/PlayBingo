@@ -4,7 +4,7 @@
     "description": "",
     "main": "index.js",
     "prisma": {
-        "seed": "ts-node prisma/seed.ts"
+        "seed": "tsx prisma/seed.ts"
     },
     "scripts": {
         "dev": "tsc-watch --noClear --onSuccess \"node build/src/main.js\"",
@@ -65,6 +65,7 @@
         "ts-jest": "^29.2.5",
         "ts-node": "^10.9.2",
         "tsc-watch": "^6.0.4",
+        "tsx": "^4.19.2",
         "typescript": "^5.3.3"
     }
 }
