@@ -62,7 +62,7 @@ export const validateToken = async (token: string) => {
     if (!tokenObj) {
         return false;
     }
-    if (tokenObj.revokedOn && new Date() < tokenObj.revokedOn) {
+    if (tokenObj.revokedOn && new Date() >= tokenObj.revokedOn) {
         return false;
     }
     return tokenObj.active;
