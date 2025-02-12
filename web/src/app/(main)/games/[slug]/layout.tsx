@@ -4,6 +4,7 @@ import Image from 'next/image';
 import NextLink from 'next/link';
 import { ReactNode } from 'react';
 import GameTabs from './GameTabs';
+import { getGamePermissions } from '../../../../actions/Auth';
 
 async function getGame(slug: string): Promise<Game | null> {
     const res = await fetch(
@@ -11,19 +12,6 @@ async function getGame(slug: string): Promise<Game | null> {
     );
     if (!res.ok) {
         return null;
-    }
-    return res.json();
-}
-
-async function getPermissions(
-    slug: string,
-): Promise<{ canModerate: boolean; isOwner: boolean }> {
-    const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_PATH}/api/games/${slug}/permissions`,
-    );
-    if (!res.ok) {
-        console.log('unable to dtermine permissions');
-        return { canModerate: false, isOwner: false };
     }
     return res.json();
 }
@@ -40,7 +28,7 @@ export default async function GamePage(props: GameLayoutProps) {
     const { goals } = props;
 
     const gameData = await getGame(slug);
-    const { canModerate, isOwner } = await getPermissions(slug);
+    const { canModerate, isOwner } = await getGamePermissions(slug);
 
     if (!gameData) {
         return null;

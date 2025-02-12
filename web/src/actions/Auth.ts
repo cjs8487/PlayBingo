@@ -37,3 +37,15 @@ export async function resetPassword(token: string, password: string) {
         status: res.status,
     };
 }
+
+export async function getGamePermissions(slug: string) {
+    const res = await serverFetch(`/api/games/${slug}/permissions`);
+
+    if (!res.ok) {
+        return { ok: false, canModerate: false, isOwner: false };
+    }
+
+    const { canModerate, isOwner } = await res.json();
+
+    return { ok: true, canModerate, isOwner };
+}
