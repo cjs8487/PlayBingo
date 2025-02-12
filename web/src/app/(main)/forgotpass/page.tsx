@@ -1,10 +1,11 @@
 'use client';
-import { Field, Form, Formik } from 'formik';
+import { Box, Button, Typography } from '@mui/material';
+import { Form, Formik } from 'formik';
 import { useState } from 'react';
 import * as yup from 'yup';
-import { alertError } from '../../../lib/Utils';
+import { forgotPassword } from '../../../actions/Auth';
 import FormikTextField from '../../../components/input/FormikTextField';
-import { Box, Button, Typography } from '@mui/material';
+import { alertError } from '../../../lib/Utils';
 
 const validationSchema = yup.object({
     email: yup
@@ -34,19 +35,11 @@ export default function ForgotPassword() {
                     initialValues={{ email: '', username: '' }}
                     validationSchema={validationSchema}
                     onSubmit={async ({ email, username }) => {
-                        const res = await fetch('/api/auth/forgotPassword', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
-                            body: JSON.stringify({ email, username }),
-                        });
+                        const res = await forgotPassword(email, username);
                         if (!res.ok) {
-                            const error = await res.text();
-                            alertError(
-                                `Unable to submit reset request - ${error}`,
+                            return alertError(
+                                `Unable to submit reset request - ${res.message}`,
                             );
-                            return;
                         }
                         setSuccess(true);
                     }}

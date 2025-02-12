@@ -5,6 +5,7 @@ import * as yup from 'yup';
 import { alertError } from '../../../lib/Utils';
 import { Box, Button, Container, Typography } from '@mui/material';
 import FormikTextField from '../../../components/input/FormikTextField';
+import { resetPassword } from '../../../actions/Auth';
 
 const validationSchema = yup.object({
     password: yup
@@ -45,21 +46,14 @@ export default function ResetPassword() {
                 initialValues={{ password: '', passwordConfirm: '' }}
                 validationSchema={validationSchema}
                 onSubmit={async ({ password }) => {
-                    const res = await fetch('/api/auth/resetPassword', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({ token, password }),
-                    });
+                    const res = await resetPassword(token, password);
                     if (!res.ok) {
-                        const error = await res.text();
                         alertError(
-                            `Unable to submit reset request - ${error}. You may need to request a new reset link.`,
+                            `Unable to submit reset request - ${res.message}. You may need to request a new reset link.`,
                         );
                         return;
                     }
-                    router.push('/login')
+                    router.push('/login');
                 }}
             >
                 {({ isValid, isSubmitting, values: { password } }) => (

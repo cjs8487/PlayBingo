@@ -10,6 +10,8 @@ import registration from './registration/Registration';
 import rooms from './rooms/Rooms';
 import users from './users/Users';
 import { readFile } from 'fs/promises';
+import tokens from './auth/ApiTokens';
+import { requiresApiToken } from './middleware';
 
 const api = Router();
 
@@ -22,6 +24,7 @@ api.use('/users', users);
 api.use('/connect', connect);
 api.use('/oauth', oauth);
 api.use('/connection', connection);
+api.use('/tokens', tokens);
 
 api.get('/me', async (req, res) => {
     if (!req.session.user) {
@@ -36,7 +39,7 @@ api.get('/me', async (req, res) => {
     res.status(200).send(user);
 });
 
-api.post('/logout', (req, res, next) => {
+api.post('/logout', requiresApiToken, (req, res, next) => {
     if (!req.session.user) {
         res.sendStatus(401);
         return;
@@ -57,7 +60,7 @@ api.post('/logout', (req, res, next) => {
     });
 });
 
-api.get('/logs', async (req, res) => {
+api.get('/logs', requiresApiToken, async (req, res) => {
     if (!req.session.user) {
         res.sendStatus(401);
         return;

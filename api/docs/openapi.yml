@@ -15,10 +15,23 @@ components:
       description:
         Authentication is handled via session and cookies. Endpoints
         protected by this authentication method are only available to requests
-        made by the website, unless they list another form of authorization.
+        made by the website, unless they list another form of authorization. The
+        value of the cookie indicates the server session of the currently logged
+        in user, which is used to identify the user across page loads and
+        multiple requests.
       type: apiKey
       in: cookie
       name: connect.sid
+    apiKeyAuthentication:
+      description: 
+        Authentication is handled via a header. Endpoints protected with this
+        authentication method are considered "private" and are not available for
+        consumption by general consumers of the API. API keys can only be
+        granted by site admins. Each API key uniquely represents an API consumer
+        who has been granted access to these private endpoints
+      type: apiKey
+      in: header
+      name: PlayBingo-Api-Key
   responses:
     errorBadRequest:
       description:
@@ -264,6 +277,9 @@ paths:
       summary: End the current login session
       description:
         Ends the login session of the currently logged in user.
+      security:
+        - cookieAuthentication: []
+          apiKeyAuthentication: []
       responses:
         200:
           description: OK

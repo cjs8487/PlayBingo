@@ -1,4 +1,4 @@
-'use client'
+'use client';
 import useSWR from 'swr';
 
 export const useApi = <T>(route: string, immutable?: boolean) => {

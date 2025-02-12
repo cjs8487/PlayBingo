@@ -1,23 +1,22 @@
-'use client';
-import { Suspense, useContext, useLayoutEffect } from 'react';
-import { UserContext } from '../../../context/UserContext';
+import { Box, Container, Typography } from '@mui/material';
 import { redirect } from 'next/navigation';
-import { ErrorMessage, Field, Form, Formik } from 'formik';
-import Link from 'next/link';
 import RacetimeIntegration from './RacetimeIntegration';
-import { Box, Button, Container, Typography } from '@mui/material';
-import FormikTextField from '../../../components/input/FormikTextField';
+import { serverFetch } from '../../ServerUtils';
 
-export default function ProfilePage() {
-    const { user, loggedIn } = useContext(UserContext);
+async function getUser() {
+    const res = await serverFetch('/api/me');
 
-    useLayoutEffect(() => {
-        if (!loggedIn) {
-            redirect('/');
-        }
-    });
-    if (!loggedIn || !user) {
-        return null;
+    if (!res.ok) {
+        return undefined;
+    }
+    return res.json();
+}
+
+export default async function ProfilePage() {
+    const user = await getUser();
+
+    if (!user) {
+        redirect('/');
     }
 
     return (
@@ -69,9 +68,7 @@ export default function ProfilePage() {
                 <Typography variant="h5" mb={1}>
                     Integrations
                 </Typography>
-                <Suspense>
-                    <RacetimeIntegration />
-                </Suspense>
+                <RacetimeIntegration />
             </Box>
         </Container>
     );
