@@ -1,4 +1,4 @@
-import { RoomActionType } from '@prisma/client';
+import { BingoMode, RoomActionType } from '@prisma/client';
 import { prisma } from './Database';
 import { JsonObject } from '@prisma/client/runtime/library';
 
@@ -9,6 +9,8 @@ export const createRoom = (
     isPrivate: boolean,
     password: string,
     hideCard: boolean,
+    bingoMode: BingoMode,
+    lineCount: number = 1,
 ) => {
     return prisma.room.create({
         data: {
@@ -18,6 +20,8 @@ export const createRoom = (
             game: { connect: { id: game } },
             password,
             hideCard,
+            bingoMode,
+            lineCount,
         },
     });
 };

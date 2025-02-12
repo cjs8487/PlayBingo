@@ -2,8 +2,7 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider        = "prisma-client-js"
-  previewFeatures = ["omitApi"]
+  provider = "prisma-client-js"
 }
 
 datasource db {
@@ -132,6 +131,8 @@ model Room {
   board        String[]
   racetimeRoom String?
   hideCard     Boolean      @default(false)
+  bingoMode    BingoMode    @default(LINES)
+  lineCount    Int          @default(1)
 }
 
 model RoomAction {
@@ -164,4 +165,10 @@ enum ConnectionService {
   TWITCH
   DISCORD
   RACETIME
+}
+
+enum BingoMode {
+  LINES
+  BLACKOUT
+  LOCKOUT
 }
