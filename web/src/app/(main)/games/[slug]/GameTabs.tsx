@@ -3,7 +3,6 @@
 import { TabContext, TabList, TabPanel } from '@mui/lab';
 import { Box, Tab } from '@mui/material';
 import { ReactNode, useState } from 'react';
-import GameSettings from '../../../../components/game/GameSettings';
 import GoalCategories from '../../../../components/game/GoalCategories';
 import PermissionsManagement from '../../../../components/game/PermissionsManagement';
 import Variants from '../../../../components/game/Variants';
@@ -15,6 +14,8 @@ interface GameTabsProps {
     canModerate: boolean;
     isOwner: boolean;
     goals: ReactNode;
+    settings: ReactNode;
+    permissions: ReactNode;
 }
 
 export default function GameTabs({
@@ -22,6 +23,8 @@ export default function GameTabs({
     canModerate,
     isOwner,
     goals,
+    settings,
+    permissions,
 }: GameTabsProps) {
     const [tab, setTab] = useState('Goals');
     const handleChange = (event: React.SyntheticEvent, newValue: string) => {
@@ -78,9 +81,7 @@ export default function GameTabs({
                     gameData={gameData}
                 />
             </TabPanel>
-            <TabPanel value="Settings">
-                <GameSettings gameData={gameData} />
-            </TabPanel>
+            <TabPanel value="Settings">{settings}</TabPanel>
         </TabContext>
     );
 }

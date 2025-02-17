@@ -6,7 +6,7 @@ import { ReactNode } from 'react';
 import GameTabs from './GameTabs';
 import { getGamePermissions } from '../../../../actions/Auth';
 
-async function getGame(slug: string): Promise<Game | null> {
+export async function getGame(slug: string): Promise<Game | null> {
     const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_PATH}/api/games/${slug}`,
     );
@@ -16,16 +16,20 @@ async function getGame(slug: string): Promise<Game | null> {
     return res.json();
 }
 
-interface GameLayoutProps {
+export interface GamePageParams {
     params: Promise<{ slug: string }>;
+}
+interface GameLayoutProps extends GamePageParams {
     goals: ReactNode;
+    settings: ReactNode;
+    permissions: ReactNode;
 }
 
 export default async function GamePage(props: GameLayoutProps) {
     const params = await props.params;
 
     const { slug } = params;
-    const { goals } = props;
+    const { goals, settings, permissions } = props;
 
     const gameData = await getGame(slug);
     const { canModerate, isOwner } = await getGamePermissions(slug);
@@ -86,6 +90,8 @@ export default async function GamePage(props: GameLayoutProps) {
                 canModerate={canModerate}
                 isOwner={isOwner}
                 goals={goals}
+                settings={settings}
+                permissions={permissions}
             />
         </Container>
     );

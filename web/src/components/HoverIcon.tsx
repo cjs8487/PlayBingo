@@ -1,3 +1,5 @@
+'use client';
+
 import { useFloating, useHover, useInteractions } from '@floating-ui/react';
 import { Paper } from '@mui/material';
 import { ReactNode, useState } from 'react';
