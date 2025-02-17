@@ -10,9 +10,6 @@ const nextConfig = {
     env: {
         version
     },
-    experimental: {
-        instrumentationHook: true,
-    }
 };
 
 module.exports = nextConfig;
