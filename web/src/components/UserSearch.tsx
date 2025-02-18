@@ -15,25 +15,28 @@ import {
     useMediaQuery,
     useTheme,
 } from '@mui/material';
-import { forwardRef, useCallback, useState } from 'react';
+import { forwardRef, ReactNode, useCallback, useState } from 'react';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import { Virtuoso } from 'react-virtuoso';
+import { GamePermissionResponse } from '../actions/Game';
 import { useApi } from '../lib/Hooks';
 import { alertError } from '../lib/Utils';
 import { User } from '../types/User';
 
 interface UserSearchProps {
-    isOpen: boolean;
-    close: () => void;
-    submit: (selectedUsers: string[]) => void;
+    openButtonCaption: string;
+    openButtonIcon?: ReactNode;
+    submit: (users: string[]) => Promise<GamePermissionResponse>;
     listPath?: string;
+    userTitleOverride?: string;
 }
 
 export default function UserSearch({
-    isOpen,
-    close,
+    openButtonCaption,
+    openButtonIcon,
     submit,
     listPath,
+    userTitleOverride,
 }: UserSearchProps) {
     const {
         data: users,
@@ -41,21 +44,27 @@ export default function UserSearch({
         error,
     } = useApi<User[]>(listPath ?? '/api/users');
 
+    const [isOpen, setIsOpen] = useState(false);
     const [selected, setSelected] = useState<string[]>([]);
     const [searchString, setSearchString] = useState('');
 
-    const cancel = useCallback(() => {
-        setSelected([]);
-        setSearchString('');
-        close();
-    }, [close]);
+    const userTitle = userTitleOverride ?? 'users';
 
-    const onSubmit = useCallback(() => {
-        submit(selected);
+    const cancel = useCallback(async () => {
         setSelected([]);
         setSearchString('');
-        close();
-    }, [submit, selected, close]);
+        setIsOpen(false);
+    }, []);
+
+    const onSubmit = useCallback(async () => {
+        const res = await submit(selected);
+        if (!res.ok) {
+            alertError(`Unable to add new ${userTitle} - ${error}`);
+        }
+        setSelected([]);
+        setSearchString('');
+        setIsOpen(false);
+    }, [submit, selected]);
 
     const theme = useTheme();
     const fullScreen = useMediaQuery(theme.breakpoints.down('sm'));
@@ -82,106 +91,117 @@ export default function UserSearch({
         });
 
     return (
-        <Dialog
-            onClose={close}
-            open={isOpen}
-            fullScreen={fullScreen}
-            maxWidth="sm"
-            fullWidth
-        >
-            <DialogTitle>User Search</DialogTitle>
-            <DialogContent sx={{ minHeight: '300px' }}>
-                <TextField
-                    type="text"
-                    label="Search"
-                    onChange={(e) => setSearchString(e.target.value)}
-                    sx={{ width: '33%' }}
-                />
-                <AutoSizer>
-                    {({ height, width }) => (
-                        <Virtuoso<User>
-                            height={height}
-                            width={width}
-                            style={{ height, width }}
-                            components={{
-                                // eslint-disable-next-line react/display-name
-                                List: forwardRef(
-                                    ({ style, children }, listRef) => {
+        <>
+            <Button onClick={() => setIsOpen(true)} startIcon={openButtonIcon}>
+                {openButtonCaption}
+            </Button>
+
+            <Dialog
+                onClose={close}
+                open={isOpen}
+                fullScreen={fullScreen}
+                maxWidth="sm"
+                fullWidth
+            >
+                <DialogTitle>User Search</DialogTitle>
+                <DialogContent sx={{ minHeight: '300px' }}>
+                    <TextField
+                        type="text"
+                        label="Search"
+                        onChange={(e) => setSearchString(e.target.value)}
+                        sx={{ width: '33%' }}
+                    />
+                    <AutoSizer>
+                        {({ height, width }) => (
+                            <Virtuoso<User>
+                                height={height}
+                                width={width}
+                                style={{ height, width }}
+                                components={{
+                                    // eslint-disable-next-line react/display-name
+                                    List: forwardRef(
+                                        ({ style, children }, listRef) => {
+                                            return (
+                                                <List
+                                                    style={{
+                                                        padding: 0,
+                                                        ...style,
+                                                        margin: 0,
+                                                    }}
+                                                    component="div"
+                                                    ref={listRef}
+                                                >
+                                                    {children}
+                                                </List>
+                                            );
+                                        },
+                                    ),
+                                    Item: ({ children, ...props }) => {
                                         return (
-                                            <List
+                                            <ListItem
+                                                {...props}
                                                 style={{
-                                                    padding: 0,
-                                                    ...style,
                                                     margin: 0,
                                                 }}
-                                                component="div"
-                                                ref={listRef}
+                                                disableGutters
                                             >
                                                 {children}
-                                            </List>
+                                            </ListItem>
                                         );
                                     },
-                                ),
-                                Item: ({ children, ...props }) => {
-                                    return (
-                                        <ListItem
-                                            {...props}
-                                            style={{
-                                                margin: 0,
-                                            }}
-                                            disableGutters
-                                        >
-                                            {children}
-                                        </ListItem>
-                                    );
-                                },
-                            }}
-                            data={listedUsers}
-                            itemContent={(index, user) => (
-                                <ListItemButton
-                                    onClick={() => {
-                                        if (selected.includes(user.id)) {
-                                            setSelected(
-                                                selected.filter(
-                                                    (u) => u !== user.id,
-                                                ),
-                                            );
-                                        } else {
-                                            setSelected([...selected, user.id]);
-                                        }
-                                    }}
-                                    divider
-                                >
-                                    <ListItemIcon>
-                                        <Checkbox
-                                            edge="start"
-                                            checked={selected.includes(user.id)}
-                                            tabIndex={-1}
-                                            disableRipple
-                                            inputProps={{
-                                                'aria-labelledby': `user-list-label-${index}`,
-                                            }}
-                                        />
-                                    </ListItemIcon>
-                                    <ListItemText
-                                        id={`user-list-label-${index}`}
+                                }}
+                                data={listedUsers}
+                                itemContent={(index, user) => (
+                                    <ListItemButton
+                                        onClick={() => {
+                                            if (selected.includes(user.id)) {
+                                                setSelected(
+                                                    selected.filter(
+                                                        (u) => u !== user.id,
+                                                    ),
+                                                );
+                                            } else {
+                                                setSelected([
+                                                    ...selected,
+                                                    user.id,
+                                                ]);
+                                            }
+                                        }}
+                                        divider
                                     >
-                                        {user.username}
-                                    </ListItemText>
-                                </ListItemButton>
-                            )}
-                        />
-                    )}
-                </AutoSizer>
-            </DialogContent>
-            <DialogActions>
-                <Button color="error" onClick={cancel}>
-                    Cancel
-                </Button>
-                <Button type="button" color="success" onClick={onSubmit}>
-                    Submit
-                </Button>
-            </DialogActions>
-        </Dialog>
+                                        <ListItemIcon>
+                                            <Checkbox
+                                                edge="start"
+                                                checked={selected.includes(
+                                                    user.id,
+                                                )}
+                                                tabIndex={-1}
+                                                disableRipple
+                                                inputProps={{
+                                                    'aria-labelledby': `user-list-label-${index}`,
+                                                }}
+                                            />
+                                        </ListItemIcon>
+                                        <ListItemText
+                                            id={`user-list-label-${index}`}
+                                        >
+                                            {user.username}
+                                        </ListItemText>
+                                    </ListItemButton>
+                                )}
+                            />
+                        )}
+                    </AutoSizer>
+                </DialogContent>
+                <DialogActions>
+                    <Button color="error" onClick={cancel}>
+                        Cancel
+                    </Button>
+                    <Button type="button" color="success" onClick={onSubmit}>
+                        Submit
+                    </Button>
+                </DialogActions>
+            </Dialog>
+        </>
     );
 }

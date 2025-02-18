@@ -75,12 +75,7 @@ export default function GameTabs({
             <TabPanel value="Variants">
                 <Variants gameData={gameData} />
             </TabPanel>
-            <TabPanel value="Permissions">
-                <PermissionsManagement
-                    slug={gameData.slug}
-                    gameData={gameData}
-                />
-            </TabPanel>
+            <TabPanel value="Permissions">{permissions}</TabPanel>
             <TabPanel value="Settings">{settings}</TabPanel>
         </TabContext>
     );
