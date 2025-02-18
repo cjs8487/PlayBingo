@@ -7,18 +7,39 @@ import {
     removeOwner,
 } from '../../../../../actions/Game';
 import UserSearch from '../../../../../components/UserSearch';
-import { GamePageParams, getGame } from '../layout';
+import { GamePageParams } from '../layout';
 import UserEntry from './UserEntry';
+import { User } from '../../../../../types/User';
+
+async function getOwners(slug: string): Promise<User[] | null> {
+    const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_PATH}/api/games/${slug}/owners`,
+    );
+    if (!res.ok) {
+        return null;
+    }
+    return res.json();
+}
+
+async function getModerators(slug: string): Promise<User[] | null> {
+    const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_PATH}/api/games/${slug}/moderators`,
+    );
+    if (!res.ok) {
+        return null;
+    }
+    return res.json();
+}
 
 export default async function PermissionsManagement({
     params,
 }: GamePageParams) {
     const { slug } = await params;
-    const gameData = await getGame(slug);
 
-    if (!gameData) {
-        return null;
-    }
+    const ownerPromise = getOwners(slug);
+    const modPromise = getModerators(slug);
+
+    const [owners, moderators] = await Promise.all([ownerPromise, modPromise]);
 
     const ownerSubmit = addOwners.bind(null, slug);
     const modSubmit = addModerators.bind(null, slug);
@@ -32,15 +53,12 @@ export default async function PermissionsManagement({
                     appointing additional owners and moderators.
                 </Typography>
                 <Box>
-                    {gameData.owners?.map((owner) => (
+                    {owners?.map((owner) => (
                         <UserEntry
-                            slug={gameData.slug}
+                            slug={slug}
                             key={owner.id}
                             user={owner}
-                            canRemove={
-                                !!gameData.owners?.length &&
-                                gameData.owners.length > 1
-                            }
+                            canRemove={!!owners?.length && owners.length > 1}
                             remove={removeOwner}
                         />
                     ))}
@@ -62,9 +80,9 @@ export default async function PermissionsManagement({
                     settings.
                 </Typography>
                 <div>
-                    {gameData.moderators?.map((mod) => (
+                    {moderators?.map((mod) => (
                         <UserEntry
-                            slug={gameData.slug}
+                            slug={slug}
                             key={mod.id}
                             user={mod}
                             canRemove

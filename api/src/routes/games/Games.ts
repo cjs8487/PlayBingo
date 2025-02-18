@@ -9,6 +9,8 @@ import {
     deleteGame,
     favoriteGame,
     gameForSlug,
+    getModerators,
+    getOwners,
     isModerator,
     isOwner,
     removeModerator,
@@ -193,147 +195,161 @@ games.get('/:slug/eligibleMods', async (req, res) => {
     res.status(200).json(userList);
 });
 
-games.post('/:slug/owners', async (req, res) => {
-    const { slug } = req.params;
-    const { users } = req.body;
+games
+    .route('/:slug/owners')
+    .get(async (req, res) => {
+        const { slug } = req.params;
 
-    if (!req.session.user) {
-        res.sendStatus(401);
-        return;
-    }
-    if (!isOwner(slug, req.session.user)) {
-        res.sendStatus(403);
-        return;
-    }
+        const owners = await getOwners(slug);
+        res.status(200).json(owners);
+    })
+    .post(async (req, res) => {
+        const { slug } = req.params;
+        const { users } = req.body;
 
-    if (!users) {
-        res.status(400).send('Missing users');
-        return;
-    }
-    if (!Array.isArray(users)) {
-        res.status(400).send('Users parameter is not an array');
-        return;
-    }
-    const allUsersExist = (
-        await Promise.all(
-            users.map(async (user) => {
-                if (!getUser(user)) {
-                    return false;
-                }
-                return true;
-            }),
-        )
-    ).every((b) => b);
+        if (!req.session.user) {
+            res.sendStatus(401);
+            return;
+        }
+        if (!isOwner(slug, req.session.user)) {
+            res.sendStatus(403);
+            return;
+        }
 
-    if (!allUsersExist) {
-        res.sendStatus(400);
-        return;
-    }
+        if (!users) {
+            res.status(400).send('Missing users');
+            return;
+        }
+        if (!Array.isArray(users)) {
+            res.status(400).send('Users parameter is not an array');
+            return;
+        }
+        const allUsersExist = (
+            await Promise.all(
+                users.map(async (user) => {
+                    if (!getUser(user)) {
+                        return false;
+                    }
+                    return true;
+                }),
+            )
+        ).every((b) => b);
 
-    await addOwners(slug, users);
-    res.sendStatus(200);
-});
+        if (!allUsersExist) {
+            res.sendStatus(400);
+            return;
+        }
 
-games.delete('/:slug/owners', async (req, res) => {
-    const { slug } = req.params;
-    const { user } = req.body;
+        await addOwners(slug, users);
+        res.sendStatus(200);
+    })
+    .delete(async (req, res) => {
+        const { slug } = req.params;
+        const { user } = req.body;
 
-    if (!req.session.user) {
-        res.sendStatus(401);
-        return;
-    }
-    if (!isOwner(slug, req.session.user)) {
-        res.sendStatus(403);
-        return;
-    }
+        if (!req.session.user) {
+            res.sendStatus(401);
+            return;
+        }
+        if (!isOwner(slug, req.session.user)) {
+            res.sendStatus(403);
+            return;
+        }
 
-    if (!user) {
-        res.status(400).send('Missing user');
-        return;
-    }
-    if (!getUser(user)) {
-        res.sendStatus(404);
-        return;
-    }
-    const game = await gameForSlug(slug);
-    if (!game) {
-        res.sendStatus(404);
-        return;
-    }
-    if (game.owners.length <= 1) {
-        res.status(400).send('Cannot remove the last owner of a game.');
-    }
+        if (!user) {
+            res.status(400).send('Missing user');
+            return;
+        }
+        if (!getUser(user)) {
+            res.sendStatus(404);
+            return;
+        }
+        const game = await gameForSlug(slug);
+        if (!game) {
+            res.sendStatus(404);
+            return;
+        }
+        if (game.owners.length <= 1) {
+            res.status(400).send('Cannot remove the last owner of a game.');
+        }
 
-    await removeOwner(slug, user);
-    res.sendStatus(200);
-});
+        await removeOwner(slug, user);
+        res.sendStatus(200);
+    });
 
-games.post('/:slug/moderators', async (req, res) => {
-    const { slug } = req.params;
-    const { users } = req.body;
+games
+    .route('/:slug/moderators')
+    .get(async (req, res) => {
+        const { slug } = req.params;
 
-    if (!req.session.user) {
-        res.sendStatus(401);
-        return;
-    }
-    if (!isOwner(slug, req.session.user)) {
-        res.sendStatus(403);
-        return;
-    }
+        const mods = await getModerators(slug);
+        res.status(200).json(mods);
+    })
+    .post(async (req, res) => {
+        const { slug } = req.params;
+        const { users } = req.body;
 
-    if (!users) {
-        res.status(400).send('Missing users');
-        return;
-    }
-    if (!Array.isArray(users)) {
-        res.status(400).send('Users parameter is not an array');
-        return;
-    }
-    const allUsersExist = (
-        await Promise.all(
-            users.map(async (user) => {
-                if (!getUser(user)) {
-                    return false;
-                }
-                return true;
-            }),
-        )
-    ).every((b) => b);
+        if (!req.session.user) {
+            res.sendStatus(401);
+            return;
+        }
+        if (!isOwner(slug, req.session.user)) {
+            res.sendStatus(403);
+            return;
+        }
 
-    if (!allUsersExist) {
-        res.sendStatus(400);
-        return;
-    }
+        if (!users) {
+            res.status(400).send('Missing users');
+            return;
+        }
+        if (!Array.isArray(users)) {
+            res.status(400).send('Users parameter is not an array');
+            return;
+        }
+        const allUsersExist = (
+            await Promise.all(
+                users.map(async (user) => {
+                    if (!getUser(user)) {
+                        return false;
+                    }
+                    return true;
+                }),
+            )
+        ).every((b) => b);
 
-    await addModerators(slug, users);
-    res.sendStatus(200);
-});
+        if (!allUsersExist) {
+            res.sendStatus(400);
+            return;
+        }
 
-games.delete('/:slug/moderators', async (req, res) => {
-    const { slug } = req.params;
-    const { user } = req.body;
+        await addModerators(slug, users);
+        res.sendStatus(200);
+    })
+    .delete(async (req, res) => {
+        const { slug } = req.params;
+        const { user } = req.body;
 
-    if (!req.session.user) {
-        res.sendStatus(401);
-        return;
-    }
-    if (!isOwner(slug, req.session.user)) {
-        res.sendStatus(403);
-        return;
-    }
+        if (!req.session.user) {
+            res.sendStatus(401);
+            return;
+        }
+        if (!isOwner(slug, req.session.user)) {
+            res.sendStatus(403);
+            return;
+        }
 
-    if (!user) {
-        res.status(400).send('Missing user');
-        return;
-    }
-    if (!getUser(user)) {
-        res.sendStatus(404);
-        return;
-    }
+        if (!user) {
+            res.status(400).send('Missing user');
+            return;
+        }
+        if (!getUser(user)) {
+            res.sendStatus(404);
+            return;
+        }
 
-    await removeModerator(slug, user);
-    res.sendStatus(200);
-});
+        await removeModerator(slug, user);
+        res.sendStatus(200);
+    });
 
 games.get('/:slug/permissions', async (req, res) => {
     const { slug } = req.params;

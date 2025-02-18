@@ -15,13 +15,14 @@ import {
     useMediaQuery,
     useTheme,
 } from '@mui/material';
-import { forwardRef, ReactNode, useCallback, useState } from 'react';
+import { forwardRef, ReactNode, useCallback, useEffect, useState } from 'react';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import { Virtuoso } from 'react-virtuoso';
 import { GamePermissionResponse } from '../actions/Game';
 import { useApi } from '../lib/Hooks';
 import { alertError } from '../lib/Utils';
 import { User } from '../types/User';
+import { mutate } from 'swr';
 
 interface UserSearchProps {
     openButtonCaption: string;
@@ -68,6 +69,10 @@ export default function UserSearch({
 
     const theme = useTheme();
     const fullScreen = useMediaQuery(theme.breakpoints.down('sm'));
+
+    useEffect(() => {
+        mutate(listPath);
+    }, [isOpen]);
 
     if (!users || isLoading) {
         return null;

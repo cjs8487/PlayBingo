@@ -34,8 +34,7 @@ export async function addOwners(
         return { ok: false, status: res.status, error };
     }
 
-    revalidatePath(`/api/games/${slug}`);
-    revalidatePath(`/api/games/${slug}/eligibleMods`);
+    revalidatePath(`/api/games/${slug}/owners`);
 
     return { ok: true, status: res.status };
 }
@@ -55,8 +54,7 @@ export async function removeOwner(
         return { ok: false, status: res.status, error };
     }
 
-    revalidatePath(`/api/games/${slug}`);
-    revalidatePath(`/api/games/${slug}/eligibleMods`);
+    revalidatePath(`/api/games/${slug}/owners`);
 
     return { ok: true, status: res.status };
 }
@@ -74,8 +72,7 @@ export async function addModerators(
         return { ok: false, status: res.status, error };
     }
 
-    revalidatePath(`/api/games/${slug}`);
-    revalidatePath(`/api/games/${slug}/eligibleMods`);
+    revalidatePath(`/api/games/${slug}/moderators`);
 
     return { ok: true, status: res.status };
 }
@@ -95,8 +92,7 @@ export async function removeModerator(
         return { ok: false, status: res.status, error };
     }
 
-    revalidatePath(`/api/games/${slug}`);
-    revalidatePath(`/api/games/${slug}/eligibleMods`);
+    revalidatePath(`/api/games/${slug}/moderators`);
 
     return { ok: true, status: res.status };
 }

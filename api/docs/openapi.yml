@@ -620,6 +620,29 @@ paths:
                   $ref: "#/components/schemas/user"
 
   /games/{slug}/owners:
+    get:
+      summary: Get game owners
+      description: Get the users who are owners for the game.
+      tags:
+        - games
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The unique identifier for the game.
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/user"
+        404:
+          $ref: "#/components/responses/errorNotFound"
     post:
       summary: Add game owners
       description: Adds new owners to the game.
@@ -696,6 +719,29 @@ paths:
           $ref: "#/components/responses/errorNotFound"
 
   /games/{slug}/moderators:
+    get:
+      summary: Get game moderators
+      description: Get the users who are moderators for the game.
+      tags:
+        - games
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The unique identifier for the game.
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/user"
+        404:
+          $ref: "#/components/responses/errorNotFound"
     post:
       summary: Add game moderators
       description: Adds new moderators to the game.

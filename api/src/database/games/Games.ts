@@ -177,6 +177,30 @@ export const getRacetimeConfiguration = (slug: string) => {
     });
 };
 
+export const getOwners = async (slug: string) => {
+    return (
+        await prisma.game.findUnique({
+            select: {
+                owners: { select: { id: true, username: true, staff: true } },
+            },
+            where: { slug },
+        })
+    )?.owners;
+};
+
+export const getModerators = async (slug: string) => {
+    return (
+        await prisma.game.findUnique({
+            select: {
+                moderators: {
+                    select: { id: true, username: true, staff: true },
+                },
+            },
+            where: { slug },
+        })
+    )?.moderators;
+};
+
 export const addOwners = (slug: string, users: string[]) => {
     return prisma.game.update({
         where: { slug },
