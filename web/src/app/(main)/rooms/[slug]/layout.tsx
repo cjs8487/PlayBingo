@@ -1,8 +1,9 @@
 import { ReactNode } from 'react';
 import { RoomContextProvider } from '@/context/RoomContext';
 import { notFound } from 'next/navigation';
+import { RoomData } from '../../../../types/RoomData';
 
-async function loadRoom(slug: string) {
+async function loadRoom(slug: string): Promise<RoomData> {
     const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_PATH}/api/rooms/${slug}`,
     );
@@ -13,7 +14,7 @@ async function loadRoom(slug: string) {
         }
     }
 
-    return {};
+    return res.json();
 }
 
 export default async function RoomLayout({
@@ -30,7 +31,7 @@ export default async function RoomLayout({
     const roomData = await loadRoom(slug);
 
     return (
-        <RoomContextProvider slug={slug}>
+        <RoomContextProvider slug={slug} roomData={roomData}>
             {children}
             {modal}
         </RoomContextProvider>

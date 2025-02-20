@@ -41,6 +41,7 @@ import {
     GlobalGenerationState,
 } from './generation/GeneratorCore';
 import { getCategories } from '../database/games/GoalCategories';
+import { RoomData } from '../types/RoomData';
 
 type RoomIdentity = {
     nickname: string;
@@ -277,6 +278,23 @@ export default class Room {
         return players;
     }
 
+    getRoomData(): RoomData {
+        return {
+            game: this.game,
+            slug: this.slug,
+            name: this.name,
+            gameSlug: this.gameSlug,
+            racetimeConnection: {
+                gameActive: this.racetimeEligible,
+                url: this.racetimeHandler.url,
+                startDelay: this.racetimeHandler.data?.start_delay,
+                started: this.racetimeHandler.data?.started_at ?? undefined,
+                ended: this.racetimeHandler.data?.ended_at ?? undefined,
+                status: this.racetimeHandler.data?.status.verbose_value,
+            },
+        };
+    }
+
     //#region Handlers
     handleJoin(
         action: JoinAction,
@@ -315,20 +333,7 @@ export default class Room {
             chatHistory: this.chatHistory,
             nickname: identity.nickname,
             color: identity.color,
-            roomData: {
-                game: this.game,
-                slug: this.slug,
-                name: this.name,
-                gameSlug: this.gameSlug,
-                racetimeConnection: {
-                    gameActive: this.racetimeEligible,
-                    url: this.racetimeHandler.url,
-                    startDelay: this.racetimeHandler.data?.start_delay,
-                    started: this.racetimeHandler.data?.started_at ?? undefined,
-                    ended: this.racetimeHandler.data?.ended_at ?? undefined,
-                    status: this.racetimeHandler.data?.status.verbose_value,
-                },
-            },
+            roomData: this.getRoomData(),
             players: this.getPlayers(),
         };
     }

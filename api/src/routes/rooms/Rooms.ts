@@ -1,5 +1,5 @@
 import { randomInt } from 'crypto';
-import { Router } from 'express';
+import { Router, Response } from 'express';
 import { createRoomToken } from '../../auth/RoomAuth';
 import Room, {
     BoardGenerationMode,
@@ -16,6 +16,7 @@ import { chunk } from '../../util/Array';
 import actions from './Actions';
 import { logWarn } from '../../Logger';
 import { randomWord, slugAdjectives, slugNouns } from '../../util/Words';
+import { RoomData } from '../../types/RoomData';
 
 const MIN_ROOM_GOALS_REQUIRED = 25;
 const rooms = Router();
@@ -139,11 +140,10 @@ rooms.post('/', async (req, res) => {
     res.status(200).json({ slug, authToken: token });
 });
 
-rooms.get('/:slug', async (req, res) => {
+rooms.get('/:slug', async (req, res: Response<RoomData>) => {
     const { slug } = req.params;
     if (allRooms.get(slug)) {
-        res.sendStatus(200);
-        return;
+        return res.status(200).json(allRooms.get(slug)!!.getRoomData());
     }
     const dbRoom = await getRoomFromSlug(slug);
     if (!dbRoom) {
@@ -223,6 +223,8 @@ rooms.get('/:slug', async (req, res) => {
         }
     });
     allRooms.set(slug, room);
+
+    res.status(200).json(room.getRoomData());
 });
 
 rooms.post('/:slug/authorize', (req, res) => {

@@ -2,17 +2,41 @@
 
 import { Box, Button, Paper, Typography } from '@mui/material';
 import { Form, Formik } from 'formik';
-import { useContext, useState } from 'react';
-import { RoomContext } from '@/context/RoomContext';
+import { useContext, useLayoutEffect, useState } from 'react';
+import { ConnectionStatus, RoomContext } from '@/context/RoomContext';
 import FormikTextField from '@/components/input/FormikTextField';
 import FormikSwitch from '@/components/input/FormikSwitch';
+import { useRouter } from 'next/navigation';
 
-export default function RoomLogin() {
+interface Props {
+    useRouterBack?: boolean;
+}
+
+export default function RoomLogin({ useRouterBack }: Props) {
     // context
-    const { connect, roomData } = useContext(RoomContext);
+    const { connect, roomData, connectionStatus } = useContext(RoomContext);
 
     // state
     const [error, setError] = useState<string>();
+
+    const router = useRouter();
+
+    useLayoutEffect(() => {
+        if (
+            connectionStatus === ConnectionStatus.CONNECTED ||
+            connectionStatus === ConnectionStatus.CONNECTING
+        ) {
+            if (useRouterBack) {
+                router.back();
+            } else {
+                router.push(`/rooms/${roomData?.slug}`);
+            }
+        }
+    }, []);
+
+    if (!roomData) {
+        return null;
+    }
 
     return (
         <Formik
@@ -24,7 +48,12 @@ export default function RoomLogin() {
             onSubmit={async ({ nickname, password, spectator }) => {
                 const result = await connect(nickname, password, spectator);
                 if (!result.success) {
-                    setError(result.message);
+                    return setError(result.message);
+                }
+                if (useRouterBack) {
+                    router.back();
+                } else {
+                    router.push(`/rooms/${roomData?.slug}`);
                 }
             }}
         >

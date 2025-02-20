@@ -2,14 +2,13 @@
 import Board from '@/components/board/Board';
 import RoomChat from '@/components/room/RoomChat';
 import RoomInfo from '@/components/room/RoomInfo';
-// import RoomLogin from '@/components/room/RoomLogin';
 import { ConnectionStatus, useRoomContext } from '@/context/RoomContext';
-import { Box, Container } from '@mui/material';
+import { Box } from '@mui/material';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import PlayerList from '../../../../components/room/PlayerList';
 import RacetimeCard from '../../../../components/room/racetime/RacetimeCard';
 import PlayerInfo from '../../../../components/room/PlayerInfo';
-import { redirect, usePathname, useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 
 export default function Room() {

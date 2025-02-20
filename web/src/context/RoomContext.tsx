@@ -99,10 +99,15 @@ export const RoomContext = createContext<RoomContext>({
 
 interface RoomContextProps {
     slug: string;
+    roomData: RoomData;
     children: ReactNode;
 }
 
-export function RoomContextProvider({ slug, children }: RoomContextProps) {
+export function RoomContextProvider({
+    slug,
+    roomData: initalRoomData,
+    children,
+}: RoomContextProps) {
     // state
     const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [connectionStatusState, setConnectionStatus] = useState(
@@ -111,7 +116,7 @@ export function RoomContextProvider({ slug, children }: RoomContextProps) {
     const [authToken, setAuthToken] = useState<string>();
     const [nickname, setNickname] = useState('');
     const [color, setColor] = useState('blue');
-    const [roomData, setRoomData] = useState<RoomData>();
+    const [roomData, setRoomData] = useState<RoomData>(initalRoomData);
     const [loading, setLoading] = useState(true);
     const [players, setPlayers] = useState<Player[]>([]);
 
