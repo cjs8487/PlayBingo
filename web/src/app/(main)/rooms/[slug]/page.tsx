@@ -2,27 +2,33 @@
 import Board from '@/components/board/Board';
 import RoomChat from '@/components/room/RoomChat';
 import RoomInfo from '@/components/room/RoomInfo';
-import RoomLogin from '@/components/room/RoomLogin';
+// import RoomLogin from '@/components/room/RoomLogin';
 import { ConnectionStatus, useRoomContext } from '@/context/RoomContext';
 import { Box, Container } from '@mui/material';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import PlayerList from '../../../../components/room/PlayerList';
 import RacetimeCard from '../../../../components/room/racetime/RacetimeCard';
 import PlayerInfo from '../../../../components/room/PlayerInfo';
+import { redirect, usePathname, useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 
 export default function Room() {
     const { connectionStatus, roomData } = useRoomContext();
+    const router = useRouter();
+    const path = usePathname();
 
-    if (connectionStatus === ConnectionStatus.UNINITIALIZED) {
-        return <RoomLogin />;
-    }
+    useEffect(() => {
+        if (connectionStatus === ConnectionStatus.UNINITIALIZED) {
+            router.push(`${path}/login`);
+        }
 
-    // something went wrong attempting to connect to the server, show the login
-    // page which when submitted will restart the connection process, or show an
-    // adequate error message on failure
-    if (connectionStatus === ConnectionStatus.CLOSED && !roomData) {
-        return <RoomLogin />;
-    }
+        // something went wrong attempting to connect to the server, show the login
+        // page which when submitted will restart the connection process, or show an
+        // adequate error message on failure
+        if (connectionStatus === ConnectionStatus.CLOSED && !roomData) {
+            router.push(`${path}/login`);
+        }
+    }, [connectionStatus, roomData]);
 
     return (
         <AutoSizer>

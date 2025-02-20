@@ -19,13 +19,20 @@ async function loadRoom(slug: string) {
 export default async function RoomLayout({
     params,
     children,
+    modal,
 }: {
     params: Promise<{ slug: string }>;
     children: ReactNode;
+    modal: ReactNode;
 }) {
     const { slug } = await params;
 
     const roomData = await loadRoom(slug);
 
-    return <RoomContextProvider slug={slug}>{children}</RoomContextProvider>;
+    return (
+        <RoomContextProvider slug={slug}>
+            {children}
+            {modal}
+        </RoomContextProvider>
+    );
 }
