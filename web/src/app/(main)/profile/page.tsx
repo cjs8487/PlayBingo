@@ -1,18 +1,8 @@
 import { Box, Button, Container, Typography } from '@mui/material';
 import { redirect } from 'next/navigation';
-import { serverFetch } from '../../ServerUtils';
 import RacetimeIntegration from './RacetimeIntegration';
 import ProfileForm from './ProfileForm';
 import { me } from '../../../actions/Session';
-
-async function getUser() {
-    const res = await serverFetch('/api/me');
-
-    if (!res.ok) {
-        return undefined;
-    }
-    return res.json();
-}
 
 export default async function ProfilePage() {
     const { ok, user } = await me();

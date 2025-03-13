@@ -142,3 +142,11 @@ export const changePassword = (
         data: { password, salt },
     });
 };
+
+export const updateUsername = (id: string, username: string) => {
+    return prisma.user.update({ where: { id }, data: { username } });
+};
+
+export const updateEmail = (id: string, email: string) => {
+    return prisma.user.update({ where: { id }, data: { email } });
+};
