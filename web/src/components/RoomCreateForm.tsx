@@ -172,7 +172,7 @@ export default function RoomCreateForm() {
                 game: null,
                 password: '',
                 variant: '',
-                mode: 'lines',
+                mode: 'LINES',
                 lineCount: 1,
                 seed: undefined,
                 generationMode: '',

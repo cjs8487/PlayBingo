@@ -41,6 +41,7 @@ export function FormikSelectField({
             </InputLabel>
             <Select
                 id={id}
+                name={name}
                 label={label}
                 value={field.value}
                 onChange={(e) => {
