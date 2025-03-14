@@ -56,6 +56,17 @@ export const getSiteAuth = async (username: string) => {
     return user;
 };
 
+export const getSiteAuthId = async (id: string) => {
+    const user = await prisma.user.findUnique({
+        select: { id: true, password: true, salt: true },
+        where: { id },
+    });
+    if (!user) {
+        return undefined;
+    }
+    return user;
+};
+
 export const getUser = async (id: string, includeEmail?: boolean) => {
     const user = await prisma.user.findUnique({
         select: {

@@ -9,6 +9,11 @@ import { allRooms, roomWebSocketServer } from './core/RoomServer';
 import { disconnect } from './database/Database';
 import api from './routes/api';
 import path from 'path';
+import {
+    closeSessionDatabase,
+    removeSessionsForUser,
+    sessionStore,
+} from './util/Session';
 
 declare module 'express-session' {
     interface SessionData {
@@ -19,15 +24,6 @@ declare module 'express-session' {
 // export is needed for tests
 export const app = express();
 
-// configure session store
-const sessionDb: DB = new Database('sessions.db');
-const sessionStore = new (SqliteStore(session))({
-    client: sessionDb,
-    expired: {
-        clear: true,
-        intervalMs: 900000,
-    },
-});
 app.use(
     session({
         store: sessionStore,
@@ -126,7 +122,7 @@ const cleanup = async () => {
         }),
         new Promise((resolve) => {
             logDebug('Closing session database connection');
-            sessionDb.close();
+            closeSessionDatabase();
             logDebug('Session database connection closed');
             resolve(undefined);
         }),

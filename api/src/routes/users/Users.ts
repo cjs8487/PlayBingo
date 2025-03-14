@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import {
+    changePassword,
     emailUsed,
     getAllUsers,
     getUser,
@@ -8,6 +9,10 @@ import {
     usernameUsed,
 } from '../../database/Users';
 import { requiresApiToken } from '../middleware';
+import { pbkdf2Sync, randomBytes } from 'crypto';
+import { removeSessionsForUser } from '../../util/Session';
+import { logWarn } from '../../Logger';
+import { validatePassword } from '../../lib/Auth';
 
 const users = Router();
 
@@ -71,6 +76,58 @@ users.route('/:id').post(requiresApiToken, async (req, res) => {
     }
 
     res.status(200).send(resUser);
+});
+
+users.post('/:id/changePassword', requiresApiToken, async (req, res, next) => {
+    const { id } = req.params;
+    const { currentPassword, newPassword } = req.body;
+
+    // user must be logged in to the site to change password
+    if (!req.session.user) {
+        logWarn('Password change attempt from a non-logged in user');
+        return res.sendStatus(403);
+    }
+
+    // must be the logged in user changing their own password
+    if (req.session.user !== id) {
+        const offendingUser = await getUser(req.session.user);
+        const targetUser = await getUser(id);
+        logWarn(
+            `${offendingUser?.username} attempted to change password for ${targetUser?.username}`,
+        );
+        return res.sendStatus(403);
+    }
+
+    if (!currentPassword) {
+        return res.sendStatus(403);
+    }
+
+    if (!(await validatePassword(id, currentPassword))) {
+        return res.status(403).send('Incorrect password ');
+    }
+
+    if (!newPassword) {
+        return res.sendStatus(400);
+    }
+
+    const salt = randomBytes(16);
+    const passwordHash = pbkdf2Sync(newPassword, salt, 10000, 64, 'sha256');
+    await changePassword(id, passwordHash, salt);
+
+    // end the current login session
+    req.session.user = undefined;
+    await new Promise<void>((resolve) =>
+        req.session.save(() => {
+            req.session.destroy(() => {
+                resolve();
+            });
+        }),
+    );
+
+    // destroy all remaining sessions
+    await removeSessionsForUser(id);
+
+    res.sendStatus(200);
 });
 
 export default users;

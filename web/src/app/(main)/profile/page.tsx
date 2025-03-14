@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import RacetimeIntegration from './RacetimeIntegration';
 import ProfileForm from './ProfileForm';
 import { me } from '../../../actions/Session';
+import ChangePassword from './ChangePassword';
 
 export default async function ProfilePage() {
     const { ok, user } = await me();
@@ -22,16 +23,9 @@ export default async function ProfilePage() {
             <ProfileForm user={user} />
             <Box mb={3}>
                 <Typography variant="h6" mb={1}>
-                    Password
+                    Security
                 </Typography>
-                <Button color="error" variant="outlined">
-                    Change Password
-                </Button>
-                <Box>
-                    <Typography variant="caption">
-                        Changing your password will end all login sessions.
-                    </Typography>
-                </Box>
+                <ChangePassword />
             </Box>
             <Box>
                 <Typography variant="h5" mb={1}>
