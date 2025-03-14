@@ -3,7 +3,6 @@
 import { Box, Button } from '@mui/material';
 import { Formik, Form } from 'formik';
 import FormikTextField from '../../../components/input/FormikTextField';
-import { User } from '../../../types/User';
 import { object, string } from 'yup';
 import {
     emailAvailable,
@@ -37,12 +36,13 @@ const validationSchema = object({
         ),
 });
 
-interface Props {
-    user: User;
-}
+export default function ProfileForm() {
+    const { user, checkSession } = useUserContext();
 
-export default function ProfileForm({ user }: Props) {
-    const { checkSession } = useUserContext();
+    if (!user) {
+        return null;
+    }
+
     return (
         <Formik
             initialValues={{ username: user.username, email: user.email }}

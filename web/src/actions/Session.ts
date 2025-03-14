@@ -24,13 +24,3 @@ export async function logout() {
         status: res.status,
     };
 }
-
-export async function me() {
-    const res = await serverFetch('api/me');
-
-    if (!res.ok) {
-        return { ok: false };
-    }
-
-    return { ok: true, user: await res.json() };
-}
