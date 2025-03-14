@@ -47,3 +47,19 @@ export const serverFetch = async (path: string, init?: RequestInit) => {
 
     return res;
 };
+
+export const serverGet = async (path: string, init?: RequestInit) => {
+    const res = await fetch(getFullUrl(path), {
+        ...init,
+        headers: {
+            ...(init?.headers ?? {}),
+            'PlayBingo-Api-Key': process.env.API_KEY ?? '',
+            // forward client cookies
+            cookie: (await cookies())
+                .getAll()
+                .map((c) => `${c.name}=${c.value}`)
+                .join('; '),
+        },
+    });
+    return res;
+};

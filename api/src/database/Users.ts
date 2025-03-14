@@ -56,7 +56,18 @@ export const getSiteAuth = async (username: string) => {
     return user;
 };
 
-export const getUser = async (id: string) => {
+export const getSiteAuthId = async (id: string) => {
+    const user = await prisma.user.findUnique({
+        select: { id: true, password: true, salt: true },
+        where: { id },
+    });
+    if (!user) {
+        return undefined;
+    }
+    return user;
+};
+
+export const getUser = async (id: string, includeEmail?: boolean) => {
     const user = await prisma.user.findUnique({
         select: {
             id: true,
@@ -65,6 +76,7 @@ export const getUser = async (id: string) => {
             connections: {
                 select: { service: true },
             },
+            email: !!includeEmail,
         },
         where: { id },
     });
@@ -78,6 +90,7 @@ export const getUser = async (id: string) => {
         )
             ? true
             : false,
+        email: user.email,
     };
 };
 
@@ -139,4 +152,12 @@ export const changePassword = (
         where: { id: user },
         data: { password, salt },
     });
+};
+
+export const updateUsername = (id: string, username: string) => {
+    return prisma.user.update({ where: { id }, data: { username } });
+};
+
+export const updateEmail = (id: string, email: string) => {
+    return prisma.user.update({ where: { id }, data: { email } });
 };

@@ -1,14 +1,19 @@
-import NextLink from 'next/link';
-import { alertError } from '../../../lib/Utils';
 import { Box, Link, Typography } from '@mui/material';
-import { serverFetch } from '../../ServerUtils';
-import DiscconectButton from './DisconnectButton';
+import NextLink from 'next/link';
 import { disconnectRacetime } from '../../../actions/Connection';
+import DisconnectButton from './DisconnectButton';
+import { serverFetch } from '../../ServerUtils';
 
-async function checkRacetimeStatus() {
+interface RacetimeConnectionStatus {
+    hasRacetimeConnection: boolean;
+    racetimeUser: string;
+}
+
+async function checkRacetimeStatus(): Promise<
+    RacetimeConnectionStatus | false
+> {
     const res = await serverFetch('/api/connection/racetime');
     if (!res.ok) {
-        alertError('Unable to retrieve racetime connection data.');
         return false;
     }
     const data = await res.json();
@@ -16,7 +21,13 @@ async function checkRacetimeStatus() {
 }
 
 export default async function RacetimeIntegration() {
-    const { hasRacetimeConnection, racetimeUser } = await checkRacetimeStatus();
+    const racetimeRes = await checkRacetimeStatus();
+
+    if (!racetimeRes) {
+        return null;
+    }
+
+    const { hasRacetimeConnection, racetimeUser } = racetimeRes;
 
     return (
         <div>
@@ -31,7 +42,7 @@ export default async function RacetimeIntegration() {
             {hasRacetimeConnection && (
                 <Box display="flex" alignItems="center" columnGap={1}>
                     <Typography>Connected as {racetimeUser}</Typography>
-                    <DiscconectButton disconnect={disconnectRacetime} />
+                    <DisconnectButton disconnect={disconnectRacetime} />
                 </Box>
             )}
         </div>

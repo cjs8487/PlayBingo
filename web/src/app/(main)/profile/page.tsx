@@ -1,19 +1,23 @@
 import { Box, Container, Typography } from '@mui/material';
 import { redirect } from 'next/navigation';
+import { serverGet } from '../../ServerUtils';
+import ChangePassword from './ChangePassword';
+import ProfileForm from './ProfileForm';
 import RacetimeIntegration from './RacetimeIntegration';
-import { serverFetch } from '../../ServerUtils';
 
 async function getUser() {
-    const res = await serverFetch('/api/me');
+    const res = await serverGet('/api/me');
 
     if (!res.ok) {
-        return undefined;
+        return false;
     }
     return res.json();
 }
 
 export default async function ProfilePage() {
     const user = await getUser();
+
+    console.log(user);
 
     if (!user) {
         redirect('/');
@@ -24,46 +28,16 @@ export default async function ProfilePage() {
             <Typography variant="h4" mb={2}>
                 {user.username}
             </Typography>
-            {/* <Typography variant="h5" mb={1}>
+            <Typography variant="h5" mb={1}>
                 Account Info
             </Typography>
-            <Formik initialValues={{}} onSubmit={() => {}}>
-                <Form>
-                    <Box display="flex" flexDirection="column" rowGap={1}>
-                        <FormikTextField
-                            id="username"
-                            name="username"
-                            label="Username"
-                            size="small"
-                        />
-                        <FormikTextField
-                            id="email"
-                            name="email"
-                            label="Email"
-                            size="small"
-                        />
-                        <Box display="flex">
-                            <Box flexGrow={1} />
-                            <Button className="rounded-md bg-green-700 px-2 py-1">
-                                Update
-                            </Button>
-                        </Box>
-                    </Box>
-                </Form>
-            </Formik>
+            <ProfileForm />
             <Box mb={3}>
                 <Typography variant="h6" mb={1}>
-                    Password
+                    Security
                 </Typography>
-                <Button color="error" variant="outlined">
-                    Change Password
-                </Button>
-                <Box>
-                    <Typography variant="caption">
-                        Changing your password will end all login sessions.
-                    </Typography>
-                </Box>
-            </Box> */}
+                <ChangePassword />
+            </Box>
             <Box>
                 <Typography variant="h5" mb={1}>
                     Integrations
