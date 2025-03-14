@@ -46,7 +46,9 @@ rooms.post('/', async (req, res) => {
         game,
         nickname,
         password,
-        /*variant, mode,*/ generationMode,
+        /*variant,*/ mode,
+        lineCount,
+        generationMode,
         difficulty,
         hideCard,
         seed,
@@ -88,6 +90,8 @@ rooms.post('/', async (req, res) => {
         false,
         password,
         hideCard,
+        mode,
+        lineCount,
     );
     const room = new Room(
         name,
@@ -97,6 +101,8 @@ rooms.post('/', async (req, res) => {
         password,
         dbRoom.id,
         hideCard,
+        mode,
+        lineCount,
         gameData.racetimeBeta &&
             !!gameData.racetimeCategory &&
             !!gameData.racetimeGoal,
@@ -158,6 +164,8 @@ rooms.get('/:slug', async (req, res) => {
         dbRoom.password ?? '',
         dbRoom.id,
         dbRoom.hideCard,
+        dbRoom.bingoMode,
+        dbRoom.lineCount,
         (dbRoom.game?.racetimeBeta &&
             !!dbRoom.game.racetimeCategory &&
             !!dbRoom.game.racetimeGoal) ||

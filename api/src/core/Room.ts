@@ -32,7 +32,11 @@ import {
     ServerMessage,
 } from '../types/ServerMessage';
 import { shuffle } from '../util/Array';
-import { listToBoard } from '../util/RoomUtils';
+import {
+    checkCompletedLines,
+    CompletedLines,
+    listToBoard,
+} from '../util/RoomUtils';
 import { generateFullRandom, generateRandomTyped } from './generation/Random';
 import { generateSRLv5 } from './generation/SRLv5';
 import RacetimeHandler, { RaceData } from './integration/RacetimeHandler';
@@ -41,6 +45,7 @@ import {
     GlobalGenerationState,
 } from './generation/GeneratorCore';
 import { getCategories } from '../database/games/GoalCategories';
+import { BingoMode } from '@prisma/client';
 
 type RoomIdentity = {
     nickname: string;
@@ -48,6 +53,7 @@ type RoomIdentity = {
     racetimeId?: string;
     spectator: boolean;
     monitor: boolean;
+    goalComplete: boolean;
 };
 
 export enum BoardGenerationMode {
@@ -96,8 +102,13 @@ export default class Room {
     chatHistory: ChatMessage[];
     id: string;
     hideCard: boolean;
+    bingoMode: BingoMode;
+    lineCount: number;
 
     lastGenerationMode: BoardGenerationOptions;
+
+    lastLineStatus: CompletedLines;
+    completed: boolean;
 
     racetimeEligible: boolean;
     racetimeHandler: RacetimeHandler;
@@ -110,6 +121,8 @@ export default class Room {
         password: string,
         id: string,
         hideCard: boolean,
+        bingoMode: BingoMode,
+        lineCount: number,
         racetimeEligible: boolean,
         racetimeUrl?: string,
     ) {
@@ -122,6 +135,8 @@ export default class Room {
         this.connections = new Map();
         this.chatHistory = [];
         this.id = id;
+        this.bingoMode = bingoMode;
+        this.lineCount = lineCount;
 
         this.lastGenerationMode = { mode: BoardGenerationMode.RANDOM };
 
@@ -138,6 +153,8 @@ export default class Room {
         }
 
         this.hideCard = hideCard;
+        this.lastLineStatus = {};
+        this.completed = false;
     }
 
     async generateBoard(options: BoardGenerationOptions) {
@@ -290,6 +307,7 @@ export default class Room {
                 color: auth.isSpectating ? '' : 'blue',
                 spectator: auth.isSpectating,
                 monitor: auth.isMonitor,
+                goalComplete: false,
             };
             this.identities.set(auth.uuid, identity);
         } else {
@@ -383,6 +401,11 @@ export default class Room {
         const { row, col } = action.payload;
         if (row === undefined || col === undefined) return;
         if (this.board.board[row][col].colors.includes(identity.color)) return;
+        if (
+            this.bingoMode === BingoMode.LOCKOUT &&
+            this.board.board[row][col].colors.length > 0
+        )
+            return;
         this.board.board[row][col].colors.push(identity.color);
         this.board.board[row][col].colors.sort((a, b) => a.localeCompare(b));
         this.sendCellUpdate(row, col);
@@ -400,6 +423,7 @@ export default class Room {
             row,
             col,
         ).then();
+        this.checkWinConditions();
     }
 
     handleUnmark(
@@ -427,6 +451,7 @@ export default class Room {
             unRow,
             unCol,
         ).then();
+        this.checkWinConditions();
     }
 
     handleChangeColor(
@@ -596,6 +621,112 @@ export default class Room {
                 );
             }
         });
+    }
+
+    private checkWinConditions() {
+        switch (this.bingoMode) {
+            case 'LINES':
+                const lineCounts = checkCompletedLines(this.board.board);
+                Object.keys(lineCounts).forEach((color) => {});
+                this.identities.forEach((identity) => {
+                    const { color, nickname, goalComplete } = identity;
+                    if (lineCounts[color] > this.lastLineStatus[color]) {
+                        this.sendChat([
+                            { contents: nickname, color },
+                            ' has completed a line',
+                        ]);
+                    }
+                    if (!goalComplete && lineCounts[color] >= this.lineCount) {
+                        this.sendChat([
+                            { contents: nickname, color },
+                            ' has completed the goal!',
+                        ]);
+                        identity.goalComplete = true;
+                    }
+                    if (goalComplete && lineCounts[color] < this.lineCount) {
+                        identity.goalComplete = false;
+                        this.sendChat([
+                            { contents: nickname, color },
+                            ' has no longer completed the goal.',
+                        ]);
+                    }
+                });
+                this.lastLineStatus = lineCounts;
+                break;
+            case 'BLACKOUT':
+                this.identities.forEach((identity) => {
+                    const hasBlackout = this.board.board.every((row) =>
+                        row.every((cell) =>
+                            cell.colors.includes(identity.color),
+                        ),
+                    );
+                    if (hasBlackout && !identity.goalComplete) {
+                        identity.goalComplete = true;
+                        this.sendChat([
+                            {
+                                color: identity.color,
+                                contents: identity.nickname,
+                            },
+                            ' has achieved blackout!',
+                        ]);
+                    }
+                    if (!hasBlackout && identity.goalComplete) {
+                        identity.goalComplete = false;
+                        this.sendChat([
+                            {
+                                color: identity.color,
+                                contents: identity.nickname,
+                            },
+                            ' no longer has blackout',
+                        ]);
+                    }
+                });
+                break;
+            case 'LOCKOUT':
+                this.identities.forEach((identity) => {
+                    const goalCount = this.board.board.reduce((prev, row) => {
+                        return (
+                            prev +
+                            row.reduce((p, cell) => {
+                                if (cell.colors.includes(identity.color)) {
+                                    return p + 1;
+                                }
+                                return p;
+                            }, 0)
+                        );
+                    }, 0);
+                    if (!identity.goalComplete && goalCount >= 13) {
+                        this.sendChat([
+                            {
+                                contents: identity.nickname,
+                                color: identity.color,
+                            },
+                            ' has achieved lockout!',
+                        ]);
+                        identity.goalComplete = true;
+                    }
+                    if (identity.goalComplete && goalCount < 13) {
+                        this.sendChat([
+                            {
+                                contents: identity.nickname,
+                                color: identity.color,
+                            },
+                            ' no longer has lockout.',
+                        ]);
+                        identity.goalComplete = false;
+                    }
+                });
+                break;
+            default:
+                break;
+        }
+        let allComplete = true;
+        this.identities.forEach((i) => {
+            if (!i.spectator && !i.goalComplete) {
+                allComplete = false;
+            }
+        });
+        this.completed = allComplete;
     }
 
     //#region Racetime Integration
