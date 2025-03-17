@@ -1,4 +1,5 @@
 import bodyParser from 'body-parser';
+import cors from 'cors';
 import express from 'express';
 import session from 'express-session';
 import path from 'path';
@@ -6,11 +7,9 @@ import { port, sessionSecret, testing } from './Environment';
 import { logDebug, logger, logInfo } from './Logger';
 import { allRooms, roomWebSocketServer } from './core/RoomServer';
 import { disconnect } from './database/Database';
+import mediaServer from './media/MediaServer';
 import api from './routes/api';
 import { closeSessionDatabase, sessionStore } from './util/Session';
-import mediaServer from './media/MediaServer';
-import fileUpload from 'express-fileupload';
-import cors from 'cors';
 
 declare module 'express-session' {
     interface SessionData {
@@ -59,6 +58,7 @@ app.use(bodyParser.json());
 app.use('/api', api);
 
 app.use('/api/docs', express.static(path.join(__dirname, '..', '..', 'docs')));
+app.use('/media', express.static(path.resolve('media')));
 
 const server = app.listen(port, () => {
     logInfo(`API application listening on port ${port}`);
