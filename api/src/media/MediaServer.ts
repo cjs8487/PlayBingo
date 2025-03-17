@@ -14,7 +14,7 @@ interface PendingFileData {
 const pendingFiles: Record<string, PendingFileData> = {};
 
 const pendFile = (file: UploadedFile, workflow: string) => {
-    const id = randomUUID();
+    const id = `${randomUUID()}${path.extname(file.name)}`;
     pendingFiles[id] = {
         file,
         workflow,
@@ -39,17 +39,15 @@ export const saveFile = async (id: string) => {
     clearTimeout(timeout);
 
     const success = await new Promise((resolve) => {
-        file.mv(
-            path.resolve('media', workflow, `${id}.${path.extname(file.name)}`),
-            (err) => {
-                if (err) {
-                    resolve(false);
-                } else {
-                    delete pendingFiles[id];
-                    resolve(true);
-                }
-            },
-        );
+        file.mv(path.resolve('media', workflow, id), (err) => {
+            if (err) {
+                console.log(err);
+                resolve(false);
+            } else {
+                delete pendingFiles[id];
+                resolve(true);
+            }
+        });
     });
 
     return success;
