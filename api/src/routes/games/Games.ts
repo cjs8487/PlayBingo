@@ -36,6 +36,7 @@ import {
     createCateogry,
     getCategories,
 } from '../../database/games/GoalCategories';
+import { saveFile } from '../../media/MediaServer';
 
 const games = Router();
 
@@ -67,6 +68,11 @@ games.post('/', async (req, res) => {
     if (!slug) {
         res.status(400).send('Missing game slug');
         return;
+    }
+    if (coverImage) {
+        if (!saveFile(coverImage)) {
+            return res.status(400).send('Invalid cover image');
+        }
     }
     const result = await createGame(name, slug, coverImage, [req.session.user]);
     if (!result) {

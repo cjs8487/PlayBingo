@@ -1,18 +1,19 @@
 'use client';
+
 import { useApi } from '@/lib/Hooks';
 import { Game } from '@playbingo/types';
 import { TabContext, TabList, TabPanel } from '@mui/lab';
 import { Box, Container, Link, Tab, Typography } from '@mui/material';
 import Image from 'next/image';
 import NextLink from 'next/link';
-import { useLayoutEffect, useState, use } from 'react';
+import { use, useLayoutEffect, useState } from 'react';
 import GameSettings from '../../../../components/game/GameSettings';
+import GoalCategories from '../../../../components/game/GoalCategories';
 import PermissionsManagement from '../../../../components/game/PermissionsManagement';
+import Variants from '../../../../components/game/Variants';
 import GoalManagement from '../../../../components/game/goals/GoalManagement';
 import { GoalManagerContextProvider } from '../../../../context/GoalManagerContext';
-import { alertError } from '../../../../lib/Utils';
-import Variants from '../../../../components/game/Variants';
-import GoalCategories from '../../../../components/game/GoalCategories';
+import { alertError, gameCoverUrl } from '../../../../lib/Utils';
 
 export default function GamePage(props: { params: Promise<{ slug: string }> }) {
     const params = use(props.params);
@@ -81,7 +82,11 @@ export default function GamePage(props: { params: Promise<{ slug: string }> }) {
                     }}
                 >
                     {gameData.coverImage && (
-                        <Image src={gameData.coverImage} alt="" fill />
+                        <Image
+                            src={gameCoverUrl(gameData.coverImage)}
+                            alt=""
+                            fill
+                        />
                     )}
                     {!gameData.coverImage && (
                         <div>
