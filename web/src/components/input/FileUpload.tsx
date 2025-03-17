@@ -1,8 +1,9 @@
+'use client';
 import { styled } from '@mui/material';
 import { useField } from 'formik';
 import { useRef } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { getFullUrl } from '../../lib/Utils';
+import { alertError, getFullUrl } from '../../lib/Utils';
 
 const VisuallyHiddenInput = styled('input')({
     clip: 'rect(0 0 0 0)',
@@ -18,23 +19,30 @@ const VisuallyHiddenInput = styled('input')({
 
 interface Props {
     name: string;
+    workflow: string;
 }
 
-export default function FormikFileUpload({ name }: Props) {
-    const [{ value, onChange }, _, { setValue }] = useField(name);
-
-    const formRef = useRef<HTMLFormElement>(null);
+export default function FormikFileUpload({ name, workflow }: Props) {
+    const [_input, _meta, { setValue }] = useField<string>(name);
 
     const { acceptedFiles, getRootProps, getInputProps } = useDropzone({
         onDrop: async (acceptedFiles) => {
-            console.log(acceptedFiles);
-
             const formData = new FormData();
             formData.append('file', acceptedFiles[0]);
+            formData.append('workflow', workflow);
             const res = await fetch(getFullUrl('/media'), {
                 method: 'POST',
                 body: formData,
             });
+
+            if (!res.ok) {
+                return alertError(
+                    `Unable to upload file - ${await res.text()}`,
+                );
+            }
+
+            const { ids } = await res.json();
+            setValue(ids[0]);
         },
     });
 
