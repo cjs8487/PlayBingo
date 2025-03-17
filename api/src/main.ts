@@ -85,6 +85,7 @@ app.use('/api/metrics', metricsRouter);
 app.use('/api/health', healthCheckRouter);
 
 app.use('/api/docs', express.static(path.join(__dirname, '..', '..', 'docs')));
+app.use('/media', express.static(path.resolve('media')));
 
 const server = app.listen(port, () => {
     logInfo(`API application listening on port ${port}`);
