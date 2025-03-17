@@ -54,3 +54,7 @@ export function getFullUrl(path: string) {
     }
     return `${process.env.NEXT_PUBLIC_API_PATH}/${path}`;
 }
+
+export function gameCoverUrl(file: string) {
+    return getFullUrl(`/media/game/${file}`);
+}
