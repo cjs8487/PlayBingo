@@ -1,19 +1,16 @@
-import Database, { Database as DB } from 'better-sqlite3';
-import SqliteStore from 'better-sqlite3-session-store';
 import bodyParser from 'body-parser';
 import express from 'express';
 import session from 'express-session';
+import path from 'path';
 import { port, sessionSecret, testing } from './Environment';
 import { logDebug, logger, logInfo } from './Logger';
 import { allRooms, roomWebSocketServer } from './core/RoomServer';
 import { disconnect } from './database/Database';
 import api from './routes/api';
-import path from 'path';
-import {
-    closeSessionDatabase,
-    removeSessionsForUser,
-    sessionStore,
-} from './util/Session';
+import { closeSessionDatabase, sessionStore } from './util/Session';
+import mediaServer from './media/MediaServer';
+import fileUpload from 'express-fileupload';
+import cors from 'cors';
 
 declare module 'express-session' {
     interface SessionData {
@@ -53,6 +50,9 @@ app.use((req, res, next) => {
     });
     next();
 });
+
+app.use(cors());
+app.use('/media', mediaServer);
 
 app.use(bodyParser.json());
 
