@@ -69,14 +69,32 @@ export default function NewGame() {
                     router.push(`/games/${values.slug}`);
                 }}
             >
-                {({ setFieldValue }) => (
-                    <Form>
+                <Form>
+                    <Box
+                        sx={{
+                            display: 'flex',
+                            columnGap: 2,
+                            height: 'fit-content',
+                        }}
+                    >
+                        <Box
+                            sx={{
+                                flexGrow: 1,
+                                height: '100%',
+                                maxWidth: '33%',
+                            }}
+                        >
+                            <FormikFileUpload
+                                name="coverImage"
+                                workflow="game"
+                            />
+                        </Box>
                         <Box
                             sx={{
                                 display: 'flex',
                                 flexDirection: 'column',
-                                width: '100%',
                                 rowGap: 1,
+                                flexGrow: 1,
                             }}
                         >
                             <FormikTextField
@@ -89,25 +107,13 @@ export default function NewGame() {
                                 name="slug"
                                 label="Slug"
                             />
-                            <FormikFileUpload
-                                name="coverImage"
-                                workflow="game"
-                            />
-                            <Box
-                                sx={{
-                                    display: 'flex',
-                                }}
-                            >
-                                <Box
-                                    sx={{
-                                        flexGrow: 1,
-                                    }}
-                                />
+                            <Box sx={{ display: 'flex' }}>
+                                <Box sx={{ flexGrow: 1 }} />
                                 <Button type="submit">Submit</Button>
                             </Box>
                         </Box>
-                    </Form>
-                )}
+                    </Box>
+                </Form>
             </Formik>
         </Box>
     );
