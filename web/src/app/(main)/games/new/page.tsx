@@ -57,13 +57,33 @@ export default function NewGame() {
                     router.push(`/games/${values.slug}`);
                 }}
             >
-                {({ setFieldValue }) => (
-                    <Form>
+                <Form>
+                    <Box
+                        sx={{
+                            display: 'flex',
+                            columnGap: 2,
+                            height: 'fit-content',
+                        }}
+                    >
                         <Box
-                            display="flex"
-                            flexDirection="column"
-                            width="100%"
-                            rowGap={1}
+                            sx={{
+                                flexGrow: 1,
+                                height: '100%',
+                                maxWidth: '33%',
+                            }}
+                        >
+                            <FormikFileUpload
+                                name="coverImage"
+                                workflow="game"
+                            />
+                        </Box>
+                        <Box
+                            sx={{
+                                display: 'flex',
+                                flexDirection: 'column',
+                                rowGap: 1,
+                                flexGrow: 1,
+                            }}
                         >
                             <FormikTextField
                                 id="game-name"
@@ -75,17 +95,13 @@ export default function NewGame() {
                                 name="slug"
                                 label="Slug"
                             />
-                            <FormikFileUpload
-                                name="coverImage"
-                                workflow="game"
-                            />
                             <Box display="flex">
                                 <Box flexGrow={1} />
                                 <Button type="submit">Submit</Button>
                             </Box>
                         </Box>
-                    </Form>
-                )}
+                    </Box>
+                </Form>
             </Formik>
         </Box>
     );
