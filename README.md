@@ -47,6 +47,9 @@ function.
   server
 - SMTP_PASSWORD is the password of the email account
 - PORT is the port the server runs on (defaults to 8000)
+- E_API_KEY is a backup API key that is always available regardless of database
+  access or existence of keys in the database. If there are no keys in the
+  database, several API functions are completely unavailable without this
 
 
 ### API

@@ -11,6 +11,7 @@ export const allGames = async (user?: string) => {
                 select: { id: true, name: true, goalAmounts: true },
             },
         },
+        orderBy: { name: 'asc' },
     });
     if (user) {
         const favorites = (
@@ -24,8 +25,8 @@ export const allGames = async (user?: string) => {
                 ...game,
                 favorited: favorites?.includes(game.id),
                 isMod: await isModerator(game.slug, user),
-            }))
-        )
+            })),
+        );
     }
     return games.map((game) => ({ ...game, favorite: false }));
 };
@@ -148,6 +149,10 @@ export const updateDifficultyGroups = (
             difficultyGroups,
         },
     });
+};
+
+export const updateUseTypedRandom = (slug: string, useTypedRandom: boolean) => {
+    return prisma.game.update({ where: { slug }, data: { useTypedRandom } });
 };
 
 export const updateRacetimeCategory = (
@@ -287,4 +292,11 @@ export const getDifficultyVariant = (id: string) => {
 export const getDifficultyGroupCount = async (slug: string) => {
     return (await prisma.game.findUnique({ where: { slug } }))
         ?.difficultyGroups;
+};
+
+export const useTypedRandom = async (slug: string) => {
+    return (
+        (await prisma.game.findUnique({ where: { slug } }))?.useTypedRandom ??
+        false
+    );
 };

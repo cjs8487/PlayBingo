@@ -4,7 +4,7 @@ import {
     isOwner,
     updateSRLv5Enabled,
 } from '../../database/games/Games';
-import { createGoals } from '../../database/games/Goals';
+import { createGoals, GoalInput } from '../../database/games/Goals';
 
 const upload = Router();
 
@@ -43,7 +43,7 @@ upload.post('/srlv5', async (req, res) => {
 });
 
 upload.post('/list', async (req, res) => {
-    const { slug, goals } : {slug: string, goals: string[]} = req.body;
+    const { slug, goals }: { slug: string; goals: string[] } = req.body;
     if (!req.session.user) {
         res.sendStatus(401);
         return;
@@ -70,12 +70,17 @@ upload.post('/list', async (req, res) => {
         return;
     }
 
-    const convertedGoals: {goal: string}[] = goals.map((goal: string) => {
-        return {
-            goal: goal,
-            
-        };
-    });
+    const convertedGoals: GoalInput[] = goals.map(
+        (goal: string | GoalInput) => {
+            if (typeof goal === 'string') {
+                return {
+                    goal: goal,
+                };
+            }
+            return goal;
+        },
+    );
+
     await createGoals(slug, convertedGoals);
     res.sendStatus(201);
 });

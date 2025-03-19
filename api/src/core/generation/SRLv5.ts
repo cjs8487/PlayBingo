@@ -1,5 +1,5 @@
-import { Goal } from '@prisma/client';
 import prand from 'pure-rand';
+import { GeneratorGoal, GlobalGenerationState } from './GeneratorCore';
 
 const lineCheckList: number[][] = [];
 lineCheckList[1] = [1, 2, 3, 4, 5, 10, 15, 20, 6, 12, 18, 24];
@@ -80,12 +80,16 @@ function difficulty(i: number, seed: number) {
  * @param seedIn Optional starting seed for the PRNG
  * @returns
  */
-export const generateSRLv5 = (goals: Goal[], seedIn?: number): Goal[] => {
+export const generateSRLv5 = (
+    goals: GeneratorGoal[],
+    globalState: GlobalGenerationState,
+    seedIn?: number,
+): GeneratorGoal[] => {
     // const LANG = opts.lang || 'name';
     // const MODE = opts.mode || 'normal';
-    const seed = seedIn || Math.ceil(999999 * Math.random());
+    const seed = seedIn ?? Math.ceil(999999 * Math.random());
 
-    const bingoList = goals.reduce<Goal[][]>((acc, val) => {
+    const bingoList = goals.reduce<GeneratorGoal[][]>((acc, val) => {
         if (!val.difficulty) {
             return acc;
         }
@@ -95,7 +99,7 @@ export const generateSRLv5 = (goals: Goal[], seedIn?: number): Goal[] => {
 
     const rng = prand.xoroshiro128plus(seed);
 
-    const bingoBoard: Goal[] = [];
+    const bingoBoard: GeneratorGoal[] = [];
 
     function checkLine(i: number, typesA: string[]) {
         let synergy = 0;
@@ -131,8 +135,8 @@ export const generateSRLv5 = (goals: Goal[], seedIn?: number): Goal[] => {
         }
         let j = 0,
             synergy = 0,
-            currentObj: Goal,
-            minSynObj: { synergy: number; value: Goal } | null = null;
+            currentObj: GeneratorGoal,
+            minSynObj: { synergy: number; value: GeneratorGoal } | null = null;
         do {
             currentObj =
                 bingoList[getDifficulty][
@@ -147,7 +151,20 @@ export const generateSRLv5 = (goals: Goal[], seedIn?: number): Goal[] => {
             }
             j++;
         } while (synergy != 0 && j < bingoList[getDifficulty].length);
-        bingoBoard[i] = minSynObj?.value;
+        const goal = minSynObj?.value;
+        bingoBoard[i] = goal;
+        if (globalState.useCategoryMaxes) {
+            goal.categories.forEach((cat) => {
+                globalState.categoryMaxes[cat]--;
+                if (globalState.categoryMaxes[cat] === 0) {
+                    for (let k = 1; k <= 25; k++) {
+                        bingoList[k] = bingoList[k].filter(
+                            (g) => !g.categories.includes(cat),
+                        );
+                    }
+                }
+            });
+        }
     }
     return bingoBoard;
 };

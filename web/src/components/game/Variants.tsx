@@ -175,8 +175,6 @@ export default function Variants({ gameData }: VariantsProps) {
         return null;
     }
 
-    console.log('render');
-
     return (
         <>
             <Typography variant="h6">Difficulty Variants</Typography>

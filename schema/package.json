@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "",
   "scripts": {
-    "generate": "ts-node Generate.ts"
+    "types:generate": "ts-node Generate.ts"
   },
   "author": "",
   "license": "ISC",

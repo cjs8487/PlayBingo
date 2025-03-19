@@ -4,6 +4,7 @@ import { Form, Formik } from 'formik';
 import { useContext, useState } from 'react';
 import { RoomContext } from '../../context/RoomContext';
 import FormikTextField from '../input/FormikTextField';
+import FormikSwitch from '../input/FormikSwitch';
 
 export default function RoomLogin() {
     // context
@@ -25,9 +26,17 @@ export default function RoomLogin() {
                 }}
             >
                 <Formik
-                    initialValues={{ nickname: '', password: '' }}
-                    onSubmit={async ({ nickname, password }) => {
-                        const result = await connect(nickname, password);
+                    initialValues={{
+                        nickname: '',
+                        password: '',
+                        spectator: false,
+                    }}
+                    onSubmit={async ({ nickname, password, spectator }) => {
+                        const result = await connect(
+                            nickname,
+                            password,
+                            spectator,
+                        );
                         if (!result.success) {
                             setError(result.message);
                         }
@@ -50,6 +59,11 @@ export default function RoomLogin() {
                                 name="password"
                                 type="password"
                                 label="Password"
+                            />
+                            <FormikSwitch
+                                name="spectator"
+                                id="spectator"
+                                label="Join as spectator?"
                             />
                         </Box>
                         <Box display="flex">

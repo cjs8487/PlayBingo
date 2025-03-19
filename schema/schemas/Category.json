@@ -1,0 +1,13 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "description": "The full goal category definition.",
+    "required": ["id", "name", "gameId", "max"],
+    "additionalProperties": false,
+    "properties": {
+        "id":{"type": "string"},
+        "name": {"type": "string"},
+        "gameId": {"type": "string"},
+        "max": {"type": "number"}
+    }
+}

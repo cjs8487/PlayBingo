@@ -1,5 +1,4 @@
 'use client';
-import { notFound } from 'next/navigation';
 import {
     ReactNode,
     createContext,
@@ -21,7 +20,8 @@ import { Board, Cell } from '../types/Board';
 import { RoomData } from '../types/RoomData';
 import { ChatMessage, Player, ServerMessage } from '../types/ServerMessage';
 import { alertError } from '../lib/Utils';
-import { number } from 'yup';
+import { Box, Link, Typography } from '@mui/material';
+import NextLink from 'next/link';
 
 const websocketBase = (process.env.NEXT_PUBLIC_API_PATH ?? '').replace(
     'http',
@@ -54,6 +54,7 @@ interface RoomContext {
     connect: (
         nickname: string,
         password: string,
+        spectator: boolean,
     ) => Promise<{ success: boolean; message?: string }>;
     sendChatMessage: (message: string) => void;
     markGoal: (row: number, col: number) => void;
@@ -113,6 +114,8 @@ export function RoomContextProvider({ slug, children }: RoomContextProps) {
     const [roomData, setRoomData] = useState<RoomData>();
     const [loading, setLoading] = useState(true);
     const [players, setPlayers] = useState<Player[]>([]);
+
+    const [notFound, setNotFound] = useState(false);
 
     const [starredGoals, { push, clear, filter }] = useList<number>([]);
 
@@ -263,11 +266,11 @@ export function RoomContextProvider({ slug, children }: RoomContextProps) {
         [sendJsonMessage],
     );
     const connect = useCallback(
-        async (nickname: string, password: string) => {
+        async (nickname: string, password: string, spectator: boolean) => {
             const res = await fetch(`/api/rooms/${slug}/authorize`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ password }),
+                body: JSON.stringify({ password, spectator }),
             });
             if (!res.ok) {
                 if (res.status === 403) {
@@ -346,8 +349,7 @@ export function RoomContextProvider({ slug, children }: RoomContextProps) {
             sendJsonMessage({
                 action: 'newCard',
                 authToken,
-                seed,
-                generationMode,
+                options: { seed, mode: generationMode },
             });
         },
         [authToken, sendJsonMessage],
@@ -419,7 +421,7 @@ export function RoomContextProvider({ slug, children }: RoomContextProps) {
             const res = await fetch(`/api/rooms/${slug}`);
             if (!res.ok) {
                 if (res.status === 404) {
-                    notFound();
+                    setNotFound(true);
                 } else {
                     const error = await res.text();
                     alertError(`Unable to load room data - ${error}`);
@@ -452,6 +454,28 @@ export function RoomContextProvider({ slug, children }: RoomContextProps) {
     // after connection will usually be batched
     if (loading) {
         return 'loading...';
+    }
+
+    if (notFound) {
+        return (
+            <Box
+                display="flex"
+                flexDirection="column"
+                alignItems="center"
+                flexGrow={1}
+                p={5}
+            >
+                <Typography variant="h4" pb={2}>
+                    Not Found
+                </Typography>
+                <Typography>The room {slug} couldn&#39;t be found.</Typography>
+                <Box pt={0.5}>
+                    <Link href="/rooms" component={NextLink}>
+                        ← Return to room list
+                    </Link>
+                </Box>
+            </Box>
+        );
     }
 
     return (

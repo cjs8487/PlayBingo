@@ -46,6 +46,9 @@ export type ServerMessage = (
       players: Player[];
       racetimeConnection: RacetimeConnection;
     }
+  | {
+      action: "forbidden";
+    }
 ) & {
   players?: Player[];
 };
@@ -118,6 +121,8 @@ export interface Player {
   color: string;
   goalCount: number;
   racetimeStatus: RacetimeStatusDisconnected | RacetimeStatusConnected;
+  spectator: boolean;
+  monitor: boolean;
 }
 export interface RacetimeStatusDisconnected {
   connected: false;

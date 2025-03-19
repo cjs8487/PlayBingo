@@ -84,7 +84,7 @@ export default function Games() {
             {Object.keys(games)
                 .filter((k) => games[k].length > 0)
                 .map((key) => (
-                    <>
+                    <Box key={key}>
                         <Typography variant="h5" pb={1}>
                             {key}
                         </Typography>
@@ -108,7 +108,7 @@ export default function Games() {
                                 />
                             ))}
                         </Masonry>
-                    </>
+                    </Box>
                 ))}
         </Box>
     );

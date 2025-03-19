@@ -5,8 +5,11 @@ import {
     deleteConnection,
     getConnectionForUser,
 } from '../../database/Connections';
+import { requiresApiToken } from '../middleware';
 
 const connection = Router();
+
+connection.use(requiresApiToken);
 
 connection.get('/racetime', async (req, res) => {
     if (!req.session.user) {

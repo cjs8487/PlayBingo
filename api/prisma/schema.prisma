@@ -2,8 +2,7 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider        = "prisma-client-js"
-  previewFeatures = ["omitApi"]
+  provider = "prisma-client-js"
 }
 
 datasource db {
@@ -12,16 +11,28 @@ datasource db {
 }
 
 model Goal {
-  id          String        @id @unique @default(cuid())
-  goal        String
-  description String?
-  categories  String[]
-  difficulty  Int?
-  game        Game          @relation(fields: [gameId], references: [id])
-  variants    GoalVariant[]
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
-  gameId      String
+  id            String        @id @unique @default(cuid())
+  goal          String
+  description   String?
+  oldCategories String[]
+  categories    Category[]    @relation("GoalCategories")
+  difficulty    Int?
+  game          Game          @relation(fields: [gameId], references: [id])
+  variants      GoalVariant[]
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  gameId        String
+}
+
+model Category {
+  id     String @id @unique @default(cuid())
+  game   Game   @relation(fields: [gameId], references: [id])
+  name   String
+  goals  Goal[] @relation("GoalCategories")
+  max    Int    @default(0)
+  gameId String
+
+  @@unique([gameId, name])
 }
 
 model GoalVariant {
@@ -65,6 +76,8 @@ model Game {
   difficultyVariants        DifficultyVariant[]
   difficultyGroups          Int?
   slugWords                 String[]            @default([])
+  useTypedRandom            Boolean             @default(false)
+  goalCategories            Category[]
 }
 
 model DifficultyVariant {
@@ -118,6 +131,8 @@ model Room {
   board        String[]
   racetimeRoom String?
   hideCard     Boolean      @default(false)
+  bingoMode    BingoMode    @default(LINES)
+  lineCount    Int          @default(1)
 }
 
 model RoomAction {
@@ -126,6 +141,15 @@ model RoomAction {
   action  RoomActionType
   payload Json
   roomId  String
+}
+
+model ApiToken {
+  id        String    @id @unique @default(cuid())
+  name      String    @unique
+  token     String    @unique
+  active    Boolean   @default(true)
+  createdOn DateTime  @default(now())
+  revokedOn DateTime?
 }
 
 enum RoomActionType {
@@ -141,4 +165,10 @@ enum ConnectionService {
   TWITCH
   DISCORD
   RACETIME
+}
+
+enum BingoMode {
+  LINES
+  BLACKOUT
+  LOCKOUT
 }

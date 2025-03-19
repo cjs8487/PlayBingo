@@ -24,10 +24,12 @@ export interface Game {
   difficultyVariants?: DifficultyVariant[];
   difficultyGroups?: number;
   slugWords?: string[];
+  useTypedRandom?: boolean;
 }
 export interface User {
   id: string;
   username: string;
+  email?: string;
   staff: boolean;
   racetimeConnected?: boolean;
 }

@@ -1,26 +1,59 @@
 import { Prisma } from '@prisma/client';
 import { prisma } from '../Database';
 import { logError } from '../../Logger';
+import { gameForSlug } from './Games';
 
-export const goalsForGame = (slug: string) => {
+export const goalsForGame = async (slug: string) => {
+    const goals = await prisma.goal.findMany({
+        where: { game: { slug } },
+        orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+        include: { categories: true },
+    });
+
+    return goals.map((g) => ({
+        ...g,
+        categories: g.categories.map((c) => c.name),
+    }));
+};
+
+export const goalsForGameFull = (slug: string) => {
     return prisma.goal.findMany({
         where: { game: { slug } },
         orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+        include: { categories: true },
     });
 };
 
-export const createGoal = (
+export const createGoal = async (
     gameSlug: string,
     goal: string,
     description?: string,
     categories?: string[],
     difficulty?: number,
 ) => {
+    const gameId = (await gameForSlug(gameSlug))?.id;
+    if (!gameId) {
+        return undefined;
+    }
+
     return prisma.goal.create({
         data: {
             goal,
             description,
-            categories,
+            categories: {
+                connectOrCreate: categories?.map((cat) => ({
+                    create: {
+                        name: cat,
+                        game: { connect: { slug: gameSlug } },
+                    },
+                    where: {
+                        gameId_name: {
+                            gameId,
+                            name: cat,
+                        },
+                    },
+                })),
+            },
             difficulty,
             game: { connect: { slug: gameSlug } },
         },
@@ -63,7 +96,7 @@ export const deleteGoal = async (id: string) => {
     }
 };
 
-type GoalInput = {
+export type GoalInput = {
     goal: string;
     description?: string;
     categories?: string[];
@@ -71,16 +104,37 @@ type GoalInput = {
 };
 
 export const createGoals = async (slug: string, goals: GoalInput[]) => {
-    await prisma.game.update({
-        where: { slug },
-        data: {
-            goals: {
-                createMany: {
-                    data: goals,
+    const gameId = (await gameForSlug(slug))?.id;
+    if (!gameId) {
+        return undefined;
+    }
+
+    await prisma.$transaction(
+        goals.map((g) =>
+            prisma.goal.create({
+                data: {
+                    goal: g.goal,
+                    description: g.description,
+                    categories: {
+                        connectOrCreate: g.categories?.map((cat) => ({
+                            create: {
+                                name: cat,
+                                game: { connect: { slug: slug } },
+                            },
+                            where: {
+                                gameId_name: {
+                                    gameId,
+                                    name: cat,
+                                },
+                            },
+                        })),
+                    },
+                    difficulty: g.difficulty,
+                    game: { connect: { slug: slug } },
                 },
-            },
-        },
-    });
+            }),
+        ),
+    );
 };
 
 export const gameForGoal = async (goalId: string) => {
@@ -92,7 +146,7 @@ export const gameForGoal = async (goalId: string) => {
     });
 
     return goal?.game;
-}
+};
 
 export const deleteAllGoalsForGame = async (gameSlug: string) => {
     try {
@@ -104,7 +158,9 @@ export const deleteAllGoalsForGame = async (gameSlug: string) => {
         if (e instanceof Prisma.PrismaClientKnownRequestError) {
             logError(`Database Known Client error - ${e.message}`);
         } else {
-            logError('An unknown error occurred while attempting a database operation');
+            logError(
+                'An unknown error occurred while attempting a database operation',
+            );
         }
         return false;
     }

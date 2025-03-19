@@ -1,8 +1,11 @@
 import { Router } from 'express';
 import { emailUsed, registerUser, usernameUsed } from '../../database/Users';
 import { pbkdf2Sync, randomBytes } from 'crypto';
+import { requiresApiToken } from '../middleware';
 
 const registration = Router();
+
+registration.use(requiresApiToken);
 
 registration.get('/checkEmail', async (req, res) => {
     const { email } = req.query;

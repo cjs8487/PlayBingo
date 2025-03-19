@@ -46,9 +46,13 @@ rooms.post('/', async (req, res) => {
         game,
         nickname,
         password,
-        /*variant, mode,*/ generationMode,
+        /*variant,*/ mode,
+        lineCount,
+        generationMode,
         difficulty,
         hideCard,
+        seed,
+        spectator,
     } = req.body;
 
     if (!name || !game || !nickname /*|| !variant || !mode*/) {
@@ -86,6 +90,8 @@ rooms.post('/', async (req, res) => {
         false,
         password,
         hideCard,
+        mode,
+        lineCount,
     );
     const room = new Room(
         name,
@@ -95,19 +101,21 @@ rooms.post('/', async (req, res) => {
         password,
         dbRoom.id,
         hideCard,
+        mode,
+        lineCount,
         gameData.racetimeBeta &&
             !!gameData.racetimeCategory &&
             !!gameData.racetimeGoal,
     );
-    const genMode: BoardGenerationOptions = {
+    const options: BoardGenerationOptions = {
         mode: BoardGenerationMode.RANDOM,
     } as BoardGenerationOptions; // necessary cast to avoid auto-narrowing
     let useDefault = true;
     if (generationMode) {
-        genMode.mode = generationMode as BoardGenerationMode;
-        if (genMode.mode === BoardGenerationMode.DIFFICULTY) {
+        options.mode = generationMode as BoardGenerationMode;
+        if (options.mode === BoardGenerationMode.DIFFICULTY) {
             if (difficulty) {
-                genMode.difficulty = difficulty;
+                options.difficulty = difficulty;
                 useDefault = false;
             } else {
                 logWarn(
@@ -120,15 +128,19 @@ rooms.post('/', async (req, res) => {
     }
     if (useDefault) {
         if (gameData.enableSRLv5) {
-            genMode.mode = BoardGenerationMode.SRLv5;
+            options.mode = BoardGenerationMode.SRLv5;
         } else {
-            genMode.mode = BoardGenerationMode.RANDOM;
+            options.mode = BoardGenerationMode.RANDOM;
         }
     }
-    await room.generateBoard(genMode);
+    options.seed = seed;
+    await room.generateBoard(options);
     allRooms.set(slug, room);
 
-    const token = createRoomToken(room);
+    const token = createRoomToken(room, {
+        isSpectating: spectator,
+        isMonitor: true,
+    });
 
     res.status(200).json({ slug, authToken: token });
 });
@@ -152,6 +164,8 @@ rooms.get('/:slug', async (req, res) => {
         dbRoom.password ?? '',
         dbRoom.id,
         dbRoom.hideCard,
+        dbRoom.bingoMode,
+        dbRoom.lineCount,
         (dbRoom.game?.racetimeBeta &&
             !!dbRoom.game.racetimeCategory &&
             !!dbRoom.game.racetimeGoal) ||
@@ -221,7 +235,7 @@ rooms.get('/:slug', async (req, res) => {
 
 rooms.post('/:slug/authorize', (req, res) => {
     const { slug } = req.params;
-    const { password } = req.body;
+    const { password, spectator } = req.body;
     const room = allRooms.get(slug);
     if (!room) {
         res.sendStatus(404);
@@ -231,7 +245,8 @@ rooms.post('/:slug/authorize', (req, res) => {
         res.sendStatus(403);
         return;
     }
-    const token = createRoomToken(room);
+
+    const token = createRoomToken(room, { isSpectating: spectator });
     res.status(200).send({ authToken: token });
 });
 

@@ -24,6 +24,18 @@ const theme = createTheme({
     },
     typography: {
         fontFamily: roboto.style.fontFamily,
+        h1: {
+            fontSize: '3.25rem',
+        },
+        h2: {
+            fontSize: '2.5rem',
+        },
+        h3: {
+            fontSize: '2rem',
+        },
+        h4: {
+            fontSize: '1.75rem',
+        },
     },
     components: {
         MuiAppBar: {

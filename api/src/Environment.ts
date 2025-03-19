@@ -9,6 +9,7 @@ export const smtpHost = process.env.SMTP_HOST ?? '';
 export const smtpUser = process.env.SMTP_USER ?? '';
 export const smtpPassword = process.env.SMTP_PASSWORD ?? '';
 export const urlBase = process.env.URL_BASE ?? '';
+export const eApiKey = process.env.E_API_KEY;
 
 //racetime integration
 export const racetimeClientId = process.env.RT_CLIENT_ID ?? '';

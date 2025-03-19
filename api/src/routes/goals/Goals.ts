@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { isModerator } from '../../database/games/Games';
 import { deleteGoal, editGoal, gameForGoal } from '../../database/games/Goals';
 import upload from './Upload';
+import goalCategories from './GoalCategories';
 
 const goals = Router();
 
@@ -18,7 +19,7 @@ goals.post('/:id', async (req, res) => {
     const game = await gameForGoal(req.params.id);
 
     // If no game could be found, the goal probably doesn't exist
-    if(!game) {
+    if (!game) {
         res.sendStatus(404);
         return;
     }
@@ -30,15 +31,26 @@ goals.post('/:id', async (req, res) => {
 
     const { id } = req.params;
     const { goal, description, categories, difficulty } = req.body;
-    
+
     if (!goal && !description && !categories && !difficulty) {
         res.status(400).send('No changes submitted');
         return;
     }
+
     const success = await editGoal(id, {
         goal,
         description,
-        categories,
+        categories: {
+            connectOrCreate: categories.map((cat: string) => ({
+                create: { name: cat, game: { connect: { id: game.id } } },
+                where: {
+                    gameId_name: {
+                        gameId: game.id,
+                        name: cat,
+                    },
+                },
+            })),
+        },
         difficulty,
     });
     if (!success) {
@@ -57,7 +69,7 @@ goals.delete('/:id', async (req, res) => {
     const game = await gameForGoal(req.params.id);
 
     // If no game could be found, the goal probably doesn't exist
-    if(!game) {
+    if (!game) {
         res.sendStatus(404);
         return;
     }
@@ -77,5 +89,6 @@ goals.delete('/:id', async (req, res) => {
 });
 
 goals.use('/upload', upload);
+goals.use('/categories', goalCategories);
 
 export default goals;

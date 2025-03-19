@@ -23,13 +23,19 @@ import {
     updateRacetimeGoal,
     updateSlugWords,
     updateSRLv5Enabled,
+    updateUseTypedRandom,
 } from '../../database/games/Games';
 import {
     createGoal,
     goalsForGame,
     deleteAllGoalsForGame,
+    goalsForGameFull,
 } from '../../database/games/Goals';
 import { getUser, getUsersEligibleToModerateGame } from '../../database/Users';
+import {
+    createCateogry,
+    getCategories,
+} from '../../database/games/GoalCategories';
 
 const games = Router();
 
@@ -86,6 +92,7 @@ games.post('/:slug', async (req, res) => {
         difficultyVariantsEnabled,
         difficultyGroups,
         slugWords,
+        useTypedRandom,
     } = req.body;
 
     let result = undefined;
@@ -117,13 +124,21 @@ games.post('/:slug', async (req, res) => {
         if (!Array.isArray(slugWords)) {
             return res.status(400).send('Incorrect slug word format');
         }
-        if (slugWords.length < 50) {
-            return res.status(400).send('Not enough slug words provided');
+        console.log(slugWords);
+        if (slugWords.length > 0) {
+            if (slugWords.length < 50) {
+                return res.status(400).send('Not enough slug words provided');
+            }
+            if (!slugWords.every((word) => word.match(/^[a-zA-Z]*$/))) {
+                return res
+                    .status(400)
+                    .send('Slug words can only contain letters');
+            }
+            result = await updateSlugWords(slug, slugWords);
         }
-        if (!slugWords.every((word) => word.match(/^[a-zA-Z]*$/))) {
-            return res.status(400).send('Slug words can only contain letters');
-        }
-        result = await updateSlugWords(slug, slugWords);
+    }
+    if (useTypedRandom !== undefined) {
+        result = await updateUseTypedRandom(slug, !!useTypedRandom);
     }
 
     if (!result) {
@@ -136,7 +151,14 @@ games.post('/:slug', async (req, res) => {
 
 games.get('/:slug/goals', async (req, res) => {
     const { slug } = req.params;
-    const goals = await goalsForGame(slug);
+    const { includeFullCatData } = req.query;
+
+    let goals;
+    if (includeFullCatData) {
+        goals = await goalsForGameFull(slug);
+    } else {
+        goals = await goalsForGame(slug);
+    }
     res.status(200).json(goals);
 });
 
@@ -446,5 +468,42 @@ games.delete('/:slug', async (req, res) => {
     const result = await deleteGame(slug);
     res.status(200).json(result);
 });
+
+games
+    .route('/:slug/categories')
+    .get(async (req, res) => {
+        const { slug } = req.params;
+
+        const categories = await getCategories(slug);
+        categories.sort((a, b) => (a.name > b.name ? 1 : -1));
+        res.status(200).json(
+            categories.map((cat) => ({
+                id: cat.id,
+                name: cat.name,
+                max: cat.max,
+                goalCount: cat._count.goals,
+            })),
+        );
+    })
+    .post(async (req, res) => {
+        const { slug } = req.params;
+
+        if (!req.session.user) {
+            return res.sendStatus(401);
+        }
+        if (!isModerator(slug, req.session.user)) {
+            return res.sendStatus(403);
+        }
+
+        const { name, max } = req.body;
+        if (!name && !max) {
+            return res.status(400).send('Missing required fields');
+        }
+        if (max !== undefined && Number.isNaN(Number(max))) {
+            return res.status(400).send('Invalid value for max');
+        }
+        const cat = await createCateogry(name, max);
+        res.status(200).json(cat);
+    });
 
 export default games;

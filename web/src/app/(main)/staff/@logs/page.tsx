@@ -6,7 +6,6 @@ import {
     Collapse,
     FormControl,
     FormControlLabel,
-    FormGroup,
     IconButton,
     InputLabel,
     MenuItem,
@@ -210,7 +209,7 @@ export default function Logs() {
     }
 
     if (error || !logs) {
-        return <Typography>Unable to load logs - ${error}</Typography>;
+        return <Typography>Unable to load logs - {error.message}</Typography>;
     }
 
     const shownLogs = logs

@@ -1,5 +1,5 @@
 {
-    "extends": "@tsconfig/node18/tsconfig.json",
+    "extends": "@tsconfig/node22/tsconfig.json",
     "compilerOptions": {
         "allowJs": true,
         "declaration": true,
@@ -7,6 +7,7 @@
         "noFallthroughCasesInSwitch": true,
         "resolveJsonModule": true,
         "isolatedModules": true,
+        "sourceMap": true,
         "outDir": "build",
         "baseUrl": "./src",
         "declarationMap": true,
@@ -15,5 +16,5 @@
         "esm": true
     },
     "include": ["src/**/*.ts", "src/**/*.d.ts", "src/main.ts", "prisma/seed.ts"],
-    "exclude": ["src/__tests__/**/*", "src/coverage/**/*"]
+    "exclude": ["src/coverage/**/*"]
 }

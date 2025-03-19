@@ -7,6 +7,18 @@ import 'react-toastify/dist/ReactToastify.css';
 import Footer from '../../components/footer/Footer';
 import Header from '../../components/header/Header';
 
+const realFetch = globalThis.fetch;
+globalThis.fetch = async (path: URL | RequestInfo, init?: RequestInit) => {
+    const res = await realFetch(path, {
+        ...init,
+        headers: {
+            ...(init?.headers ?? {}),
+            'Content-Type': 'application/json',
+        },
+    });
+    return res;
+};
+
 export default function CoreLayout({ children }: { children: ReactNode }) {
     return (
         <Box
@@ -26,7 +38,7 @@ export default function CoreLayout({ children }: { children: ReactNode }) {
                     fontSize: '13px',
                 }}
             >
-                This website uses cookies to provide some parts of it&#39;s
+                This website uses cookies to provide some parts of its
                 functionality.
             </CookieConsent>
             <Box flexGrow={1} height="100%" display="flex">

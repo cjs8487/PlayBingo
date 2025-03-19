@@ -3,6 +3,10 @@ import {
     Box,
     Button,
     Chip,
+    DialogActions,
+    DialogContent,
+    DialogContentText,
+    DialogTitle,
     FormControl,
     InputLabel,
     MenuItem,
@@ -28,8 +32,9 @@ import FormikSwitch from '../input/FormikSwitch';
 import FormikTextField from '../input/FormikTextField';
 import NumberInput from '../input/NumberInput';
 import Delete from '@mui/icons-material/Delete';
-import { useConfirm } from 'material-ui-confirm';
 import { useRouter } from 'next/navigation';
+import Dialog, { DialogRef } from '../Dialog';
+import { useRef } from 'react';
 
 async function validateRacetimeCategory(value: string) {
     if (value) {
@@ -110,8 +115,9 @@ interface GameSettingsProps {
 }
 
 export default function GameSettings({ gameData }: GameSettingsProps) {
-    const confirm = useConfirm();
     const router = useRouter();
+    const confirmDialogRef = useRef<DialogRef | null>(null);
+
     return (
         <div>
             <Box display="flex">
@@ -123,31 +129,7 @@ export default function GameSettings({ gameData }: GameSettingsProps) {
                     color="error"
                     startIcon={<Delete />}
                     onClick={async () => {
-                        try {
-                            await confirm({
-                                title: 'Delete game?',
-                                description:
-                                    'Are you sure you want to delete this game? This cannot be undone.',
-                                confirmationText: 'Delete',
-                                confirmationButtonProps: {
-                                    color: 'error',
-                                },
-                            });
-                            const res = await fetch(
-                                `/api/games/${gameData.slug}`,
-                                { method: 'DELETE' },
-                            );
-                            if (!res.ok) {
-                                alertError(
-                                    `Unable to delete game - ${await res.text()}`,
-                                );
-                                return;
-                            }
-                            router.push('/games');
-                            notifyMessage('Game deleted');
-                        } catch {
-                            // do nothing when dialog is canceled/dismissed
-                        }
+                        confirmDialogRef.current?.open();
                     }}
                 >
                     Delete Game
@@ -164,6 +146,7 @@ export default function GameSettings({ gameData }: GameSettingsProps) {
                         gameData.difficultyVariantsEnabled,
                     difficultyGroups: gameData.difficultyGroups ?? 0,
                     slugWords: gameData.slugWords?.join('\n') ?? '',
+                    useTypedRandom: gameData.useTypedRandom,
                 }}
                 onSubmit={async ({
                     name,
@@ -174,6 +157,7 @@ export default function GameSettings({ gameData }: GameSettingsProps) {
                     difficultyVariantsEnabled,
                     difficultyGroups,
                     slugWords,
+                    useTypedRandom,
                 }) => {
                     const res = await fetch(`/api/games/${gameData.slug}`, {
                         method: 'POST',
@@ -188,7 +172,9 @@ export default function GameSettings({ gameData }: GameSettingsProps) {
                             racetimeGoal,
                             difficultyVariantsEnabled,
                             difficultyGroups,
-                            slugWords: slugWords.split('\n'),
+                            slugWords:
+                                slugWords === '' ? [] : slugWords.split('\n'),
+                            useTypedRandom,
                         }),
                     });
                     if (!res.ok) {
@@ -289,6 +275,22 @@ export default function GameSettings({ gameData }: GameSettingsProps) {
                                 </HoverIcon>
                             </Box>
                         </Box>
+                        <Box display="flex" alignItems="center">
+                            <FormikSwitch
+                                id="game-typed-random-switch"
+                                label="Enable Category-Random Generation"
+                                name="useTypedRandom"
+                            />
+                            <HoverIcon icon={<Info />}>
+                                <Typography variant="caption">
+                                    Category-Random generation allows random
+                                    generation to apply the typed restrictions
+                                    of SRLv5 generation, which attempts to
+                                    minimize the category overlap of each line.
+                                    Category-Random replaces Random generation.
+                                </Typography>
+                            </HoverIcon>
+                        </Box>
                         {gameData.racetimeBeta && <RacetimeSettings />}
                         <Box>
                             <Box display="flex" columnGap={1}>
@@ -316,11 +318,18 @@ export default function GameSettings({ gameData }: GameSettingsProps) {
                                 multiline
                                 fullWidth
                                 validate={(value: string) => {
+                                    if (value === '') {
+                                        return;
+                                    }
                                     const words = value.split('\n');
+                                    console.log(words.length);
+                                    if (words.length === 0) {
+                                        return;
+                                    }
                                     if (words.length < 50) {
                                         return 'At least 50 words are required';
                                     }
-                                    let error = '';
+                                    let error;
                                     words.forEach((word) => {
                                         if (!word.match(/^[a-zA-Z]*$/)) {
                                             error =
@@ -348,6 +357,39 @@ export default function GameSettings({ gameData }: GameSettingsProps) {
                     </Box>
                 </Form>
             </Formik>
+            <Dialog ref={confirmDialogRef}>
+                <DialogTitle>Delete game?</DialogTitle>
+                <DialogContent>
+                    <DialogContentText>
+                        Are you sure you want to delete this game? This cannot
+                        be undone.
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => confirmDialogRef.current?.close()}>
+                        Cancel
+                    </Button>
+                    <Button
+                        color="error"
+                        onClick={async () => {
+                            const res = await fetch(
+                                `/api/games/${gameData.slug}`,
+                                { method: 'DELETE' },
+                            );
+                            if (!res.ok) {
+                                alertError(
+                                    `Unable to delete game - ${await res.text()}`,
+                                );
+                                return;
+                            }
+                            router.push('/games');
+                            notifyMessage('Game deleted');
+                        }}
+                    >
+                        Delete
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </div>
     );
 }

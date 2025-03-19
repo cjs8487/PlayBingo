@@ -1,4 +1,3 @@
-import { Goal } from '@prisma/client';
 import { OPEN, WebSocket } from 'ws';
 import { logError, logInfo, logWarn } from '../Logger';
 import { RoomTokenPayload, invalidateToken } from '../auth/RoomAuth';
@@ -11,6 +10,11 @@ import {
     addUnmarkAction,
     setRoomBoard,
 } from '../database/Rooms';
+import {
+    getDifficultyGroupCount,
+    getDifficultyVariant,
+    useTypedRandom,
+} from '../database/games/Games';
 import { goalsForGame } from '../database/games/Goals';
 import {
     ChangeColorAction,
@@ -28,18 +32,28 @@ import {
     ServerMessage,
 } from '../types/ServerMessage';
 import { shuffle } from '../util/Array';
-import { listToBoard } from '../util/RoomUtils';
+import {
+    checkCompletedLines,
+    CompletedLines,
+    listToBoard,
+} from '../util/RoomUtils';
+import { generateFullRandom, generateRandomTyped } from './generation/Random';
 import { generateSRLv5 } from './generation/SRLv5';
 import RacetimeHandler, { RaceData } from './integration/RacetimeHandler';
 import {
-    getDifficultyGroupCount,
-    getDifficultyVariant,
-} from '../database/games/Games';
+    GeneratorGoal,
+    GlobalGenerationState,
+} from './generation/GeneratorCore';
+import { getCategories } from '../database/games/GoalCategories';
+import { BingoMode } from '@prisma/client';
 
 type RoomIdentity = {
     nickname: string;
     color: string;
     racetimeId?: string;
+    spectator: boolean;
+    monitor: boolean;
+    goalComplete: boolean;
 };
 
 export enum BoardGenerationMode {
@@ -88,8 +102,13 @@ export default class Room {
     chatHistory: ChatMessage[];
     id: string;
     hideCard: boolean;
+    bingoMode: BingoMode;
+    lineCount: number;
 
     lastGenerationMode: BoardGenerationOptions;
+
+    lastLineStatus: CompletedLines;
+    completed: boolean;
 
     racetimeEligible: boolean;
     racetimeHandler: RacetimeHandler;
@@ -102,6 +121,8 @@ export default class Room {
         password: string,
         id: string,
         hideCard: boolean,
+        bingoMode: BingoMode,
+        lineCount: number,
         racetimeEligible: boolean,
         racetimeUrl?: string,
     ) {
@@ -114,6 +135,8 @@ export default class Room {
         this.connections = new Map();
         this.chatHistory = [];
         this.id = id;
+        this.bingoMode = bingoMode;
+        this.lineCount = lineCount;
 
         this.lastGenerationMode = { mode: BoardGenerationMode.RANDOM };
 
@@ -130,17 +153,28 @@ export default class Room {
         }
 
         this.hideCard = hideCard;
+        this.lastLineStatus = {};
+        this.completed = false;
     }
 
     async generateBoard(options: BoardGenerationOptions) {
         this.lastGenerationMode = options;
-        const { mode } = options;
+        const { mode, seed } = options;
         const goals = await goalsForGame(this.gameSlug);
-        let goalList: Goal[];
+        let goalList: GeneratorGoal[];
+        const categories = await getCategories(this.gameSlug);
+        const categoryMaxes: { [k: string]: number } = {};
+        categories.forEach((cat) => {
+            categoryMaxes[cat.name] = cat.max <= 0 ? -1 : cat.max;
+        });
+        const globalState: GlobalGenerationState = {
+            useCategoryMaxes: categories.some((cat) => cat.max > 0),
+            categoryMaxes,
+        };
         try {
             switch (mode) {
                 case BoardGenerationMode.SRLv5:
-                    goalList = generateSRLv5(goals);
+                    goalList = generateSRLv5(goals, globalState, seed);
                     goalList.shift();
                     break;
                 case BoardGenerationMode.DIFFICULTY:
@@ -168,7 +202,7 @@ export default class Room {
                     for (let i = 0; i < numGroups; i++) {
                         emptyGroupedGoals.push([]);
                     }
-                    const groupedGoals = goals.reduce<Goal[][]>(
+                    const groupedGoals = goals.reduce<GeneratorGoal[][]>(
                         (curr, goal) => {
                             if (goal.difficulty && goal.difficulty > 0) {
                                 const grpIdx = Math.floor(
@@ -198,12 +232,18 @@ export default class Room {
                         );
                         throw new Error();
                     }
-                    shuffle(goalList);
+                    shuffle(goalList, seed);
                     break;
                 case BoardGenerationMode.RANDOM:
+                    if (await useTypedRandom(this.game)) {
+                        goalList = generateRandomTyped(goals, seed);
+                        goalList.shift();
+                    } else {
+                        goalList = generateFullRandom(goals, seed);
+                    }
+                    break;
                 default:
-                    shuffle(goals);
-                    goalList = goals.splice(0, 25);
+                    goalList = generateFullRandom(goals, seed);
                     break;
             }
         } catch (e) {
@@ -247,6 +287,8 @@ export default class Room {
                           finishTime: rtUser.finish_time ?? undefined,
                       }
                     : { connected: false },
+                spectator: i.spectator,
+                monitor: i.monitor,
             });
         });
         return players;
@@ -262,7 +304,10 @@ export default class Room {
         if (action.payload) {
             identity = {
                 nickname: action.payload.nickname,
-                color: 'blue',
+                color: auth.isSpectating ? '' : 'blue',
+                spectator: auth.isSpectating,
+                monitor: auth.isMonitor,
+                goalComplete: false,
             };
             this.identities.set(auth.uuid, identity);
         } else {
@@ -271,10 +316,14 @@ export default class Room {
                 return { action: 'unauthorized' };
             }
         }
-        this.sendChat([
-            { contents: identity.nickname, color: identity.color },
-            ' has joined.',
-        ]);
+        if (auth.isSpectating) {
+            this.sendChat(`${identity.nickname} is now spectating`);
+        } else {
+            this.sendChat([
+                { contents: identity.nickname, color: identity.color },
+                ' has joined.',
+            ]);
+        }
 
         this.connections.set(auth.uuid, socket);
         addJoinAction(this.id, identity.nickname, identity.color).then();
@@ -352,6 +401,11 @@ export default class Room {
         const { row, col } = action.payload;
         if (row === undefined || col === undefined) return;
         if (this.board.board[row][col].colors.includes(identity.color)) return;
+        if (
+            this.bingoMode === BingoMode.LOCKOUT &&
+            this.board.board[row][col].colors.length > 0
+        )
+            return;
         this.board.board[row][col].colors.push(identity.color);
         this.board.board[row][col].colors.sort((a, b) => a.localeCompare(b));
         this.sendCellUpdate(row, col);
@@ -369,6 +423,7 @@ export default class Room {
             row,
             col,
         ).then();
+        this.checkWinConditions();
     }
 
     handleUnmark(
@@ -396,6 +451,7 @@ export default class Room {
             unRow,
             unCol,
         ).then();
+        this.checkWinConditions();
     }
 
     handleChangeColor(
@@ -429,7 +485,11 @@ export default class Room {
 
     handleNewCard(action: NewCardAction) {
         if (action.options) {
-            this.generateBoard(action.options as BoardGenerationOptions);
+            const options = action.options;
+            if (!options.mode) {
+                options.mode = this.lastGenerationMode.mode;
+            }
+            this.generateBoard(options as BoardGenerationOptions);
         } else {
             // TODO: we should probably generate a new seed before generating
             // the board from the previous settings
@@ -502,7 +562,7 @@ export default class Room {
                 contents: identity.nickname,
                 color: identity.color,
             },
-            'has revealed the card.',
+            ' has revealed the card.',
         ]);
         return this.board;
     }
@@ -561,6 +621,112 @@ export default class Room {
                 );
             }
         });
+    }
+
+    private checkWinConditions() {
+        switch (this.bingoMode) {
+            case 'LINES':
+                const lineCounts = checkCompletedLines(this.board.board);
+                Object.keys(lineCounts).forEach((color) => {});
+                this.identities.forEach((identity) => {
+                    const { color, nickname, goalComplete } = identity;
+                    if (lineCounts[color] > this.lastLineStatus[color]) {
+                        this.sendChat([
+                            { contents: nickname, color },
+                            ' has completed a line',
+                        ]);
+                    }
+                    if (!goalComplete && lineCounts[color] >= this.lineCount) {
+                        this.sendChat([
+                            { contents: nickname, color },
+                            ' has completed the goal!',
+                        ]);
+                        identity.goalComplete = true;
+                    }
+                    if (goalComplete && lineCounts[color] < this.lineCount) {
+                        identity.goalComplete = false;
+                        this.sendChat([
+                            { contents: nickname, color },
+                            ' has no longer completed the goal.',
+                        ]);
+                    }
+                });
+                this.lastLineStatus = lineCounts;
+                break;
+            case 'BLACKOUT':
+                this.identities.forEach((identity) => {
+                    const hasBlackout = this.board.board.every((row) =>
+                        row.every((cell) =>
+                            cell.colors.includes(identity.color),
+                        ),
+                    );
+                    if (hasBlackout && !identity.goalComplete) {
+                        identity.goalComplete = true;
+                        this.sendChat([
+                            {
+                                color: identity.color,
+                                contents: identity.nickname,
+                            },
+                            ' has achieved blackout!',
+                        ]);
+                    }
+                    if (!hasBlackout && identity.goalComplete) {
+                        identity.goalComplete = false;
+                        this.sendChat([
+                            {
+                                color: identity.color,
+                                contents: identity.nickname,
+                            },
+                            ' no longer has blackout',
+                        ]);
+                    }
+                });
+                break;
+            case 'LOCKOUT':
+                this.identities.forEach((identity) => {
+                    const goalCount = this.board.board.reduce((prev, row) => {
+                        return (
+                            prev +
+                            row.reduce((p, cell) => {
+                                if (cell.colors.includes(identity.color)) {
+                                    return p + 1;
+                                }
+                                return p;
+                            }, 0)
+                        );
+                    }, 0);
+                    if (!identity.goalComplete && goalCount >= 13) {
+                        this.sendChat([
+                            {
+                                contents: identity.nickname,
+                                color: identity.color,
+                            },
+                            ' has achieved lockout!',
+                        ]);
+                        identity.goalComplete = true;
+                    }
+                    if (identity.goalComplete && goalCount < 13) {
+                        this.sendChat([
+                            {
+                                contents: identity.nickname,
+                                color: identity.color,
+                            },
+                            ' no longer has lockout.',
+                        ]);
+                        identity.goalComplete = false;
+                    }
+                });
+                break;
+            default:
+                break;
+        }
+        let allComplete = true;
+        this.identities.forEach((i) => {
+            if (!i.spectator && !i.goalComplete) {
+                allComplete = false;
+            }
+        });
+        this.completed = allComplete;
     }
 
     //#region Racetime Integration
