@@ -3,15 +3,8 @@
 import { useField } from 'formik';
 import { useDropzone } from 'react-dropzone';
 import { alertError, getFullUrl } from '../../lib/Utils';
-import {
-    Box,
-    Button,
-    IconButton,
-    SxProps,
-    Theme,
-    Typography,
-} from '@mui/material';
-import { useMemo, useState } from 'react';
+import { Box, IconButton, SxProps, Theme, Typography } from '@mui/material';
+import { useCallback, useMemo, useState } from 'react';
 import FileUpload from '@mui/icons-material/FileUpload';
 import Close from '@mui/icons-material/Close';
 
@@ -60,7 +53,7 @@ interface Props {
 }
 
 export default function FormikFileUpload({ name, workflow }: Props) {
-    const [_input, _meta, { setValue }] = useField<string>(name);
+    const [{ value }, _meta, { setValue }] = useField<string>(name);
     const [file, setFile] = useState<{ preview: string }>();
     const [uploading, setUploading] = useState(false);
 
@@ -149,7 +142,22 @@ export default function FormikFileUpload({ name, workflow }: Props) {
                 {!uploading && file && (
                     <Typography variant="body2" color="success">
                         File uploaded
-                        <IconButton size="small" sx={{ ml: 0.5 }}>
+                        <IconButton
+                            size="small"
+                            sx={{ ml: 0.5 }}
+                            onClick={async (e) => {
+                                e.stopPropagation();
+                                e.preventDefault();
+
+                                const res = await fetch(getFullUrl(`/media/pending/${value}`), { method: 'DELETE' });
+                                if (!res.ok) {
+                                    return alertError('Unable to remove file');
+                                }
+                                setFile(undefined);
+                                setValue('');
+
+                            }}
+                        >
                             <Close />
                         </IconButton>
                     </Typography>

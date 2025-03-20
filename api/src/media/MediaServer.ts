@@ -81,4 +81,16 @@ mediaServer.post('/', (req, res) => {
     res.status(200).send({ ids });
 });
 
+mediaServer.delete('/pending/:id', (req, res) => {
+    const { id } = req.params;
+
+    if (!pendingFiles[id]) {
+        return res.status(400).send('File does not exist');
+    }
+
+    delete pendingFiles[id];
+
+    res.sendStatus(200);
+});
+
 export default mediaServer;
