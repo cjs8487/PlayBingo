@@ -11,8 +11,8 @@ healthCheckRouter.get('/', (req, res) => {
 
     try {
         res.send(healthCheck);
-    } catch (error: Error) {
-        healthCheck.message = error.message;
+    } catch (error: unknown) {
+        healthCheck.message = (error as Error).message;
         res.sendStatus(500);
     }
 });
