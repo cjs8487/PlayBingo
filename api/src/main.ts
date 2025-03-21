@@ -15,6 +15,7 @@ import {
     removeSessionsForUser,
     sessionStore,
 } from './util/Session';
+import { healthCheckRouter } from './routes/healthCheck';
 
 declare module 'express-session' {
     interface SessionData {
@@ -72,6 +73,7 @@ app.use(bodyParser.json());
 
 app.use('/api', api);
 app.use('/metrics', metricsRouter);
+app.use('/health', healthCheckRouter);
 
 app.use('/api/docs', express.static(path.join(__dirname, '..', '..', 'docs')));
 
