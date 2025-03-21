@@ -8,11 +8,11 @@ healthCheckRouter.get('/', (req, res) => {
         message: 'OK',
         timestamp: Date.now(),
     };
-    
+
     try {
         res.send(healthCheck);
-    } catch (error) {
-        healthCheck.message = error;
+    } catch (error: Error) {
+        healthCheck.message = error.message;
         res.sendStatus(500);
     }
 });
