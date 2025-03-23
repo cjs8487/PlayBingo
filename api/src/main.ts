@@ -82,8 +82,8 @@ app.use((req, res, next) => {
 });
 
 app.use('/api', api);
-app.use('/metrics', metricsRouter);
-app.use('/health', healthCheckRouter);
+app.use('/api/metrics', metricsRouter);
+app.use('/api/health', healthCheckRouter);
 
 app.use('/api/docs', express.static(path.join(__dirname, '..', '..', 'docs')));
 
