@@ -8,12 +8,19 @@ import { logDebug, logger, logInfo } from './Logger';
 import { allRooms, roomWebSocketServer } from './core/RoomServer';
 import { disconnect } from './database/Database';
 import api from './routes/api';
+import {
+    metricsRouter,
+    requestDurationHistogram,
+    bodySizeHistogram,
+} from './routes/metrics';
 import path from 'path';
 import {
     closeSessionDatabase,
     removeSessionsForUser,
     sessionStore,
 } from './util/Session';
+import { healthCheckRouter } from './routes/healthCheck';
+import * as console from 'console';
 
 declare module 'express-session' {
     interface SessionData {
@@ -36,6 +43,26 @@ app.use(
     }),
 );
 
+app.use(bodyParser.json());
+
+// Tracking duration of requests
+app.use((req, res, next) => {
+    const stopTimer = requestDurationHistogram.startTimer();
+    if (req.body) {
+        const bodySize = Buffer.byteLength(JSON.stringify(req.body));
+        console.log(`Body Size: ${bodySize}`);
+        bodySizeHistogram.observe({ method: req.method }, bodySize);
+    }
+    res.on('finish', () => {
+        stopTimer({
+            route: req.route ? req.route.path : req.path,
+            method: req.method,
+            status_code: res.statusCode,
+        });
+    });
+    next();
+});
+
 // request logger
 app.use((req, res, next) => {
     const profiler = logger.startTimer();
@@ -54,9 +81,9 @@ app.use((req, res, next) => {
     next();
 });
 
-app.use(bodyParser.json());
-
 app.use('/api', api);
+app.use('/api/metrics', metricsRouter);
+app.use('/api/health', healthCheckRouter);
 
 app.use('/api/docs', express.static(path.join(__dirname, '..', '..', 'docs')));
 
