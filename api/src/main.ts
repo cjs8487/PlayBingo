@@ -50,7 +50,6 @@ app.use((req, res, next) => {
     const stopTimer = requestDurationHistogram.startTimer();
     if (req.body) {
         const bodySize = Buffer.byteLength(JSON.stringify(req.body));
-        console.log(`Body Size: ${bodySize}`);
         bodySizeHistogram.observe({ method: req.method }, bodySize);
     }
     res.on('finish', () => {
