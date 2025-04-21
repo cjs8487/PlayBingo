@@ -18,7 +18,9 @@ export default function CardHiddenActions({
                 justifyContent: align ?? 'left',
             }}
         >
-            <Box zIndex={1}>{children}</Box>
+            <Box sx={{
+                zIndex: 1
+            }}>{children}</Box>
         </Box>
     );
 }

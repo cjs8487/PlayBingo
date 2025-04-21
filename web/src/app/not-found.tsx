@@ -114,18 +114,33 @@ export default function NotFound() {
 
     return (
         <RoomContext.Provider value={mockRoomContext}>
-            <Box display="flex" flexDirection="column" minHeight="100vh">
-                <Box textAlign="center" p={5}>
+            <Box
+                sx={{
+                    display: "flex",
+                    flexDirection: "column",
+                    minHeight: "100vh"
+                }}>
+                <Box
+                    sx={{
+                        textAlign: "center",
+                        p: 5
+                    }}>
                     <NextLink href="/">
                         <Image src={logo} alt="PlayBingo logo" height={125} />
                     </NextLink>
-                    <Typography variant="h4" pt={1}>
+                    <Typography variant="h4" sx={{
+                        pt: 1
+                    }}>
                         {title}
                     </Typography>
-                    <Typography variant="subtitle1" pb={2}>
+                    <Typography variant="subtitle1" sx={{
+                        pb: 2
+                    }}>
                         {subtitle}
                     </Typography>
-                    <Typography variant="body1" pb={2}>
+                    <Typography variant="body1" sx={{
+                        pb: 2
+                    }}>
                         We couldn&#39;t find the page you are looking for. Take
                         this bingo with you for the journey home!
                     </Typography>
@@ -151,7 +166,9 @@ export default function NotFound() {
                             </Box>
                         </NextLink>
                     </Box>
-                    <Box pt={2}>
+                    <Box sx={{
+                        pt: 2
+                    }}>
                         <Link
                             href="/"
                             component={NextLink}
@@ -164,7 +181,9 @@ export default function NotFound() {
                         </Link>
                     </Box>
                 </Box>
-                <Box flexGrow={1} />
+                <Box sx={{
+                    flexGrow: 1
+                }} />
                 <Footer />
             </Box>
         </RoomContext.Provider>

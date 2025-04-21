@@ -87,7 +87,9 @@ export default function DocUserMenu() {
                     <ListItemIcon>
                         <IconLogout fontSize="small" />
                     </ListItemIcon>
-                    <Typography textAlign="center">Logout</Typography>
+                    <Typography sx={{
+                        textAlign: "center"
+                    }}>Logout</Typography>
                 </MenuItem>
             </Menu>
         </Box>

@@ -40,7 +40,9 @@ export default function GoalSearch() {
     } = useGoalManagerContext();
     return (
         <>
-            <Box width="33%">
+            <Box sx={{
+                width: "33%"
+            }}>
                 <Autocomplete
                     multiple
                     id="filter-categories"

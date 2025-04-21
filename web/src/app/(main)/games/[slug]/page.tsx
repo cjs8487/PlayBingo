@@ -75,8 +75,14 @@ export default function GamePage(
                 pt: 2,
             }}
         >
-            <Box display="flex">
-                <Box position="fixed" mr={4}>
+            <Box sx={{
+                display: "flex"
+            }}>
+                <Box
+                    sx={{
+                        position: "fixed",
+                        mr: 4
+                    }}>
                     {gameData.coverImage && (
                         <Image src={gameData.coverImage} alt="" fill />
                     )}
@@ -86,13 +92,17 @@ export default function GamePage(
                         </div>
                     )}
                 </Box>
-                <Box flexGrow={1}>
+                <Box sx={{
+                    flexGrow: 1
+                }}>
                     <Link component={NextLink} href={`/games/${slug}`}>
                         {gameData.slug}
                     </Link>
                     <Typography variant="h6">{gameData.name}</Typography>
                 </Box>
-                <Box minWidth="30%">
+                <Box sx={{
+                    minWidth: "30%"
+                }}>
                     <Typography
                         variant="body1"
                         sx={{ textDecoration: 'underline' }}

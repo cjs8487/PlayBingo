@@ -20,14 +20,20 @@ export default function ForgotPassword() {
 
     return (
         <Box
-            display="flex"
-            flexDirection="column"
-            alignItems="center"
-            justifyContent="center"
-            flexGrow={1}
-        >
+            sx={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                flexGrow: 1
+            }}>
             <Typography variant="h4">Forgot Password</Typography>
-            <Typography pb={2} variant="body2" color="text.secondary">
+            <Typography
+                variant="body2"
+                sx={{
+                    pb: 2,
+                    color: "text.secondary"
+                }}>
                 Forgot your password? Follow the steps below to reset it.
             </Typography>
             {!success && (
@@ -60,7 +66,9 @@ export default function ForgotPassword() {
                                 fullWidth
                                 sx={{ mb: 2 }}
                             />
-                            <Box textAlign="right">
+                            <Box sx={{
+                                textAlign: "right"
+                            }}>
                                 <Button
                                     type="submit"
                                     disabled={!isValid || isSubmitting}

@@ -27,7 +27,9 @@ function CategoryForm({ cat, slug }: CategoryFormProps) {
                 borderColor: (theme) => theme.palette.divider,
             }}
         >
-            <Box display="flex">
+            <Box sx={{
+                display: "flex"
+            }}>
                 <Formik
                     initialValues={{ name: cat.name, max: cat.max }}
                     onSubmit={async (values) => {
@@ -50,10 +52,11 @@ function CategoryForm({ cat, slug }: CategoryFormProps) {
                     {({ resetForm }) => (
                         <Form>
                             <Box
-                                display="flex"
-                                alignItems="center"
-                                columnGap={1}
-                            >
+                                sx={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    columnGap: 1
+                                }}>
                                 <FormikTextField
                                     name="name"
                                     id={`cat-${cat.id}-name`}

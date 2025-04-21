@@ -40,7 +40,9 @@ export default function Rooms() {
     }
 
     return (
-        <Box flexGrow={1}>
+        <Box sx={{
+            flexGrow: 1
+        }}>
             <Box
                 sx={{
                     display: 'flex',
@@ -53,7 +55,9 @@ export default function Rooms() {
                 }}
             >
                 <Typography>{roomList.length} rooms loaded.</Typography>
-                <Box flexGrow={1} />
+                <Box sx={{
+                    flexGrow: 1
+                }} />
                 <FormGroup>
                     <FormControlLabel
                         control={
@@ -89,7 +93,9 @@ export default function Rooms() {
                                 </Typography>
                                 <Typography
                                     variant="caption"
-                                    color="text.secondary"
+                                    sx={{
+                                        color: "text.secondary"
+                                    }}
                                 >
                                     {room.slug}
                                 </Typography>

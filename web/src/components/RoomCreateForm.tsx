@@ -237,11 +237,12 @@ export default function RoomCreateForm() {
                             <ErrorMessage name="variant" component="div" />
                         </div> */}
                         <Box
-                            display="flex"
-                            width="100%"
-                            alignItems="center"
-                            columnGap={2}
-                        >
+                            sx={{
+                                display: "flex",
+                                width: "100%",
+                                alignItems: "center",
+                                columnGap: 2
+                            }}>
                             <FormikSelectField
                                 id="room-mode-select"
                                 name="mode"
@@ -294,8 +295,12 @@ export default function RoomCreateForm() {
                                 />
                             </AccordionDetails>
                         </Accordion>
-                        <Box display="flex">
-                            <Box flexGrow={1} />
+                        <Box sx={{
+                            display: "flex"
+                        }}>
+                            <Box sx={{
+                                flexGrow: 1
+                            }} />
                             <Button variant="contained" type="submit">
                                 Create Room
                             </Button>

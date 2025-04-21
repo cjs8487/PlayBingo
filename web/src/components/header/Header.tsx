@@ -111,7 +111,9 @@ export default function Header() {
                                 <ListItemIcon>
                                     <IconLogout fontSize="small" />
                                 </ListItemIcon>
-                                <Typography textAlign="center">
+                                <Typography sx={{
+                                    textAlign: "center"
+                                }}>
                                     Logout
                                 </Typography>
                             </MenuItem>

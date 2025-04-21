@@ -21,7 +21,11 @@ export default function ActiveRoomList() {
     const rooms = use(getRooms());
 
     if (rooms.length === 0) {
-        return <Typography fontStyle="italic">No active rooms</Typography>;
+        return (
+            <Typography sx={{
+                fontStyle: "italic"
+            }}>No active rooms</Typography>
+        );
     }
 
     return (

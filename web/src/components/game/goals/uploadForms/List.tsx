@@ -48,11 +48,17 @@ export function ListUploadForm({ slug, close }: UploadFormProps) {
                     }
                     shrinkLabel
                 />
-                <Box mt={2} display="flex">
+                <Box
+                    sx={{
+                        mt: 2,
+                        display: "flex"
+                    }}>
                     <Button type="button" color="error" onClick={close}>
                         Cancel
                     </Button>
-                    <Box flexGrow={1} />
+                    <Box sx={{
+                        flexGrow: 1
+                    }} />
                     <Button type="submit" variant="contained" color="success">
                         Submit
                     </Button>

@@ -11,7 +11,9 @@ export default function DesktopMenu() {
                 <Image src={logo} alt="PlayBingo logo" height={52} />
             </LinkButton>
             <Box sx={{ flexGrow: 1 }} />
-            <Box display="flex">
+            <Box sx={{
+                display: "flex"
+            }}>
                 {pages.map((page) => (
                     <LinkButton key={page.name} href={page.path}>
                         {page.name}

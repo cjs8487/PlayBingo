@@ -109,7 +109,13 @@ export default function StaffGamesTab() {
     const gameList = [...games, ...games, ...games];
 
     return (
-        <Box width="100%" height="100%" display="flex" flexDirection="column">
+        <Box
+            sx={{
+                width: "100%",
+                height: "100%",
+                display: "flex",
+                flexDirection: "column"
+            }}>
             <Box style={{ flexGrow: 1 }}>
                 <AutoSizer>
                     {({ width, height }) => (

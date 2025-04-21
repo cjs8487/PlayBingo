@@ -164,11 +164,12 @@ export default function GoalEditor({
             {({ isSubmitting, isValidating, resetForm }) => (
                 <Form>
                     <Box
-                        display="flex"
-                        flexDirection="column"
-                        width="100%"
-                        rowGap={3}
-                    >
+                        sx={{
+                            display: "flex",
+                            flexDirection: "column",
+                            width: "100%",
+                            rowGap: 3
+                        }}>
                         <FormikTextField
                             id="goal-name"
                             name="goal"
@@ -185,11 +186,19 @@ export default function GoalEditor({
                             rows={6}
                             fullWidth
                         />
-                        <Box display="flex" columnGap={2}>
-                            <Box flexGrow={3}>
+                        <Box
+                            sx={{
+                                display: "flex",
+                                columnGap: 2
+                            }}>
+                            <Box sx={{
+                                flexGrow: 3
+                            }}>
                                 <CategorySelect categories={categories} />
                             </Box>
-                            <Box flexGrow={1}>
+                            <Box sx={{
+                                flexGrow: 1
+                            }}>
                                 <NumberInput
                                     id="goal-difficulty"
                                     name="difficulty"
@@ -202,7 +211,11 @@ export default function GoalEditor({
                         </Box>
                     </Box>
                     {canModerate && (
-                        <Box display="flex" pt={1}>
+                        <Box
+                            sx={{
+                                display: "flex",
+                                pt: 1
+                            }}>
                             <Button
                                 type="button"
                                 color="error"
@@ -215,7 +228,9 @@ export default function GoalEditor({
                             >
                                 Cancel
                             </Button>
-                            <Box flexGrow={1} />
+                            <Box sx={{
+                                flexGrow: 1
+                            }} />
                             <Button
                                 type="submit"
                                 disabled={isSubmitting || isValidating}

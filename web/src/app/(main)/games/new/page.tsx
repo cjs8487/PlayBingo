@@ -35,8 +35,15 @@ export default function NewGame() {
     }
 
     return (
-        <Box flexGrow={1} px={4} width="100%">
-            <Typography variant="h4" align="center" py={2}>
+        <Box
+            sx={{
+                flexGrow: 1,
+                px: 4,
+                width: "100%"
+            }}>
+            <Typography variant="h4" align="center" sx={{
+                py: 2
+            }}>
                 Create a new game
             </Typography>
             <Formik
@@ -60,11 +67,12 @@ export default function NewGame() {
             >
                 <Form>
                     <Box
-                        display="flex"
-                        flexDirection="column"
-                        width="100%"
-                        rowGap={1}
-                    >
+                        sx={{
+                            display: "flex",
+                            flexDirection: "column",
+                            width: "100%",
+                            rowGap: 1
+                        }}>
                         <FormikTextField
                             id="game-name"
                             name="name"
@@ -80,8 +88,12 @@ export default function NewGame() {
                             name="coverImage"
                             label="Cover Image"
                         />
-                        <Box display="flex">
-                            <Box flexGrow={1} />
+                        <Box sx={{
+                            display: "flex"
+                        }}>
+                            <Box sx={{
+                                flexGrow: 1
+                            }} />
                             <Button type="submit">Submit</Button>
                         </Box>
                     </Box>

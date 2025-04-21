@@ -24,8 +24,10 @@ export default function PlayerList() {
         >
             <CardHeader
                 title={`Connected Players (${players.length})`}
-                titleTypographyProps={{ variant: 'h6' }}
                 sx={{ py: 0 }}
+                slotProps={{
+                    title: { variant: 'h6' }
+                }}
             />
             <CardContent sx={{ maxHeight: '80%', overflowY: 'auto' }}>
                 <Box
@@ -39,13 +41,18 @@ export default function PlayerList() {
                 >
                     {players.map((player) => (
                         <Box key={player.nickname}>
-                            <Box display="flex" columnGap={2}>
+                            <Box
+                                sx={{
+                                    display: "flex",
+                                    columnGap: 2
+                                }}>
                                 <Box
-                                    px={0.5}
                                     style={{ background: player.color }}
-                                    border={1}
-                                    borderColor="divider"
-                                >
+                                    sx={{
+                                        px: 0.5,
+                                        border: 1,
+                                        borderColor: "divider"
+                                    }}>
                                     <Typography>{player.goalCount}</Typography>
                                 </Box>
                                 <Typography>{player.nickname}</Typography>
@@ -68,13 +75,24 @@ export default function PlayerList() {
                         </Box>
                     ))}
                 </Box>
-                <Typography variant="h6" pb={1}>
+                <Typography variant="h6" sx={{
+                    pb: 1
+                }}>
                     Spectators
                 </Typography>
-                <Box display="flex" flexDirection="column" rowGap={3}>
+                <Box
+                    sx={{
+                        display: "flex",
+                        flexDirection: "column",
+                        rowGap: 3
+                    }}>
                     {spectators.map((player) => (
                         <Box key={player.nickname}>
-                            <Box display="flex" columnGap={2}>
+                            <Box
+                                sx={{
+                                    display: "flex",
+                                    columnGap: 2
+                                }}>
                                 <Typography>{player.nickname}</Typography>
                             </Box>
                         </Box>

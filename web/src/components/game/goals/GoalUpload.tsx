@@ -65,7 +65,9 @@ export default function GoalUpload({ isOpen, close, slug }: GoalUploadProps) {
                                 }}
                             >
                                 <Warning />
-                                <Box color="warning.contrastText">
+                                <Box sx={{
+                                    color: "warning.contrastText"
+                                }}>
                                     <Typography variant="body2">
                                         Please ensure that the list you upload
                                         is a proper json array.
@@ -107,7 +109,9 @@ export default function GoalUpload({ isOpen, close, slug }: GoalUploadProps) {
                                 <Warning />
                                 <Typography
                                     variant="body2"
-                                    color="warning.contrastText"
+                                    sx={{
+                                        color: "warning.contrastText"
+                                    }}
                                 >
                                     Only use this upload method if you trust the
                                     author of the goal list.

@@ -7,8 +7,15 @@ export default function PlayerInfo() {
     return (
         <Card>
             <CardContent>
-                <Box display="flex" alignItems="center" flexGrow={1}>
-                    <Typography variant="h6" flexGrow={1}>
+                <Box
+                    sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        flexGrow: 1
+                    }}>
+                    <Typography variant="h6" sx={{
+                        flexGrow: 1
+                    }}>
                         Playing as {nickname}
                     </Typography>
                     {connectionStatus !== ConnectionStatus.CLOSED && (

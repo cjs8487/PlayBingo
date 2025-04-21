@@ -40,7 +40,9 @@ function GoalListItemSecondary({ goal }: { goal: Goal }) {
                     {goal.difficulty}
                 </>
             )}
-            <Box pt={0.5}>
+            <Box sx={{
+                pt: 0.5
+            }}>
                 {goal.categories?.map((cat) => (
                     <Chip key={cat} label={cat} size="small" sx={{ mr: 0.5 }} />
                 ))}

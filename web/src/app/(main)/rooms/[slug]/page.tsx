@@ -109,13 +109,19 @@ function RoomXs() {
             <Box>
                 <PlayerInfo />
             </Box>
-            <Box maxWidth="100%" maxHeight="100%">
+            <Box
+                sx={{
+                    maxWidth: "100%",
+                    maxHeight: "100%"
+                }}>
                 <Board />
             </Box>
             <Box>
                 <PlayerList />
             </Box>
-            <Box maxHeight="90%">
+            <Box sx={{
+                maxHeight: "90%"
+            }}>
                 <RoomChat />
             </Box>
         </>
@@ -125,7 +131,9 @@ function RoomXs() {
 function RoomSm() {
     return (
         <>
-            <Box flexGrow={1}>
+            <Box sx={{
+                flexGrow: 1
+            }}>
                 <RoomInfo />
             </Box>
             <Box>
@@ -134,13 +142,19 @@ function RoomSm() {
             <Box>
                 <PlayerInfo />
             </Box>
-            <Box maxWidth="100%" maxHeight="100%">
+            <Box
+                sx={{
+                    maxWidth: "100%",
+                    maxHeight: "100%"
+                }}>
                 <Board />
             </Box>
             <Box>
                 <PlayerList />
             </Box>
-            <Box maxHeight="90%">
+            <Box sx={{
+                maxHeight: "90%"
+            }}>
                 <RoomChat />
             </Box>
         </>
@@ -150,8 +164,14 @@ function RoomSm() {
 function RoomMd() {
     return (
         <>
-            <Box display="flex" columnGap={2}>
-                <Box flexGrow={1}>
+            <Box
+                sx={{
+                    display: "flex",
+                    columnGap: 2
+                }}>
+                <Box sx={{
+                    flexGrow: 1
+                }}>
                     <RoomInfo />
                 </Box>
                 <Box>
@@ -162,21 +182,30 @@ function RoomMd() {
                 <PlayerInfo />
             </Box>
             <Box
-                maxWidth="100%"
-                maxHeight="100%"
-                display="flex"
-                columnGap={1}
-                alignContent="center"
-                justifyContent="center"
-            >
-                <Box width="75%" maxHeight="100%">
+                sx={{
+                    maxWidth: "100%",
+                    maxHeight: "100%",
+                    display: "flex",
+                    columnGap: 1,
+                    alignContent: "center",
+                    justifyContent: "center"
+                }}>
+                <Box
+                    sx={{
+                        width: "75%",
+                        maxHeight: "100%"
+                    }}>
                     <Board />
                 </Box>
                 <Box>
                     <PlayerList />
                 </Box>
             </Box>
-            <Box px={4} maxHeight="90%">
+            <Box
+                sx={{
+                    px: 4,
+                    maxHeight: "90%"
+                }}>
                 <RoomChat />
             </Box>
         </>
@@ -187,22 +216,24 @@ function RoomLg() {
     return (
         <>
             <Box
-                flexGrow={1}
-                maxWidth="75%"
-                maxHeight="100%"
-                display="flex"
-                alignContent="center"
-                justifyContent="center"
-            >
+                sx={{
+                    flexGrow: 1,
+                    maxWidth: "75%",
+                    maxHeight: "100%",
+                    display: "flex",
+                    alignContent: "center",
+                    justifyContent: "center"
+                }}>
                 <Board />
             </Box>
             <Box
-                display="flex"
-                flexDirection="column"
-                rowGap={1}
-                maxHeight="100%"
-                sx={{ overflowY: 'auto' }}
-            >
+                sx={{
+                    display: "flex",
+                    flexDirection: "column",
+                    rowGap: 1,
+                    maxHeight: "100%",
+                    overflowY: 'auto'
+                }}>
                 <Box>
                     <RoomInfo />
                 </Box>
@@ -215,7 +246,9 @@ function RoomLg() {
                 <Box>
                     <PlayerList />
                 </Box>
-                <Box maxHeight="85%">
+                <Box sx={{
+                    maxHeight: "85%"
+                }}>
                     <RoomChat />
                 </Box>
             </Box>
@@ -227,24 +260,36 @@ function RoomXl() {
     return (
         <>
             <Box
-                flexGrow={1}
-                maxWidth="50%"
-                maxHeight="100%"
-                display="flex"
-                alignContent="center"
-                justifyContent="center"
-            >
+                sx={{
+                    flexGrow: 1,
+                    maxWidth: "50%",
+                    maxHeight: "100%",
+                    display: "flex",
+                    alignContent: "center",
+                    justifyContent: "center"
+                }}>
                 <Board />
             </Box>
-            <Box display="flex" columnGap={1} maxWidth="50%" maxHeight="100%">
+            <Box
+                sx={{
+                    display: "flex",
+                    columnGap: 1,
+                    maxWidth: "50%",
+                    maxHeight: "100%"
+                }}>
                 <Box
-                    display="flex"
-                    flexDirection="column"
-                    rowGap={1}
-                    maxHeight="100%"
-                    sx={{ overflowY: 'auto' }}
-                >
-                    <Box display="flex" columnGap={1}>
+                    sx={{
+                        display: "flex",
+                        flexDirection: "column",
+                        rowGap: 1,
+                        maxHeight: "100%",
+                        overflowY: 'auto'
+                    }}>
+                    <Box
+                        sx={{
+                            display: "flex",
+                            columnGap: 1
+                        }}>
                         <Box>
                             <RoomInfo />
                         </Box>
@@ -259,7 +304,11 @@ function RoomXl() {
                         <PlayerList />
                     </Box>
                 </Box>
-                <Box flexGrow={1} maxWidth="40%">
+                <Box
+                    sx={{
+                        flexGrow: 1,
+                        maxWidth: "40%"
+                    }}>
                     <RoomChat />
                 </Box>
             </Box>
