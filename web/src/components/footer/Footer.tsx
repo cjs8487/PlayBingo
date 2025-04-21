@@ -54,9 +54,11 @@ function LargeFooter() {
                         <FontAwesomeIcon icon={icon} />
                     </IconButton>
                 ))}
-                <Box sx={{
-                    flexGrow: 1
-                }} />
+                <Box
+                    sx={{
+                        flexGrow: 1,
+                    }}
+                />
                 <Tooltip title="Documentation">
                     <IconButton
                         size="small"
@@ -73,9 +75,11 @@ function LargeFooter() {
                     display: 'flex',
                 }}
             >
-                <Box sx={{
-                    flexGrow: 1
-                }}>
+                <Box
+                    sx={{
+                        flexGrow: 1,
+                    }}
+                >
                     <Typography variant="caption">
                         © Copyright 2024 - {new Date().getFullYear()} Bingothon
                         | All Rights Reserved |{' '}
@@ -103,9 +107,11 @@ function SmallFooter() {
                 display: { md: 'none' },
             }}
         >
-            <Box sx={{
-                flexGrow: 1
-            }}>
+            <Box
+                sx={{
+                    flexGrow: 1,
+                }}
+            >
                 <Box
                     sx={{
                         display: 'flex',
@@ -130,12 +136,16 @@ function SmallFooter() {
                     All Rights Reserved
                 </Typography>
             </Box>
-            <Box sx={{
-                display: "flex"
-            }}>
-                <Box sx={{
-                    flexGrow: 1
-                }}>
+            <Box
+                sx={{
+                    display: 'flex',
+                }}
+            >
+                <Box
+                    sx={{
+                        flexGrow: 1,
+                    }}
+                >
                     <Link
                         href="/legal/privacy"
                         component={NextLink}

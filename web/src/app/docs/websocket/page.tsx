@@ -15,13 +15,14 @@ function MarkdownHeader({
         <Typography
             variant={node?.tagName as Extract<'variant', typeof Typography>}
             {...props}
-            sx={[{
+            sx={{
                 pb: 1,
                 mb: 2,
                 mt: 4,
                 borderBottom: 1,
-                borderBottomColor: 'grey.700'
-            }, ...(Array.isArray(props.sx) ? props.sx : [props.sx])]}>
+                borderBottomColor: 'grey.700',
+            }}
+        >
             {children}
         </Typography>
     );
@@ -37,9 +38,11 @@ async function getMarkdown() {
 export default async function WebsocketDocs() {
     const markdown = await getMarkdown();
     return (
-        <Box sx={{
-            px: 8
-        }}>
+        <Box
+            sx={{
+                px: 8,
+            }}
+        >
             <ReactMarkdown
                 components={{
                     code({ node, className, children, ...props }) {
@@ -107,9 +110,10 @@ export default async function WebsocketDocs() {
                         return (
                             <Typography
                                 {...props}
-                                sx={[{
-                                    mb: 1
-                                }, ...(Array.isArray(props.sx) ? props.sx : [props.sx])]}>
+                                sx={{
+                                    mb: 1,
+                                }}
+                            >
                                 {children}
                             </Typography>
                         );
