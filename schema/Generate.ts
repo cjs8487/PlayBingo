@@ -14,8 +14,6 @@ try {
                 cwd: './schemas',
             }).then((ts) => {
                 writeFileSync(`./types/${fileName}.d.ts`, ts);
-                writeFileSync(`../api/src/types/${fileName}.d.ts`, ts);
-                writeFileSync(`../web/src/types/${fileName}.d.ts`, ts);
             });
         }
     });
