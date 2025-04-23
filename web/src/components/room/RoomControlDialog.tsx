@@ -19,7 +19,7 @@ import { useContext } from 'react';
 import { toast } from 'react-toastify';
 import { useAsync, useCopyToClipboard } from 'react-use';
 import { RoomContext } from '../../context/RoomContext';
-import { Game } from '../../types/Game';
+import { Game } from '@playbingo/types';
 import FormikTextField from '../input/FormikTextField';
 
 interface RoomControlDialogProps {
@@ -87,9 +87,11 @@ export default function RoomControlDialog({
                                 <AccordionDetails
                                     sx={{ display: 'flex', columnGap: 2 }}
                                 >
-                                    <Box sx={{
-                                        width: "50%"
-                                    }}>
+                                    <Box
+                                        sx={{
+                                            width: '50%',
+                                        }}
+                                    >
                                         <FormikTextField
                                             type="number"
                                             name="seed"
@@ -100,9 +102,11 @@ export default function RoomControlDialog({
                                             size="small"
                                         />
                                     </Box>
-                                    <Box sx={{
-                                        width: "50%"
-                                    }}>
+                                    <Box
+                                        sx={{
+                                            width: '50%',
+                                        }}
+                                    >
                                         <FormControl fullWidth>
                                             <InputLabel
                                                 size="small"
@@ -137,18 +141,22 @@ export default function RoomControlDialog({
                         </Form>
                     )}
                 </Formik>
-                <Box sx={{
-                    pt: 2
-                }}>
+                <Box
+                    sx={{
+                        pt: 2,
+                    }}
+                >
                     <Typography variant="h6">Local Actions</Typography>
                     <Typography variant="caption">
                         These actions are potentially destructive and should
                         only be used if the application is exhibiting strange or
                         incorrect behavior
                     </Typography>
-                    <Box sx={{
-                        display: "flex"
-                    }}>
+                    <Box
+                        sx={{
+                            display: 'flex',
+                        }}
+                    >
                         <Button
                             onClick={() => {
                                 window.dispatchEvent(new Event('resize'));
@@ -159,9 +167,11 @@ export default function RoomControlDialog({
                     </Box>
                 </Box>
                 {!board.hidden && (
-                    <Box sx={{
-                        pt: 2
-                    }}>
+                    <Box
+                        sx={{
+                            pt: 2,
+                        }}
+                    >
                         <Button
                             onClick={() => {
                                 const data = board.board

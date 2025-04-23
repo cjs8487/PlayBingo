@@ -1,5 +1,5 @@
 'use client';
-import { Game } from '@/types/Game';
+import { Game } from '@playbingo/types';
 import Masonry from '@mui/lab/Masonry';
 import { Box, Button, Typography } from '@mui/material';
 import Link from 'next/link';
@@ -63,8 +63,9 @@ export default function Games() {
         <Box
             sx={{
                 flexGrow: 1,
-                px: 2
-            }}>
+                px: 2,
+            }}
+        >
             <Box
                 sx={{
                     display: 'flex',
@@ -76,9 +77,11 @@ export default function Games() {
                 }}
             >
                 <Typography>{gameList.length} games loaded</Typography>
-                <Box sx={{
-                    flexGrow: 1
-                }} />
+                <Box
+                    sx={{
+                        flexGrow: 1,
+                    }}
+                />
                 {loggedIn && (
                     <div>
                         <Button href="/games/new" LinkComponent={Link}>
@@ -91,9 +94,12 @@ export default function Games() {
                 .filter((k) => games[k].length > 0)
                 .map((key) => (
                     <Box key={key}>
-                        <Typography variant="h5" sx={{
-                            pb: 1
-                        }}>
+                        <Typography
+                            variant="h5"
+                            sx={{
+                                pb: 1,
+                            }}
+                        >
                             {key}
                         </Typography>
                         <Masonry

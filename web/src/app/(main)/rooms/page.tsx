@@ -18,7 +18,7 @@ import Link from 'next/link';
 import { useState } from 'react';
 import RoomCreateForm from '../../../components/RoomCreateForm';
 import { useApi } from '../../../lib/Hooks';
-import { RoomData } from '../../../types/RoomData';
+import { RoomData } from '@playbingo/types';
 
 export default function Rooms() {
     const [includeInactive, setIncludeInactive] = useState(false);
@@ -40,9 +40,11 @@ export default function Rooms() {
     }
 
     return (
-        <Box sx={{
-            flexGrow: 1
-        }}>
+        <Box
+            sx={{
+                flexGrow: 1,
+            }}
+        >
             <Box
                 sx={{
                     display: 'flex',
@@ -55,9 +57,11 @@ export default function Rooms() {
                 }}
             >
                 <Typography>{roomList.length} rooms loaded.</Typography>
-                <Box sx={{
-                    flexGrow: 1
-                }} />
+                <Box
+                    sx={{
+                        flexGrow: 1,
+                    }}
+                />
                 <FormGroup>
                     <FormControlLabel
                         control={
@@ -94,7 +98,7 @@ export default function Rooms() {
                                 <Typography
                                     variant="caption"
                                     sx={{
-                                        color: "text.secondary"
+                                        color: 'text.secondary',
                                     }}
                                 >
                                     {room.slug}

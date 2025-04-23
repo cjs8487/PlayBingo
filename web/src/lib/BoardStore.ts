@@ -1,4 +1,4 @@
-import { Board, Cell } from '@/types/Board';
+import { Board, Cell } from '@playbingo/types';
 
 type BoardEvent =
     | {

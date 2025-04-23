@@ -7,7 +7,7 @@ import {
     useLayoutEffect,
     useState,
 } from 'react';
-import { User } from '../types/User';
+import { User } from '@playbingo/types';
 import { useRouter } from 'next/navigation';
 import { alertError } from '../lib/Utils';
 import { logout } from '../actions/Session';

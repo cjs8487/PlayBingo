@@ -1,6 +1,6 @@
 'use client';
 import { alertError } from '@/lib/Utils';
-import { Game } from '@/types/Game';
+import { Game } from '@playbingo/types';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import {
     Accordion,
@@ -238,11 +238,12 @@ export default function RoomCreateForm() {
                         </div> */}
                         <Box
                             sx={{
-                                display: "flex",
-                                width: "100%",
-                                alignItems: "center",
-                                columnGap: 2
-                            }}>
+                                display: 'flex',
+                                width: '100%',
+                                alignItems: 'center',
+                                columnGap: 2,
+                            }}
+                        >
                             <FormikSelectField
                                 id="room-mode-select"
                                 name="mode"
@@ -295,12 +296,16 @@ export default function RoomCreateForm() {
                                 />
                             </AccordionDetails>
                         </Accordion>
-                        <Box sx={{
-                            display: "flex"
-                        }}>
-                            <Box sx={{
-                                flexGrow: 1
-                            }} />
+                        <Box
+                            sx={{
+                                display: 'flex',
+                            }}
+                        >
+                            <Box
+                                sx={{
+                                    flexGrow: 1,
+                                }}
+                            />
                             <Button variant="contained" type="submit">
                                 Create Room
                             </Button>

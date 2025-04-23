@@ -1,6 +1,6 @@
-import { chunk } from './Array';
+import { Cell } from '@playbingo/types';
 import { GeneratorGoal } from '../core/generation/GeneratorCore';
-import { Cell } from '../types/Cell';
+import { chunk } from './Array';
 
 export const listToBoard = (list: GeneratorGoal[]) => {
     return chunk(

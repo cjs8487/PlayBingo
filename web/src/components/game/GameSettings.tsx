@@ -1,8 +1,8 @@
+import Delete from '@mui/icons-material/Delete';
 import Info from '@mui/icons-material/Info';
 import {
     Box,
     Button,
-    Chip,
     DialogActions,
     DialogContent,
     DialogContentText,
@@ -11,30 +11,20 @@ import {
     InputLabel,
     MenuItem,
     Select,
-    TextField,
     Typography,
 } from '@mui/material';
-import {
-    ErrorMessage,
-    Field,
-    FieldArray,
-    Form,
-    Formik,
-    useField,
-    useFormikContext,
-} from 'formik';
-import { useAsync, useList } from 'react-use';
+import { Game } from '@playbingo/types';
+import { Form, Formik, useField, useFormikContext } from 'formik';
+import { useRouter } from 'next/navigation';
+import { useRef } from 'react';
+import { useAsync } from 'react-use';
 import { mutate } from 'swr';
 import { alertError, notifyMessage } from '../../lib/Utils';
-import { Game } from '../../types/Game';
+import Dialog, { DialogRef } from '../Dialog';
 import HoverIcon from '../HoverIcon';
 import FormikSwitch from '../input/FormikSwitch';
 import FormikTextField from '../input/FormikTextField';
 import NumberInput from '../input/NumberInput';
-import Delete from '@mui/icons-material/Delete';
-import { useRouter } from 'next/navigation';
-import Dialog, { DialogRef } from '../Dialog';
-import { useRef } from 'react';
 
 async function validateRacetimeCategory(value: string) {
     if (value) {
@@ -66,17 +56,19 @@ function RacetimeSettings() {
         <>
             <Box
                 sx={{
-                    display: "flex",
-                    width: "100%",
-                    columnGap: 2
-                }}>
+                    display: 'flex',
+                    width: '100%',
+                    columnGap: 2,
+                }}
+            >
                 <Box
                     sx={{
-                        display: "flex",
+                        display: 'flex',
                         columnGap: 1,
-                        alignItems: "center",
-                        flexGrow: 1
-                    }}>
+                        alignItems: 'center',
+                        flexGrow: 1,
+                    }}
+                >
                     <FormikTextField
                         id="game-racetime-category"
                         name="racetimeCategory"
@@ -126,12 +118,18 @@ export default function GameSettings({ gameData }: GameSettingsProps) {
 
     return (
         <div>
-            <Box sx={{
-                display: "flex"
-            }}>
-                <Typography variant="h5" align="center" sx={{
-                    flexGrow: 1
-                }}>
+            <Box
+                sx={{
+                    display: 'flex',
+                }}
+            >
+                <Typography
+                    variant="h5"
+                    align="center"
+                    sx={{
+                        flexGrow: 1,
+                    }}
+                >
                     Game Settings
                 </Typography>
                 <Button
@@ -198,12 +196,13 @@ export default function GameSettings({ gameData }: GameSettingsProps) {
                 <Form>
                     <Box
                         sx={{
-                            display: "flex",
-                            flexDirection: "column",
-                            justifyItems: "center",
+                            display: 'flex',
+                            flexDirection: 'column',
+                            justifyItems: 'center',
                             rowGap: 2,
-                            pt: 2
-                        }}>
+                            pt: 2,
+                        }}
+                    >
                         <FormikTextField
                             id="game-name"
                             name="name"
@@ -216,9 +215,10 @@ export default function GameSettings({ gameData }: GameSettingsProps) {
                         />
                         <Box
                             sx={{
-                                display: "flex",
-                                alignItems: "center"
-                            }}>
+                                display: 'flex',
+                                alignItems: 'center',
+                            }}
+                        >
                             <FormikSwitch
                                 id="game-srlv5-generation-switch"
                                 label="Enable SRLv5 Board Generation"
@@ -240,15 +240,17 @@ export default function GameSettings({ gameData }: GameSettingsProps) {
                         </Box>
                         <Box
                             sx={{
-                                display: "flex",
-                                alignItems: "center",
-                                columnGap: 3
-                            }}>
+                                display: 'flex',
+                                alignItems: 'center',
+                                columnGap: 3,
+                            }}
+                        >
                             <Box
                                 sx={{
-                                    display: "flex",
-                                    alignItems: "center"
-                                }}>
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                }}
+                            >
                                 <FormikSwitch
                                     id="game-difficulty-variants-switch"
                                     label="Enable Difficulty Variants"
@@ -271,10 +273,11 @@ export default function GameSettings({ gameData }: GameSettingsProps) {
                             </Box>
                             <Box
                                 sx={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    columnGap: 1
-                                }}>
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    columnGap: 1,
+                                }}
+                            >
                                 <NumberInput
                                     name="difficultyGroups"
                                     label="Difficulty Groups"
@@ -302,9 +305,10 @@ export default function GameSettings({ gameData }: GameSettingsProps) {
                         </Box>
                         <Box
                             sx={{
-                                display: "flex",
-                                alignItems: "center"
-                            }}>
+                                display: 'flex',
+                                alignItems: 'center',
+                            }}
+                        >
                             <FormikSwitch
                                 id="game-typed-random-switch"
                                 label="Enable Category-Random Generation"
@@ -324,9 +328,10 @@ export default function GameSettings({ gameData }: GameSettingsProps) {
                         <Box>
                             <Box
                                 sx={{
-                                    display: "flex",
-                                    columnGap: 1
-                                }}>
+                                    display: 'flex',
+                                    columnGap: 1,
+                                }}
+                            >
                                 <Typography>Slug Words</Typography>
                                 <HoverIcon icon={<Info />}>
                                     <Typography variant="caption">
@@ -380,11 +385,14 @@ export default function GameSettings({ gameData }: GameSettingsProps) {
                         <Box
                             sx={{
                                 pt: 1,
-                                display: "flex"
-                            }}>
-                            <Box sx={{
-                                flexGrow: 1
-                            }} />
+                                display: 'flex',
+                            }}
+                        >
+                            <Box
+                                sx={{
+                                    flexGrow: 1,
+                                }}
+                            />
                             <Button
                                 type="submit"
                                 variant="contained"

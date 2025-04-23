@@ -1,7 +1,7 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Fragment, useCallback, useState } from 'react';
 import { mutate } from 'swr';
-import { Game } from '../../types/Game';
+import { Game } from '@playbingo/types';
 import UserSearch from '../UserSearch';
 import { alertError } from '../../lib/Utils';
 import { Box, Button, IconButton, Typography } from '@mui/material';
@@ -27,13 +27,18 @@ export default function PermissionsManagement({
 
     return (
         <Box>
-            <Box sx={{
-                pb: 3
-            }}>
+            <Box
+                sx={{
+                    pb: 3,
+                }}
+            >
                 <Typography variant="h6">Owners</Typography>
-                <Typography variant="caption" sx={{
-                    pb: 3
-                }}>
+                <Typography
+                    variant="caption"
+                    sx={{
+                        pb: 3,
+                    }}
+                >
                     Owners have full moderation powers over a game, including
                     appointing additional owners and moderators.
                 </Typography>
@@ -42,9 +47,10 @@ export default function PermissionsManagement({
                         <Box
                             key={owner.id}
                             sx={{
-                                display: "flex",
-                                alignItems: "center"
-                            }}>
+                                display: 'flex',
+                                alignItems: 'center',
+                            }}
+                        >
                             <Typography variant="body1">
                                 {owner.username}
                             </Typography>
@@ -109,9 +115,12 @@ export default function PermissionsManagement({
             </Box>
             <Box>
                 <Typography variant="h5">Moderators</Typography>
-                <Typography variant="caption" sx={{
-                    pb: 3
-                }}>
+                <Typography
+                    variant="caption"
+                    sx={{
+                        pb: 3,
+                    }}
+                >
                     Moderators have the power to modify goal lists and create
                     game modes and variants, as well as modify some game
                     settings.
@@ -121,9 +130,10 @@ export default function PermissionsManagement({
                         <Box
                             key={mod.id}
                             sx={{
-                                display: "flex",
-                                alignItems: "center"
-                            }}>
+                                display: 'flex',
+                                alignItems: 'center',
+                            }}
+                        >
                             <Typography variant="body1">
                                 {mod.username}
                             </Typography>

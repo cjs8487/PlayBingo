@@ -16,9 +16,9 @@ import {
     getServerSnapshot,
     subscribeToBoardUpdates,
 } from '../lib/BoardStore';
-import { Board, Cell } from '../types/Board';
-import { RoomData } from '../types/RoomData';
-import { ChatMessage, Player, ServerMessage } from '../types/ServerMessage';
+import { Board, Cell } from '@playbingo/types';
+import { RoomData } from '@playbingo/types';
+import { ChatMessage, Player, ServerMessage } from '@playbingo/types';
 import { alertError } from '../lib/Utils';
 import { Box, Link, Typography } from '@mui/material';
 import NextLink from 'next/link';
@@ -460,21 +460,27 @@ export function RoomContextProvider({ slug, children }: RoomContextProps) {
         return (
             <Box
                 sx={{
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
                     flexGrow: 1,
-                    p: 5
-                }}>
-                <Typography variant="h4" sx={{
-                    pb: 2
-                }}>
+                    p: 5,
+                }}
+            >
+                <Typography
+                    variant="h4"
+                    sx={{
+                        pb: 2,
+                    }}
+                >
                     Not Found
                 </Typography>
                 <Typography>The room {slug} couldn&#39;t be found.</Typography>
-                <Box sx={{
-                    pt: 0.5
-                }}>
+                <Box
+                    sx={{
+                        pt: 0.5,
+                    }}
+                >
                     <Link href="/rooms" component={NextLink}>
                         ← Return to room list
                     </Link>

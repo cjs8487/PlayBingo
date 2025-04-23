@@ -1,5 +1,5 @@
 import NumberInput from '@/components/input/NumberInput';
-import { Goal } from '@/types/Goal';
+import { Goal } from '@playbingo/types';
 import CheckBoxIcon from '@mui/icons-material/CheckBox';
 import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
 import {
@@ -140,8 +140,8 @@ export default function GoalEditor({
                                     : undefined,
                             categories:
                                 categories.length !== goal.categories?.length ||
-                                !categories.every(
-                                    (cat) => goal.categories?.includes(cat),
+                                !categories.every((cat) =>
+                                    goal.categories?.includes(cat),
                                 )
                                     ? categories
                                     : undefined,
@@ -165,11 +165,12 @@ export default function GoalEditor({
                 <Form>
                     <Box
                         sx={{
-                            display: "flex",
-                            flexDirection: "column",
-                            width: "100%",
-                            rowGap: 3
-                        }}>
+                            display: 'flex',
+                            flexDirection: 'column',
+                            width: '100%',
+                            rowGap: 3,
+                        }}
+                    >
                         <FormikTextField
                             id="goal-name"
                             name="goal"
@@ -188,17 +189,22 @@ export default function GoalEditor({
                         />
                         <Box
                             sx={{
-                                display: "flex",
-                                columnGap: 2
-                            }}>
-                            <Box sx={{
-                                flexGrow: 3
-                            }}>
+                                display: 'flex',
+                                columnGap: 2,
+                            }}
+                        >
+                            <Box
+                                sx={{
+                                    flexGrow: 3,
+                                }}
+                            >
                                 <CategorySelect categories={categories} />
                             </Box>
-                            <Box sx={{
-                                flexGrow: 1
-                            }}>
+                            <Box
+                                sx={{
+                                    flexGrow: 1,
+                                }}
+                            >
                                 <NumberInput
                                     id="goal-difficulty"
                                     name="difficulty"
@@ -213,9 +219,10 @@ export default function GoalEditor({
                     {canModerate && (
                         <Box
                             sx={{
-                                display: "flex",
-                                pt: 1
-                            }}>
+                                display: 'flex',
+                                pt: 1,
+                            }}
+                        >
                             <Button
                                 type="button"
                                 color="error"
@@ -228,9 +235,11 @@ export default function GoalEditor({
                             >
                                 Cancel
                             </Button>
-                            <Box sx={{
-                                flexGrow: 1
-                            }} />
+                            <Box
+                                sx={{
+                                    flexGrow: 1,
+                                }}
+                            />
                             <Button
                                 type="submit"
                                 disabled={isSubmitting || isValidating}

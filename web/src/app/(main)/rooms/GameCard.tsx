@@ -14,7 +14,7 @@ import { Dispatch, SetStateAction, useCallback, useState } from 'react';
 import { useLocalStorage, useTimeoutFn } from 'react-use';
 import { mutate } from 'swr';
 import CardHiddenActions from '../../../components/CardHiddenActions';
-import { Game } from '../../../types/Game';
+import { Game } from '@playbingo/types';
 import { useUserContext } from '../../../context/UserContext';
 
 interface IGameCardProps {
@@ -105,9 +105,12 @@ export default function GameCard({
                     </Box>
                 )}
                 <CardContent>
-                    <Typography variant="h6" sx={{
-                        textAlign: "center"
-                    }}>
+                    <Typography
+                        variant="h6"
+                        sx={{
+                            textAlign: 'center',
+                        }}
+                    >
                         {name}
                     </Typography>
                 </CardContent>
