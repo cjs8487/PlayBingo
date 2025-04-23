@@ -459,17 +459,22 @@ export function RoomContextProvider({ slug, children }: RoomContextProps) {
     if (notFound) {
         return (
             <Box
-                display="flex"
-                flexDirection="column"
-                alignItems="center"
-                flexGrow={1}
-                p={5}
-            >
-                <Typography variant="h4" pb={2}>
+                sx={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    flexGrow: 1,
+                    p: 5
+                }}>
+                <Typography variant="h4" sx={{
+                    pb: 2
+                }}>
                     Not Found
                 </Typography>
                 <Typography>The room {slug} couldn&#39;t be found.</Typography>
-                <Box pt={0.5}>
+                <Box sx={{
+                    pt: 0.5
+                }}>
                     <Link href="/rooms" component={NextLink}>
                         ← Return to room list
                     </Link>

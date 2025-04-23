@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
 import { validateToken } from '../database/auth/ApiTokens';
 import { logWarn } from '../Logger';
+
 export const requiresApiToken = async (
     req: Request,
     res: Response,
@@ -8,11 +9,13 @@ export const requiresApiToken = async (
 ) => {
     const apiToken = req.header('PlayBingo-Api-Key');
     if (!apiToken) {
-        return res.sendStatus(401);
+        res.sendStatus(401);
+        return;
     }
     if (!(await validateToken(apiToken))) {
         logWarn('Invalid API Key');
-        return res.sendStatus(401);
+        res.sendStatus(401);
+        return;
     }
     next();
 };

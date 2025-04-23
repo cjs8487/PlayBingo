@@ -65,7 +65,6 @@ export default function FormikTextField({
             name={name}
             label={label}
             type={type}
-            inputProps={{ pattern, inputMode }}
             value={field.value}
             onChange={field.onChange}
             onBlur={field.onBlur}
@@ -80,7 +79,9 @@ export default function FormikTextField({
             multiline={multiline}
             rows={rows}
             placeholder={placeholder}
-            InputLabelProps={{ shrink: shrinkLabel }}
-        />
+            slotProps={{
+                htmlInput: { pattern, inputMode },
+                inputLabel: { shrink: shrinkLabel }
+            }} />
     );
 }

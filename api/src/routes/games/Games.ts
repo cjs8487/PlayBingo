@@ -122,17 +122,17 @@ games.post('/:slug', async (req, res) => {
     }
     if (slugWords) {
         if (!Array.isArray(slugWords)) {
-            return res.status(400).send('Incorrect slug word format');
+            res.status(400).send('Incorrect slug word format');
+            return;
         }
-        console.log(slugWords);
         if (slugWords.length > 0) {
             if (slugWords.length < 50) {
-                return res.status(400).send('Not enough slug words provided');
+                res.status(400).send('Not enough slug words provided');
+                return;
             }
             if (!slugWords.every((word) => word.match(/^[a-zA-Z]*$/))) {
-                return res
-                    .status(400)
-                    .send('Slug words can only contain letters');
+                res.status(400).send('Slug words can only contain letters');
+                return;
             }
             result = await updateSlugWords(slug, slugWords);
         }
@@ -489,18 +489,22 @@ games
         const { slug } = req.params;
 
         if (!req.session.user) {
-            return res.sendStatus(401);
+            res.sendStatus(401);
+            return;
         }
         if (!isModerator(slug, req.session.user)) {
-            return res.sendStatus(403);
+            res.sendStatus(403);
+            return;
         }
 
         const { name, max } = req.body;
         if (!name && !max) {
-            return res.status(400).send('Missing required fields');
+            res.status(400).send('Missing required fields');
+            return;
         }
         if (max !== undefined && Number.isNaN(Number(max))) {
-            return res.status(400).send('Invalid value for max');
+            res.status(400).send('Invalid value for max');
+            return;
         }
         const cat = await createCateogry(name, max);
         res.status(200).json(cat);

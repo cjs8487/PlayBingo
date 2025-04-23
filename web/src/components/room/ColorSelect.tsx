@@ -26,33 +26,38 @@ export default function ColorSelect() {
 
     return (
         <Box
-            display="flex"
-            alignItems="center"
-            justifyContent="center"
-            columnGap={2}
-            rowGap={1}
-        >
+            sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                columnGap: 2,
+                rowGap: 1
+            }}>
             {colors.map((colorItem) => (
                 <Box
                     key={colorItem}
+                    onClick={() => changeColor(colorItem)}
                     sx={{
+                        bgcolor: colorItem,
                         backgroundColor: colorItem,
                         cursor: 'pointer',
                         border: color === colorItem ? 4 : 0,
                         borderColor: 'white',
                         px: 1,
                         py: 0.5,
+
                         ':hover': {
                             scale: '110%',
-                        },
-                    }}
-                    bgcolor={colorItem}
-                    onClick={() => changeColor(colorItem)}
-                >
+                        }
+                    }}>
                     {colorItem}
                 </Box>
             ))}
-            <Box display="flex" flexDirection="column">
+            <Box
+                sx={{
+                    display: "flex",
+                    flexDirection: "column"
+                }}>
                 <Box
                     sx={{
                         backgroundColor: customColor,
@@ -70,7 +75,12 @@ export default function ColorSelect() {
                     custom
                 </Box>
                 {picker && (
-                    <Box position="absolute" zIndex={20} ref={pickerRef}>
+                    <Box
+                        ref={pickerRef}
+                        sx={{
+                            position: "absolute",
+                            zIndex: 20
+                        }}>
                         <SketchPicker
                             color={customColor}
                             onChange={(color) => {

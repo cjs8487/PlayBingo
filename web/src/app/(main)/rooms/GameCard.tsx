@@ -105,7 +105,9 @@ export default function GameCard({
                     </Box>
                 )}
                 <CardContent>
-                    <Typography variant="h6" textAlign="center">
+                    <Typography variant="h6" sx={{
+                        textAlign: "center"
+                    }}>
                         {name}
                     </Typography>
                 </CardContent>

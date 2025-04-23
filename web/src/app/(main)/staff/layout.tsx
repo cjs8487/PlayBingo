@@ -38,7 +38,9 @@ export default function StaffDashboardLayout({
                 flexDirection: 'column',
             }}
         >
-            <Typography textAlign="center" variant="h4">
+            <Typography variant="h4" sx={{
+                textAlign: "center"
+            }}>
                 Staff Dashboard
             </Typography>
             <TabContext value={tab}>

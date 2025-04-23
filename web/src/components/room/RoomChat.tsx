@@ -58,7 +58,11 @@ export default function RoomChat() {
                     </div>
                 ))}
             </Box>
-            <Box display="flex" columnGap={1}>
+            <Box
+                sx={{
+                    display: "flex",
+                    columnGap: 1
+                }}>
                 <TextField
                     size="small"
                     variant="outlined"

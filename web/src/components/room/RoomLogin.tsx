@@ -15,11 +15,12 @@ export default function RoomLogin() {
 
     return (
         <Box
-            display="flex"
-            flexGrow={1}
-            alignItems="center"
-            justifyContent="center"
-        >
+            sx={{
+                display: "flex",
+                flexGrow: 1,
+                alignItems: "center",
+                justifyContent: "center"
+            }}>
             <Paper
                 sx={{
                     p: 4,
@@ -44,11 +45,18 @@ export default function RoomLogin() {
                 >
                     <Form>
                         {error && (
-                            <Typography pb={1} color="error" variant="body2">
+                            <Typography color="error" variant="body2" sx={{
+                                pb: 1
+                            }}>
                                 {error}
                             </Typography>
                         )}
-                        <Box display="flex" flexDirection="column" rowGap={2}>
+                        <Box
+                            sx={{
+                                display: "flex",
+                                flexDirection: "column",
+                                rowGap: 2
+                            }}>
                             <FormikTextField
                                 id="nickname"
                                 name="nickname"
@@ -66,8 +74,12 @@ export default function RoomLogin() {
                                 label="Join as spectator?"
                             />
                         </Box>
-                        <Box display="flex">
-                            <Box flexGrow={1} />
+                        <Box sx={{
+                            display: "flex"
+                        }}>
+                            <Box sx={{
+                                flexGrow: 1
+                            }} />
                             <Button type="submit">Join Room</Button>
                         </Box>
                     </Form>

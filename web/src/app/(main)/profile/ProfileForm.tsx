@@ -56,7 +56,12 @@ export default function ProfileForm() {
             }}
         >
             <Form>
-                <Box display="flex" flexDirection="column" rowGap={1}>
+                <Box
+                    sx={{
+                        display: "flex",
+                        flexDirection: "column",
+                        rowGap: 1
+                    }}>
                     <FormikTextField
                         id="username"
                         name="username"
@@ -69,8 +74,12 @@ export default function ProfileForm() {
                         label="Email"
                         size="small"
                     />
-                    <Box display="flex">
-                        <Box flexGrow={1} />
+                    <Box sx={{
+                        display: "flex"
+                    }}>
+                        <Box sx={{
+                            flexGrow: 1
+                        }} />
                         <Button type="submit">Update</Button>
                     </Box>
                 </Box>

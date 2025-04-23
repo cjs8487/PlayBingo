@@ -26,16 +26,19 @@ users.route('/:id').post(requiresApiToken, async (req, res) => {
     const { username, email } = req.body;
 
     if (!username && !email) {
-        return res.status(400).send('Missing profile update data');
+        res.status(400).send('Missing profile update data');
+        return;
     }
 
     const user = await getUser(id, true);
     if (!user) {
-        return res.sendStatus(404);
+        res.sendStatus(404);
+        return;
     }
 
     if (username === user.username && email === user.email) {
-        return res.status(400).send('No changes made');
+        res.status(400).send('No changes made');
+        return;
     }
 
     let shouldUpdateUsername,
@@ -43,11 +46,13 @@ users.route('/:id').post(requiresApiToken, async (req, res) => {
 
     if (username) {
         if (typeof username !== 'string') {
-            return res.status(400).send('Invalid username format');
+            res.status(400).send('Invalid username format');
+            return;
         }
         if (username !== user.username) {
             if (await usernameUsed(username)) {
-                return res.status(400).send('Username unavailable');
+                res.status(400).send('Username unavailable');
+                return;
             }
             shouldUpdateUsername = true;
         }
@@ -55,13 +60,13 @@ users.route('/:id').post(requiresApiToken, async (req, res) => {
 
     if (email) {
         if (typeof email !== 'string') {
-            return res.status(400).send('Invalid email format');
+            res.status(400).send('Invalid email format');
+            return;
         }
-        console.log(email);
-        console.log(user.email);
         if (email !== user.email) {
             if (await emailUsed(email)) {
-                return res.status(400).send('Email unavailable');
+                res.status(400).send('Email unavailable');
+                return;
             }
             shouldUpdateEmail = true;
         }
@@ -85,7 +90,8 @@ users.post('/:id/changePassword', requiresApiToken, async (req, res, next) => {
     // user must be logged in to the site to change password
     if (!req.session.user) {
         logWarn('Password change attempt from a non-logged in user');
-        return res.sendStatus(403);
+        res.sendStatus(403);
+        return;
     }
 
     // must be the logged in user changing their own password
@@ -95,19 +101,23 @@ users.post('/:id/changePassword', requiresApiToken, async (req, res, next) => {
         logWarn(
             `${offendingUser?.username} attempted to change password for ${targetUser?.username}`,
         );
-        return res.sendStatus(403);
+        res.sendStatus(403);
+        return;
     }
 
     if (!currentPassword) {
-        return res.sendStatus(403);
+        res.sendStatus(403);
+        return;
     }
 
     if (!(await validatePassword(id, currentPassword))) {
-        return res.status(403).send('Incorrect password ');
+        res.status(403).send('Incorrect password ');
+        return;
     }
 
     if (!newPassword) {
-        return res.sendStatus(400);
+        res.sendStatus(400);
+        return;
     }
 
     const salt = randomBytes(16);

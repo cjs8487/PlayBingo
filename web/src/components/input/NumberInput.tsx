@@ -51,7 +51,11 @@ export default function NumberInput({
 
     return (
         <>
-            <Box display="flex" height="max-content">
+            <Box
+                sx={{
+                    display: "flex",
+                    height: "max-content"
+                }}>
                 <Button
                     type="button"
                     variant="contained"
@@ -71,20 +75,22 @@ export default function NumberInput({
                     id={id}
                     label={label}
                     inputMode="numeric"
-                    inputProps={{
-                        pattern: '[0-9]*',
-                    }}
                     value={value}
                     disabled={disabled}
                     onChange={(e) => setValue(Number(e.target.value))}
                     size="small"
-                    InputProps={{
-                        slotProps: {
-                            root: { style: { borderRadius: 0 } },
-                        },
-                    }}
                     sx={{ flexGrow: 1 }}
-                />
+                    slotProps={{
+                        input: {
+                            slotProps: {
+                                root: { style: { borderRadius: 0 } },
+                            },
+                        },
+
+                        htmlInput: {
+                            pattern: '[0-9]*',
+                        }
+                    }} />
                 <Button
                     type="button"
                     variant="contained"

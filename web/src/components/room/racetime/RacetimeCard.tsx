@@ -45,7 +45,9 @@ export default function RacetimeCard() {
                 <Typography variant="h6">racetime.gg</Typography>
                 {!url && (
                     <>
-                        <Typography fontStyle="italic" variant="body2">
+                        <Typography variant="body2" sx={{
+                            fontStyle: "italic"
+                        }}>
                             Not connected
                         </Typography>
                         {loggedIn && (
@@ -57,7 +59,11 @@ export default function RacetimeCard() {
                 )}
                 {url && (
                     <Box>
-                        <Box display="flex" alignItems="center">
+                        <Box
+                            sx={{
+                                display: "flex",
+                                alignItems: "center"
+                            }}>
                             <Link
                                 component={NextLink}
                                 href={url}

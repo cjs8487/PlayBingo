@@ -21,15 +21,22 @@ export default function Login() {
 
     return (
         <Box
-            display="flex"
-            alignItems="center"
-            justifyContent="center"
-            flexGrow={1}
-        >
+            sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                flexGrow: 1
+            }}>
             <Paper sx={{ px: 8, py: 4 }}>
-                <Box paddingBottom={2} textAlign="center">
+                <Box
+                    sx={{
+                        paddingBottom: 2,
+                        textAlign: "center"
+                    }}>
                     <Typography variant="h4">Login to PlayBingo</Typography>
-                    <Typography variant="caption" color="text.secondary">
+                    <Typography variant="caption" sx={{
+                        color: "text.secondary"
+                    }}>
                         No login is required to play bingo.
                     </Typography>
                     {error && (
@@ -86,7 +93,9 @@ export default function Login() {
                                     Forgot password?
                                 </Link>
                             </Box>
-                            <Box textAlign="right">
+                            <Box sx={{
+                                textAlign: "right"
+                            }}>
                                 <Button href="/register" component={NextLink}>
                                     Register
                                 </Button>

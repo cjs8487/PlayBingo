@@ -25,7 +25,11 @@ export default function CreateTokenForm({
             }}
         >
             <Form>
-                <Box display="flex" alignItems="center">
+                <Box
+                    sx={{
+                        display: "flex",
+                        alignItems: "center"
+                    }}>
                     <FormikTextField
                         id="token-name"
                         type="text"

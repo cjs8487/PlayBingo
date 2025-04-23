@@ -36,7 +36,9 @@ export default function RoomInfo() {
                     <CardContent sx={{ textAlign: 'center' }}>
                         <Typography variant="h5">{roomData.name}</Typography>
                         <Typography>{roomData.game}</Typography>
-                        <Typography component="div" variant="caption" mb={2}>
+                        <Typography component="div" variant="caption" sx={{
+                            mb: 2
+                        }}>
                             {roomData.slug}
                         </Typography>
                         {/* <div>

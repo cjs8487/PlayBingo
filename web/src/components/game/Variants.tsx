@@ -66,7 +66,12 @@ function DificultyVariantEditRow({
         >
             {({ resetForm }) => (
                 <Form>
-                    <Box display="flex" columnGap={1} alignItems="center">
+                    <Box
+                        sx={{
+                            display: "flex",
+                            columnGap: 1,
+                            alignItems: "center"
+                        }}>
                         <FormikTextField
                             name="name"
                             label="Name"
@@ -129,7 +134,12 @@ function DifficultyVariantRow({ slug, variant }: DificultyVariantRow) {
                 borderColor: (theme) => theme.palette.divider,
             }}
         >
-            <Box display="flex" columnGap={1} alignItems="center">
+            <Box
+                sx={{
+                    display: "flex",
+                    columnGap: 1,
+                    alignItems: "center"
+                }}>
                 <DificultyVariantEditRow
                     slug={slug}
                     variant={variant}
@@ -212,10 +222,11 @@ export default function Variants({ gameData }: VariantsProps) {
                     {({ values, resetForm }) => (
                         <Form>
                             <Box
-                                display="flex"
-                                columnGap={1}
-                                alignItems="center"
-                            >
+                                sx={{
+                                    display: "flex",
+                                    columnGap: 1,
+                                    alignItems: "center"
+                                }}>
                                 <FormikTextField name="name" label="Name" />
                                 <FieldArray name="goalAmounts">
                                     {() =>
