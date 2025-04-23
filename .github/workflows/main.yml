@@ -1,55 +1,55 @@
 name: Node.js CI
 
 on:
-  push:
-    branches: [ main ] # Trigger the workflow on every commit to the main branch.
-  pull_request:
-    branches: [ main ] # Trigger the workflow on pull requests targeting the main branch.
+    push:
+        branches: [main] # Trigger the workflow on every commit to the main branch.
+    pull_request:
+        branches: [main] # Trigger the workflow on pull requests targeting the main branch.
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    services:
-      postgres:
-        image: postgres:13
-        ports:
-          - '5432:5432'
+    build:
+        runs-on: ubuntu-latest
+        services:
+            postgres:
+                image: postgres:13
+                ports:
+                    - '5432:5432'
+                env:
+                    POSTGRES_USER: postgres
+                    POSTGRES_PASSWORD: password
+                    POSTGRES_DB: bingogg
         env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: password
-          POSTGRES_DB: bingogg
-    env:
-      DATABASE_URL: postgres://postgres:password@localhost:5432/bingogg
-      SESSION_SECRET: test
-      ROOM_TOKEN_SECRET: test
+            DATABASE_URL: postgres://postgres:password@localhost:5432/bingogg
+            SESSION_SECRET: test
+            ROOM_TOKEN_SECRET: test
 
-    strategy:
-      matrix:
-        node-version: [ 18.x, 20.x, 22.x ] # Define a matrix of Node.js versions to test
+        strategy:
+            matrix:
+                node-version: [18.x, 20.x, 22.x] # Define a matrix of Node.js versions to test
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2 # Step 1: Check out the source code from the repository.
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4 # Step 1: Check out the source code from the repository.
 
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v2
-        with:
-          node-version: ${{ matrix.node-version }}
-          cache: 'npm' # Step 2: Use npm caching for faster dependency installs.
-          cache-dependency-path: ./api/package-lock.json # Specify the lock file location.
+            - name: Use Node.js ${{ matrix.node-version }}
+              uses: actions/setup-node@v4
+              with:
+                  node-version: ${{ matrix.node-version }}
+                  cache: 'npm' # Step 2: Use npm caching for faster dependency installs.
+                  cache-dependency-path: ./api/package-lock.json # Specify the lock file location.
 
-      - name: Install Node.js dependencies
-        working-directory: ./api
-        run: npm ci # Perform a clean install of Node.js dependencies.
+            - name: Install Node.js dependencies
+              working-directory: ./api
+              run: npm ci # Perform a clean install of Node.js dependencies.
 
-      - name: Build
-        working-directory: ./api
-        run: npm run build # Compile the TypeScript code.
+            - name: Build
+              working-directory: ./api
+              run: npm run build # Compile the TypeScript code.
 
-      - name: Migrate DB Schema
-        working-directory: ./api
-        run: npm run db:migrate
+            - name: Migrate DB Schema
+              working-directory: ./api
+              run: npm run db:migrate
 
-      - name: Run tests
-        working-directory: ./api
-        run: npm run test # Step 4: Run tests using the specified Node.js version.
+            - name: Run tests
+              working-directory: ./api
+              run: npm run test # Step 4: Run tests using the specified Node.js version.
