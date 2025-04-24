@@ -71,7 +71,8 @@ games.post('/', async (req, res) => {
     }
     if (coverImage) {
         if (!saveFile(coverImage)) {
-            return res.status(400).send('Invalid cover image');
+            res.status(400).send('Invalid cover image');
+            return;
         }
     }
     const result = await createGame(name, slug, coverImage, [req.session.user]);

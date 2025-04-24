@@ -57,12 +57,14 @@ mediaServer.use(fileUpload());
 
 mediaServer.post('/', (req, res) => {
     if (!req.files || Object.keys(req.files).length === 0) {
-        return res.status(400).send('No files were uploaded.');
+        res.status(400).send('No files were uploaded.');
+        return;
     }
 
     const { workflow } = req.body;
     if (!workflow) {
-        return res.status(400).send('Missing file workflow');
+        res.status(400).send('Missing file workflow');
+        return;
     }
 
     const ids: string[] = [];
@@ -85,7 +87,8 @@ mediaServer.delete('/pending/:id', (req, res) => {
     const { id } = req.params;
 
     if (!pendingFiles[id]) {
-        return res.status(400).send('File does not exist');
+        res.status(400).send('File does not exist');
+        return;
     }
 
     delete pendingFiles[id];
