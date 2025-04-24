@@ -1,6 +1,6 @@
+import { RoomAction } from '@playbingo/types';
 import { WebSocketServer } from 'ws';
 import { hasPermission, verifyRoomToken } from '../auth/RoomAuth';
-import { RoomAction } from '../types/RoomAction';
 import Room from './Room';
 
 export const roomWebSocketServer: WebSocketServer = new WebSocketServer({

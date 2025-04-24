@@ -1,6 +1,6 @@
 'use client';
 import { useApi } from '@/lib/Hooks';
-import { Game } from '@/types/Game';
+import { Game } from '@playbingo/types';
 import { TabContext, TabList, TabPanel } from '@mui/lab';
 import { Box, Container, Link, Tab, Typography } from '@mui/material';
 import Image from 'next/image';
@@ -14,16 +14,10 @@ import { alertError } from '../../../../lib/Utils';
 import Variants from '../../../../components/game/Variants';
 import GoalCategories from '../../../../components/game/GoalCategories';
 
-export default function GamePage(
-    props: {
-        params: Promise<{ slug: string }>;
-    }
-) {
+export default function GamePage(props: { params: Promise<{ slug: string }> }) {
     const params = use(props.params);
 
-    const {
-        slug
-    } = params;
+    const { slug } = params;
 
     const { data: gameData, isLoading } = useApi<Game>(`/api/games/${slug}`);
 
@@ -75,14 +69,17 @@ export default function GamePage(
                 pt: 2,
             }}
         >
-            <Box sx={{
-                display: "flex"
-            }}>
+            <Box
+                sx={{
+                    display: 'flex',
+                }}
+            >
                 <Box
                     sx={{
-                        position: "fixed",
-                        mr: 4
-                    }}>
+                        position: 'fixed',
+                        mr: 4,
+                    }}
+                >
                     {gameData.coverImage && (
                         <Image src={gameData.coverImage} alt="" fill />
                     )}
@@ -92,17 +89,21 @@ export default function GamePage(
                         </div>
                     )}
                 </Box>
-                <Box sx={{
-                    flexGrow: 1
-                }}>
+                <Box
+                    sx={{
+                        flexGrow: 1,
+                    }}
+                >
                     <Link component={NextLink} href={`/games/${slug}`}>
                         {gameData.slug}
                     </Link>
                     <Typography variant="h6">{gameData.name}</Typography>
                 </Box>
-                <Box sx={{
-                    minWidth: "30%"
-                }}>
+                <Box
+                    sx={{
+                        minWidth: '30%',
+                    }}
+                >
                     <Typography
                         variant="body1"
                         sx={{ textDecoration: 'underline' }}

@@ -1,4 +1,4 @@
-import { Cell } from '../../types/Cell';
+import { Cell } from '@playbingo/types';
 import { checkCompletedLines, listToBoard } from '../../util/RoomUtils';
 
 const createBoard = (): Cell[][] =>

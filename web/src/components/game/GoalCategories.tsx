@@ -1,17 +1,16 @@
-import { Box, IconButton, List, ListItem, Typography } from '@mui/material';
-import { useApi } from '../../lib/Hooks';
-import { Game } from '../../types/Game';
-import { GoalCategory } from '../../types/GoalCategory';
-import { Form, Formik } from 'formik';
-import { useState } from 'react';
-import FormikTextField from '../input/FormikTextField';
-import NumberInput from '../input/NumberInput';
 import Check from '@mui/icons-material/Check';
 import Close from '@mui/icons-material/Close';
-import Edit from '@mui/icons-material/Edit';
 import Delete from '@mui/icons-material/Delete';
-import { alertError } from '../../lib/Utils';
+import Edit from '@mui/icons-material/Edit';
+import { Box, IconButton, List, ListItem, Typography } from '@mui/material';
+import { Game, GoalCategory } from '@playbingo/types';
+import { Form, Formik } from 'formik';
+import { useState } from 'react';
 import { mutate } from 'swr';
+import { useApi } from '../../lib/Hooks';
+import { alertError } from '../../lib/Utils';
+import FormikTextField from '../input/FormikTextField';
+import NumberInput from '../input/NumberInput';
 
 interface CategoryFormProps {
     cat: GoalCategory;
@@ -27,9 +26,11 @@ function CategoryForm({ cat, slug }: CategoryFormProps) {
                 borderColor: (theme) => theme.palette.divider,
             }}
         >
-            <Box sx={{
-                display: "flex"
-            }}>
+            <Box
+                sx={{
+                    display: 'flex',
+                }}
+            >
                 <Formik
                     initialValues={{ name: cat.name, max: cat.max }}
                     onSubmit={async (values) => {
@@ -53,10 +54,11 @@ function CategoryForm({ cat, slug }: CategoryFormProps) {
                         <Form>
                             <Box
                                 sx={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    columnGap: 1
-                                }}>
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    columnGap: 1,
+                                }}
+                            >
                                 <FormikTextField
                                     name="name"
                                     id={`cat-${cat.id}-name`}

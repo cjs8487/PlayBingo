@@ -8,7 +8,7 @@ import {
     useEffect,
     useState,
 } from 'react';
-import { Goal } from '../types/Goal';
+import { Goal } from '@playbingo/types';
 import { useApi } from '../lib/Hooks';
 import { alertError } from '../lib/Utils';
 import { KeyedMutator } from 'swr';

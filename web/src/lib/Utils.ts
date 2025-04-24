@@ -1,6 +1,6 @@
 import { Bounce, toast } from 'react-toastify';
-import { User } from '../types/User';
-import { Game } from '../types/Game';
+import { User } from '@playbingo/types';
+import { Game } from '@playbingo/types';
 
 export function alertError(message: string) {
     toast.error(message, {

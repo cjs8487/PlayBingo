@@ -2,7 +2,7 @@
 import { Box, Tooltip } from '@mui/material';
 import { useCallback, useContext } from 'react';
 import { RoomContext } from '../../context/RoomContext';
-import { Cell } from '../../types/Cell';
+import { Cell } from '@playbingo/types';
 import TextFit from '../TextFit';
 import Star from '@mui/icons-material/Star';
 

@@ -2,7 +2,7 @@ import { sign, verify } from 'jsonwebtoken';
 import Room from '../core/Room';
 import { roomTokenSecret } from '../Environment';
 import { randomUUID } from 'crypto';
-import { RoomAction } from '../types/RoomAction';
+import { RoomAction } from '@playbingo/types';
 
 type Permissions = {
     isSpectating: boolean;

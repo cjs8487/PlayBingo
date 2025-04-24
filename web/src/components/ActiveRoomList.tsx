@@ -8,7 +8,7 @@ import {
     Typography,
 } from '@mui/material';
 import { use } from 'react';
-import { RoomData } from '../types/RoomData';
+import { RoomData } from '@playbingo/types';
 import CacheBreaker from './CacheBreaker';
 import Link from 'next/link';
 
@@ -22,9 +22,13 @@ export default function ActiveRoomList() {
 
     if (rooms.length === 0) {
         return (
-            <Typography sx={{
-                fontStyle: "italic"
-            }}>No active rooms</Typography>
+            <Typography
+                sx={{
+                    fontStyle: 'italic',
+                }}
+            >
+                No active rooms
+            </Typography>
         );
     }
 

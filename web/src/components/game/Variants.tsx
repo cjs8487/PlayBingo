@@ -6,7 +6,7 @@ import {
     ListItem,
     Typography,
 } from '@mui/material';
-import { DifficultyVariant, Game } from '../../types/Game';
+import { DifficultyVariant, Game } from '@playbingo/types';
 import Add from '@mui/icons-material/Add';
 import Edit from '@mui/icons-material/Edit';
 import Check from '@mui/icons-material/Check';
@@ -68,10 +68,11 @@ function DificultyVariantEditRow({
                 <Form>
                     <Box
                         sx={{
-                            display: "flex",
+                            display: 'flex',
                             columnGap: 1,
-                            alignItems: "center"
-                        }}>
+                            alignItems: 'center',
+                        }}
+                    >
                         <FormikTextField
                             name="name"
                             label="Name"
@@ -136,10 +137,11 @@ function DifficultyVariantRow({ slug, variant }: DificultyVariantRow) {
         >
             <Box
                 sx={{
-                    display: "flex",
+                    display: 'flex',
                     columnGap: 1,
-                    alignItems: "center"
-                }}>
+                    alignItems: 'center',
+                }}
+            >
                 <DificultyVariantEditRow
                     slug={slug}
                     variant={variant}
@@ -223,10 +225,11 @@ export default function Variants({ gameData }: VariantsProps) {
                         <Form>
                             <Box
                                 sx={{
-                                    display: "flex",
+                                    display: 'flex',
                                     columnGap: 1,
-                                    alignItems: "center"
-                                }}>
+                                    alignItems: 'center',
+                                }}
+                            >
                                 <FormikTextField name="name" label="Name" />
                                 <FieldArray name="goalAmounts">
                                     {() =>

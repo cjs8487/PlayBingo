@@ -19,7 +19,7 @@ import { forwardRef, ReactNode, useCallback, useRef, useState } from 'react';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import { TableVirtuoso } from 'react-virtuoso';
 import { useApi } from '../../../../lib/Hooks';
-import { Game } from '../../../../types/Game';
+import { Game } from '@playbingo/types';
 import Delete from '@mui/icons-material/Delete';
 import { alertError, notifyMessage } from '../../../../lib/Utils';
 import router from 'next/router';
@@ -111,11 +111,12 @@ export default function StaffGamesTab() {
     return (
         <Box
             sx={{
-                width: "100%",
-                height: "100%",
-                display: "flex",
-                flexDirection: "column"
-            }}>
+                width: '100%',
+                height: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+            }}
+        >
             <Box style={{ flexGrow: 1 }}>
                 <AutoSizer>
                     {({ width, height }) => (

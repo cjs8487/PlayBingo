@@ -20,7 +20,7 @@ import AutoSizer from 'react-virtualized-auto-sizer';
 import { Virtuoso } from 'react-virtuoso';
 import { useApi } from '../lib/Hooks';
 import { alertError } from '../lib/Utils';
-import { User } from '../types/User';
+import { User } from '@playbingo/types';
 
 interface UserSearchProps {
     isOpen: boolean;

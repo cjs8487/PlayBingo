@@ -1,6 +1,20 @@
+import {
+    ChangeColorAction,
+    ChatAction,
+    ChatMessage,
+    JoinAction,
+    LeaveAction,
+    MarkAction,
+    NewCardAction,
+    Player,
+    RevealedBoard,
+    ServerMessage,
+    UnmarkAction,
+} from '@playbingo/types';
+import { BingoMode } from '@prisma/client';
 import { OPEN, WebSocket } from 'ws';
 import { logError, logInfo, logWarn } from '../Logger';
-import { RoomTokenPayload, invalidateToken } from '../auth/RoomAuth';
+import { invalidateToken, RoomTokenPayload } from '../auth/RoomAuth';
 import {
     addChangeColorAction,
     addChatAction,
@@ -15,37 +29,21 @@ import {
     getDifficultyVariant,
     useTypedRandom,
 } from '../database/games/Games';
+import { getCategories } from '../database/games/GoalCategories';
 import { goalsForGame } from '../database/games/Goals';
-import {
-    ChangeColorAction,
-    ChatAction,
-    JoinAction,
-    LeaveAction,
-    MarkAction,
-    NewCardAction,
-    UnmarkAction,
-} from '../types/RoomAction';
-import {
-    ChatMessage,
-    Player,
-    RevealedBoard,
-    ServerMessage,
-} from '../types/ServerMessage';
 import { shuffle } from '../util/Array';
 import {
     checkCompletedLines,
     CompletedLines,
     listToBoard,
 } from '../util/RoomUtils';
-import { generateFullRandom, generateRandomTyped } from './generation/Random';
-import { generateSRLv5 } from './generation/SRLv5';
-import RacetimeHandler, { RaceData } from './integration/RacetimeHandler';
 import {
     GeneratorGoal,
     GlobalGenerationState,
 } from './generation/GeneratorCore';
-import { getCategories } from '../database/games/GoalCategories';
-import { BingoMode } from '@prisma/client';
+import { generateFullRandom, generateRandomTyped } from './generation/Random';
+import { generateSRLv5 } from './generation/SRLv5';
+import RacetimeHandler, { RaceData } from './integration/RacetimeHandler';
 
 type RoomIdentity = {
     nickname: string;

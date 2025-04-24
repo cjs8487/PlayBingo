@@ -2,7 +2,7 @@ import { Card, CardActionArea, CardContent, Typography } from '@mui/material';
 import { useCallback, useContext, useState } from 'react';
 import { useAsync, useCopyToClipboard } from 'react-use';
 import { RoomContext } from '../../context/RoomContext';
-import { Game } from '../../types/Game';
+import { Game } from '@playbingo/types';
 import ConnectionState from './ConnectionState';
 import RoomControlDialog from './RoomControlDialog';
 
@@ -36,9 +36,13 @@ export default function RoomInfo() {
                     <CardContent sx={{ textAlign: 'center' }}>
                         <Typography variant="h5">{roomData.name}</Typography>
                         <Typography>{roomData.game}</Typography>
-                        <Typography component="div" variant="caption" sx={{
-                            mb: 2
-                        }}>
+                        <Typography
+                            component="div"
+                            variant="caption"
+                            sx={{
+                                mb: 2,
+                            }}
+                        >
                             {roomData.slug}
                         </Typography>
                         {/* <div>

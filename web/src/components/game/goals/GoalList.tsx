@@ -14,7 +14,7 @@ import {
 } from '@mui/material';
 import { forwardRef } from 'react';
 import { Virtuoso } from 'react-virtuoso';
-import { Goal } from '../../../types/Goal';
+import { Goal } from '@playbingo/types';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { useGoalManagerContext } from '../../../context/GoalManagerContext';
 
@@ -40,9 +40,11 @@ function GoalListItemSecondary({ goal }: { goal: Goal }) {
                     {goal.difficulty}
                 </>
             )}
-            <Box sx={{
-                pt: 0.5
-            }}>
+            <Box
+                sx={{
+                    pt: 0.5,
+                }}
+            >
                 {goal.categories?.map((cat) => (
                     <Chip key={cat} label={cat} size="small" sx={{ mr: 0.5 }} />
                 ))}
