@@ -3,12 +3,12 @@
 import { useField } from 'formik';
 import { useDropzone } from 'react-dropzone';
 import { alertError, getFullUrl } from '../../lib/Utils';
-import { Box, IconButton, SxProps, Theme, Typography } from '@mui/material';
+import { Box, IconButton, Theme, Typography } from '@mui/material';
 import { useCallback, useMemo, useState } from 'react';
 import FileUpload from '@mui/icons-material/FileUpload';
 import Close from '@mui/icons-material/Close';
 
-const baseStyle: SxProps<Theme> = {
+const baseStyle = {
     flex: 1,
     display: 'flex',
     flexDirection: 'column',
@@ -18,31 +18,31 @@ const baseStyle: SxProps<Theme> = {
     borderRadius: 2,
     borderColor: 'divider',
     borderStyle: 'dashed',
-    color: (theme) => theme.palette.text.secondary,
+    color: (theme: Theme) => theme.palette.text.secondary,
     outline: 'none',
     transition: 'border .24s ease-in-out',
     cursor: 'pointer',
     ':hover': {
-        backgroundColor: (theme) => theme.palette.action.hover,
-        borderColor: (theme) => theme.palette.action.focus,
+        backgroundColor: (theme: Theme) => theme.palette.action.hover,
+        borderColor: (theme: Theme) => theme.palette.action.focus,
     },
     width: '100%',
     height: '100%',
 };
 
-const focusedStyle: SxProps<Theme> = {
-    borderColor: (theme) => theme.palette.primary.main,
+const focusedStyle = {
+    borderColor: (theme: Theme) => theme.palette.primary.main,
 };
 
-const acceptStyle: SxProps<Theme> = {
-    borderColor: (theme) => theme.palette.success.main,
+const acceptStyle = {
+    borderColor: (theme: Theme) => theme.palette.success.main,
 };
 
-const rejectStyle: SxProps<Theme> = {
+const rejectStyle = {
     borderColor: '#ff1744',
 };
 
-const uploadedStyle: SxProps<Theme> = {
+const uploadedStyle = {
     border: 'none',
     padding: 0,
 };
@@ -149,13 +149,15 @@ export default function FormikFileUpload({ name, workflow }: Props) {
                                 e.stopPropagation();
                                 e.preventDefault();
 
-                                const res = await fetch(getFullUrl(`/media/pending/${value}`), { method: 'DELETE' });
+                                const res = await fetch(
+                                    getFullUrl(`/media/pending/${value}`),
+                                    { method: 'DELETE' },
+                                );
                                 if (!res.ok) {
                                     return alertError('Unable to remove file');
                                 }
                                 setFile(undefined);
                                 setValue('');
-
                             }}
                         >
                             <Close />
