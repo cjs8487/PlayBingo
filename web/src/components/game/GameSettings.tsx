@@ -25,6 +25,7 @@ import HoverIcon from '../HoverIcon';
 import FormikSwitch from '../input/FormikSwitch';
 import FormikTextField from '../input/FormikTextField';
 import NumberInput from '../input/NumberInput';
+import FormikFileUpload from '../input/FileUpload';
 
 async function validateRacetimeCategory(value: string) {
     if (value) {
@@ -203,16 +204,20 @@ export default function GameSettings({ gameData }: GameSettingsProps) {
                             pt: 2,
                         }}
                     >
-                        <FormikTextField
-                            id="game-name"
-                            name="name"
-                            label="Name"
-                        />
-                        <FormikTextField
-                            id="game-cover-image"
-                            name="coverImage"
-                            label="Cover Image"
-                        />
+                        <Box sx={{ display: 'flex', columnGap: 2 }}>
+                            <Box sx={{ maxWidth: '33%' }}>
+                                <FormikFileUpload
+                                    name="coverImage"
+                                    workflow="game"
+                                />
+                            </Box>
+                            <FormikTextField
+                                id="game-name"
+                                name="name"
+                                label="Name"
+                                sx={{ flexGrow: 1 }}
+                            />
+                        </Box>
                         <Box
                             sx={{
                                 display: 'flex',

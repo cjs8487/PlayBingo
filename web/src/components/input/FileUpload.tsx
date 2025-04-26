@@ -2,9 +2,9 @@
 
 import { useField } from 'formik';
 import { useDropzone } from 'react-dropzone';
-import { alertError, getFullUrl } from '../../lib/Utils';
+import { alertError, gameCoverUrl, getFullUrl } from '../../lib/Utils';
 import { Box, IconButton, Theme, Typography } from '@mui/material';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import FileUpload from '@mui/icons-material/FileUpload';
 import Close from '@mui/icons-material/Close';
 
@@ -56,6 +56,12 @@ export default function FormikFileUpload({ name, workflow }: Props) {
     const [{ value }, _meta, { setValue }] = useField<string>(name);
     const [file, setFile] = useState<{ preview: string }>();
     const [uploading, setUploading] = useState(false);
+
+    useEffect(() => {
+        if (value) {
+            setFile({ preview: gameCoverUrl(value) });
+        }
+    }, []);
 
     const {
         getRootProps,
