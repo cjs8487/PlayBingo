@@ -53,7 +53,6 @@ export default function NewGame() {
                 initialValues={{ name: '', slug: '', coverImage: '' }}
                 validationSchema={newGameValidationSchema}
                 onSubmit={async (values) => {
-                    console.log(values);
                     const res = await fetch('/api/games', {
                         method: 'POST',
                         headers: {

@@ -4,6 +4,7 @@ import {
     emailUsed,
     getAllUsers,
     getUser,
+    updateAvatar,
     updateEmail,
     updateUsername,
     usernameUsed,
@@ -13,6 +14,7 @@ import { pbkdf2Sync, randomBytes } from 'crypto';
 import { removeSessionsForUser } from '../../util/Session';
 import { logWarn } from '../../Logger';
 import { validatePassword } from '../../lib/Auth';
+import { saveFile } from '../../media/MediaServer';
 
 const users = Router();
 
@@ -23,7 +25,7 @@ users.get('/', async (req, res) => {
 
 users.route('/:id').post(requiresApiToken, async (req, res) => {
     const { id } = req.params;
-    const { username, email } = req.body;
+    const { username, email, avatar, shouldRemoveAvatar } = req.body;
 
     if (!username && !email) {
         res.status(400).send('Missing profile update data');
@@ -36,13 +38,18 @@ users.route('/:id').post(requiresApiToken, async (req, res) => {
         return;
     }
 
-    if (username === user.username && email === user.email) {
+    if (
+        username === user.username &&
+        email === user.email &&
+        avatar === user.avatar
+    ) {
         res.status(400).send('No changes made');
         return;
     }
 
     let shouldUpdateUsername,
-        shouldUpdateEmail = false;
+        shouldUpdateEmail,
+        shouldUpdateAvatar = false;
 
     if (username) {
         if (typeof username !== 'string') {
@@ -72,12 +79,31 @@ users.route('/:id').post(requiresApiToken, async (req, res) => {
         }
     }
 
+    if (avatar) {
+        if (typeof avatar !== 'string') {
+            res.status(400).send('Invalid avatar value');
+            return;
+        }
+        if (avatar !== user.avatar) {
+            shouldUpdateAvatar = true;
+        }
+    }
+
     let resUser;
     if (shouldUpdateUsername) {
         resUser = await updateUsername(id, username);
     }
     if (shouldUpdateEmail) {
         resUser = await updateEmail(id, email);
+    }
+    if (shouldUpdateAvatar) {
+        if (!saveFile(avatar)) {
+            res.status(400).send('Invalid cover image');
+            return;
+        }
+        resUser = await updateAvatar(id, avatar);
+    } else if (shouldRemoveAvatar) {
+        resUser = await updateAvatar(id, null);
     }
 
     res.status(200).send(resUser);

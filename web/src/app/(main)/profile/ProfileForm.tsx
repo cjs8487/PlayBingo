@@ -11,6 +11,7 @@ import {
 import { updateProfile } from '../../../actions/User';
 import { alertError } from '../../../lib/Utils';
 import { useUserContext } from '../../../context/UserContext';
+import FormikFileUpload from '../../../components/input/FileUpload';
 
 const validationSchema = object({
     email: string()
@@ -45,9 +46,16 @@ export default function ProfileForm() {
 
     return (
         <Formik
-            initialValues={{ username: user.username, email: user.email }}
+            initialValues={{
+                username: user.username,
+                email: user.email,
+                avatar: user.avatar,
+            }}
             onSubmit={async (values) => {
-                const res = await updateProfile(user.id, values);
+                const res = await updateProfile(user.id, {
+                    ...values,
+                    shouldRemoveAvatar: !!user.avatar && !values.avatar,
+                });
                 if (!res.ok) {
                     alertError(`Unable to save changes - ${res.message}`);
                     return;
@@ -58,30 +66,55 @@ export default function ProfileForm() {
             <Form>
                 <Box
                     sx={{
-                        display: "flex",
-                        flexDirection: "column",
-                        rowGap: 1
-                    }}>
+                        display: 'grid',
+                        width: '100%',
+                        gridTemplateColumns: 'repeat(5, 20.5%)',
+                        gridTemplateRows: 'repeat(5, 1fr)',
+                        rowGap: 2,
+                        columnGap: 1,
+                    }}
+                >
+                    <Box
+                        sx={{
+                            gridRow: '1/-1',
+                            aspectRatio: '1/1',
+                        }}
+                    >
+                        <FormikFileUpload
+                            name="avatar"
+                            workflow="userAvatar"
+                            circle
+                            edit
+                        />
+                    </Box>
+
                     <FormikTextField
                         id="username"
                         name="username"
                         label="Username"
                         size="small"
+                        sx={{
+                            gridColumn: '2 / -1',
+                        }}
                     />
                     <FormikTextField
                         id="email"
                         name="email"
                         label="Email"
                         size="small"
+                        sx={{
+                            gridColumn: '2 / -1',
+                        }}
                     />
-                    <Box sx={{
-                        display: "flex"
-                    }}>
-                        <Box sx={{
-                            flexGrow: 1
-                        }} />
-                        <Button type="submit">Update</Button>
-                    </Box>
+                    <Button
+                        type="submit"
+                        sx={{
+                            gridColumn: '2/-1',
+                            justifySelf: 'end',
+                        }}
+                    >
+                        Update
+                    </Button>
                 </Box>
             </Form>
         </Formik>

@@ -6,15 +6,17 @@ import { serverFetch } from '../app/ServerUtils';
 interface ProfileUpdateOptions {
     username?: string;
     email?: string;
+    avatar?: string;
+    shouldRemoveAvatar?: boolean;
 }
 
 export async function updateProfile(
     id: string,
-    { username, email }: ProfileUpdateOptions,
+    { username, email, avatar, shouldRemoveAvatar }: ProfileUpdateOptions,
 ) {
     const res = await serverFetch(`api/users/${id}`, {
         method: 'POST',
-        body: JSON.stringify({ username, email }),
+        body: JSON.stringify({ username, email, avatar, shouldRemoveAvatar }),
     });
 
     if (!res.ok) {

@@ -44,7 +44,6 @@ export const saveFile = async (id: string) => {
     const success = await new Promise((resolve) => {
         file.mv(path.resolve('media', workflow, id), (err) => {
             if (err) {
-                console.log(err);
                 resolve(false);
             } else {
                 delete pendingFiles[id];

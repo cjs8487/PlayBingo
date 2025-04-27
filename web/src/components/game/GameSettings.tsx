@@ -368,7 +368,6 @@ export default function GameSettings({ gameData }: GameSettingsProps) {
                                         return;
                                     }
                                     const words = value.split('\n');
-                                    console.log(words.length);
                                     if (words.length === 0) {
                                         return;
                                     }

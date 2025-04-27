@@ -32,6 +32,7 @@ export interface User {
   email?: string;
   staff: boolean;
   racetimeConnected?: boolean;
+  avatar?: string;
 }
 export interface DifficultyVariant {
   id?: string;

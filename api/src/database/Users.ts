@@ -72,6 +72,7 @@ export const getUser = async (id: string, includeEmail?: boolean) => {
         select: {
             id: true,
             username: true,
+            avatar: true,
             staff: true,
             connections: {
                 select: { service: true },
@@ -85,6 +86,7 @@ export const getUser = async (id: string, includeEmail?: boolean) => {
         id: user.id,
         username: user.username,
         staff: user.staff,
+        avatar: user.avatar,
         racetimeConnected: user.connections.find(
             (c) => c.service === ConnectionService.RACETIME,
         )
@@ -160,4 +162,8 @@ export const updateUsername = (id: string, username: string) => {
 
 export const updateEmail = (id: string, email: string) => {
     return prisma.user.update({ where: { id }, data: { email } });
+};
+
+export const updateAvatar = (id: string, avatar: string | null) => {
+    return prisma.user.update({ where: { id }, data: { avatar } });
 };

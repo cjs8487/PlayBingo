@@ -2,7 +2,13 @@
 
 import { useField } from 'formik';
 import { useDropzone } from 'react-dropzone';
-import { alertError, gameCoverUrl, getFullUrl } from '../../lib/Utils';
+import {
+    alertError,
+    gameCoverUrl,
+    getFullUrl,
+    getMediaForWorkflow,
+    MediaWorkflow,
+} from '../../lib/Utils';
 import { Box, IconButton, Theme, Typography } from '@mui/material';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import FileUpload from '@mui/icons-material/FileUpload';
@@ -13,9 +19,8 @@ const baseStyle = {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
-    padding: 2,
+    justifyContent: 'center',
     borderWidth: 2,
-    borderRadius: 2,
     borderColor: 'divider',
     borderStyle: 'dashed',
     color: (theme: Theme) => theme.palette.text.secondary,
@@ -49,20 +54,25 @@ const uploadedStyle = {
 
 interface Props {
     name: string;
-    workflow: string;
+    workflow: MediaWorkflow;
     edit?: boolean;
+    circle?: boolean;
 }
 
-export default function FormikFileUpload({ name, workflow, edit }: Props) {
+export default function FormikFileUpload({
+    name,
+    workflow,
+    edit,
+    circle,
+}: Props) {
     const [{ value }, _meta, { setValue }] = useField<string>(name);
     const [file, setFile] = useState<{ preview: string }>();
     const [uploading, setUploading] = useState(false);
     const [changed, setChanged] = useState(false);
 
-    console.log(value);
     useEffect(() => {
         if (value) {
-            setFile({ preview: gameCoverUrl(value) });
+            setFile({ preview: getMediaForWorkflow(workflow, value) });
         }
     }, []);
 
@@ -103,9 +113,12 @@ export default function FormikFileUpload({ name, workflow, edit }: Props) {
         },
     });
 
+    const borderRadius = circle ? '50%' : 2;
+
     const sx = useMemo(
         () => ({
             ...baseStyle,
+            borderRadius,
             ...(isFocused ? focusedStyle : {}),
             ...(isDragAccept ? acceptStyle : {}),
             ...(isDragReject ? rejectStyle : {}),
@@ -126,9 +139,10 @@ export default function FormikFileUpload({ name, workflow, edit }: Props) {
                         src={file.preview}
                         style={{
                             display: 'block',
-                            width: 'auto',
-                            maxHeight: '100%',
-                            maxWidth: '100%',
+                            width: '100%',
+                            height: '100%',
+                            borderRadius,
+                            objectFit: 'cover',
                         }}
                         onLoad={() => {
                             URL.revokeObjectURL(file.preview);
@@ -149,6 +163,8 @@ export default function FormikFileUpload({ name, workflow, edit }: Props) {
                         </Typography>
                     </>
                 )}
+            </Box>
+            <Box sx={{ position: 'fixed' }}>
                 {changed && !uploading && file && (
                     <Typography variant="body2" color="success">
                         File uploaded
