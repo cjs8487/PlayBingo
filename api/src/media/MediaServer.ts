@@ -2,6 +2,9 @@ import { randomUUID } from 'crypto';
 import { Router } from 'express';
 import fileUpload, { UploadedFile } from 'express-fileupload';
 import path from 'path';
+import { requiresApiToken } from '../routes/middleware';
+import { isModerator, isOwner, slugForMedia } from '../database/games/Games';
+import { rm } from 'fs/promises';
 
 const mediaServer = Router();
 
@@ -53,6 +56,15 @@ export const saveFile = async (id: string) => {
     return success;
 };
 
+export const deleteFile = async (workflow: string, id: string) => {
+    try {
+        await rm(path.resolve('media', workflow, id));
+        return true;
+    } catch {
+        return false;
+    }
+};
+
 mediaServer.use(fileUpload());
 
 mediaServer.post('/', (req, res) => {
@@ -92,6 +104,42 @@ mediaServer.delete('/pending/:id', (req, res) => {
     }
 
     delete pendingFiles[id];
+
+    res.sendStatus(200);
+});
+
+mediaServer.delete(':workflow/:id', async (req, res) => {
+    if (!req.session.user) {
+        res.sendStatus(401);
+        return;
+    }
+
+    const { workflow, id } = req.body;
+
+    // ensure this action is allowed based on the workflow and file
+    switch (workflow) {
+        case 'game':
+            // determine what game owns the media
+            const slug = await slugForMedia(id);
+            // make sure te game actually exists
+            if (!slug) {
+                res.sendStatus(404);
+                return;
+            }
+            // ensure the user has permission to remove the media
+            if (!isOwner(slug, req.session.user)) {
+                res.sendStatus(403);
+                return;
+            }
+            break;
+        default:
+            res.status(400).send('Invalid media workflow');
+    }
+
+    if (!deleteFile(workflow, id)) {
+        res.sendStatus(404);
+        return;
+    }
 
     res.sendStatus(200);
 });

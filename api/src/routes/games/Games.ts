@@ -9,6 +9,7 @@ import {
     deleteGame,
     favoriteGame,
     gameForSlug,
+    getGameCover,
     isModerator,
     isOwner,
     removeModerator,
@@ -36,7 +37,7 @@ import {
     createCateogry,
     getCategories,
 } from '../../database/games/GoalCategories';
-import { saveFile } from '../../media/MediaServer';
+import { deleteFile, saveFile } from '../../media/MediaServer';
 
 const games = Router();
 
@@ -100,6 +101,7 @@ games.post('/:slug', async (req, res) => {
         difficultyGroups,
         slugWords,
         useTypedRandom,
+        shouldDeleteCover,
     } = req.body;
 
     let result = undefined;
@@ -112,6 +114,13 @@ games.post('/:slug', async (req, res) => {
             return;
         }
         result = await updateGameCover(slug, coverImage);
+    }
+    if (shouldDeleteCover) {
+        const currentCover = await getGameCover(slug);
+        if (currentCover) {
+            deleteFile('game', currentCover);
+            result = await updateGameCover(slug, null);
+        }
     }
     if (enableSRLv5 !== undefined) {
         result = await updateSRLv5Enabled(slug, !!enableSRLv5);

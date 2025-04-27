@@ -50,13 +50,16 @@ const uploadedStyle = {
 interface Props {
     name: string;
     workflow: string;
+    edit?: boolean;
 }
 
-export default function FormikFileUpload({ name, workflow }: Props) {
+export default function FormikFileUpload({ name, workflow, edit }: Props) {
     const [{ value }, _meta, { setValue }] = useField<string>(name);
     const [file, setFile] = useState<{ preview: string }>();
     const [uploading, setUploading] = useState(false);
+    const [changed, setChanged] = useState(false);
 
+    console.log(value);
     useEffect(() => {
         if (value) {
             setFile({ preview: gameCoverUrl(value) });
@@ -91,6 +94,7 @@ export default function FormikFileUpload({ name, workflow }: Props) {
             setValue(ids[0]);
             setFile({ preview: URL.createObjectURL(acceptedFiles[0]) });
             setUploading(false);
+            setChanged(true);
         },
         maxFiles: 1,
         accept: {
@@ -145,7 +149,7 @@ export default function FormikFileUpload({ name, workflow }: Props) {
                         </Typography>
                     </>
                 )}
-                {!uploading && file && (
+                {changed && !uploading && file && (
                     <Typography variant="body2" color="success">
                         File uploaded
                         <IconButton
@@ -169,6 +173,20 @@ export default function FormikFileUpload({ name, workflow }: Props) {
                             <Close />
                         </IconButton>
                     </Typography>
+                )}
+                {edit && !changed && file && (
+                    <IconButton
+                        size="small"
+                        sx={{ ml: 0.5 }}
+                        onClick={async (e) => {
+                            e.stopPropagation();
+                            e.preventDefault();
+                            setFile(undefined);
+                            setValue('');
+                        }}
+                    >
+                        <Close />
+                    </IconButton>
                 )}
             </Box>
         </Box>

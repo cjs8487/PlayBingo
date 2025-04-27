@@ -168,6 +168,7 @@ export default function GameSettings({ gameData }: GameSettingsProps) {
                     slugWords,
                     useTypedRandom,
                 }) => {
+                    let shouldDeleteCover = gameData.coverImage && !coverImage;
                     const res = await fetch(`/api/games/${gameData.slug}`, {
                         method: 'POST',
                         headers: {
@@ -184,6 +185,7 @@ export default function GameSettings({ gameData }: GameSettingsProps) {
                             slugWords:
                                 slugWords === '' ? [] : slugWords.split('\n'),
                             useTypedRandom,
+                            shouldDeleteCover,
                         }),
                     });
                     if (!res.ok) {
@@ -209,6 +211,7 @@ export default function GameSettings({ gameData }: GameSettingsProps) {
                                 <FormikFileUpload
                                     name="coverImage"
                                     workflow="game"
+                                    edit
                                 />
                             </Box>
                             <FormikTextField

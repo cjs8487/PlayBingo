@@ -119,7 +119,7 @@ export const updateGameName = (slug: string, name: string) => {
     return prisma.game.update({ where: { slug }, data: { name } });
 };
 
-export const updateGameCover = (slug: string, coverImage: string) => {
+export const updateGameCover = (slug: string, coverImage: string | null) => {
     return prisma.game.update({ where: { slug }, data: { coverImage } });
 };
 
@@ -299,4 +299,12 @@ export const useTypedRandom = async (slug: string) => {
         (await prisma.game.findUnique({ where: { slug } }))?.useTypedRandom ??
         false
     );
+};
+
+export const slugForMedia = async (id: string) => {
+    return (await prisma.game.findFirst({ where: { coverImage: id } }))?.slug;
+};
+
+export const getGameCover = async (slug: string) => {
+    return (await prisma.game.findUnique({ where: { slug } }))?.coverImage;
 };
