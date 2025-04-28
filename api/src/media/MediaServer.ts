@@ -67,8 +67,8 @@ export const deleteFile = async (workflow: string, id: string) => {
 mediaServer.use(fileUpload());
 
 mediaServer.post('/', (req, res) => {
-    if (!req.files || Object.keys(req.files).length === 0) {
-        res.status(400).send('No files were uploaded.');
+    if (!req.files || Object.keys(req.files).length !== 1) {
+        res.status(400).send('Invalid number of files uploaded');
         return;
     }
 
@@ -78,20 +78,18 @@ mediaServer.post('/', (req, res) => {
         return;
     }
 
-    const ids: string[] = [];
-    Object.keys(req.files).forEach((k) => {
-        if (!req.files) return;
+    const file = req.files.file;
+    if (Array.isArray(file)) {
+        res.status(400).send('Too many files uploaded');
+        return;
+    }
+    if (file.size > 1024 * 1024) {
+        res.sendStatus(400);
+    }
 
-        if (Array.isArray(req.files[k])) {
-            req.files[k].forEach((file) => {
-                ids.push(pendFile(file, workflow));
-            });
-        } else {
-            ids.push(pendFile(req.files[k], workflow));
-        }
-    });
+    const id = pendFile(file, workflow);
 
-    res.status(200).send({ ids });
+    res.status(200).send({ id });
 });
 
 mediaServer.delete('/pending/:id', (req, res) => {

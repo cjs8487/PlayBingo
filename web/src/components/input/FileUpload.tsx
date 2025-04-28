@@ -103,8 +103,8 @@ export default function FormikFileUpload({
                 return;
             }
 
-            const { ids } = await res.json();
-            setValue(ids[0]);
+            const { id } = await res.json();
+            setValue(id);
             setFile({ preview: URL.createObjectURL(acceptedFiles[0]) });
             setUploading(false);
             setChanged(true);
