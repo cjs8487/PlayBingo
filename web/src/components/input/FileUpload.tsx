@@ -4,7 +4,6 @@ import { useField } from 'formik';
 import { useDropzone } from 'react-dropzone';
 import {
     alertError,
-    gameCoverUrl,
     getFullUrl,
     getMediaForWorkflow,
     MediaWorkflow,
@@ -52,18 +51,30 @@ const uploadedStyle = {
     padding: 0,
 };
 
-interface Props {
+interface BaseProps {
     name: string;
     workflow: MediaWorkflow;
     edit?: boolean;
-    circle?: boolean;
 }
+
+interface CircleProps extends BaseProps {
+    circle: true;
+    size: string | number;
+}
+
+interface NormalProps extends BaseProps {
+    circle: false;
+    size: never;
+}
+
+type Props = NormalProps | CircleProps;
 
 export default function FormikFileUpload({
     name,
     workflow,
     edit,
     circle,
+    size,
 }: Props) {
     const [{ value }, _meta, { setValue }] = useField<string>(name);
     const [file, setFile] = useState<{ preview: string }>();
@@ -118,11 +129,15 @@ export default function FormikFileUpload({
     });
 
     const borderRadius = circle ? '50%' : 2;
+    const aspectRatio = circle ? '1:1' : 'auto';
+    const padding = circle ? 0 : 2;
 
     const sx = useMemo(
         () => ({
             ...baseStyle,
             borderRadius,
+            aspectRatio,
+            padding,
             ...(isFocused ? focusedStyle : {}),
             ...(isDragAccept ? acceptStyle : {}),
             ...(isDragReject ? rejectStyle : {}),
@@ -131,8 +146,20 @@ export default function FormikFileUpload({
         [isFocused, isDragAccept, isDragReject, file],
     );
 
+    const imgWidth = circle ? size : '100%';
+    const imgHeight = circle ? size : '100%';
+
     return (
-        <Box sx={{ width: '100%', height: '100%' }}>
+        <Box
+            sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: '100%',
+                height: '100%',
+            }}
+        >
             <Box
                 {...getRootProps({
                     sx,
@@ -143,8 +170,10 @@ export default function FormikFileUpload({
                         src={file.preview}
                         style={{
                             display: 'block',
-                            width: '100%',
-                            height: '100%',
+                            width: imgWidth,
+                            maxWidth: '100%',
+                            height: imgHeight,
+                            maxHeight: '100%',
                             borderRadius,
                             objectFit: 'cover',
                         }}
@@ -168,47 +197,45 @@ export default function FormikFileUpload({
                     </>
                 )}
             </Box>
-            <Box sx={{ position: 'fixed' }}>
-                {changed && !uploading && file && (
-                    <Typography variant="body2" color="success">
-                        File uploaded
-                        <IconButton
-                            size="small"
-                            sx={{ ml: 0.5 }}
-                            onClick={async (e) => {
-                                e.stopPropagation();
-                                e.preventDefault();
-
-                                const res = await fetch(
-                                    getFullUrl(`/media/pending/${value}`),
-                                    { method: 'DELETE' },
-                                );
-                                if (!res.ok) {
-                                    return alertError('Unable to remove file');
-                                }
-                                setFile(undefined);
-                                setValue('');
-                            }}
-                        >
-                            <Close />
-                        </IconButton>
-                    </Typography>
-                )}
-                {edit && !changed && file && (
+            {changed && !uploading && file && (
+                <Typography variant="body2" color="success">
+                    File uploaded
                     <IconButton
                         size="small"
                         sx={{ ml: 0.5 }}
                         onClick={async (e) => {
                             e.stopPropagation();
                             e.preventDefault();
+
+                            const res = await fetch(
+                                getFullUrl(`/media/pending/${value}`),
+                                { method: 'DELETE' },
+                            );
+                            if (!res.ok) {
+                                return alertError('Unable to remove file');
+                            }
                             setFile(undefined);
                             setValue('');
                         }}
                     >
                         <Close />
                     </IconButton>
-                )}
-            </Box>
+                </Typography>
+            )}
+            {edit && !changed && file && (
+                <IconButton
+                    size="small"
+                    sx={{ ml: 0.5 }}
+                    onClick={async (e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        setFile(undefined);
+                        setValue('');
+                    }}
+                >
+                    <Close />
+                </IconButton>
+            )}
         </Box>
     );
 }

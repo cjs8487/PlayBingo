@@ -34,7 +34,7 @@ export default async function ProfilePage() {
             <Typography
                 variant="h5"
                 sx={{
-                    mb: 1,
+                    mb: 2,
                 }}
             >
                 Account Info

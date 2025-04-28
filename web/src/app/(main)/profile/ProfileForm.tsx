@@ -68,7 +68,7 @@ export default function ProfileForm() {
                     sx={{
                         display: 'grid',
                         width: '100%',
-                        gridTemplateColumns: 'repeat(5, 20.5%)',
+                        gridTemplateColumns: '250px repeat(4, 1fr)',
                         gridTemplateRows: 'repeat(5, 1fr)',
                         rowGap: 2,
                         columnGap: 1,
@@ -84,6 +84,7 @@ export default function ProfileForm() {
                             name="avatar"
                             workflow="userAvatar"
                             circle
+                            size="250px"
                             edit
                         />
                     </Box>
