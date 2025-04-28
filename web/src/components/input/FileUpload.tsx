@@ -85,6 +85,9 @@ export default function FormikFileUpload({
         isDragActive,
     } = useDropzone({
         onDrop: async (acceptedFiles) => {
+            if (acceptedFiles.length === 0) {
+                return;
+            }
             setUploading(true);
             const formData = new FormData();
             formData.append('file', acceptedFiles[0]);
@@ -98,6 +101,7 @@ export default function FormikFileUpload({
                 return alertError(
                     `Unable to upload file - ${await res.text()}`,
                 );
+                setUploading(false);
             }
 
             const { ids } = await res.json();
@@ -111,6 +115,7 @@ export default function FormikFileUpload({
             'image/jpeg': [],
             'image/png': [],
         },
+        maxSize: 1024 * 1024,
     });
 
     const borderRadius = circle ? '50%' : 2;
