@@ -98,10 +98,9 @@ export default function FormikFileUpload({
             });
 
             if (!res.ok) {
-                return alertError(
-                    `Unable to upload file - ${await res.text()}`,
-                );
+                alertError(`Unable to upload file - ${await res.text()}`);
                 setUploading(false);
+                return;
             }
 
             const { ids } = await res.json();
