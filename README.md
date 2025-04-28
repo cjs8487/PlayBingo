@@ -39,6 +39,7 @@ function.
 
 ##### Web
 - NEXT_PUBLIC_API_PATH is the url that the api service is running at
+- API_KEY the API key the website is using to make requests to the API
   
 #### Optional
 ##### API

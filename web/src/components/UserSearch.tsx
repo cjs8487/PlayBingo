@@ -76,8 +76,8 @@ export default function UserSearch({
                 return true;
             }
             return (
-                user.username.startsWith(searchString) ||
-                user.username.includes(searchString)
+                user.username.toLowerCase().startsWith(searchString.toLowerCase()) ||
+                user.username.toLowerCase().includes(searchString.toLowerCase())
             );
         });
 
