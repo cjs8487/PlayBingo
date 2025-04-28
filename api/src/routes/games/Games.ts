@@ -109,7 +109,7 @@ games.post('/:slug', async (req, res) => {
         result = await updateGameName(slug, name);
     }
     if (coverImage) {
-        if (!saveFile(coverImage)) {
+        if (!await saveFile(coverImage)) {
             res.status(400).send('Invalid cover image');
             return;
         }
