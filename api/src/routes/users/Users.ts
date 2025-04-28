@@ -14,7 +14,7 @@ import { pbkdf2Sync, randomBytes } from 'crypto';
 import { removeSessionsForUser } from '../../util/Session';
 import { logWarn } from '../../Logger';
 import { validatePassword } from '../../lib/Auth';
-import { saveFile } from '../../media/MediaServer';
+import { deleteFile, saveFile } from '../../media/MediaServer';
 
 const users = Router();
 
@@ -97,12 +97,13 @@ users.route('/:id').post(requiresApiToken, async (req, res) => {
         resUser = await updateEmail(id, email);
     }
     if (shouldUpdateAvatar) {
-        if (!saveFile(avatar)) {
+        if (!(await saveFile(avatar))) {
             res.status(400).send('Invalid cover image');
             return;
         }
         resUser = await updateAvatar(id, avatar);
-    } else if (shouldRemoveAvatar) {
+    } else if (shouldRemoveAvatar && user.avatar) {
+        await deleteFile('userAvatar', user.avatar);
         resUser = await updateAvatar(id, null);
     }
 
