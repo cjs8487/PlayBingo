@@ -68,7 +68,7 @@ export default function ProfileForm() {
                     sx={{
                         display: 'grid',
                         width: '100%',
-                        gridTemplateColumns: '250px repeat(4, 1fr)',
+                        gridTemplateColumns: 'auto repeat(4, 1fr)',
                         gridTemplateRows: 'repeat(5, 1fr)',
                         rowGap: 2,
                         columnGap: 1,
