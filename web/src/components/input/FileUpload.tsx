@@ -80,6 +80,7 @@ export default function FormikFileUpload({
     const [file, setFile] = useState<{ preview: string }>();
     const [uploading, setUploading] = useState(false);
     const [changed, setChanged] = useState(false);
+    const [message, setMessage] = useState('');
 
     useEffect(() => {
         if (value) {
@@ -95,8 +96,9 @@ export default function FormikFileUpload({
         isDragReject,
         isDragActive,
     } = useDropzone({
-        onDrop: async (acceptedFiles) => {
+        onDrop: async (acceptedFiles, rejections) => {
             if (acceptedFiles.length === 0) {
+                setMessage(rejections[0].errors[0].message);
                 return;
             }
             setUploading(true);
@@ -119,7 +121,9 @@ export default function FormikFileUpload({
             setFile({ preview: URL.createObjectURL(acceptedFiles[0]) });
             setUploading(false);
             setChanged(true);
+            setMessage('');
         },
+        multiple: false,
         maxFiles: 1,
         accept: {
             'image/jpeg': [],
@@ -197,6 +201,11 @@ export default function FormikFileUpload({
                     </>
                 )}
             </Box>
+            {message && (
+                <Typography variant="body2" color="error">
+                    {message}
+                </Typography>
+            )}
             {changed && !uploading && file && (
                 <Typography variant="body2" color="success">
                     File uploaded
