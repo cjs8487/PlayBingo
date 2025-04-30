@@ -22,21 +22,26 @@ export default function Login() {
     return (
         <Box
             sx={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                flexGrow: 1
-            }}>
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexGrow: 1,
+            }}
+        >
             <Paper sx={{ px: 8, py: 4 }}>
                 <Box
                     sx={{
                         paddingBottom: 2,
-                        textAlign: "center"
-                    }}>
+                        textAlign: 'center',
+                    }}
+                >
                     <Typography variant="h4">Login to PlayBingo</Typography>
-                    <Typography variant="caption" sx={{
-                        color: "text.secondary"
-                    }}>
+                    <Typography
+                        variant="caption"
+                        sx={{
+                            color: 'text.secondary',
+                        }}
+                    >
                         No login is required to play bingo.
                     </Typography>
                     {error && (
@@ -50,7 +55,7 @@ export default function Login() {
                     onSubmit={async ({ username, password }) => {
                         const res = await login(username, password);
                         if (!res.ok) {
-                            if (res.status === 403) {
+                            if (res.status === 401) {
                                 setError('Incorrect username or password.');
                             } else {
                                 setError(
@@ -93,9 +98,11 @@ export default function Login() {
                                     Forgot password?
                                 </Link>
                             </Box>
-                            <Box sx={{
-                                textAlign: "right"
-                            }}>
+                            <Box
+                                sx={{
+                                    textAlign: 'right',
+                                }}
+                            >
                                 <Button href="/register" component={NextLink}>
                                     Register
                                 </Button>
