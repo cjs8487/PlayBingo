@@ -17,25 +17,32 @@ import FormikTextField from '../../input/FormikTextField';
 
 const icon = <CheckBoxOutlineBlankIcon fontSize="small" />;
 const checkedIcon = <CheckBoxIcon fontSize="small" />;
-const filter = createFilterOptions<string>();
 
+interface Category {
+    value: string;
+    display: string;
+}
+
+const filter = createFilterOptions<Category>();
 interface CategorySelectProps {
     categories: string[];
 }
 
 function CategorySelect({ categories }: CategorySelectProps) {
     const [field, meta, helpers] = useField<string[]>('categories');
+
+    const catList = categories.map((c) => ({ value: c, display: c }));
     return (
-        <Autocomplete
+        <Autocomplete<Category, true>
             multiple
             id="goal-cat-select"
-            options={categories}
-            value={field.value}
+            options={catList}
+            value={field.value.map((v) => ({ value: v, display: v }))}
             onChange={(_, newValue) => {
-                helpers.setValue(newValue);
+                helpers.setValue(newValue.map((v) => v.value));
             }}
             disableCloseOnSelect
-            getOptionLabel={(option) => option}
+            getOptionLabel={(option) => option.display}
             renderOption={(props, option, { selected }) => {
                 return (
                     <li {...props}>
@@ -45,7 +52,7 @@ function CategorySelect({ categories }: CategorySelectProps) {
                             style={{ marginRight: 8 }}
                             checked={selected}
                         />
-                        {option}
+                        {option.display}
                     </li>
                 );
             }}
@@ -53,17 +60,19 @@ function CategorySelect({ categories }: CategorySelectProps) {
                 <TextField {...params} label="Categories" />
             )}
             fullWidth
-            freeSolo
             filterOptions={(options, params) => {
                 const filtered = filter(options, params);
 
                 const { inputValue } = params;
                 // Suggest the creation of a new value
                 const isExisting = options.some(
-                    (option) => inputValue === option,
+                    (option) => inputValue === option.value,
                 );
                 if (inputValue !== '' && !isExisting) {
-                    filtered.push(`Add "${inputValue}"`);
+                    filtered.push({
+                        value: inputValue,
+                        display: `Add "${inputValue}"`,
+                    });
                 }
 
                 return filtered;
