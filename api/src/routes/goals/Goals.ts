@@ -41,6 +41,7 @@ goals.post('/:id', async (req, res) => {
         goal,
         description,
         categories: {
+            set: [],
             connectOrCreate: categories?.map((cat: string) => ({
                 create: { name: cat, game: { connect: { id: game.id } } },
                 where: {
