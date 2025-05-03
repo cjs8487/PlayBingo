@@ -78,7 +78,7 @@ model Game {
   slugWords                   String[]                      @default([])
   useTypedRandom              Boolean                       @default(false)
   goalCategories              Category[]
-  generationListMode          GenerationListMode            @default(NONE)
+  generationListMode          GenerationListMode[]          @default([])
   generationListTransform     GenerationListTransform       @default(NONE)
   generationBoardLayout       GenerationBoardLayout         @default(NONE)
   generationGoalSelection     GenerationGoalSelection       @default(RANDOM)
@@ -182,7 +182,7 @@ enum BingoMode {
 
 // board generation enums
 enum GenerationListMode {
-  NONE
+  NONE // placeholder until first mode is implemented
 }
 
 enum GenerationListTransform {
