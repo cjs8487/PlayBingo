@@ -82,7 +82,7 @@ config.get('/generator', (req, res) => {
             },
             {
                 displayName: 'Cell Restrictions',
-                value: 'cellrestriction',
+                value: 'cellRestriction',
                 description:
                     'Applies additional restrictions on cells, which prevents the placement of otherwise valid goals in the cell.',
                 required: false,
