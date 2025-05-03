@@ -1,5 +1,6 @@
 import Add from '@mui/icons-material/Add';
 import {
+    Box,
     Button,
     Card,
     CardActionArea,
@@ -7,6 +8,7 @@ import {
     CircularProgress,
     FormControl,
     FormHelperText,
+    IconButton,
     InputLabel,
     ListItemText,
     MenuItem,
@@ -18,6 +20,7 @@ import { GeneratorOptions, GeneratorStep } from '@playbingo/types';
 import { Form, Formik, useField, useFormik } from 'formik';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { FormikSelectField } from '../../../../components/input/FormikSelectField';
+import Delete from '@mui/icons-material/Delete';
 
 type GeneratorConfigSingle = string;
 type GeneratorConfigMultiple = string[];
@@ -87,6 +90,14 @@ function GenerationStepMultiple({
         setValue(value);
     }, [value, setValue]);
 
+    const removeValue = useCallback(
+        (index: number) => {
+            value.splice(index, 1);
+            setValue(value);
+        },
+        [value, setValue],
+    );
+
     const options = useMemo(
         () =>
             availableRules.map((r) => ({
@@ -127,18 +138,26 @@ function GenerationStepMultiple({
                 {error && !Array.isArray(meta.error) && (
                     <FormHelperText error={error}>{meta.error}</FormHelperText>
                 )}
-                {value.map((v, idx) => (
-                    <FormikSelectField
-                        id={`${name}-${idx}`}
-                        name={`${name}[${idx}]`}
-                        label=""
-                        options={availableRules.map((r) => ({
-                            label: r.displayName,
-                            value: r.value,
-                            tooltip: r.description,
-                        }))}
-                        sx={{ width: '100%', mb: 2 }}
-                    />
+                {value.map((_, idx) => (
+                    <Box
+                        key={idx}
+                        sx={{
+                            display: 'flex',
+                            columnGap: 0.5,
+                            mb: 2,
+                        }}
+                    >
+                        <FormikSelectField
+                            id={`${name}-${idx}`}
+                            name={`${name}[${idx}]`}
+                            label=""
+                            options={options}
+                            sx={{ flexGrow: 1 }}
+                        />
+                        <IconButton onClick={() => removeValue(idx)}>
+                            <Delete />
+                        </IconButton>
+                    </Box>
                 ))}
                 {availableRules.length > 0 && (
                     <Card variant="outlined" sx={{ borderStyle: 'dashed' }}>
