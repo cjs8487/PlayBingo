@@ -1,4 +1,5 @@
 import Add from '@mui/icons-material/Add';
+import Delete from '@mui/icons-material/Delete';
 import {
     Box,
     Button,
@@ -6,21 +7,14 @@ import {
     CardActionArea,
     CardContent,
     CircularProgress,
-    FormControl,
     FormHelperText,
     IconButton,
-    InputLabel,
-    ListItemText,
-    MenuItem,
-    Select,
-    Tooltip,
     Typography,
 } from '@mui/material';
 import { GeneratorOptions, GeneratorStep } from '@playbingo/types';
-import { Form, Formik, useField, useFormik } from 'formik';
+import { Form, Formik, useField } from 'formik';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { FormikSelectField } from '../../../../components/input/FormikSelectField';
-import Delete from '@mui/icons-material/Delete';
 
 type GeneratorConfigSingle = string;
 type GeneratorConfigMultiple = string[];
@@ -51,30 +45,29 @@ function GenerationStepSingle({
             component="fieldset"
             sx={{
                 mb: 1,
-                borderColor: (theme) =>
-                    error ? theme.palette.error.main : theme.palette.divider,
+                borderColor: error ? 'error.main' : 'divider',
             }}
         >
             <Typography
                 sx={{
                     px: 1,
-                    color: (theme) => (error ? theme.palette.error.main : ''),
+                    color: error ? 'error.main' : '',
                 }}
                 component="legend"
             >
                 {displayName}
             </Typography>
             <CardContent>
-                <Typography variant="body2" sx={{ mb: 4 }}>
-                    {description}
-                </Typography>
-                <FormikSelectField
-                    id={`${name}`}
-                    name={`${name}`}
-                    label=""
-                    options={options}
-                    sx={{ width: '100%', mb: 2 }}
-                />
+                <Typography variant="body2">{description}</Typography>
+                {availableRules.length > 0 && (
+                    <FormikSelectField
+                        id={`${name}`}
+                        name={`${name}`}
+                        label=""
+                        options={options}
+                        sx={{ width: '100%', mt: 2 }}
+                    />
+                )}
             </CardContent>
         </Card>
     );
@@ -118,23 +111,20 @@ function GenerationStepMultiple({
             component="fieldset"
             sx={{
                 mb: 1,
-                borderColor: (theme) =>
-                    error ? theme.palette.error.main : theme.palette.divider,
+                borderColor: error ? 'error.main' : 'divider',
             }}
         >
             <Typography
                 sx={{
                     px: 1,
-                    color: (theme) => (error ? theme.palette.error.main : ''),
+                    color: error ? 'error.main' : '',
                 }}
                 component="legend"
             >
                 {displayName}
             </Typography>
             <CardContent>
-                <Typography variant="body2" sx={{ mb: 2 }}>
-                    {description}
-                </Typography>
+                <Typography variant="body2">{description}</Typography>
                 {error && !Array.isArray(meta.error) && (
                     <FormHelperText error={error}>{meta.error}</FormHelperText>
                 )}
@@ -144,7 +134,7 @@ function GenerationStepMultiple({
                         sx={{
                             display: 'flex',
                             columnGap: 0.5,
-                            mb: 2,
+                            mt: 2,
                         }}
                     >
                         <FormikSelectField
@@ -160,7 +150,10 @@ function GenerationStepMultiple({
                     </Box>
                 ))}
                 {availableRules.length > 0 && (
-                    <Card variant="outlined" sx={{ borderStyle: 'dashed' }}>
+                    <Card
+                        variant="outlined"
+                        sx={{ borderStyle: 'dashed', mt: 2 }}
+                    >
                         <CardActionArea onClick={addNewValue}>
                             <CardContent sx={{ textAlign: 'center' }}>
                                 <Add />
@@ -250,16 +243,31 @@ export default function GenerationPage() {
                 return errors;
             }}
         >
-            <Form>
-                {steps.map((step) =>
-                    step.selectMultiple ? (
-                        <GenerationStepMultiple key={step.value} step={step} />
-                    ) : (
-                        <GenerationStepSingle key={step.value} step={step} />
-                    ),
-                )}
-                <Button type="submit">Save</Button>
-            </Form>
+            {({ resetForm }) => (
+                <Form>
+                    {steps.map((step) =>
+                        step.selectMultiple ? (
+                            <GenerationStepMultiple
+                                key={step.value}
+                                step={step}
+                            />
+                        ) : (
+                            <GenerationStepSingle
+                                key={step.value}
+                                step={step}
+                            />
+                        ),
+                    )}
+                    <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+                        <Button color="error" onClick={() => resetForm()}>
+                            Cancel
+                        </Button>
+                        <Button type="submit" color="success">
+                            Save
+                        </Button>
+                    </Box>
+                </Form>
+            )}
         </Formik>
     );
 }
