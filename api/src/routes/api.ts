@@ -12,6 +12,7 @@ import users from './users/Users';
 import { readFile } from 'fs/promises';
 import tokens from './auth/ApiTokens';
 import { requiresApiToken } from './middleware';
+import config from './Config';
 
 const api = Router();
 
@@ -25,6 +26,7 @@ api.use('/connect', connect);
 api.use('/oauth', oauth);
 api.use('/connection', connection);
 api.use('/tokens', tokens);
+api.use('/config', config);
 
 api.get('/me', async (req, res) => {
     if (!req.session.user) {
