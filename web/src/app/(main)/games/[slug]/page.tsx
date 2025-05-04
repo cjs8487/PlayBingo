@@ -161,7 +161,7 @@ export default function GamePage(props: { params: Promise<{ slug: string }> }) {
                     <PermissionsManagement slug={slug} gameData={gameData} />
                 </TabPanel>
                 <TabPanel value="Generation">
-                    <GenerationPage />
+                    <GenerationPage game={gameData} />
                 </TabPanel>
                 <TabPanel value="Settings">
                     <GameSettings gameData={gameData} />

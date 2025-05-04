@@ -36,10 +36,10 @@ export const gameForSlug = (slug: string) => {
         where: { slug },
         include: {
             owners: {
-                select: { id: true, username: true },
+                select: { id: true, username: true, staff: true },
             },
             moderators: {
-                select: { id: true, username: true },
+                select: { id: true, username: true, staff: true },
             },
             difficultyVariants: {
                 select: { id: true, name: true, goalAmounts: true },

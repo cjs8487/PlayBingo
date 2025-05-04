@@ -11,7 +11,12 @@ import {
     IconButton,
     Typography,
 } from '@mui/material';
-import { GeneratorOptions, GeneratorStep } from '@playbingo/types';
+import {
+    Game,
+    GeneratorOptions,
+    GeneratorSettings,
+    GeneratorStep,
+} from '@playbingo/types';
 import { Form, Formik, useField } from 'formik';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { FormikSelectField } from '../../../../components/input/FormikSelectField';
@@ -167,7 +172,11 @@ function GenerationStepMultiple({
     );
 }
 
-export default function GenerationPage() {
+interface Props {
+    game: Game;
+}
+
+export default function GenerationPage({ game }: Props) {
     const [generatorOptions, setGeneratorOptions] =
         useState<GeneratorOptions>();
     const [failed, setFailed] = useState(false);
@@ -199,18 +208,11 @@ export default function GenerationPage() {
 
     const { steps } = generatorOptions;
 
-    const initialValues: { [k: string]: string | string[] } = {};
-    generatorOptions.steps.forEach((s) => {
-        if (s.selectMultiple) {
-            initialValues[s.value] = [];
-        } else {
-            initialValues[s.value] = '';
-        }
-    });
+    console.log(game.generationSettings);
 
     return (
         <Formik
-            initialValues={initialValues}
+            initialValues={game.generationSettings}
             onSubmit={(values) => {
                 console.log(values);
             }}
@@ -220,15 +222,19 @@ export default function GenerationPage() {
                     if (s.required) {
                         if (
                             (s.selectMultiple &&
-                                values[s.value].length === 0) ||
-                            (!s.selectMultiple && !values[s.value])
+                                values[s.value as keyof GeneratorSettings]
+                                    .length === 0) ||
+                            (!s.selectMultiple &&
+                                !values[s.value as keyof GeneratorSettings])
                         ) {
                             errors[s.value] = `${s.displayName} is required.`;
                         }
                     }
 
                     if (s.selectMultiple) {
-                        const valList = values[s.value] as string[];
+                        const valList = values[
+                            s.value as keyof GeneratorSettings
+                        ] as string[];
                         if (valList.length > 0) {
                             errors[s.value] = [];
                             valList.forEach((v, idx) => {

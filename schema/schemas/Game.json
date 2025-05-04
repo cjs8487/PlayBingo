@@ -2,35 +2,142 @@
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "type": "object",
     "additionalProperties": false,
-    "required": ["name", "slug"],
-    "description": "An incoming websocket message from the server telling the client of a change in room state or instructing it to take an action",
+    "required": [
+        "id",
+        "name",
+        "slug",
+        "generationSettings"
+    ],
+    "description": "",
     "properties": {
-        "name": {"type": "string"},
-        "slug": {"type": "string"},
-        "coverImage": {"type": "string"},
-        "owners": {"type": "array", "items": {"$ref": "./User.json"}},
-        "moderators": {"type": "array", "items": {"$ref": "./User.json"}},
-        "favorited": {"type": "boolean"},
-        "isMod": {"type": "boolean"},
-        "enableSRLv5": {"type": "boolean"},
-        "racetimeBeta": {"type": "boolean"},
-        "racetimeCategory": {"type": "string"},
-        "racetimeGoal": {"type": "string"},
-        "difficultyVariantsEnabled": {"type": "boolean"},
-        "difficultyVariants": {"type": "array", "items": {"$ref": "#/$defs/DifficultyVariant" }},
-        "difficultyGroups": {"type": "number"},
-        "slugWords": {"type": "array", "items": {"type": "string"}},
-        "useTypedRandom": {"type": "boolean"}
+        "id": {
+            "type": "string"
+        },
+        "name": {
+            "type": "string"
+        },
+        "slug": {
+            "type": "string"
+        },
+        "coverImage": {
+            "type": "string"
+        },
+        "owners": {
+            "type": "array",
+            "items": {
+                "$ref": "./User.json"
+            }
+        },
+        "moderators": {
+            "type": "array",
+            "items": {
+                "$ref": "./User.json"
+            }
+        },
+        "favorited": {
+            "type": "boolean"
+        },
+        "isMod": {
+            "type": "boolean"
+        },
+        "enableSRLv5": {
+            "type": "boolean"
+        },
+        "racetimeBeta": {
+            "type": "boolean"
+        },
+        "racetimeCategory": {
+            "type": "string"
+        },
+        "racetimeGoal": {
+            "type": "string"
+        },
+        "difficultyVariantsEnabled": {
+            "type": "boolean"
+        },
+        "difficultyVariants": {
+            "type": "array",
+            "items": {
+                "$ref": "#/$defs/DifficultyVariant"
+            }
+        },
+        "difficultyGroups": {
+            "type": "number"
+        },
+        "slugWords": {
+            "type": "array",
+            "items": {
+                "type": "string"
+            }
+        },
+        "useTypedRandom": {
+            "type": "boolean"
+        },
+        "generationSettings": {
+            "$ref": "#/$defs/GeneratorSettings"
+        }
     },
     "$defs": {
         "DifficultyVariant": {
             "type": "object",
             "additionalProperties": false,
-            "required": ["name"],
+            "required": [
+                "name"
+            ],
             "properties": {
-                "id": {"type": "string"},
-                "name": {"type": "string"},
-                "goalAmounts": {"type": "array", "items": {"type": "number"}}
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "goalAmounts": {
+                    "type": "array",
+                    "items": {
+                        "type": "number"
+                    }
+                }
+            }
+        },
+        "GeneratorSettings": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+                "pruners",
+                "transformer",
+                "layout",
+                "goalSelection",
+                "cellRestrictions",
+                "globalAdjustments"
+            ],
+            "properties": {
+                "pruners": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "transformer": {
+                    "type": "string"
+                },
+                "layout": {
+                    "type": "string"
+                },
+                "goalSelection": {
+                    "type": "string"
+                },
+                "cellRestrictions": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "globalAdjustments": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
             }
         }
     }

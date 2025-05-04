@@ -36,6 +36,7 @@ import {
     createCateogry,
     getCategories,
 } from '../../database/games/GoalCategories';
+import { Game } from '@playbingo/types';
 
 const games = Router();
 
@@ -46,12 +47,37 @@ games.get('/', async (req, res) => {
 
 games.get('/:slug', async (req, res) => {
     const { slug } = req.params;
-    const result = await gameForSlug(slug);
-    if (result) {
-        res.status(200).json(result);
-    } else {
+    const game = await gameForSlug(slug);
+    if (!game) {
         res.sendStatus(404);
+        return;
     }
+    const result: Game = {
+        id: game.id,
+        name: game.name,
+        slug: game.slug,
+        coverImage: game.coverImage ?? undefined,
+        owners: game.owners,
+        moderators: game.moderators,
+        enableSRLv5: game.enableSRLv5,
+        racetimeBeta: game.racetimeBeta,
+        racetimeCategory: game.racetimeCategory ?? undefined,
+        racetimeGoal: game.racetimeGoal ?? undefined,
+        difficultyVariantsEnabled: game.difficultyVariantsEnabled,
+        difficultyVariants: game.difficultyVariants,
+        difficultyGroups: game.difficultyGroups ?? undefined,
+        slugWords: game.slugWords,
+        useTypedRandom: game.useTypedRandom,
+        generationSettings: {
+            pruners: game.generationListMode,
+            transformer: game.generationListTransform,
+            layout: game.generationBoardLayout,
+            goalSelection: game.generationGoalSelection,
+            cellRestrictions: game.generationGoalRestrictions,
+            globalAdjustments: game.generationGlobalAdjustments,
+        },
+    };
+    res.status(200).json(result);
 });
 
 games.post('/', async (req, res) => {

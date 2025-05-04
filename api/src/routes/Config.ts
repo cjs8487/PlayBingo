@@ -14,7 +14,7 @@ config.get('/generator', (req, res) => {
         steps: [
             {
                 displayName: 'List Selection',
-                value: 'pruner',
+                value: 'pruners',
                 description:
                     'Determines what goals are available for the generator select from using the overall list for the game. At this time, no options are available for this and the generator will always utilize the full list of goals for the game.',
                 required: false,
@@ -82,7 +82,7 @@ config.get('/generator', (req, res) => {
             },
             {
                 displayName: 'Cell Restrictions',
-                value: 'cellRestriction',
+                value: 'cellRestrictions',
                 description:
                     'Applies additional restrictions on cells, which prevents the placement of otherwise valid goals in the cell.',
                 required: false,
@@ -98,7 +98,7 @@ config.get('/generator', (req, res) => {
             },
             {
                 displayName: 'Global Adjustments',
-                value: 'globalAdjsutments',
+                value: 'globalAdjustments',
                 description:
                     'Applies modifications after a goal is selected and placed in the board, which may affect the placement of future goals.',
                 required: false,
