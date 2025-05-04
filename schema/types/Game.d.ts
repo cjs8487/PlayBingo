@@ -5,10 +5,8 @@
  * and run json-schema-to-typescript to regenerate this file.
  */
 
-/**
- * An incoming websocket message from the server telling the client of a change in room state or instructing it to take an action
- */
 export interface Game {
+  id: string;
   name: string;
   slug: string;
   coverImage?: string;
@@ -25,6 +23,7 @@ export interface Game {
   difficultyGroups?: number;
   slugWords?: string[];
   useTypedRandom?: boolean;
+  generationSettings: GeneratorSettings;
 }
 export interface User {
   id: string;
@@ -38,4 +37,12 @@ export interface DifficultyVariant {
   id?: string;
   name: string;
   goalAmounts?: number[];
+}
+export interface GeneratorSettings {
+  pruners: string[];
+  transformer: string;
+  layout: string;
+  goalSelection: string;
+  cellRestrictions: string[];
+  globalAdjustments: string[];
 }
