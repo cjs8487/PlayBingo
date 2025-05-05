@@ -2,6 +2,7 @@ import { RoomAction } from '@playbingo/types';
 import { WebSocketServer } from 'ws';
 import { hasPermission, verifyRoomToken } from '../auth/RoomAuth';
 import Room from './Room';
+import { logInfo } from '../Logger';
 
 export const roomWebSocketServer: WebSocketServer = new WebSocketServer({
     noServer: true,
@@ -115,10 +116,13 @@ roomWebSocketServer.on('connection', (ws, req) => {
                 break;
         }
     });
-    ws.on('close', () => {
+    ws.on('close', (code, reason) => {
         // cleanup
         // attempt to close the connection from the room, in case the connection
         // is closed unexpectedly without a leave message
+        logInfo(
+            `[ws] Socket connection closed - ${code} - ${reason.toString()}`,
+        );
         let found = false;
         allRooms.forEach((room) => {
             if (found) return;
