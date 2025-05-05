@@ -77,6 +77,9 @@ function CategorySelect({ categories }: CategorySelectProps) {
 
                 return filtered;
             }}
+            isOptionEqualToValue={(option, value) =>
+                option.value === value.value
+            }
         />
     );
 }
