@@ -54,3 +54,22 @@ export function getFullUrl(path: string) {
     }
     return `${process.env.NEXT_PUBLIC_API_PATH}/${path}`;
 }
+
+export type MediaWorkflow = 'game' | 'userAvatar';
+
+export function getMediaForWorkflow(workflow: MediaWorkflow, file: string) {
+    switch (workflow) {
+        case 'game':
+            return gameCoverUrl(file);
+        case 'userAvatar':
+            return userAvatarUrl(file);
+    }
+}
+
+export function gameCoverUrl(file: string) {
+    return getFullUrl(`/media/game/${file}`);
+}
+
+export function userAvatarUrl(file: string) {
+    return getFullUrl(`/media/userAvatar/${file}`);
+}

@@ -2,12 +2,29 @@
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "type": "object",
     "additionalProperties": false,
-    "required": ["id", "username", "staff"],
+    "required": [
+        "id",
+        "username",
+        "staff"
+    ],
     "properties": {
-        "id": {"type": "string"},
-        "username": {"type": "string"},
-        "email": {"type": "string"},
-        "staff": {"type": "boolean"},
-        "racetimeConnected": { "type": "boolean" }
+        "id": {
+            "type": "string"
+        },
+        "username": {
+            "type": "string"
+        },
+        "email": {
+            "type": "string"
+        },
+        "staff": {
+            "type": "boolean"
+        },
+        "racetimeConnected": {
+            "type": "boolean"
+        },
+        "avatar": {
+            "type": "string"
+        }
     }
 }

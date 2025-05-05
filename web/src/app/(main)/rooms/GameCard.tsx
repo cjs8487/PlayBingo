@@ -11,11 +11,12 @@ import {
 } from '@mui/material';
 import Link from 'next/link';
 import { Dispatch, SetStateAction, useCallback, useState } from 'react';
-import { useLocalStorage, useTimeoutFn } from 'react-use';
+import { useTimeoutFn } from 'react-use';
 import { mutate } from 'swr';
 import CardHiddenActions from '../../../components/CardHiddenActions';
 import { Game } from '@playbingo/types';
 import { useUserContext } from '../../../context/UserContext';
+import { gameCoverUrl } from '../../../lib/Utils';
 
 interface IGameCardProps {
     game: Game;
@@ -77,7 +78,12 @@ export default function GameCard({
                 </IconButton>
             </CardHiddenActions>
             <CardActionArea href={`/games/${slug}`} LinkComponent={Link}>
-                {coverImage && <CardMedia component="img" image={coverImage} />}
+                {coverImage && (
+                    <CardMedia
+                        component="img"
+                        image={gameCoverUrl(coverImage)}
+                    />
+                )}
                 {!coverImage && (
                     <Box
                         sx={{

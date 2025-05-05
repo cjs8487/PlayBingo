@@ -1,13 +1,13 @@
 'use client';
-import { Field, Form, Formik } from 'formik';
-import Image from 'next/image';
+import { Box, Button, Typography } from '@mui/material';
+import { Form, Formik } from 'formik';
 import { useRouter } from 'next/navigation';
 import { useContext, useLayoutEffect } from 'react';
 import * as yup from 'yup';
+import FormikFileUpload from '../../../../components/input/FileUpload';
+import FormikTextField from '../../../../components/input/FormikTextField';
 import { UserContext } from '../../../../context/UserContext';
 import { alertError } from '../../../../lib/Utils';
-import { Box, Button, Typography } from '@mui/material';
-import FormikTextField from '../../../../components/input/FormikTextField';
 
 const newGameValidationSchema = yup.object().shape({
     name: yup.string().required('Game name is required'),
@@ -16,9 +16,7 @@ const newGameValidationSchema = yup.object().shape({
         .required('Game slug is required')
         .min(2, 'Slugs must be at least 5 characters')
         .max(8, 'Slugs cannot be longer than 8 characters'),
-    coverImage: yup
-        .string()
-        .url('Game cover images ust be a valid URL pointing to the image'),
+    coverImage: yup.string(),
 });
 
 export default function NewGame() {
@@ -39,11 +37,16 @@ export default function NewGame() {
             sx={{
                 flexGrow: 1,
                 px: 4,
-                width: "100%"
-            }}>
-            <Typography variant="h4" align="center" sx={{
-                py: 2
-            }}>
+                width: '100%',
+            }}
+        >
+            <Typography
+                variant="h4"
+                align="center"
+                sx={{
+                    py: 2,
+                }}
+            >
                 Create a new game
             </Typography>
             <Formik
@@ -68,33 +71,45 @@ export default function NewGame() {
                 <Form>
                     <Box
                         sx={{
-                            display: "flex",
-                            flexDirection: "column",
-                            width: "100%",
-                            rowGap: 1
-                        }}>
-                        <FormikTextField
-                            id="game-name"
-                            name="name"
-                            label="Game Name"
-                        />
-                        <FormikTextField
-                            id="game-slug"
-                            name="slug"
-                            label="Slug"
-                        />
-                        <FormikTextField
-                            id="game-cover-image"
-                            name="coverImage"
-                            label="Cover Image"
-                        />
-                        <Box sx={{
-                            display: "flex"
-                        }}>
-                            <Box sx={{
-                                flexGrow: 1
-                            }} />
-                            <Button type="submit">Submit</Button>
+                            display: 'flex',
+                            columnGap: 2,
+                            height: 'fit-content',
+                        }}
+                    >
+                        <Box
+                            sx={{
+                                flexGrow: 1,
+                                height: '100%',
+                                maxWidth: '33%',
+                            }}
+                        >
+                            <FormikFileUpload
+                                name="coverImage"
+                                workflow="game"
+                            />
+                        </Box>
+                        <Box
+                            sx={{
+                                display: 'flex',
+                                flexDirection: 'column',
+                                rowGap: 1,
+                                flexGrow: 1,
+                            }}
+                        >
+                            <FormikTextField
+                                id="game-name"
+                                name="name"
+                                label="Game Name"
+                            />
+                            <FormikTextField
+                                id="game-slug"
+                                name="slug"
+                                label="Slug"
+                            />
+                            <Box sx={{ display: 'flex' }}>
+                                <Box sx={{ flexGrow: 1 }} />
+                                <Button type="submit">Submit</Button>
+                            </Box>
                         </Box>
                     </Box>
                 </Form>

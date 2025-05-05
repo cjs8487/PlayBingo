@@ -9,6 +9,7 @@ import {
     deleteGame,
     favoriteGame,
     gameForSlug,
+    getGameCover,
     isModerator,
     isOwner,
     removeModerator,
@@ -36,6 +37,7 @@ import {
     createCateogry,
     getCategories,
 } from '../../database/games/GoalCategories';
+import { deleteFile, saveFile } from '../../media/MediaServer';
 
 const games = Router();
 
@@ -68,6 +70,12 @@ games.post('/', async (req, res) => {
         res.status(400).send('Missing game slug');
         return;
     }
+    if (coverImage) {
+        if (!saveFile(coverImage)) {
+            res.status(400).send('Invalid cover image');
+            return;
+        }
+    }
     const result = await createGame(name, slug, coverImage, [req.session.user]);
     if (!result) {
         res.status(500).send('Failed to create game');
@@ -93,6 +101,7 @@ games.post('/:slug', async (req, res) => {
         difficultyGroups,
         slugWords,
         useTypedRandom,
+        shouldDeleteCover,
     } = req.body;
 
     let result = undefined;
@@ -100,7 +109,18 @@ games.post('/:slug', async (req, res) => {
         result = await updateGameName(slug, name);
     }
     if (coverImage) {
+        if (!(await saveFile(coverImage))) {
+            res.status(400).send('Invalid cover image');
+            return;
+        }
         result = await updateGameCover(slug, coverImage);
+    }
+    if (shouldDeleteCover) {
+        const currentCover = await getGameCover(slug);
+        if (currentCover) {
+            await deleteFile('game', currentCover);
+            result = await updateGameCover(slug, null);
+        }
     }
     if (enableSRLv5 !== undefined) {
         result = await updateSRLv5Enabled(slug, !!enableSRLv5);

@@ -1,26 +1,21 @@
-import Database, { Database as DB } from 'better-sqlite3';
-import SqliteStore from 'better-sqlite3-session-store';
 import bodyParser from 'body-parser';
+import cors from 'cors';
 import express from 'express';
 import session from 'express-session';
+import path from 'path';
 import { port, sessionSecret, testing } from './Environment';
 import { logDebug, logger, logInfo } from './Logger';
 import { allRooms, roomWebSocketServer } from './core/RoomServer';
 import { disconnect } from './database/Database';
+import mediaServer from './media/MediaServer';
 import api from './routes/api';
+import { healthCheckRouter } from './routes/healthCheck';
 import {
+    bodySizeHistogram,
     metricsRouter,
     requestDurationHistogram,
-    bodySizeHistogram,
 } from './routes/metrics';
-import path from 'path';
-import {
-    closeSessionDatabase,
-    removeSessionsForUser,
-    sessionStore,
-} from './util/Session';
-import { healthCheckRouter } from './routes/healthCheck';
-import * as console from 'console';
+import { closeSessionDatabase, sessionStore } from './util/Session';
 
 declare module 'express-session' {
     interface SessionData {
@@ -80,11 +75,17 @@ app.use((req, res, next) => {
     next();
 });
 
+app.use(cors());
+app.use('/media', mediaServer);
+
+app.use(bodyParser.json());
+
 app.use('/api', api);
 app.use('/api/metrics', metricsRouter);
 app.use('/api/health', healthCheckRouter);
 
 app.use('/api/docs', express.static(path.join(__dirname, '..', '..', 'docs')));
+app.use('/media', express.static(path.resolve('media')));
 
 const server = app.listen(port, () => {
     logInfo(`API application listening on port ${port}`);

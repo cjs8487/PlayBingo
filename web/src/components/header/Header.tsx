@@ -22,6 +22,7 @@ import { UserContext } from '../../context/UserContext';
 import LinkButton from '../LinkButton';
 import DesktopMenu from './DesktopMenu';
 import MobileMenu from './MobileMenu';
+import { userAvatarUrl } from '../../lib/Utils';
 
 export const pages = [
     { name: 'Games', path: '/games' },
@@ -67,7 +68,14 @@ export default function Header() {
                                 }}
                             >
                                 {user.username}
-                                <Avatar alt={user.username} />
+                                <Avatar
+                                    src={
+                                        user.avatar
+                                            ? userAvatarUrl(user.avatar)
+                                            : undefined
+                                    }
+                                    alt={user.username}
+                                />
                             </Button>
                         </Tooltip>
                         <Menu
@@ -111,9 +119,11 @@ export default function Header() {
                                 <ListItemIcon>
                                     <IconLogout fontSize="small" />
                                 </ListItemIcon>
-                                <Typography sx={{
-                                    textAlign: "center"
-                                }}>
+                                <Typography
+                                    sx={{
+                                        textAlign: 'center',
+                                    }}
+                                >
                                     Logout
                                 </Typography>
                             </MenuItem>

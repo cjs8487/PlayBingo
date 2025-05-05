@@ -92,6 +92,7 @@ model User {
   id             String         @id @unique @default(cuid())
   username       String         @unique
   email          String         @unique
+  avatar         String?
   password       Bytes
   salt           Bytes
   connections    Connection[]
