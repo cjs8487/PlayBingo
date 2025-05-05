@@ -55,6 +55,8 @@ interface BaseProps {
     name: string;
     workflow: MediaWorkflow;
     edit?: boolean;
+    circle?: boolean;
+    size?: string | number;
 }
 
 interface CircleProps extends BaseProps {
@@ -63,8 +65,8 @@ interface CircleProps extends BaseProps {
 }
 
 interface NormalProps extends BaseProps {
-    circle: false;
-    size: never;
+    circle?: false;
+    size?: never;
 }
 
 type Props = NormalProps | CircleProps;
