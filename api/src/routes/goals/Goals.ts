@@ -3,6 +3,7 @@ import { isModerator } from '../../database/games/Games';
 import { deleteGoal, editGoal, gameForGoal } from '../../database/games/Goals';
 import upload from './Upload';
 import goalCategories from './GoalCategories';
+import { Prisma } from '@prisma/client';
 
 const goals = Router();
 
@@ -37,10 +38,16 @@ goals.post('/:id', async (req, res) => {
         return;
     }
 
-    const success = await editGoal(id, {
+    const input: Prisma.GoalUpdateInput = {
         goal,
         description,
-        categories: {
+        difficulty,
+    };
+
+    console.log(categories);
+
+    if (categories) {
+        input.categories = {
             set: [],
             connectOrCreate: categories?.map((cat: string) => ({
                 create: { name: cat, game: { connect: { id: game.id } } },
@@ -51,9 +58,10 @@ goals.post('/:id', async (req, res) => {
                     },
                 },
             })),
-        },
-        difficulty,
-    });
+        };
+    }
+
+    const success = await editGoal(id, input);
     if (!success) {
         res.sendStatus(404);
         return;
