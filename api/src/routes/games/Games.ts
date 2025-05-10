@@ -77,6 +77,7 @@ games.get('/:slug', async (req, res) => {
         difficultyGroups: game.difficultyGroups ?? undefined,
         slugWords: game.slugWords,
         useTypedRandom: game.useTypedRandom,
+        newGeneratorBeta: game.newGeneratorBeta,
         generationSettings: {
             pruners: game.generationListMode,
             transformer: game.generationListTransform,

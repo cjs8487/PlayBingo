@@ -742,6 +742,7 @@ async function main() {
                 GenerationGoalRestriction.LINE_TYPE_EXCLUSION,
             ],
             generationGoalSelection: GenerationGoalSelection.DIFFICULTY,
+            newGeneratorBeta: true,
         },
     });
     await prisma.category.createMany({

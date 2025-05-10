@@ -24,6 +24,7 @@ export interface Game {
   slugWords?: string[];
   useTypedRandom?: boolean;
   generationSettings: GeneratorSettings;
+  newGeneratorBeta?: boolean;
 }
 export interface User {
   id: string;

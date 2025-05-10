@@ -58,7 +58,9 @@ export default function GamePage(props: { params: Promise<{ slug: string }> }) {
             tabs.push('Variants');
         }
         tabs.push('Permissions');
-        tabs.push('Generation');
+        if (gameData.newGeneratorBeta) {
+            tabs.push('Generation');
+        }
         tabs.push('Settings');
     }
 
