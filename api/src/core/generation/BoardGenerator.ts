@@ -1,38 +1,33 @@
 import {
-    Goal,
-    Game,
+    Category,
     GenerationBoardLayout,
+    GenerationGlobalAdjustments,
+    GenerationGoalRestriction,
     GenerationGoalSelection,
     GenerationListMode,
     GenerationListTransform,
-    GenerationGlobalAdjustments,
-    GenerationGoalRestriction,
-    Category,
 } from '@prisma/client';
-import { gameForSlug } from '../../database/games/Games';
-import { goalsForGame } from '../../database/games/Goals';
-import { difficulty } from './SRLv5';
-import { createPruner, GoalListPruner } from './GoalListPruner';
-import { createTransformer, GoalListTransformer } from './GoalListTransformer';
+import { shuffle } from '../../util/Array';
 import {
     BoardLayoutGenerator,
     createLayoutGenerator,
 } from './BoardLayoutGenerator';
+import { GeneratorGoal } from './GeneratorCore';
+import { createGlobalAdjustment, GlobalAdjustment } from './GlobalAdjustments';
+import { createGoalGrouper, GoalGrouper } from './GoalGrouper';
+import { createPruner, GoalListPruner } from './GoalListPruner';
+import { createTransformer, GoalListTransformer } from './GoalListTransformer';
 import {
     createPlacementRestriction,
     GoalPlacementRestriction,
 } from './GoalPlacementRestriction';
-import { createGlobalAdjustment, GlobalAdjustment } from './GlobalAdjustments';
-import { createGoalGrouper, GoalGrouper } from './GoalGrouper';
-import { GeneratorGoal } from './GeneratorCore';
-import { shuffle } from '../../util/Array';
 
 /**
  *
  */
 export default class BoardGenerator {
     // generation strategies
-    goalListPruner: GoalListPruner;
+    goalListPruners: GoalListPruner[];
     goalListTransformer: GoalListTransformer;
     layoutGenerator: BoardLayoutGenerator;
     goalGrouper: GoalGrouper;
@@ -54,7 +49,7 @@ export default class BoardGenerator {
     constructor(
         goals: GeneratorGoal[],
         categories: Category[],
-        pruneStrategy: GenerationListMode,
+        pruneStrategies: GenerationListMode[],
         transformStrategy: GenerationListTransform,
         layoutStrategy: GenerationBoardLayout,
         selectionStrategy: GenerationGoalSelection,
@@ -71,9 +66,15 @@ export default class BoardGenerator {
             }
         }
 
+        //@ts-ignore
+        if (goals.includes(undefined)) {
+            console.log('undefined in goal list');
+        }
+
         this.allGoals = goals;
+        this.goals = [...this.allGoals];
         this.categories = categories;
-        this.goalListPruner = createPruner(pruneStrategy);
+        this.goalListPruners = pruneStrategies.map((s) => createPruner(s));
         this.goalListTransformer = createTransformer(transformStrategy);
         this.layoutGenerator = createLayoutGenerator(layoutStrategy);
         this.goalGrouper = createGoalGrouper(selectionStrategy);
@@ -126,7 +127,7 @@ export default class BoardGenerator {
     }
 
     pruneGoalList() {
-        this.goalListPruner(this);
+        this.goalListPruners.forEach((f) => f(this));
     }
 
     transformGoals() {

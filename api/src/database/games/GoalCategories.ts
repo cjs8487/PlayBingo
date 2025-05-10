@@ -16,6 +16,7 @@ export const getCategories = (gameSlug: string) => {
             id: true,
             name: true,
             max: true,
+            gameId: true,
             _count: {
                 select: { goals: true },
             },

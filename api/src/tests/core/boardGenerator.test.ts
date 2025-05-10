@@ -34,7 +34,7 @@ describe('BoardGenerator initialization', () => {
             new BoardGenerator(
                 goals,
                 categories,
-                GenerationListMode.NONE,
+                [],
                 GenerationListTransform.NONE,
                 GenerationBoardLayout.NONE,
                 GenerationGoalSelection.DIFFICULTY,
@@ -54,7 +54,7 @@ describe('Board Layout', () => {
         const generator = new BoardGenerator(
             goals,
             categories,
-            GenerationListMode.NONE,
+            [],
             GenerationListTransform.NONE,
             GenerationBoardLayout.NONE,
             GenerationGoalSelection.RANDOM,
@@ -78,7 +78,7 @@ describe('Board Layout', () => {
         const generator = new BoardGenerator(
             goals,
             categories,
-            GenerationListMode.NONE,
+            [],
             GenerationListTransform.NONE,
             GenerationBoardLayout.SRLv5,
             GenerationGoalSelection.DIFFICULTY,
@@ -151,7 +151,7 @@ describe('Board Layout', () => {
         const generator = new BoardGenerator(
             goals,
             categories,
-            GenerationListMode.NONE,
+            [],
             GenerationListTransform.NONE,
             GenerationBoardLayout.ISAAC,
             GenerationGoalSelection.DIFFICULTY,
@@ -186,7 +186,7 @@ describe('Goal Grouping', () => {
         const generator = new BoardGenerator(
             goals,
             categories,
-            GenerationListMode.NONE,
+            [],
             GenerationListTransform.NONE,
             GenerationBoardLayout.SRLv5,
             GenerationGoalSelection.RANDOM,
@@ -205,7 +205,7 @@ describe('Goal Grouping', () => {
         const generator = new BoardGenerator(
             goals,
             categories,
-            GenerationListMode.NONE,
+            [],
             GenerationListTransform.NONE,
             GenerationBoardLayout.SRLv5,
             GenerationGoalSelection.DIFFICULTY,
@@ -228,7 +228,7 @@ describe('Goal Restriction', () => {
         const generator = new BoardGenerator(
             goals,
             categories,
-            GenerationListMode.NONE,
+            [],
             GenerationListTransform.NONE,
             GenerationBoardLayout.SRLv5,
             GenerationGoalSelection.DIFFICULTY,
@@ -272,7 +272,7 @@ describe('Global Adjustments', () => {
         const generator = new BoardGenerator(
             goals,
             categories,
-            GenerationListMode.NONE,
+            [],
             GenerationListTransform.NONE,
             GenerationBoardLayout.SRLv5,
             GenerationGoalSelection.DIFFICULTY,
@@ -338,7 +338,7 @@ describe('Global Adjustments', () => {
         const generator = new BoardGenerator(
             goals,
             categories,
-            GenerationListMode.NONE,
+            [],
             GenerationListTransform.NONE,
             GenerationBoardLayout.SRLv5,
             GenerationGoalSelection.DIFFICULTY,
@@ -409,7 +409,7 @@ describe('Global Adjustments', () => {
         const generator = new BoardGenerator(
             goals,
             categories,
-            GenerationListMode.NONE,
+            [],
             GenerationListTransform.NONE,
             GenerationBoardLayout.NONE,
             GenerationGoalSelection.RANDOM,
@@ -428,7 +428,7 @@ describe('Full Generation', () => {
     const generator = new BoardGenerator(
         goals,
         categories,
-        GenerationListMode.NONE,
+        [],
         GenerationListTransform.NONE,
         GenerationBoardLayout.NONE,
         GenerationGoalSelection.RANDOM,
@@ -446,7 +446,7 @@ describe('Full Generation', () => {
         const generator = new BoardGenerator(
             goals,
             categories,
-            GenerationListMode.NONE,
+            [],
             GenerationListTransform.NONE,
             GenerationBoardLayout.SRLv5,
             GenerationGoalSelection.DIFFICULTY,
@@ -472,7 +472,7 @@ describe('Full Generation', () => {
         const generator = new BoardGenerator(
             goals,
             categories,
-            GenerationListMode.NONE,
+            [],
             GenerationListTransform.NONE,
             GenerationBoardLayout.SRLv5,
             GenerationGoalSelection.DIFFICULTY,
@@ -492,7 +492,7 @@ describe('Full Generation', () => {
         const generator = new BoardGenerator(
             goals,
             categories,
-            GenerationListMode.NONE,
+            [],
             GenerationListTransform.NONE,
             GenerationBoardLayout.SRLv5,
             GenerationGoalSelection.DIFFICULTY,
