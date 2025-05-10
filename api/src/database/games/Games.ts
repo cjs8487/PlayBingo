@@ -1,4 +1,12 @@
-import { Prisma } from '@prisma/client';
+import {
+    GenerationBoardLayout,
+    GenerationGlobalAdjustments,
+    GenerationGoalRestriction,
+    GenerationGoalSelection,
+    GenerationListMode,
+    GenerationListTransform,
+    Prisma,
+} from '@prisma/client';
 import { logError } from '../../Logger';
 import { prisma } from '../Database';
 
@@ -299,4 +307,37 @@ export const useTypedRandom = async (slug: string) => {
         (await prisma.game.findUnique({ where: { slug } }))?.useTypedRandom ??
         false
     );
+};
+
+interface GeneratorUpdateInput {
+    generationListMode: GenerationListMode[];
+    generationListTransform: GenerationListTransform;
+    generationBoardLayout: GenerationBoardLayout;
+    generationGoalSelection: GenerationGoalSelection;
+    generationGoalRestrictions: GenerationGoalRestriction[];
+    generationGlobalAdjustments: GenerationGlobalAdjustments[];
+}
+
+export const updateGeneratorConfig = (
+    slug: string,
+    {
+        generationListMode,
+        generationListTransform,
+        generationBoardLayout,
+        generationGoalSelection,
+        generationGoalRestrictions,
+        generationGlobalAdjustments,
+    }: GeneratorUpdateInput,
+) => {
+    return prisma.game.update({
+        where: { slug },
+        data: {
+            generationListMode,
+            generationListTransform,
+            generationBoardLayout,
+            generationGoalSelection,
+            generationGoalRestrictions,
+            generationGlobalAdjustments,
+        },
+    });
 };

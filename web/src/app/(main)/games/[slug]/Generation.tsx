@@ -20,6 +20,7 @@ import {
 import { Form, Formik, useField } from 'formik';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { FormikSelectField } from '../../../../components/input/FormikSelectField';
+import { alertError, notifyMessage } from '../../../../lib/Utils';
 
 type GeneratorConfigSingle = string;
 type GeneratorConfigMultiple = string[];
@@ -208,13 +209,22 @@ export default function GenerationPage({ game }: Props) {
 
     const { steps } = generatorOptions;
 
-    console.log(game.generationSettings);
-
     return (
         <Formik
             initialValues={game.generationSettings}
-            onSubmit={(values) => {
-                console.log(values);
+            onSubmit={async (values) => {
+                const res = await fetch(`/api/games/${game.slug}/generation`, {
+                    method: 'POST',
+                    body: JSON.stringify(values),
+                });
+                if (!res.ok) {
+                    alertError(
+                        `Failed to save generator options - ${await res.text()}`,
+                    );
+                    return;
+                }
+
+                notifyMessage('Successfully updated generation settings');
             }}
             validate={(values) => {
                 const errors: { [k: string]: string | string[] } = {};
@@ -243,6 +253,10 @@ export default function GenerationPage({ game }: Props) {
                                         'Duplicate values are not allowed.';
                                 }
                             });
+
+                            if (errors[s.value].length === 0) {
+                                delete errors[s.value];
+                            }
                         }
                     }
                 });
