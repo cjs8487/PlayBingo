@@ -14,6 +14,7 @@ export interface RoomData {
   slug: string;
   gameSlug: string;
   racetimeConnection?: RacetimeConnection;
+  newGenerator: boolean;
 }
 export interface RacetimeConnection {
   /**
