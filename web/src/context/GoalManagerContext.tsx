@@ -45,7 +45,7 @@ interface GoalManagerContext {
     setSort: (sort: SortOptions) => void;
     setReverse: Dispatch<SetStateAction<boolean>>;
     setSearch: (search: string) => void;
-    setSettings: (settings: GoalManagerSettings) => void;
+    setSettings: Dispatch<SetStateAction<GoalManagerSettings>>;
     mutateGoals: KeyedMutator<Goal[]>;
     newGoal: boolean;
     setNewGoal: (newGoal: boolean) => void;
@@ -105,7 +105,9 @@ export function GoalManagerContextProvider({
     const [reverse, setReverse] = useState(false);
     const [search, setSearch] = useState('');
     //settings
-    const [settings, setSettings] = useState({ showDetails: true });
+    const [settings, setSettings] = useState<GoalManagerSettings>({
+        showDetails: true,
+    });
 
     // callbacks
     const deleteGoal = useCallback(

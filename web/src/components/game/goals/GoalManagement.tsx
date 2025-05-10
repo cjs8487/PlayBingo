@@ -33,14 +33,7 @@ export default function GoalManagement() {
     const dialogRef = useRef<DialogRef>(null);
 
     const openSettingsDialog = () => {
-        setDialogContent(
-            <SettingsDialogContent
-                showDetails={settings.showDetails}
-                setShowDetails={(value) =>
-                    setSettings({ ...settings, showDetails: value })
-                }
-            />,
-        );
+        setDialogContent(<SettingsDialogContent />);
         dialogRef.current?.open();
     };
 
