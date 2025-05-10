@@ -32,7 +32,7 @@ export const shuffle = (array: unknown[], seedIn?: number) => {
         i;
 
     while (m) {
-        i = prand.unsafeUniformIntDistribution(0, m--, rng);
+        i = prand.unsafeUniformIntDistribution(0, --m, rng);
 
         t = array[m];
         array[m] = array[i];
