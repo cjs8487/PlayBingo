@@ -92,7 +92,7 @@ export type BoardGenerationOptions =
     | BoardGenerationOptionsSRLv5
     | BoardGenerationOptionsDifficulty;
 
-interface GeneratorConfig {
+export interface GeneratorConfig {
     generationListMode: GenerationListMode[];
     generationListTransform: GenerationListTransform;
     generationBoardLayout: GenerationBoardLayout;
@@ -192,6 +192,7 @@ export default class Room {
         // generator config was passed in when the room was initialized, so the
         // game is enabled and configured for the new generator system
         if (this.generatorConfig) {
+            console.log('using new generator');
             const generator = new BoardGenerator(
                 goals,
                 categories,
