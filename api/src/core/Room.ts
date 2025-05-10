@@ -127,6 +127,7 @@ export default class Room {
     completed: boolean;
 
     generatorConfig?: GeneratorConfig;
+    newGenerator: boolean;
 
     racetimeEligible: boolean;
     racetimeHandler: RacetimeHandler;
@@ -176,6 +177,7 @@ export default class Room {
         this.completed = false;
 
         this.generatorConfig = generatorConfig;
+        this.newGenerator = !!generatorConfig;
     }
 
     async generateBoard(options: BoardGenerationOptions) {
@@ -381,6 +383,7 @@ export default class Room {
                 slug: this.slug,
                 name: this.name,
                 gameSlug: this.gameSlug,
+                newGenerator: this.newGenerator,
                 racetimeConnection: {
                     gameActive: this.racetimeEligible,
                     url: this.racetimeHandler.url,
@@ -572,6 +575,7 @@ export default class Room {
                 racetimeConnection: {
                     url,
                 },
+                newGenerator: this.newGenerator,
             },
         });
         this.sendChat(`Racetime.gg room created ${url}`);
@@ -591,6 +595,7 @@ export default class Room {
                 racetimeConnection: {
                     url: undefined,
                 },
+                newGenerator: this.newGenerator,
             },
         });
     }
