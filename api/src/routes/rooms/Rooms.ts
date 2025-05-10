@@ -106,6 +106,15 @@ rooms.post('/', async (req, res) => {
         gameData.racetimeBeta &&
             !!gameData.racetimeCategory &&
             !!gameData.racetimeGoal,
+        '',
+        {
+            generationListMode: gameData.generationListMode,
+            generationListTransform: gameData.generationListTransform,
+            generationBoardLayout: gameData.generationBoardLayout,
+            generationGoalSelection: gameData.generationGoalSelection,
+            generationGoalRestrictions: gameData.generationGoalRestrictions,
+            generationGlobalAdjustments: gameData.generationGlobalAdjustments,
+        },
     );
     const options: BoardGenerationOptions = {
         mode: BoardGenerationMode.RANDOM,

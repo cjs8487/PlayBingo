@@ -11,7 +11,15 @@ import {
     ServerMessage,
     UnmarkAction,
 } from '@playbingo/types';
-import { BingoMode } from '@prisma/client';
+import {
+    BingoMode,
+    GenerationBoardLayout,
+    GenerationGlobalAdjustments,
+    GenerationGoalRestriction,
+    GenerationGoalSelection,
+    GenerationListMode,
+    GenerationListTransform,
+} from '@prisma/client';
 import { OPEN, WebSocket } from 'ws';
 import { logError, logInfo, logWarn } from '../Logger';
 import { invalidateToken, RoomTokenPayload } from '../auth/RoomAuth';
@@ -44,6 +52,7 @@ import {
 import { generateFullRandom, generateRandomTyped } from './generation/Random';
 import { generateSRLv5 } from './generation/SRLv5';
 import RacetimeHandler, { RaceData } from './integration/RacetimeHandler';
+import BoardGenerator from './generation/BoardGenerator';
 
 type RoomIdentity = {
     nickname: string;
@@ -83,6 +92,15 @@ export type BoardGenerationOptions =
     | BoardGenerationOptionsSRLv5
     | BoardGenerationOptionsDifficulty;
 
+interface GeneratorConfig {
+    generationListMode: GenerationListMode[];
+    generationListTransform: GenerationListTransform;
+    generationBoardLayout: GenerationBoardLayout;
+    generationGoalSelection: GenerationGoalSelection;
+    generationGoalRestrictions: GenerationGoalRestriction[];
+    generationGlobalAdjustments: GenerationGlobalAdjustments[];
+}
+
 /**
  * Represents a room in the PlayBingo service. A room is container for a single
  * "game" of bingo, containing the board, game state, history, and all other
@@ -108,6 +126,8 @@ export default class Room {
     lastLineStatus: CompletedLines;
     completed: boolean;
 
+    generatorConfig?: GeneratorConfig;
+
     racetimeEligible: boolean;
     racetimeHandler: RacetimeHandler;
 
@@ -123,6 +143,7 @@ export default class Room {
         lineCount: number,
         racetimeEligible: boolean,
         racetimeUrl?: string,
+        generatorConfig?: GeneratorConfig,
     ) {
         this.name = name;
         this.game = game;
@@ -153,6 +174,8 @@ export default class Room {
         this.hideCard = hideCard;
         this.lastLineStatus = {};
         this.completed = false;
+
+        this.generatorConfig = generatorConfig;
     }
 
     async generateBoard(options: BoardGenerationOptions) {
@@ -165,91 +188,112 @@ export default class Room {
         categories.forEach((cat) => {
             categoryMaxes[cat.name] = cat.max <= 0 ? -1 : cat.max;
         });
-        const globalState: GlobalGenerationState = {
-            useCategoryMaxes: categories.some((cat) => cat.max > 0),
-            categoryMaxes,
-        };
-        try {
-            switch (mode) {
-                case BoardGenerationMode.SRLv5:
-                    goalList = generateSRLv5(goals, globalState, seed);
-                    goalList.shift();
-                    break;
-                case BoardGenerationMode.DIFFICULTY:
-                    const { difficulty } = options;
-                    const variant = await getDifficultyVariant(difficulty);
-                    const numGroups = await getDifficultyGroupCount(
-                        this.gameSlug,
-                    );
 
-                    if (!numGroups || !variant) {
-                        this.logError(
-                            'Invalid game configuration for difficulty variants',
-                        );
-                        throw new Error();
-                    }
-
-                    const maxDifficulty = goals.reduce<number>((max, goal) => {
-                        if (goal.difficulty && goal.difficulty > max) {
-                            return goal.difficulty;
-                        }
-                        return max;
-                    }, 0);
-                    const groupSize = maxDifficulty / numGroups;
-                    const emptyGroupedGoals = [];
-                    for (let i = 0; i < numGroups; i++) {
-                        emptyGroupedGoals.push([]);
-                    }
-                    const groupedGoals = goals.reduce<GeneratorGoal[][]>(
-                        (curr, goal) => {
-                            if (goal.difficulty && goal.difficulty > 0) {
-                                const grpIdx = Math.floor(
-                                    (goal.difficulty - 1) / groupSize,
-                                );
-                                if (grpIdx < numGroups) {
-                                    curr[grpIdx].push(goal);
-                                }
-                            }
-                            return curr;
-                        },
-                        emptyGroupedGoals,
-                    );
-                    goalList = [];
-                    groupedGoals.forEach((group, index) => {
-                        shuffle(group);
-                        const toAdd = group.splice(
-                            0,
-                            variant.goalAmounts[index],
-                        );
-                        goalList.push(...toAdd);
-                    });
-
-                    if (goalList.length !== 25) {
-                        this.logError(
-                            'Difficulty variant generation produced an invalid goal list',
-                        );
-                        throw new Error();
-                    }
-                    shuffle(goalList, seed);
-                    break;
-                case BoardGenerationMode.RANDOM:
-                    if (await useTypedRandom(this.game)) {
-                        goalList = generateRandomTyped(goals, seed);
+        // generator config was passed in when the room was initialized, so the
+        // game is enabled and configured for the new generator system
+        if (this.generatorConfig) {
+            const generator = new BoardGenerator(
+                goals,
+                categories,
+                this.generatorConfig.generationListMode,
+                this.generatorConfig.generationListTransform,
+                this.generatorConfig.generationBoardLayout,
+                this.generatorConfig.generationGoalSelection,
+                this.generatorConfig.generationGoalRestrictions,
+                this.generatorConfig.generationGlobalAdjustments,
+            );
+            generator.generateBoard();
+            this.board = { board: listToBoard(generator.board) };
+        } else {
+            const globalState: GlobalGenerationState = {
+                useCategoryMaxes: categories.some((cat) => cat.max > 0),
+                categoryMaxes,
+            };
+            try {
+                switch (mode) {
+                    case BoardGenerationMode.SRLv5:
+                        goalList = generateSRLv5(goals, globalState, seed);
                         goalList.shift();
-                    } else {
+                        break;
+                    case BoardGenerationMode.DIFFICULTY:
+                        const { difficulty } = options;
+                        const variant = await getDifficultyVariant(difficulty);
+                        const numGroups = await getDifficultyGroupCount(
+                            this.gameSlug,
+                        );
+
+                        if (!numGroups || !variant) {
+                            this.logError(
+                                'Invalid game configuration for difficulty variants',
+                            );
+                            throw new Error();
+                        }
+
+                        const maxDifficulty = goals.reduce<number>(
+                            (max, goal) => {
+                                if (goal.difficulty && goal.difficulty > max) {
+                                    return goal.difficulty;
+                                }
+                                return max;
+                            },
+                            0,
+                        );
+                        const groupSize = maxDifficulty / numGroups;
+                        const emptyGroupedGoals = [];
+                        for (let i = 0; i < numGroups; i++) {
+                            emptyGroupedGoals.push([]);
+                        }
+                        const groupedGoals = goals.reduce<GeneratorGoal[][]>(
+                            (curr, goal) => {
+                                if (goal.difficulty && goal.difficulty > 0) {
+                                    const grpIdx = Math.floor(
+                                        (goal.difficulty - 1) / groupSize,
+                                    );
+                                    if (grpIdx < numGroups) {
+                                        curr[grpIdx].push(goal);
+                                    }
+                                }
+                                return curr;
+                            },
+                            emptyGroupedGoals,
+                        );
+                        goalList = [];
+                        groupedGoals.forEach((group, index) => {
+                            shuffle(group);
+                            const toAdd = group.splice(
+                                0,
+                                variant.goalAmounts[index],
+                            );
+                            goalList.push(...toAdd);
+                        });
+
+                        if (goalList.length !== 25) {
+                            this.logError(
+                                'Difficulty variant generation produced an invalid goal list',
+                            );
+                            throw new Error();
+                        }
+                        shuffle(goalList, seed);
+                        break;
+                    case BoardGenerationMode.RANDOM:
+                        if (await useTypedRandom(this.game)) {
+                            goalList = generateRandomTyped(goals, seed);
+                            goalList.shift();
+                        } else {
+                            goalList = generateFullRandom(goals, seed);
+                        }
+                        break;
+                    default:
                         goalList = generateFullRandom(goals, seed);
-                    }
-                    break;
-                default:
-                    goalList = generateFullRandom(goals, seed);
-                    break;
+                        break;
+                }
+            } catch (e) {
+                this.logError(`Failed to generate board ${e}`);
+                return;
             }
-        } catch (e) {
-            this.logError(`Failed to generate board ${e}`);
-            return;
+            this.board = { board: listToBoard(goalList) };
         }
 
-        this.board = { board: listToBoard(goalList) };
         this.sendSyncBoard();
         setRoomBoard(
             this.id,
