@@ -266,7 +266,7 @@ export default function GameSettings({ gameData }: GameSettingsProps) {
                                 />
                                 <HoverIcon icon={<Info />}>
                                     <Typography variant="caption">
-                                        Difficulty varaints are a special type
+                                        Difficulty variants are a special type
                                         of variants that modify generation
                                         instead of the goal list. Difficulty
                                         variants modify how many goals from a
