@@ -33,7 +33,7 @@ goals.post('/:id', async (req, res) => {
     const { id } = req.params;
     const { goal, description, categories, difficulty } = req.body;
 
-    if (!goal && !description && !categories) {
+    if (!goal && description === undefined && !categories) {
         res.status(400).send('No changes submitted');
         return;
     }
