@@ -57,4 +57,14 @@ describe('shuffle', () => {
         shuffle(array);
         expect(array).not.toContain(undefined);
     });
+
+    it('should produce the same output when seeded', () => {
+        const array = [1, 2, 3, 4, 5];
+        const seed = 42;
+        const shuffled1 = [...array];
+        shuffle(shuffled1, seed);
+        const shuffled2 = [...array];
+        shuffle(shuffled2, seed);
+        expect(shuffled1).toEqual(shuffled2);
+    });
 });
