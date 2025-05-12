@@ -27,15 +27,8 @@ export const shuffle = (array: unknown[], seedIn?: number) => {
     const seed = seedIn ?? Math.ceil(999999 * Math.random());
     const rng = prand.xoroshiro128plus(seed);
 
-    let m = array.length,
-        t,
-        i;
-
-    while (m) {
-        i = prand.unsafeUniformIntDistribution(0, m--, rng);
-
-        t = array[m];
-        array[m] = array[i];
-        array[i] = t;
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = prand.unsafeUniformIntDistribution(0, i, rng);
+        [array[i], array[j]] = [array[j], array[i]];
     }
 };
