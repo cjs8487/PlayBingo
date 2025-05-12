@@ -41,8 +41,13 @@ goals.post('/:id', async (req, res) => {
     const input: Prisma.GoalUpdateInput = {
         goal,
         description,
-        difficulty: difficulty && difficulty > 0 ? difficulty : null,
     };
+
+    if (difficulty === 0) {
+        input.difficulty = null;
+    } else if (difficulty > 0) {
+        input.difficulty = difficulty;
+    }
 
     if (categories) {
         input.categories = {
