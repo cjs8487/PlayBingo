@@ -24,7 +24,7 @@ export const chunk = <T>(array: T[], groupSize: number) => {
  * @param array the array to shuffle
  */
 export const shuffle = (array: unknown[], seedIn?: number) => {
-    const seed = seedIn ?? Math.ceil(999999 * Math.random());
+    const seed = seedIn ?? Date.now() ^ (Math.random() * 0x100000000);
     const rng = prand.xoroshiro128plus(seed);
 
     for (let i = array.length - 1; i > 0; i--) {
