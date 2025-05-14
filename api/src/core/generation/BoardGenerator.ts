@@ -21,6 +21,7 @@ import {
     createPlacementRestriction,
     GoalPlacementRestriction,
 } from './GoalPlacementRestriction';
+import { GenerationFailedError } from './GenerationFailedError';
 
 /**
  *
@@ -119,7 +120,11 @@ export default class BoardGenerator {
             const goals = this.validGoalsForCell(i);
             const goal = goals.pop();
             if (!goal) {
-                throw Error('Unable to place goal');
+                throw new GenerationFailedError(
+                    'No valid goals left to be placed in the current cell',
+                    this,
+                    i,
+                );
             }
             this.board[i] = goal;
             this.adjustGoalList(goal);
