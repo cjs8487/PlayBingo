@@ -25,7 +25,7 @@ jobs:
 
         strategy:
             matrix:
-                node-version: [18.x, 20.x, 22.x] # Define a matrix of Node.js versions to test
+                node-version: [20.x, 22.x, 24.x] # Define a matrix of Node.js versions to test
 
         steps:
             - name: Checkout code
