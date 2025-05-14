@@ -604,7 +604,7 @@ games.post('/:slug/generation', async (req, res) => {
         return;
     }
 
-    // valid layout and selection combination
+    // validate layout and selection combination
     if (
         layout === GenerationBoardLayout.NONE &&
         goalSelection !== GenerationGoalSelection.RANDOM
