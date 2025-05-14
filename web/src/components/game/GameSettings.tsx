@@ -169,6 +169,7 @@ export default function GameSettings({ gameData }: GameSettingsProps) {
                     useTypedRandom,
                 }) => {
                     let shouldDeleteCover = gameData.coverImage && !coverImage;
+                    console.log(coverImage !== gameData.coverImage);
                     const res = await fetch(`/api/games/${gameData.slug}`, {
                         method: 'POST',
                         headers: {
@@ -176,7 +177,10 @@ export default function GameSettings({ gameData }: GameSettingsProps) {
                         },
                         body: JSON.stringify({
                             name,
-                            coverImage,
+                            coverImage:
+                                coverImage !== gameData.coverImage
+                                    ? coverImage
+                                    : undefined,
                             enableSRLv5,
                             racetimeCategory,
                             racetimeGoal,
@@ -266,7 +270,7 @@ export default function GameSettings({ gameData }: GameSettingsProps) {
                                 />
                                 <HoverIcon icon={<Info />}>
                                     <Typography variant="caption">
-                                        Difficulty varaints are a special type
+                                        Difficulty variants are a special type
                                         of variants that modify generation
                                         instead of the goal list. Difficulty
                                         variants modify how many goals from a

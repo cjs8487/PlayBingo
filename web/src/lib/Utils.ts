@@ -5,7 +5,7 @@ import { Game } from '@playbingo/types';
 export function alertError(message: string) {
     toast.error(message, {
         position: 'top-right',
-        autoClose: 5000,
+        autoClose: 10000,
         hideProgressBar: false,
         closeOnClick: true,
         pauseOnHover: true,

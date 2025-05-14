@@ -33,7 +33,7 @@ goals.post('/:id', async (req, res) => {
     const { id } = req.params;
     const { goal, description, categories, difficulty } = req.body;
 
-    if (!goal && !description && !categories && !difficulty) {
+    if (!goal && description === undefined && !categories && !difficulty) {
         res.status(400).send('No changes submitted');
         return;
     }
@@ -41,10 +41,13 @@ goals.post('/:id', async (req, res) => {
     const input: Prisma.GoalUpdateInput = {
         goal,
         description,
-        difficulty,
     };
 
-    console.log(categories);
+    if (difficulty === 0) {
+        input.difficulty = null;
+    } else if (difficulty > 0) {
+        input.difficulty = difficulty;
+    }
 
     if (categories) {
         input.categories = {
