@@ -78,10 +78,8 @@ function RacetimeSettings() {
                         fullWidth
                     />
                     <HoverIcon icon={<Info />}>
-                        <Typography variant="caption">
-                            This is the short name that appears in racetime URLs
-                            pointing to category resources, such as race rooms.
-                        </Typography>
+                        This is the short name that appears in racetime URLs
+                        pointing to category resources, such as race rooms.
                     </HoverIcon>
                 </Box>
                 <FormControl sx={{ flexGrow: 3 }}>
@@ -237,17 +235,14 @@ export default function GameSettings({ gameData }: GameSettingsProps) {
                                 name="enableSRLv5"
                             />
                             <HoverIcon icon={<Info />}>
-                                <Typography variant="caption">
-                                    SRLv5 generation requires goals to have a
-                                    difficulty value assigned to them in order
-                                    to be used in generation. The generator uses
-                                    the difficulty value to balance each row,
-                                    column, and diagonal, by having the
-                                    difficulty of goals in each sum to the same
-                                    value. It also tries to minimize synergy
-                                    between goals in the same line by minimizing
-                                    the category overlap.
-                                </Typography>
+                                SRLv5 generation requires goals to have a
+                                difficulty value assigned to them in order to be
+                                used in generation. The generator uses the
+                                difficulty value to balance each row, column,
+                                and diagonal, by having the difficulty of goals
+                                in each sum to the same value. It also tries to
+                                minimize synergy between goals in the same line
+                                by minimizing the category overlap.
                             </HoverIcon>
                         </Box>
                         <Box
@@ -269,18 +264,14 @@ export default function GameSettings({ gameData }: GameSettingsProps) {
                                     name="difficultyVariantsEnabled"
                                 />
                                 <HoverIcon icon={<Info />}>
-                                    <Typography variant="caption">
-                                        Difficulty variants are a special type
-                                        of variants that modify generation
-                                        instead of the goal list. Difficulty
-                                        variants modify how many goals from a
-                                        given difficulty are selected during
-                                        generation, which can impact the
-                                        difficulty or length of the final board.
-                                        When a difficulty variant is chosen,
-                                        only the Random generation mode is
-                                        available.
-                                    </Typography>
+                                    Difficulty variants are a special type of
+                                    variants that modify generation instead of
+                                    the goal list. Difficulty variants modify
+                                    how many goals from a given difficulty are
+                                    selected during generation, which can impact
+                                    the difficulty or length of the final board.
+                                    When a difficulty variant is chosen, only
+                                    the Random generation mode is available.
                                 </HoverIcon>
                             </Box>
                             <Box
@@ -297,21 +288,17 @@ export default function GameSettings({ gameData }: GameSettingsProps) {
                                     max={25}
                                 />
                                 <HoverIcon icon={<Info />}>
-                                    <Typography variant="caption">
-                                        Difficulty groups is the number of
-                                        groups goals are grouped into for
-                                        generating a board for a difficulty
-                                        variant. The available goal difficulties
-                                        will be split into equal sized groups
-                                        based on this number. For example, if
-                                        there are 5 groups and 25 difficulties,
-                                        every 5 difficulties would be a group
-                                        (1-5, 6-10, etc.). Setting this to 0 is
-                                        equivalent to disabling difficulty
-                                        variants, as the generator will be
-                                        unable to generate a board with 0
-                                        groups.
-                                    </Typography>
+                                    Difficulty groups is the number of groups
+                                    goals are grouped into for generating a
+                                    board for a difficulty variant. The
+                                    available goal difficulties will be split
+                                    into equal sized groups based on this
+                                    number. For example, if there are 5 groups
+                                    and 25 difficulties, every 5 difficulties
+                                    would be a group (1-5, 6-10, etc.). Setting
+                                    this to 0 is equivalent to disabling
+                                    difficulty variants, as the generator will
+                                    be unable to generate a board with 0 groups.
                                 </HoverIcon>
                             </Box>
                         </Box>
@@ -327,13 +314,11 @@ export default function GameSettings({ gameData }: GameSettingsProps) {
                                 name="useTypedRandom"
                             />
                             <HoverIcon icon={<Info />}>
-                                <Typography variant="caption">
-                                    Category-Random generation allows random
-                                    generation to apply the typed restrictions
-                                    of SRLv5 generation, which attempts to
-                                    minimize the category overlap of each line.
-                                    Category-Random replaces Random generation.
-                                </Typography>
+                                Category-Random generation allows random
+                                generation to apply the typed restrictions of
+                                SRLv5 generation, which attempts to minimize the
+                                category overlap of each line. Category-Random
+                                replaces Random generation.
                             </HoverIcon>
                         </Box>
                         {gameData.racetimeBeta && <RacetimeSettings />}
@@ -346,18 +331,15 @@ export default function GameSettings({ gameData }: GameSettingsProps) {
                             >
                                 <Typography>Slug Words</Typography>
                                 <HoverIcon icon={<Info />}>
-                                    <Typography variant="caption">
-                                        Custom list of words to be used when
-                                        generating room URLs for this category.
-                                        Replaces the second word of the slug,
-                                        which is normally a noun. If provided,
-                                        you must provide at least 50 unique
-                                        words to use, and will completely
-                                        replace the default list. The more words
-                                        you supply, the lower the chance that
-                                        there is a room name collision during
-                                        generation.
-                                    </Typography>
+                                    Custom list of words to be used when
+                                    generating room URLs for this category.
+                                    Replaces the second word of the slug, which
+                                    is normally a noun. If provided, you must
+                                    provide at least 50 unique words to use, and
+                                    will completely replace the default list.
+                                    The more words you supply, the lower the
+                                    chance that there is a room name collision
+                                    during generation.
                                 </HoverIcon>
                             </Box>
                             <FormikTextField
