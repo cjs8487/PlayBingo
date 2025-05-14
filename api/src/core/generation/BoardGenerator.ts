@@ -67,11 +67,6 @@ export default class BoardGenerator {
             }
         }
 
-        //@ts-ignore
-        if (goals.includes(undefined)) {
-            console.log('undefined in goal list');
-        }
-
         this.allGoals = goals;
         this.goals = [...this.allGoals];
         this.categories = categories;
