@@ -274,7 +274,9 @@ rooms.post<{ slug: string; action: string }>(
             res.sendStatus(404);
             return;
         }
-        if (!verifyRoomToken(authToken, slug)) {
+
+        const authPayload = verifyRoomToken(authToken, slug);
+        if (!authPayload) {
             room.logWarn(`Unauthorized action request`);
             res.sendStatus(403);
             return;
@@ -284,7 +286,7 @@ rooms.post<{ slug: string; action: string }>(
             room,
             action,
             req.session.user,
-            authToken,
+            authPayload,
         );
 
         res.status(result.code);
