@@ -251,9 +251,10 @@ rooms.post('/:slug/authorize', (req, res) => {
 });
 
 rooms.post<{ slug: string; action: string }>(
-    '/:slug/actions/:action(*)',
+    '/:slug/actions',
     async (req, res) => {
-        const { slug, action } = req.params;
+        const { slug } = req.params;
+        const { authToken, action } = req.body;
 
         if (!req.session.user) {
             logWarn(`Unauthorized action request ${action}`);
@@ -261,7 +262,6 @@ rooms.post<{ slug: string; action: string }>(
             return;
         }
 
-        const { authToken } = req.body;
         if (!authToken) {
             logInfo(`Malformed action body request - missing authToken`);
             res.status(400).send('Missing required body parameter');
