@@ -1,6 +1,7 @@
 import { randomInt } from 'crypto';
 import { Router } from 'express';
-import { createRoomToken } from '../../auth/RoomAuth';
+import { logInfo, logWarn } from '../../Logger';
+import { createRoomToken, verifyRoomToken } from '../../auth/RoomAuth';
 import Room, {
     BoardGenerationMode,
     BoardGenerationOptions,
@@ -13,9 +14,8 @@ import {
 } from '../../database/Rooms';
 import { gameForSlug, goalCount } from '../../database/games/Games';
 import { chunk } from '../../util/Array';
-import actions from './Actions';
-import { logWarn } from '../../Logger';
 import { randomWord, slugAdjectives, slugNouns } from '../../util/Words';
+import { handleAction } from './actions/Actions';
 
 const MIN_ROOM_GOALS_REQUIRED = 25;
 const rooms = Router();
@@ -250,6 +250,52 @@ rooms.post('/:slug/authorize', (req, res) => {
     res.status(200).send({ authToken: token });
 });
 
-rooms.use('/actions', actions);
+rooms.post<{ slug: string; action: string }>(
+    '/:slug/actions',
+    async (req, res) => {
+        const { slug } = req.params;
+        const { authToken, action } = req.body;
+
+        if (!req.session.user) {
+            logWarn(`Unauthorized action request ${action}`);
+            res.sendStatus(401);
+            return;
+        }
+
+        if (!authToken) {
+            logInfo(`Malformed action body request - missing authToken`);
+            res.status(400).send('Missing required body parameter');
+            return;
+        }
+
+        const room = allRooms.get(slug);
+        if (!room) {
+            logInfo(`Unable to find room to take action on`);
+            res.sendStatus(404);
+            return;
+        }
+
+        const authPayload = verifyRoomToken(authToken, slug);
+        if (!authPayload) {
+            room.logWarn(`Unauthorized action request`);
+            res.sendStatus(403);
+            return;
+        }
+
+        const result = await handleAction(
+            room,
+            action,
+            req.session.user,
+            authPayload,
+        );
+
+        res.status(result.code);
+        if ('message' in result) {
+            res.send(result.message);
+        } else {
+            res.json(result.value);
+        }
+    },
+);
 
 export default rooms;

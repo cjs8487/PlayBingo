@@ -355,24 +355,35 @@ export function RoomContextProvider({ slug, children }: RoomContextProps) {
         [authToken, sendJsonMessage],
     );
     const createRacetimeRoom = useCallback(async () => {
-        const res = await fetch('/api/rooms/actions/createRacetimeRoom', {
+        const res = await fetch(`/api/rooms/${slug}/actions`, {
             method: 'POST',
-            body: JSON.stringify({ slug: roomData?.slug, authToken }),
+            body: JSON.stringify({
+                action: 'racetime/create',
+                authToken,
+            }),
         });
+        if (!res.ok) {
+            alertError(await res.text());
+            return;
+        }
     }, [roomData, authToken]);
     const updateRacetimeRoom = useCallback(async () => {
-        const res = await fetch(
-            '/api/rooms/actions/refreshRacetimeConnection',
-            {
-                method: 'POST',
-                body: JSON.stringify({ slug: roomData?.slug, authToken }),
-            },
-        );
+        const res = await fetch(`/api/rooms/${slug}/actions`, {
+            method: 'POST',
+            body: JSON.stringify({ action: 'racetime/refresh', authToken }),
+        });
+        if (!res.ok) {
+            alertError(await res.text());
+            return;
+        }
     }, [roomData, authToken]);
     const joinRacetimeRoom = useCallback(async () => {
-        const res = await fetch('/api/rooms/actions/racetime/join', {
+        const res = await fetch(`/api/rooms/${slug}/actions`, {
             method: 'POST',
-            body: JSON.stringify({ slug: roomData?.slug, authToken }),
+            body: JSON.stringify({
+                action: 'racetime/join',
+                authToken,
+            }),
         });
         if (!res.ok) {
             alertError(await res.text());
@@ -380,9 +391,12 @@ export function RoomContextProvider({ slug, children }: RoomContextProps) {
         }
     }, [roomData, authToken]);
     const racetimeReady = useCallback(async () => {
-        const res = await fetch('/api/rooms/actions/racetime/ready', {
+        const res = await fetch(`/api/rooms/${slug}/actions`, {
             method: 'POST',
-            body: JSON.stringify({ slug: roomData?.slug, authToken }),
+            body: JSON.stringify({
+                action: 'racetime/ready',
+                authToken,
+            }),
         });
         if (!res.ok) {
             alertError(await res.text());
@@ -390,9 +404,9 @@ export function RoomContextProvider({ slug, children }: RoomContextProps) {
         }
     }, [roomData, authToken]);
     const racetimeUnready = useCallback(async () => {
-        const res = await fetch('/api/rooms/actions/racetime/unready', {
+        const res = await fetch(`/api/rooms/${slug}/actions`, {
             method: 'POST',
-            body: JSON.stringify({ slug: roomData?.slug, authToken }),
+            body: JSON.stringify({ action: 'racetime/unready', authToken }),
         });
         if (!res.ok) {
             alertError(await res.text());
