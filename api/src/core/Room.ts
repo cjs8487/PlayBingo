@@ -195,7 +195,7 @@ export default class Room {
         // game is enabled and configured for the new generator system
         // difficulty variants are mutually exclusive with th new generator
         // system currently, so if difficulty is selected go back to the old one
-        if (this.generatorConfig && mode === BoardGenerationMode.DIFFICULTY) {
+        if (this.generatorConfig && mode !== BoardGenerationMode.DIFFICULTY) {
             const generator = new BoardGenerator(
                 goals,
                 categories,
