@@ -3,16 +3,19 @@ import {
     FormControl,
     FormHelperText,
     InputLabel,
+    ListItemText,
     MenuItem,
     Select,
     SxProps,
     TextField,
+    Tooltip,
 } from '@mui/material';
 import { useField } from 'formik';
 
 interface SelectOption {
     label: string;
     value: string;
+    tooltip?: string;
 }
 interface FormikSelectProps {
     id: string;
@@ -52,11 +55,17 @@ export function FormikSelectField({
             >
                 {options.map((option) => (
                     <MenuItem key={option.value} value={option.value}>
-                        {option.label}
+                        {option.tooltip ? (
+                            <Tooltip title={option.tooltip}>
+                                <ListItemText>{option.label}</ListItemText>
+                            </Tooltip>
+                        ) : (
+                            option.label
+                        )}
                     </MenuItem>
                 ))}
             </Select>
-            {meta.error && (
+            {error && (
                 <FormHelperText error={error}>{meta.error}</FormHelperText>
             )}
         </FormControl>

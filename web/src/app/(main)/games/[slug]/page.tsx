@@ -1,19 +1,20 @@
 'use client';
 
 import { useApi } from '@/lib/Hooks';
-import { Game } from '@playbingo/types';
 import { TabContext, TabList, TabPanel } from '@mui/lab';
 import { Box, Container, Link, Tab, Typography } from '@mui/material';
+import { Game } from '@playbingo/types';
 import Image from 'next/image';
 import NextLink from 'next/link';
 import { use, useLayoutEffect, useState } from 'react';
 import GameSettings from '../../../../components/game/GameSettings';
 import GoalCategories from '../../../../components/game/GoalCategories';
+import GoalManagement from '../../../../components/game/goals/GoalManagement';
 import PermissionsManagement from '../../../../components/game/PermissionsManagement';
 import Variants from '../../../../components/game/Variants';
-import GoalManagement from '../../../../components/game/goals/GoalManagement';
 import { GoalManagerContextProvider } from '../../../../context/GoalManagerContext';
 import { alertError, gameCoverUrl } from '../../../../lib/Utils';
+import GenerationPage from './Generation';
 
 export default function GamePage(props: { params: Promise<{ slug: string }> }) {
     const params = use(props.params);
@@ -58,6 +59,9 @@ export default function GamePage(props: { params: Promise<{ slug: string }> }) {
             tabs.push('Variants');
         }
         tabs.push('Permissions');
+        if (gameData.newGeneratorBeta) {
+            tabs.push('Generation');
+        }
         tabs.push('Settings');
     }
 
@@ -162,6 +166,9 @@ export default function GamePage(props: { params: Promise<{ slug: string }> }) {
                 </TabPanel>
                 <TabPanel value="Permissions">
                     <PermissionsManagement slug={slug} gameData={gameData} />
+                </TabPanel>
+                <TabPanel value="Generation">
+                    <GenerationPage game={gameData} />
                 </TabPanel>
                 <TabPanel value="Settings">
                     <GameSettings gameData={gameData} />

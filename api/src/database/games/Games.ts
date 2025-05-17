@@ -1,4 +1,12 @@
-import { Prisma } from '@prisma/client';
+import {
+    GenerationBoardLayout,
+    GenerationGlobalAdjustments,
+    GenerationGoalRestriction,
+    GenerationGoalSelection,
+    GenerationListMode,
+    GenerationListTransform,
+    Prisma,
+} from '@prisma/client';
 import { logError } from '../../Logger';
 import { prisma } from '../Database';
 
@@ -36,10 +44,10 @@ export const gameForSlug = (slug: string) => {
         where: { slug },
         include: {
             owners: {
-                select: { id: true, username: true },
+                select: { id: true, username: true, staff: true },
             },
             moderators: {
-                select: { id: true, username: true },
+                select: { id: true, username: true, staff: true },
             },
             difficultyVariants: {
                 select: { id: true, name: true, goalAmounts: true },
@@ -307,4 +315,37 @@ export const slugForMedia = async (id: string) => {
 
 export const getGameCover = async (slug: string) => {
     return (await prisma.game.findUnique({ where: { slug } }))?.coverImage;
+};
+
+interface GeneratorUpdateInput {
+    generationListMode: GenerationListMode[];
+    generationListTransform: GenerationListTransform;
+    generationBoardLayout: GenerationBoardLayout;
+    generationGoalSelection: GenerationGoalSelection;
+    generationGoalRestrictions: GenerationGoalRestriction[];
+    generationGlobalAdjustments: GenerationGlobalAdjustments[];
+}
+
+export const updateGeneratorConfig = (
+    slug: string,
+    {
+        generationListMode,
+        generationListTransform,
+        generationBoardLayout,
+        generationGoalSelection,
+        generationGoalRestrictions,
+        generationGlobalAdjustments,
+    }: GeneratorUpdateInput,
+) => {
+    return prisma.game.update({
+        where: { slug },
+        data: {
+            generationListMode,
+            generationListTransform,
+            generationBoardLayout,
+            generationGoalSelection,
+            generationGoalRestrictions,
+            generationGlobalAdjustments,
+        },
+    });
 };

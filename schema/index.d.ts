@@ -2,6 +2,7 @@ export * from './types/Board';
 export * from './types/Cell';
 export * from './types/ChatMessage';
 export * from './types/Game';
+export * from './types/GeneratorOptions';
 export * from './types/Goal';
 export * from './types/GoalCategory';
 export * from './types/Player';

@@ -6,6 +6,7 @@ import path from 'path';
 import { port, sessionSecret, testing } from './Environment';
 import { logDebug, logger, logInfo } from './Logger';
 import { allRooms, roomWebSocketServer } from './core/RoomServer';
+import BoardGenerator from './core/generation/BoardGenerator';
 import { disconnect } from './database/Database';
 import mediaServer from './media/MediaServer';
 import api from './routes/api';
@@ -15,6 +16,7 @@ import {
     metricsRouter,
     requestDurationHistogram,
 } from './routes/metrics';
+import { listToBoard } from './util/RoomUtils';
 import { closeSessionDatabase, sessionStore } from './util/Session';
 
 declare module 'express-session' {
