@@ -10,6 +10,7 @@ import PlayerList from '../../../../components/room/PlayerList';
 import RacetimeCard from '../../../../components/room/racetime/RacetimeCard';
 import PlayerInfo from '../../../../components/room/PlayerInfo';
 import NextLink from 'next/link';
+import { useState } from 'react';
 
 export default function Room() {
     const { connectionStatus, roomData } = useRoomContext();
@@ -102,8 +103,18 @@ export default function Room() {
 }
 
 function NewGeneratorBanner() {
+    const [show, setShow] = useState(true);
+    if (!show) {
+        return null;
+    }
     return (
-        <Alert severity="info" variant="filled">
+        <Alert
+            severity="info"
+            variant="filled"
+            onClose={() => {
+                setShow(false);
+            }}
+        >
             This game is using PlayBingo's new generation system. Bugs may
             occur. Report any issues you run into in the{' '}
             <Link
