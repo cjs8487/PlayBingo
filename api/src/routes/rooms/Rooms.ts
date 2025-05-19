@@ -5,6 +5,7 @@ import { createRoomToken, verifyRoomToken } from '../../auth/RoomAuth';
 import Room, {
     BoardGenerationMode,
     BoardGenerationOptions,
+    GeneratorConfig,
 } from '../../core/Room';
 import { allRooms } from '../../core/RoomServer';
 import {
@@ -83,6 +84,18 @@ rooms.post('/', async (req, res) => {
     const num = randomInt(1000, 10000);
     const slug = `${adj}-${noun}-${num}`;
 
+    let generatorConfig: GeneratorConfig | undefined = undefined;
+    if (gameData.newGeneratorBeta) {
+        generatorConfig = {
+            generationListMode: gameData.generationListMode,
+            generationListTransform: gameData.generationListTransform,
+            generationBoardLayout: gameData.generationBoardLayout,
+            generationGoalSelection: gameData.generationGoalSelection,
+            generationGoalRestrictions: gameData.generationGoalRestrictions,
+            generationGlobalAdjustments: gameData.generationGlobalAdjustments,
+        };
+    }
+
     const dbRoom = await createRoom(
         slug,
         name,
@@ -106,6 +119,8 @@ rooms.post('/', async (req, res) => {
         gameData.racetimeBeta &&
             !!gameData.racetimeCategory &&
             !!gameData.racetimeGoal,
+        '',
+        generatorConfig,
     );
     const options: BoardGenerationOptions = {
         mode: BoardGenerationMode.RANDOM,

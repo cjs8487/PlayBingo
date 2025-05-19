@@ -2,14 +2,33 @@
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "type": "object",
     "additionalProperties": false,
-    "required": ["name", "game", "slug", "gameSlug"],
+    "required": [
+        "name",
+        "game",
+        "slug",
+        "gameSlug",
+        "newGenerator"
+    ],
     "description": "Basic information about a room",
     "properties": {
-        "name": { "type": "string"},
-        "game": { "type": "string"},
-        "slug": { "type": "string"},
-        "gameSlug": { "type": "string"},
-        "racetimeConnection": {"$ref": "#/$defs/RacetimeConnection"}
+        "name": {
+            "type": "string"
+        },
+        "game": {
+            "type": "string"
+        },
+        "slug": {
+            "type": "string"
+        },
+        "gameSlug": {
+            "type": "string"
+        },
+        "racetimeConnection": {
+            "$ref": "#/$defs/RacetimeConnection"
+        },
+        "newGenerator": {
+            "type": "boolean"
+        }
     },
     "$defs": {
         "RacetimeConnection": {
