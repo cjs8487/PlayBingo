@@ -19,9 +19,12 @@ const getGame = cache(async (slug: string): Promise<Game | undefined> => {
     return res.json();
 });
 
-export async function generateMetadata(props: {
-    params: Promise<{ slug: string }>;
-}): Promise<Metadata> {
+export async function generateMetadata(
+    props: {
+        params: Promise<{ slug: string }>;
+    },
+    parent: ResolvingMetadata,
+) {
     const { slug } = await props.params;
     const game = await getGame(slug);
 
@@ -29,16 +32,23 @@ export async function generateMetadata(props: {
         return {};
     }
 
-    return {
+    const metadata: Metadata = {
         title: game.name,
         description: `Play ${game.name} bingo on PlayBingo.`,
         openGraph: {
-            url: 'https://playbingo.gg',
+            url: `https://playbingo.gg/games/${slug}`,
             title: game.name,
             description: `Play ${game.name} bingo on PlayBingo.`,
-            images: [gameCoverUrl(game.coverImage ?? '')],
         },
     };
+
+    if (game.coverImage) {
+        metadata.openGraph!.images = [gameCoverUrl(game.coverImage)];
+    } else {
+        metadata.openGraph!.images = (await parent).openGraph?.images;
+    }
+
+    return metadata;
 }
 
 export default async function GameLayout({ params }: Props) {

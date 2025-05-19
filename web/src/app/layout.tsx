@@ -16,11 +16,6 @@ export const metadata: Metadata = {
             template: '%s | PlayBingo',
             default: 'PlayBingo',
         },
-        images: {
-            url: 'https://playbingo.gg/logo.png',
-            width: 5900,
-            height: 1867,
-        },
     },
 };
 
