@@ -24,7 +24,7 @@ roomWebSocketServer.on('connection', (ws, req) => {
     const timeout = setTimeout(() => {
         ws.send(JSON.stringify({ action: 'unauthorized' }));
         ws.close();
-    }, 1000);
+    }, 60 * 1000);
 
     // const pingTimeout = setTimeout(
     //     () => {
