@@ -115,7 +115,7 @@ function NewGeneratorBanner() {
                 setShow(false);
             }}
         >
-            This game is using PlayBingo's new generation system. Bugs may
+            This game is using PlayBingo&apos;s new generation system. Bugs may
             occur. Report any issues you run into in the{' '}
             <Link
                 component={NextLink}
