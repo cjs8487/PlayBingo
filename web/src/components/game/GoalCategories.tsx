@@ -211,7 +211,7 @@ export default function GoalCategories({ gameData }: GoalCategoriesProps) {
 
     return (
         <>
-            <Box sx={{ display: 'flex' }}>
+            <Box sx={{ display: 'flex', columnGap: 4 }}>
                 <TextField
                     type="text"
                     label="Search"
