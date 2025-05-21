@@ -1,5 +1,5 @@
 import { Game } from '@playbingo/types';
-import { Metadata } from 'next';
+import { Metadata, ResolvingMetadata } from 'next';
 import { notFound } from 'next/navigation';
 import { cache } from 'react';
 import { gameCoverUrl } from '../../../../lib/Utils';
