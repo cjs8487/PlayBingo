@@ -12,7 +12,6 @@ interface Props {
 
 const getGame = cache(async (slug: string): Promise<Game | undefined> => {
     const res = await serverFetch(`/api/games/${slug}`);
-    console.log(res);
     if (!res.ok) {
         return undefined;
     }
