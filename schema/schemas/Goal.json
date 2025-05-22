@@ -7,8 +7,8 @@
     "properties": {
         "id": {"type": "string"},
         "goal": {"type": "string"},
-        "description": {"type": "string"},
-        "difficulty": {"type": "number"},
+        "description": {"type": ["string", "null"]},
+        "difficulty": {"type": ["number", "null"]},
         "categories": {"type": "array", "items": {"type": "string"}}
     }
 }

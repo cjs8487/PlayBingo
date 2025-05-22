@@ -13,7 +13,7 @@ interface CellProps {
 }
 
 export default function BoardCell({
-    cell: { goal, description, colors },
+    cell: { goal, colors },
     row,
     col,
 }: CellProps) {
@@ -34,11 +34,9 @@ export default function BoardCell({
     const colorPortion = 360 / colors.length;
     const isStarred = starredGoals.includes(row * 5 + col);
 
-    console.log(description);
-
     return (
         <Tooltip
-            title={description}
+            title={goal.description}
             arrow
             slotProps={{
                 popper: {
@@ -90,7 +88,7 @@ export default function BoardCell({
                     }}
                 >
                     <TextFit
-                        text={goal}
+                        text={goal.goal}
                         sx={{
                             p: 1,
                             filter: 'drop-shadow(2px 2px 2px rgba(0,0,0,0))',
