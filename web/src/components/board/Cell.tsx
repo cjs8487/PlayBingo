@@ -1,5 +1,5 @@
 'use client';
-import { Box, Tooltip } from '@mui/material';
+import { Box, Tooltip, Typography } from '@mui/material';
 import { useCallback, useContext } from 'react';
 import { RoomContext } from '../../context/RoomContext';
 import { Cell } from '@playbingo/types';
@@ -18,8 +18,14 @@ export default function BoardCell({
     col,
 }: CellProps) {
     // context
-    const { color, markGoal, unmarkGoal, starredGoals, toggleGoalStar } =
-        useContext(RoomContext);
+    const {
+        color,
+        markGoal,
+        unmarkGoal,
+        starredGoals,
+        toggleGoalStar,
+        showGoalDetails,
+    } = useContext(RoomContext);
 
     // callbacks
     const toggleSpace = useCallback(() => {
@@ -36,7 +42,17 @@ export default function BoardCell({
 
     return (
         <Tooltip
-            title={goal.description}
+            title={
+                showGoalDetails ? (
+                    <>
+                        <Box sx={{ pb: 1.5 }}>{goal.description}</Box>
+                        <Box>Difficulty: {goal.difficulty}</Box>
+                        <Box>Categories: {goal.categories?.join(', ')}</Box>
+                    </>
+                ) : (
+                    goal.description
+                )
+            }
             arrow
             slotProps={{
                 popper: {

@@ -9,9 +9,11 @@ import {
     DialogContent,
     DialogTitle,
     FormControl,
+    FormControlLabel,
     InputLabel,
     MenuItem,
     Select,
+    Switch,
     Typography,
 } from '@mui/material';
 import { Field, Form, Formik } from 'formik';
@@ -31,7 +33,13 @@ export default function RoomControlDialog({
     show,
     close,
 }: RoomControlDialogProps) {
-    const { roomData, regenerateCard, board } = useContext(RoomContext);
+    const {
+        roomData,
+        regenerateCard,
+        board,
+        showGoalDetails,
+        toggleGoalDetails,
+    } = useContext(RoomContext);
 
     const modes = useAsync(async () => {
         if (!roomData) {
@@ -146,6 +154,16 @@ export default function RoomControlDialog({
                         pt: 2,
                     }}
                 >
+                    <Typography variant="h6">Local Actions</Typography>
+                    <FormControlLabel
+                        control={
+                            <Switch
+                                checked={showGoalDetails}
+                                onChange={toggleGoalDetails}
+                            />
+                        }
+                        label="Show All Goal Details"
+                    />
                     <Typography variant="h6">Local Actions</Typography>
                     <Typography variant="caption">
                         These actions are potentially destructive and should
