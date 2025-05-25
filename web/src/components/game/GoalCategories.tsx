@@ -2,7 +2,21 @@ import Check from '@mui/icons-material/Check';
 import Close from '@mui/icons-material/Close';
 import Delete from '@mui/icons-material/Delete';
 import Edit from '@mui/icons-material/Edit';
-import { Box, IconButton, List, ListItem, Typography } from '@mui/material';
+import {
+    Autocomplete,
+    Box,
+    Checkbox,
+    FormControl,
+    IconButton,
+    InputLabel,
+    List,
+    ListItem,
+    MenuItem,
+    Select,
+    TextField,
+    Tooltip,
+    Typography,
+} from '@mui/material';
 import { Game, GoalCategory } from '@playbingo/types';
 import { Form, Formik } from 'formik';
 import { useState } from 'react';
@@ -11,6 +25,8 @@ import { useApi } from '../../lib/Hooks';
 import { alertError } from '../../lib/Utils';
 import FormikTextField from '../input/FormikTextField';
 import NumberInput from '../input/NumberInput';
+import ArrowDownward from '@mui/icons-material/ArrowDownward';
+import ArrowUpward from '@mui/icons-material/ArrowUpward';
 
 interface CategoryFormProps {
     cat: GoalCategory;
@@ -135,6 +151,15 @@ function CategoryForm({ cat, slug }: CategoryFormProps) {
     );
 }
 
+enum SortOptions {
+    NAME,
+    MAXIMUM,
+}
+
+const sortOptions = [
+    { label: 'Name', value: SortOptions.NAME },
+    { label: 'Maximum', value: SortOptions.MAXIMUM },
+];
 interface GoalCategoriesProps {
     gameData: Game;
 }
@@ -144,8 +169,11 @@ export default function GoalCategories({ gameData }: GoalCategoriesProps) {
         data: categories,
         isLoading,
         error,
-        mutate,
     } = useApi<GoalCategory[]>(`/api/games/${gameData.slug}/categories`);
+
+    const [sort, setSort] = useState<SortOptions>(SortOptions.NAME);
+    const [reverse, setReverse] = useState(false);
+    const [search, setSearch] = useState('');
 
     if (!categories || isLoading) {
         return null;
@@ -156,10 +184,77 @@ export default function GoalCategories({ gameData }: GoalCategoriesProps) {
             <Typography>Failed to load goal categories - {error}</Typography>
         );
     }
+
+    const shownCats = categories
+        .filter((c) => {
+            if (search && search.length > 0) {
+                if (c.name.toLowerCase().includes(search.toLowerCase())) {
+                    return true;
+                }
+                return false;
+            }
+            return true;
+        })
+        .sort((a, b) => {
+            switch (sort) {
+                case SortOptions.NAME:
+                    return a.name.localeCompare(b.name);
+                case SortOptions.MAXIMUM:
+                    return (a.max ?? 0) - (b.max ?? 0);
+                default:
+                    return 1;
+            }
+        });
+    if (reverse) {
+        shownCats.reverse();
+    }
+
     return (
         <>
+            <Box sx={{ display: 'flex', columnGap: 4 }}>
+                <TextField
+                    type="text"
+                    label="Search"
+                    onChange={(e) => setSearch(e.target.value)}
+                    sx={{ width: '33%' }}
+                />
+                <Box
+                    sx={{
+                        display: 'flex',
+                        width: '33%',
+                        alignItems: 'center',
+                        columnGap: 1,
+                    }}
+                >
+                    <FormControl fullWidth>
+                        <InputLabel id="filter-sort-by-label">
+                            Sort by
+                        </InputLabel>
+                        <Select
+                            id="filter-sort-by"
+                            labelId="filter-sort-by-label"
+                            value={sort}
+                            onChange={(e) => {
+                                setSort(e.target.value as SortOptions);
+                            }}
+                            label="Sort by"
+                        >
+                            {sortOptions.map((opt) => (
+                                <MenuItem key={opt.value} value={opt.value}>
+                                    {opt.label}
+                                </MenuItem>
+                            ))}
+                        </Select>
+                    </FormControl>
+                    <Tooltip title="Toggle sort direction">
+                        <IconButton onClick={() => setReverse((curr) => !curr)}>
+                            {reverse ? <ArrowUpward /> : <ArrowDownward />}
+                        </IconButton>
+                    </Tooltip>
+                </Box>
+            </Box>
             <List>
-                {categories.map((cat) => (
+                {shownCats.map((cat) => (
                     <CategoryForm key={cat.id} cat={cat} slug={gameData.slug} />
                 ))}
             </List>
