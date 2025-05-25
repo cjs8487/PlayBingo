@@ -42,12 +42,7 @@ export default function BoardCell({
     const colorPortion = 360 / colors.length;
     const isStarred = starredGoals.includes(row * 5 + col);
 
-    const cellId = useMemo(() => `${row},${col}`, [row, col]);
     const [counter, setCounter] = useState(0);
-
-    const progressMax = description?.match(/\b(\d+)\b$/)?.[1];
-    const maxValue = progressMax ? parseInt(progressMax) : undefined;
-
     const updateProgress = useCallback((delta: number) => {
         setCounter((prev) => {
             const next = Math.max(0, prev + delta);
