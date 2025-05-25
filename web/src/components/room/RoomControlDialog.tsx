@@ -157,7 +157,7 @@ export default function RoomControlDialog({
                                 onChange={toggleCounters}
                             />
                         }
-                        label="Show All Goal Details"
+                        label="Show Counters"
                     />
                 </Box>
                 <Box
