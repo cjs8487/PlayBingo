@@ -27,6 +27,7 @@ export default function BoardCell({
         starredGoals,
         toggleGoalStar,
         showGoalDetails,
+        showCounters,
     } = useContext(RoomContext);
 
     // callbacks
@@ -144,59 +145,61 @@ export default function BoardCell({
                         }}
                     />
                 ))}
-                <Box
-                    sx={{
-                        position: 'absolute',
-                        bottom: 0,
-                        display: 'flex',
-                        zIndex: 30,
-                        backgroundColor: 'rgba(0,0,0,0.7)',
-                        alignContent: 'center',
-                        px: 0.5,
-                        py: 0.2,
-                        fontSize: '1rem',
-                        '& > div': {
-                            cursor: 'pointer',
-                            px: 0.5,
-                            userSelect: 'none',
-                            ':hover': {
-                                color: 'yellow',
-                            },
-                        },
-                        width: '100%',
-                    }}
-                >
-                    <IconButton
-                        size="small"
-                        onClick={(e) => {
-                            updateProgress(-1);
-                            e.stopPropagation;
-                        }}
-                    >
-                        <Remove fontSize="small" />
-                    </IconButton>
-                    <Typography
+                {showCounters && (
+                    <Box
                         sx={{
-                            textAlign: 'center',
-                            zIndex: 20,
-                            color: 'white',
-                            textShadow: '1px 1px 10px rgba(0,0,0,0.9)',
-                            pointerEvents: 'none',
-                            flexGrow: 1,
+                            position: 'absolute',
+                            bottom: 0,
+                            display: 'flex',
+                            zIndex: 30,
+                            backgroundColor: 'rgba(0,0,0,0.7)',
+                            alignContent: 'center',
+                            px: 0.5,
+                            py: 0.2,
+                            fontSize: '1rem',
+                            '& > div': {
+                                cursor: 'pointer',
+                                px: 0.5,
+                                userSelect: 'none',
+                                ':hover': {
+                                    color: 'yellow',
+                                },
+                            },
+                            width: '100%',
                         }}
                     >
-                        {counter}
-                    </Typography>
-                    <IconButton
-                        size="small"
-                        onClick={(e) => {
-                            updateProgress(+1);
-                            e.stopPropagation();
-                        }}
-                    >
-                        <Add fontSize="small" />
-                    </IconButton>
-                </Box>
+                        <IconButton
+                            size="small"
+                            onClick={(e) => {
+                                updateProgress(-1);
+                                e.stopPropagation;
+                            }}
+                        >
+                            <Remove fontSize="small" />
+                        </IconButton>
+                        <Typography
+                            sx={{
+                                textAlign: 'center',
+                                zIndex: 20,
+                                color: 'white',
+                                textShadow: '1px 1px 10px rgba(0,0,0,0.9)',
+                                pointerEvents: 'none',
+                                flexGrow: 1,
+                            }}
+                        >
+                            {counter}
+                        </Typography>
+                        <IconButton
+                            size="small"
+                            onClick={(e) => {
+                                updateProgress(+1);
+                                e.stopPropagation();
+                            }}
+                        >
+                            <Add fontSize="small" />
+                        </IconButton>
+                    </Box>
+                )}
                 {isStarred && (
                     <Box sx={{ position: 'absolute', right: 0 }}>
                         <Star />

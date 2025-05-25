@@ -39,6 +39,8 @@ export default function RoomControlDialog({
         board,
         showGoalDetails,
         toggleGoalDetails,
+        showCounters,
+        toggleCounters,
     } = useContext(RoomContext);
 
     const modes = useAsync(async () => {
@@ -149,6 +151,22 @@ export default function RoomControlDialog({
                         </Form>
                     )}
                 </Formik>
+                <Box
+                    sx={{
+                        pt: 2,
+                    }}
+                >
+                    <Typography variant="h6">Settings</Typography>
+                    <FormControlLabel
+                        control={
+                            <Switch
+                                checked={showCounters}
+                                onChange={toggleCounters}
+                            />
+                        }
+                        label="Show All Goal Details"
+                    />
+                </Box>
                 <Box
                     sx={{
                         pt: 2,
