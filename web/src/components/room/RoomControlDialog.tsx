@@ -9,9 +9,11 @@ import {
     DialogContent,
     DialogTitle,
     FormControl,
+    FormControlLabel,
     InputLabel,
     MenuItem,
     Select,
+    Switch,
     Typography,
 } from '@mui/material';
 import { Field, Form, Formik } from 'formik';
@@ -31,7 +33,8 @@ export default function RoomControlDialog({
     show,
     close,
 }: RoomControlDialogProps) {
-    const { roomData, regenerateCard, board } = useContext(RoomContext);
+    const { roomData, regenerateCard, board, showCounters, toggleCounters } =
+        useContext(RoomContext);
 
     const modes = useAsync(async () => {
         if (!roomData) {
@@ -141,6 +144,22 @@ export default function RoomControlDialog({
                         </Form>
                     )}
                 </Formik>
+                <Box
+                    sx={{
+                        pt: 2,
+                    }}
+                >
+                    <Typography variant="h6">Settings</Typography>
+                    <FormControlLabel
+                        control={
+                            <Switch
+                                checked={showCounters}
+                                onChange={toggleCounters}
+                            />
+                        }
+                        label="Show Counters"
+                    />
+                </Box>
                 <Box
                     sx={{
                         pt: 2,

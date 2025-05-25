@@ -1,10 +1,12 @@
 'use client';
-import { Box, Tooltip } from '@mui/material';
-import { useCallback, useContext } from 'react';
+import { Box, Button, IconButton, Tooltip, Typography } from '@mui/material';
+import { useCallback, useContext, useMemo, useState } from 'react';
 import { RoomContext } from '../../context/RoomContext';
 import { Cell } from '@playbingo/types';
 import TextFit from '../TextFit';
 import Star from '@mui/icons-material/Star';
+import Add from '@mui/icons-material/Add';
+import Remove from '@mui/icons-material/Remove';
 
 interface CellProps {
     cell: Cell;
@@ -18,8 +20,14 @@ export default function BoardCell({
     col,
 }: CellProps) {
     // context
-    const { color, markGoal, unmarkGoal, starredGoals, toggleGoalStar } =
-        useContext(RoomContext);
+    const {
+        color,
+        markGoal,
+        unmarkGoal,
+        starredGoals,
+        toggleGoalStar,
+        showCounters,
+    } = useContext(RoomContext);
 
     // callbacks
     const toggleSpace = useCallback(() => {
@@ -34,7 +42,13 @@ export default function BoardCell({
     const colorPortion = 360 / colors.length;
     const isStarred = starredGoals.includes(row * 5 + col);
 
-    console.log(description);
+    const [counter, setCounter] = useState(0);
+    const updateProgress = useCallback((delta: number) => {
+        setCounter((prev) => {
+            const next = Math.max(0, prev + delta);
+            return next;
+        });
+    }, []);
 
     return (
         <Tooltip
@@ -76,6 +90,9 @@ export default function BoardCell({
                     toggleGoalStar(row, col);
                     e.preventDefault();
                 }}
+                onWheel={(e) => {
+                    updateProgress(e.deltaY < 0 ? +1 : -1);
+                }}
             >
                 <Box
                     sx={{
@@ -112,6 +129,48 @@ export default function BoardCell({
                         }}
                     />
                 ))}
+                {showCounters && (
+                    <Box
+                        sx={{
+                            position: 'absolute',
+                            bottom: 0,
+                            display: 'flex',
+                            backgroundColor: 'rgba(0,0,0,0.7)',
+                            px: 0.5,
+                            py: 0.2,
+                            width: '100%',
+                        }}
+                    >
+                        <IconButton
+                            size="small"
+                            onClick={(e) => {
+                                updateProgress(-1);
+                                e.stopPropagation;
+                            }}
+                        >
+                            <Remove fontSize="small" />
+                        </IconButton>
+                        <Typography
+                            sx={{
+                                textAlign: 'center',
+                                color: 'white',
+                                pointerEvents: 'none',
+                                flexGrow: 1,
+                            }}
+                        >
+                            {counter}
+                        </Typography>
+                        <IconButton
+                            size="small"
+                            onClick={(e) => {
+                                updateProgress(+1);
+                                e.stopPropagation();
+                            }}
+                        >
+                            <Add fontSize="small" />
+                        </IconButton>
+                    </Box>
+                )}
                 {isStarred && (
                     <Box sx={{ position: 'absolute', right: 0 }}>
                         <Star />
