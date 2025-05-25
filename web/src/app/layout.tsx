@@ -9,8 +9,14 @@ import './globals.css';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-    title: 'PlayBingo',
+    title: { template: '%s | PlayBingo', default: 'PlayBingo' },
     description: 'The next generation of gaming bingo',
+    openGraph: {
+        title: {
+            template: '%s | PlayBingo',
+            default: 'PlayBingo',
+        },
+    },
 };
 
 export default function RootLayout({
