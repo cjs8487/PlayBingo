@@ -151,20 +151,9 @@ export default function BoardCell({
                             position: 'absolute',
                             bottom: 0,
                             display: 'flex',
-                            zIndex: 30,
                             backgroundColor: 'rgba(0,0,0,0.7)',
-                            alignContent: 'center',
                             px: 0.5,
                             py: 0.2,
-                            fontSize: '1rem',
-                            '& > div': {
-                                cursor: 'pointer',
-                                px: 0.5,
-                                userSelect: 'none',
-                                ':hover': {
-                                    color: 'yellow',
-                                },
-                            },
                             width: '100%',
                         }}
                     >
@@ -180,9 +169,7 @@ export default function BoardCell({
                         <Typography
                             sx={{
                                 textAlign: 'center',
-                                zIndex: 20,
                                 color: 'white',
-                                textShadow: '1px 1px 10px rgba(0,0,0,0.9)',
                                 pointerEvents: 'none',
                                 flexGrow: 1,
                             }}
