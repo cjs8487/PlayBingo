@@ -51,6 +51,7 @@ interface RoomContext {
     nickname: string;
     players: Player[];
     starredGoals: number[];
+    showGoalDetails: boolean;
     connect: (
         nickname: string,
         password: string,
@@ -69,6 +70,7 @@ interface RoomContext {
     racetimeUnready: () => void;
     toggleGoalStar: (row: number, col: number) => void;
     revealCard: () => void;
+    toggleGoalDetails: () => void;
 }
 
 export const RoomContext = createContext<RoomContext>({
@@ -79,6 +81,7 @@ export const RoomContext = createContext<RoomContext>({
     nickname: '',
     players: [],
     starredGoals: [],
+    showGoalDetails: false,
     async connect() {
         return { success: false };
     },
@@ -95,6 +98,7 @@ export const RoomContext = createContext<RoomContext>({
     racetimeUnready() {},
     toggleGoalStar() {},
     revealCard() {},
+    toggleGoalDetails() {},
 });
 
 interface RoomContextProps {
@@ -118,6 +122,8 @@ export function RoomContextProvider({ slug, children }: RoomContextProps) {
     const [notFound, setNotFound] = useState(false);
 
     const [starredGoals, { push, clear, filter }] = useList<number>([]);
+
+    const [showGoalDetails, setShoWGoalDetails] = useState(false);
 
     const latestConnectionStatus = useLatest(connectionStatusState);
     const connectionStatus = latestConnectionStatus.current;
@@ -427,6 +433,11 @@ export function RoomContextProvider({ slug, children }: RoomContextProps) {
     const revealCard = useCallback(() => {
         sendJsonMessage({ action: 'revealCard', authToken });
     }, [sendJsonMessage, authToken]);
+    const toggleGoalDetails = useCallback(() => {
+        setShoWGoalDetails((curr) => {
+            return !curr;
+        });
+    }, []);
 
     // effects
     // slug changed, try to establish initial connection from storage
@@ -514,6 +525,7 @@ export function RoomContextProvider({ slug, children }: RoomContextProps) {
                 nickname,
                 players,
                 starredGoals,
+                showGoalDetails,
                 connect,
                 sendChatMessage,
                 markGoal,
@@ -528,6 +540,7 @@ export function RoomContextProvider({ slug, children }: RoomContextProps) {
                 racetimeUnready,
                 toggleGoalStar,
                 revealCard,
+                toggleGoalDetails,
             }}
         >
             {children}

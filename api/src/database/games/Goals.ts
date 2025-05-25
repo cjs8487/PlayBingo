@@ -165,3 +165,10 @@ export const deleteAllGoalsForGame = async (gameSlug: string) => {
         return false;
     }
 };
+
+export const getGoalList = (ids: string[]) => {
+    if (ids.length === 0) {
+        return [];
+    }
+    return prisma.goal.findMany({ where: { id: { in: ids } } });
+};

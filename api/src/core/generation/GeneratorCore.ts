@@ -1,4 +1,5 @@
 export interface GeneratorGoal {
+    id: string;
     goal: string;
     description: string | null;
     categories: string[];

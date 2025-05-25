@@ -11,7 +11,7 @@
 export interface Goal {
   id: string;
   goal: string;
-  description: string;
-  difficulty?: number;
+  description: string | null;
+  difficulty?: number | null;
   categories?: string[];
 }

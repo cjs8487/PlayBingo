@@ -15,9 +15,18 @@ export interface RevealedBoard {
  * An incoming websocket message from the server telling the client of a change in room state or instructing it to take an action
  */
 export interface Cell {
-  goal: string;
-  description: string;
+  goal: Goal;
   colors: string[];
+}
+/**
+ * A single objective for a bingo game.
+ */
+export interface Goal {
+  id: string;
+  goal: string;
+  description: string | null;
+  difficulty?: number | null;
+  categories?: string[];
 }
 export interface HiddenBoard {
   hidden: true;

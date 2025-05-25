@@ -2,11 +2,10 @@ import { Cell } from '@playbingo/types';
 import { GeneratorGoal } from '../core/generation/GeneratorCore';
 import { chunk } from './Array';
 
-export const listToBoard = (list: GeneratorGoal[]) => {
+export const listToBoard = (list: GeneratorGoal[]): Cell[][] => {
     return chunk(
         list.map((g) => ({
-            goal: `${g.goal}`,
-            description: g.description ?? '',
+            goal: g,
             colors: [],
         })),
         5,
