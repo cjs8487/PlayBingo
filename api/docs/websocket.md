@@ -76,8 +76,13 @@ information and the current room state.
   "board": {
     "board": [
       {
-        "goal": "Complete a goal",
-        "description": "Complete any goal by any means necessary",
+        "goal": {
+            "id": "abc23",
+            "goal": "Complete a goal",
+            "description": "Complete any goal by any means necessary",
+            "difficulty": 1,
+            "categories": ["cat1", "cat2"]
+        },
         "colors": ["blue", "#00ffaa"]
       }
     ]
@@ -144,13 +149,23 @@ contains the new board state.
     "board": [
       [
         {
-          "goal": "Goal 1",
-          "description": "Description of goal 1",
+          "goal": {
+            "id": "abc23",
+            "goal": "Goal 1",
+            "description": "Description of goal 1",
+            "difficulty": 1,
+            "categories": ["cat2"]
+        },
           "colors": ["red"]
         },
         {
-          "goal": "Goal 2",
-          "description": "Description of goal 2",
+          "goal": "goal": {
+            "id": "abc23",
+            "goal": "Goal 2",
+            "description": "Description of goal 2",
+            "difficulty": 1,
+            "categories": ["cat1",]
+        },
           "colors": ["blue"]
         }
       ]
