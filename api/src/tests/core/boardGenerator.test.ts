@@ -19,6 +19,7 @@ const categories: Category[] = Array.from({ length: 7 }).map((_, i) => ({
 }));
 
 const goals: GeneratorGoal[] = Array.from({ length: 100 }).map((_, i) => ({
+    id: `${i}`,
     goal: `Goal ${i + 1}`,
     description: `Description for Goal ${i + 1}`,
     categories: [

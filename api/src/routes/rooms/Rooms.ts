@@ -17,6 +17,7 @@ import { gameForSlug, goalCount } from '../../database/games/Games';
 import { chunk } from '../../util/Array';
 import { randomWord, slugAdjectives, slugNouns } from '../../util/Words';
 import { handleAction } from './actions/Actions';
+import { getGoalList } from '../../database/games/Goals';
 
 const MIN_ROOM_GOALS_REQUIRED = 25;
 const rooms = Router();
@@ -189,9 +190,8 @@ rooms.get('/:slug', async (req, res) => {
     );
     room.board = {
         board: chunk(
-            dbRoom.board.map((goal) => ({
-                goal: goal.split('::')[0],
-                description: goal.split('::', 2)[1] ?? '',
+            (await getGoalList(dbRoom.board)).map((goal) => ({
+                goal: goal,
                 colors: [],
             })),
             5,

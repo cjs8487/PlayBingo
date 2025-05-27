@@ -53,7 +53,7 @@ export default function Board() {
                 >
                     {row.map((goal, colIndex) => (
                         <Cell
-                            key={`(${rowIndex},${colIndex})`}
+                            key={goal.goal.id}
                             row={rowIndex}
                             col={colIndex}
                             cell={goal}

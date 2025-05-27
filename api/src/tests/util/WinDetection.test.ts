@@ -4,6 +4,7 @@ import { checkCompletedLines, listToBoard } from '../../util/RoomUtils';
 const createBoard = (): Cell[][] =>
     listToBoard(
         Array.from({ length: 25 }).map((_, i) => ({
+            id: `${i}`,
             goal: `Goal ${i + 1}`,
             categories: [],
             difficulty: 0,
