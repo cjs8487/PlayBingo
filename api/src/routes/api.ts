@@ -13,6 +13,7 @@ import { readFile } from 'fs/promises';
 import tokens from './auth/ApiTokens';
 import { requiresApiToken } from './middleware';
 import config from './Config';
+import ebs from './twitch/ebs/EBS';
 
 const api = Router();
 
@@ -27,6 +28,7 @@ api.use('/oauth', oauth);
 api.use('/connection', connection);
 api.use('/tokens', tokens);
 api.use('/config', config);
+api.use('/twitch/ebs', ebs);
 
 api.get('/me', async (req, res) => {
     if (!req.session.user) {
