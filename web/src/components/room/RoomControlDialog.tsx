@@ -39,6 +39,8 @@ export default function RoomControlDialog({
         board,
         showGoalDetails,
         toggleGoalDetails,
+        showCounters,
+        toggleCounters,
     } = useContext(RoomContext);
 
     const modes = useAsync(async () => {
@@ -154,7 +156,16 @@ export default function RoomControlDialog({
                         pt: 2,
                     }}
                 >
-                    <Typography variant="h6">Local Actions</Typography>
+                    <Typography variant="h6">Settings</Typography>
+                    <FormControlLabel
+                        control={
+                            <Switch
+                                checked={showCounters}
+                                onChange={toggleCounters}
+                            />
+                        }
+                        label="Show Counters"
+                    />
                     <FormControlLabel
                         control={
                             <Switch

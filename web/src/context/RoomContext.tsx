@@ -52,6 +52,7 @@ interface RoomContext {
     players: Player[];
     starredGoals: number[];
     showGoalDetails: boolean;
+    showCounters: boolean;
     connect: (
         nickname: string,
         password: string,
@@ -71,6 +72,7 @@ interface RoomContext {
     toggleGoalStar: (row: number, col: number) => void;
     revealCard: () => void;
     toggleGoalDetails: () => void;
+    toggleCounters: () => void;
 }
 
 export const RoomContext = createContext<RoomContext>({
@@ -82,6 +84,7 @@ export const RoomContext = createContext<RoomContext>({
     players: [],
     starredGoals: [],
     showGoalDetails: false,
+    showCounters: false,
     async connect() {
         return { success: false };
     },
@@ -99,6 +102,7 @@ export const RoomContext = createContext<RoomContext>({
     toggleGoalStar() {},
     revealCard() {},
     toggleGoalDetails() {},
+    toggleCounters() {},
 });
 
 interface RoomContextProps {
@@ -134,6 +138,11 @@ export function RoomContextProvider({ slug, children }: RoomContextProps) {
         getBoardSnapshot,
         getServerSnapshot,
     );
+
+    const [showCounters, setShowCounters] = useState(false);
+    const toggleCounters = useCallback(() => {
+        setShowCounters((curr) => !curr);
+    }, []);
 
     // incoming messages
     const onChatMessage = useCallback((message: ChatMessage) => {
@@ -526,6 +535,7 @@ export function RoomContextProvider({ slug, children }: RoomContextProps) {
                 players,
                 starredGoals,
                 showGoalDetails,
+                showCounters,
                 connect,
                 sendChatMessage,
                 markGoal,
@@ -541,6 +551,7 @@ export function RoomContextProvider({ slug, children }: RoomContextProps) {
                 toggleGoalStar,
                 revealCard,
                 toggleGoalDetails,
+                toggleCounters,
             }}
         >
             {children}
