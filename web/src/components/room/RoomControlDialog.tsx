@@ -166,13 +166,6 @@ export default function RoomControlDialog({
                         }
                         label="Show Counters"
                     />
-                </Box>
-                <Box
-                    sx={{
-                        pt: 2,
-                    }}
-                >
-                    <Typography variant="h6">Local Actions</Typography>
                     <FormControlLabel
                         control={
                             <Switch
