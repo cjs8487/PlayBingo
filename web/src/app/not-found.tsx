@@ -19,7 +19,11 @@ const mockBoard = {
         ['Misstep', 'No Bingo', 'Whoops', 'Error!', 'Return Home'],
     ].map((row, rowIndex) =>
         row.map((text, colIndex) => ({
-            goal: text,
+            goal: {
+                id: `${rowIndex}:${colIndex}`,
+                goal: text,
+                description: '',
+            },
             description: '',
             colors: text === '404' ? [theme.palette.primary.dark] : [],
         })),
@@ -93,6 +97,8 @@ export default function NotFound() {
         nickname: 'Guest',
         players: [],
         starredGoals: [],
+        showGoalDetails: false,
+        showCounters: false,
         connect: async () => ({ success: true }),
         sendChatMessage: () => {},
         markGoal: () => {},
@@ -107,6 +113,8 @@ export default function NotFound() {
         racetimeUnready: () => {},
         toggleGoalStar: () => {},
         revealCard: () => {},
+        toggleGoalDetails: () => {},
+        toggleCounters: () => {},
     };
 
     const { title, subtitle } =
@@ -116,31 +124,42 @@ export default function NotFound() {
         <RoomContext.Provider value={mockRoomContext}>
             <Box
                 sx={{
-                    display: "flex",
-                    flexDirection: "column",
-                    minHeight: "100vh"
-                }}>
+                    display: 'flex',
+                    flexDirection: 'column',
+                    minHeight: '100vh',
+                }}
+            >
                 <Box
                     sx={{
-                        textAlign: "center",
-                        p: 5
-                    }}>
+                        textAlign: 'center',
+                        p: 5,
+                    }}
+                >
                     <NextLink href="/">
                         <Image src={logo} alt="PlayBingo logo" height={125} />
                     </NextLink>
-                    <Typography variant="h4" sx={{
-                        pt: 1
-                    }}>
+                    <Typography
+                        variant="h4"
+                        sx={{
+                            pt: 1,
+                        }}
+                    >
                         {title}
                     </Typography>
-                    <Typography variant="subtitle1" sx={{
-                        pb: 2
-                    }}>
+                    <Typography
+                        variant="subtitle1"
+                        sx={{
+                            pb: 2,
+                        }}
+                    >
                         {subtitle}
                     </Typography>
-                    <Typography variant="body1" sx={{
-                        pb: 2
-                    }}>
+                    <Typography
+                        variant="body1"
+                        sx={{
+                            pb: 2,
+                        }}
+                    >
                         We couldn&#39;t find the page you are looking for. Take
                         this bingo with you for the journey home!
                     </Typography>
@@ -166,9 +185,11 @@ export default function NotFound() {
                             </Box>
                         </NextLink>
                     </Box>
-                    <Box sx={{
-                        pt: 2
-                    }}>
+                    <Box
+                        sx={{
+                            pt: 2,
+                        }}
+                    >
                         <Link
                             href="/"
                             component={NextLink}
@@ -181,9 +202,11 @@ export default function NotFound() {
                         </Link>
                     </Box>
                 </Box>
-                <Box sx={{
-                    flexGrow: 1
-                }} />
+                <Box
+                    sx={{
+                        flexGrow: 1,
+                    }}
+                />
                 <Footer />
             </Box>
         </RoomContext.Provider>
