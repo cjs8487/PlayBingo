@@ -1,19 +1,6 @@
-import type {
-    Board,
-    Cell,
-    RevealedBoard,
-    ServerMessage,
-} from '@playbingo/types';
+import type { Cell, RevealedBoard, ServerMessage } from '@playbingo/types';
 import { useCallback, useEffect, useState } from 'react';
 import useWebSocket from 'react-use-websocket';
-
-const board = [
-    ['', '', '', '', ''],
-    ['', '', '', '', ''],
-    ['', '', '', '', ''],
-    ['', '', '', '', ''],
-    ['', '', '', '', ''],
-];
 
 const slug = 'tender-lilac-1869';
 const websocketBase = `ws://localhost:8001/socket/${slug}`;
@@ -21,8 +8,7 @@ const websocketBase = `ws://localhost:8001/socket/${slug}`;
 export function App() {
     const [authToken, setAuthToken] = useState('');
     const [board, setBoard] = useState<RevealedBoard>();
-
-    console.log(authToken);
+    const [error, setError] = useState(0);
 
     const onCellUpdate = useCallback(
         (row: number, col: number, cellData: Cell) => {
@@ -98,8 +84,6 @@ export function App() {
         authToken !== '',
     );
 
-    console.log(board);
-
     useEffect(() => {
         window.Twitch.ext.onAuthorized(async (auth) => {
             console.log(auth);
@@ -112,8 +96,10 @@ export function App() {
                 },
             );
             if (!res.ok) {
+                setError(res.status);
                 return;
             }
+            setError(0);
             const { authToken } = await res.json();
             setAuthToken(authToken);
         });
@@ -126,6 +112,27 @@ export function App() {
             payload: { nickname: 'twitch viewer' },
         });
     }, [authToken]);
+
+    console.log(error);
+    if (error) {
+        let text = '';
+        switch (error) {
+            case 403:
+                text =
+                    'Unable to authorize the extension with the PlayBingo server. Try refreshing the page.';
+                break;
+            case 404:
+                text =
+                    "The bingo room this streamer has configured couldn't be found. Try refreshing the page. If this error persists, ask the streamer to make sure they connected the room to their Twitch account.";
+                break;
+            case 500:
+                text =
+                    'An error occurred on the PlayBingo server while trying to connect, but no additional details are available. Try refreshing the page.';
+        }
+        return (
+            <div style={{ color: 'white ', fontSize: 'x-large' }}>{text}</div>
+        );
+    }
 
     if (!board) {
         return null;
