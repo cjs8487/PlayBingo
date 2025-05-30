@@ -158,11 +158,12 @@ export function GoalManagerContextProvider({
                 return false;
             }
             if (search && search.length > 0) {
-                shown =
+                shown = !!(
                     goal.goal.toLowerCase().includes(search.toLowerCase()) ||
                     goal.description
                         ?.toLowerCase()
-                        .includes(search.toLowerCase());
+                        .includes(search.toLowerCase())
+                );
             }
             return shown;
         })
