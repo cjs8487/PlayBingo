@@ -86,13 +86,14 @@ export function App() {
 
     useEffect(() => {
         window.Twitch.ext.onAuthorized(async (auth) => {
-            console.log(auth);
-
             const res = await fetch(
                 `http://localhost:8001/api/twitch/ebs/${slug}/authorize`,
                 {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application-json' },
+                    headers: {
+                        'Content-Type': 'application-json',
+                        Authorization: `Bearer ${auth.token}`,
+                    },
                 },
             );
             if (!res.ok) {

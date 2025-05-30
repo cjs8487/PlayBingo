@@ -15,3 +15,9 @@ export const eApiKey = process.env.E_API_KEY;
 export const racetimeClientId = process.env.RT_CLIENT_ID ?? '';
 export const racetimeClientSecret = process.env.RT_CLIENT_SECRET ?? '';
 export const racetimeHost = process.env.RT_HOST ?? 'racetime.gg';
+
+// twitch extension
+export const ebsSecret = Buffer.from(
+    process.env.TWITCH_EXT_EBS_SECRET ?? '',
+    'base64',
+);
