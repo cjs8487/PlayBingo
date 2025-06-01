@@ -125,6 +125,8 @@ model Connection {
   refreshToken String?
   user         User              @relation(fields: [userId], references: [id])
   userId       String
+
+  @@unique([service, serviceId], name: "serviceUnique")
 }
 
 model Room {

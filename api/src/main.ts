@@ -22,6 +22,7 @@ import { closeSessionDatabase, sessionStore } from './util/Session';
 declare module 'express-session' {
     interface SessionData {
         user?: string;
+        state?: string;
     }
 }
 

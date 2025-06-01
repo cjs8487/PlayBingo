@@ -1,19 +1,46 @@
 import { ConnectionService } from '@prisma/client';
 import { prisma } from './Database';
 
-export const createRacetimeConnection = async (
+const createConnection = (
     user: string,
-    racetimeId: string,
+    service: ConnectionService,
+    serviceId: string,
     refreshToken: string,
 ) => {
     return prisma.connection.create({
         data: {
             user: { connect: { id: user } },
-            service: ConnectionService.RACETIME,
-            serviceId: racetimeId,
-            refreshToken: refreshToken,
+            service,
+            serviceId,
+            refreshToken,
         },
     });
+};
+
+export const createRacetimeConnection = async (
+    user: string,
+    racetimeId: string,
+    refreshToken: string,
+) => {
+    return createConnection(
+        user,
+        ConnectionService.RACETIME,
+        racetimeId,
+        refreshToken,
+    );
+};
+
+export const createTwitchConnection = async (
+    user: string,
+    twitchId: string,
+    refreshToken: string,
+) => {
+    return createConnection(
+        user,
+        ConnectionService.TWITCH,
+        twitchId,
+        refreshToken,
+    );
 };
 
 export const updateRefreshToken = async (
@@ -49,4 +76,17 @@ export const deleteConnection = async (
         return;
     }
     return prisma.connection.delete({ where: { id: connection.id } });
+};
+
+export const getUserForService = async (
+    service: ConnectionService,
+    serviceId: string,
+) => {
+    return (
+        await prisma.connection.findUnique({
+            where: {
+                serviceUnique: { service, serviceId },
+            },
+        })
+    )?.userId;
 };

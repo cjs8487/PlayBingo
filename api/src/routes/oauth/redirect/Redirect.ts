@@ -5,8 +5,16 @@ import {
     racetimeClientSecret,
     racetimeHost,
 } from '../../../Environment';
-import { getAccessToken, registerUser } from '../../../lib/RacetimeConnector';
-import { createRacetimeConnection } from '../../../database/Connections';
+import {
+    getAccessToken,
+    registerUser as registerUserRacetime,
+} from '../../../lib/RacetimeConnector';
+import {
+    createRacetimeConnection,
+    createTwitchConnection,
+} from '../../../database/Connections';
+import { doCodeExchange } from '../../../lib/TwitchConnector';
+import { logError, logWarn } from '../../../Logger';
 
 export interface RacetimeTokenResponse {
     access_token: string;
@@ -58,7 +66,12 @@ redirect.get('/racetime', async (req, res) => {
 
     const data = (await tokenRes.json()) as RacetimeTokenResponse;
 
-    registerUser(user, data.access_token, data.refresh_token, data.expires_in);
+    registerUserRacetime(
+        user,
+        data.access_token,
+        data.refresh_token,
+        data.expires_in,
+    );
     const token = await getAccessToken(user);
 
     const userRes = await fetch(`${racetimeHost}/o/userinfo`, {
@@ -80,6 +93,56 @@ redirect.get('/racetime', async (req, res) => {
     res.redirect(
         `${clientUrl}?type=success&message=Successfully connected to racetime.gg user ${userData.full_name}`,
     );
+});
+
+redirect.get('/twitch', async (req, res, next) => {
+    const { user } = req.session;
+    if (!user) {
+        res.redirect(
+            `${clientUrl}?type=error&message=Unable to connect account`,
+        );
+        return;
+    }
+
+    const code = req.query.code as string;
+    const state = req.query.state as string;
+    if (state !== req.session.state) {
+        // state mismatch means this request is invalid
+        logWarn(
+            `A potentially malicious Twitch authorization request has been denied. Session id: ${req.session.id}`,
+        );
+        // destroy the session in case this is a malicious request
+        req.session.destroy((err) => {
+            if (err) next();
+            res.redirect(
+                `${clientUrl}?type=error&message=Unable to connect account`,
+            );
+        });
+        return;
+    }
+    try {
+        const firstToken = await doCodeExchange(code);
+        if (!firstToken) {
+            res.redirect(
+                `${clientUrl}?type=error&message=Unable to connect account`,
+            );
+            return;
+        }
+
+        createTwitchConnection(
+            user,
+            firstToken.userId,
+            firstToken.refreshToken ?? '',
+        );
+        res.redirect(
+            `${clientUrl}?type=success&message=Successfully connected to Twitch`,
+        );
+    } catch (e: any) {
+        logError(e);
+        res.redirect(
+            `${clientUrl}?type=error&message=Unable to connect account - ${e.message}`,
+        );
+    }
 });
 
 export default redirect;

@@ -6,6 +6,7 @@ import {
     getConnectionForUser,
 } from '../../database/Connections';
 import { requiresApiToken } from '../middleware';
+import { apiClient } from '../../lib/TwitchConnector';
 
 const connection = Router();
 
@@ -61,6 +62,29 @@ connection.post('/disconnect/racetime', async (req, res) => {
         return;
     }
     res.sendStatus(200);
+});
+
+connection.get('/twitch', async (req, res) => {
+    if (!req.session.user) {
+        res.sendStatus(401);
+        return;
+    }
+
+    res.status(200);
+    const twitchConnection = await getConnectionForUser(
+        req.session.user,
+        ConnectionService.TWITCH,
+    );
+    if (!twitchConnection) {
+        res.json({ connected: false });
+        return;
+    }
+
+    const user = await apiClient.users.getAuthenticatedUser(
+        twitchConnection.serviceId,
+    );
+
+    res.json({ connected: true, twitchUser: user.displayName });
 });
 
 export default connection;

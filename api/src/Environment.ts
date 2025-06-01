@@ -21,3 +21,6 @@ export const ebsSecret = Buffer.from(
     process.env.TWITCH_EXT_EBS_SECRET ?? '',
     'base64',
 );
+export const twitchClientId = process.env.TWITCH_CLIENT_ID ?? '';
+export const twitchClientSecret = process.env.TWITCH_CLIENT_SECRET ?? '';
+export const twitchRedirect = process.env.TWITCH_REDIRECT ?? '';
