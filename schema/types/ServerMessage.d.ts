@@ -86,6 +86,10 @@ export interface RoomData {
   gameSlug: string;
   racetimeConnection?: RacetimeConnection;
   newGenerator: boolean;
+  /**
+   * The auto-authentication token generated for the logged in user.
+   */
+  token?: string;
 }
 export interface RacetimeConnection {
   /**

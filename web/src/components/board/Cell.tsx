@@ -34,8 +34,6 @@ export default function BoardCell({
     const colorPortion = 360 / colors.length;
     const isStarred = starredGoals.includes(row * 5 + col);
 
-    console.log(description);
-
     return (
         <Tooltip
             title={description}
