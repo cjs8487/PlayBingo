@@ -54,6 +54,7 @@ import {
 import { generateFullRandom, generateRandomTyped } from './generation/Random';
 import { generateSRLv5 } from './generation/SRLv5';
 import RacetimeHandler, { RaceData } from './integration/RacetimeHandler';
+import { allRooms } from './RoomServer';
 
 type RoomIdentity = {
     nickname: string;
@@ -135,6 +136,9 @@ export default class Room {
 
     lastMessage: number;
 
+    inactivityWarningTimeout?: NodeJS.Timeout;
+    closeTimeout?: NodeJS.Timeout;
+
     constructor(
         name: string,
         game: string,
@@ -183,6 +187,10 @@ export default class Room {
         this.newGenerator = !!generatorConfig;
 
         this.lastMessage = Date.now();
+        this.inactivityWarningTimeout = setTimeout(
+            this.warnClose.bind(this),
+            1000 * 60 * 60 * 3,
+        );
     }
 
     async generateBoard(options: BoardGenerationOptions) {
@@ -634,6 +642,11 @@ export default class Room {
         }
     }
 
+    sendSystemMessage(message: string) {
+        this.chatHistory.push([message]);
+        this.sendServerMessage({ action: 'chat', message: [message] }, false);
+    }
+
     sendCellUpdate(row: number, col: number) {
         this.sendServerMessage({
             action: 'cellUpdate',
@@ -666,7 +679,10 @@ export default class Room {
         });
     }
 
-    private sendServerMessage(message: ServerMessage) {
+    private sendServerMessage(
+        message: ServerMessage,
+        updateInactivity: boolean = true,
+    ) {
         this.connections.forEach((client) => {
             if (client.readyState === OPEN) {
                 client.send(
@@ -674,7 +690,13 @@ export default class Room {
                 );
             }
         });
-        this.lastMessage = Date.now();
+
+        if (updateInactivity) {
+            this.lastMessage = Date.now();
+            this.inactivityWarningTimeout?.refresh();
+            clearTimeout(this.closeTimeout);
+            this.closeTimeout = undefined;
+        }
     }
 
     private checkWinConditions() {
@@ -852,6 +874,14 @@ export default class Room {
     //#endregion
 
     //#region Utilities
+    private warnClose() {
+        this.logInfo('Sending inactivity warning.');
+        this.sendSystemMessage(
+            'This room close in 5 minutes if no activity is detected.',
+        );
+        this.closeTimeout = setTimeout(this.close.bind(this), 5 * 60 * 1000);
+    }
+
     /**
      * Determines if this room can be closed, which removes it from working memory because the room is no longer being
      * used.
@@ -868,9 +898,12 @@ export default class Room {
      * Runs room level cleanup tasks and closes all open connections to the room
      */
     close() {
+        this.logInfo('Closing room.');
+        this.sendSystemMessage('This room has been closed due to inactivity.');
         this.connections.forEach((connection) => {
-            connection.close();
+            connection.close(1001, 'Room is closing.');
         });
+        allRooms.delete(this.slug);
     }
     //#endregion
 }
