@@ -574,7 +574,6 @@ export default class Room {
         });
         if (socketKey) {
             const identity = this.identities.get(socketKey);
-            console.log(identity);
             this.connections.delete(socketKey);
             if (!identity) return true;
             this.sendChat([
