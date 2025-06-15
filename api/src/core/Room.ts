@@ -426,6 +426,9 @@ export default class Room {
         this.identities.delete(auth.uuid);
         this.connections.delete(auth.uuid);
         addLeaveAction(this.id, identity.nickname, identity.color).then();
+        if (this.connections.size === 0) {
+            this.close();
+        }
         return { action: 'disconnected' };
     }
 
@@ -571,6 +574,10 @@ export default class Room {
                 'has left.',
             ]);
             addLeaveAction(this.id, identity.nickname, identity.color).then();
+
+            if (this.connections.size === 0) {
+                this.close();
+            }
             return true;
         }
         return false;
