@@ -48,6 +48,9 @@ export default function GamePage({ gameData }: { gameData: Game }) {
             tabs.push('Variants');
         }
         tabs.push('Permissions');
+        if (gameData.newGeneratorBeta) {
+            tabs.push('Generation');
+        }
         tabs.push('Settings');
     }
 
@@ -60,11 +63,7 @@ export default function GamePage({ gameData }: { gameData: Game }) {
                 pt: 2,
             }}
         >
-            <Box
-                sx={{
-                    display: 'flex',
-                }}
-            >
+            <Box sx={{ display: 'flex' }}>
                 <Box
                     sx={{
                         position: 'fixed',
