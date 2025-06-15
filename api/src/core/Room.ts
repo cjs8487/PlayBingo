@@ -901,6 +901,7 @@ export default class Room {
         this.logInfo('Closing room.');
         this.sendSystemMessage('This room has been closed due to inactivity.');
         this.connections.forEach((connection) => {
+            this.handleSocketClose(connection);
             connection.close(1001, 'Room is closing.');
         });
         allRooms.delete(this.slug);
