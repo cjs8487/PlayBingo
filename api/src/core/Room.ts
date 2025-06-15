@@ -23,7 +23,11 @@ import {
 import { OPEN, WebSocket } from 'ws';
 import { roomCleanupInactive } from '../Environment';
 import { logError, logInfo, logWarn } from '../Logger';
-import { invalidateToken, RoomTokenPayload } from '../auth/RoomAuth';
+import {
+    invalidateToken,
+    Permissions,
+    RoomTokenPayload,
+} from '../auth/RoomAuth';
 import {
     addChangeColorAction,
     addChatAction,
@@ -33,9 +37,11 @@ import {
     addUnmarkAction,
     setRoomBoard,
 } from '../database/Rooms';
+import { isStaff } from '../database/Users';
 import {
     getDifficultyGroupCount,
     getDifficultyVariant,
+    isModerator,
     useTypedRandom,
 } from '../database/games/Games';
 import { getCategories } from '../database/games/GoalCategories';
@@ -46,6 +52,7 @@ import {
     CompletedLines,
     listToBoard,
 } from '../util/RoomUtils';
+import { allRooms } from './RoomServer';
 import BoardGenerator from './generation/BoardGenerator';
 import {
     GeneratorGoal,
@@ -54,7 +61,6 @@ import {
 import { generateFullRandom, generateRandomTyped } from './generation/Random';
 import { generateSRLv5 } from './generation/SRLv5';
 import RacetimeHandler, { RaceData } from './integration/RacetimeHandler';
-import { allRooms } from './RoomServer';
 
 type RoomIdentity = {
     nickname: string;
@@ -567,6 +573,8 @@ export default class Room {
         });
         if (socketKey) {
             const identity = this.identities.get(socketKey);
+            console.log(identity);
+            this.identities.delete(socketKey);
             this.connections.delete(socketKey);
             if (!identity) return true;
             this.sendChat([
@@ -810,6 +818,39 @@ export default class Room {
             }
         });
         this.completed = allComplete;
+    }
+
+    /**
+     * Determines if authentication is required in order to access the room.
+     * Staff and category moderators are always allowed to access rooms, though
+     * they will need to provide the password in order to elevate from spectator
+     * permissions.
+     *
+     * @param user The id of the currently logged in user
+     * @returns False if authentication is required in order to grant the
+     * provided user minimal room permissions, or a Permissions object
+     * containing he appropriate permissions based on the user
+     */
+    async canAutoAuthenticate(user?: string): Promise<false | Permissions> {
+        if (!user) {
+            return false;
+        }
+
+        if (await isModerator(this.gameSlug, user)) {
+            this.logInfo(
+                `${user} is being automatically authenticated as a room monitor due to being a game moderator or owner.`,
+            );
+            return { isMonitor: true, isSpectating: true };
+        }
+
+        if (await isStaff(user)) {
+            this.logInfo(
+                `${user} is being automatically authenticated as a room monitor due to being a member of PlayBingo staff.`,
+            );
+            return { isMonitor: true, isSpectating: true };
+        }
+
+        return false;
     }
 
     //#region Racetime Integration
