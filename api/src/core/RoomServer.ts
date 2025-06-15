@@ -1,14 +1,24 @@
 import { RoomAction } from '@playbingo/types';
 import { WebSocketServer } from 'ws';
 import { hasPermission, verifyRoomToken } from '../auth/RoomAuth';
-import Room from './Room';
+import { roomCleanupInterval } from '../Environment';
 import { logInfo } from '../Logger';
+import Room from './Room';
 
 export const roomWebSocketServer: WebSocketServer = new WebSocketServer({
     noServer: true,
 });
 
 export const allRooms = new Map<string, Room>();
+
+const cleanupInterval = setInterval(() => {
+    allRooms.forEach((room, key) => {
+        if (room.canClose()) {
+            room.close();
+            allRooms.delete(key);
+        }
+    });
+}, roomCleanupInterval);
 
 roomWebSocketServer.on('connection', (ws, req) => {
     if (!req.url) {
@@ -130,6 +140,8 @@ roomWebSocketServer.on('connection', (ws, req) => {
         });
     });
 });
+
 roomWebSocketServer.on('close', () => {
     // cleanup
+    clearInterval(cleanupInterval);
 });
