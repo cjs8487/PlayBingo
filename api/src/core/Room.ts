@@ -326,7 +326,9 @@ export default class Room {
 
     getPlayers() {
         const players: Player[] = [];
-        this.identities.forEach((i) => {
+        this.connections.forEach((_, k) => {
+            const i = this.identities.get(k);
+            if (!i) return;
             const rtUser = this.racetimeHandler.getPlayer(i.racetimeId ?? '');
             players.push({
                 nickname: i.nickname,
@@ -429,7 +431,6 @@ export default class Room {
             ' has left.',
         ]);
         invalidateToken(token);
-        this.identities.delete(auth.uuid);
         this.connections.delete(auth.uuid);
         addLeaveAction(this.id, identity.nickname, identity.color).then();
         if (this.connections.size === 0) {
@@ -574,7 +575,6 @@ export default class Room {
         if (socketKey) {
             const identity = this.identities.get(socketKey);
             console.log(identity);
-            this.identities.delete(socketKey);
             this.connections.delete(socketKey);
             if (!identity) return true;
             this.sendChat([
