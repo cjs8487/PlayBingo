@@ -2,31 +2,68 @@
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "type": "object",
     "additionalProperties": false,
-    "required": ["nickname", "color", "goalCount", "racetimeStatus", "spectator", "monitor"],
+    "required": [
+        "id",
+        "nickname",
+        "color",
+        "goalCount",
+        "racetimeStatus",
+        "spectator",
+        "monitor"
+    ],
     "properties": {
-        "nickname": {"type": "string"},
-        "color": {"type": "string"},
-        "goalCount": {"type": "number"},
-        "racetimeStatus": {"oneOf": [
-            {"$ref": "#/$defs/RacetimeStatusDisconnected"},
-            {"$ref": "#/$defs/RacetimeStatusConnected"}
-        ]},
-        "spectator": {"type": "boolean"},
-        "monitor": {"type": "boolean"}
+        "id": {
+            "type": "string"
+        },
+        "nickname": {
+            "type": "string"
+        },
+        "color": {
+            "type": "string"
+        },
+        "goalCount": {
+            "type": "number"
+        },
+        "racetimeStatus": {
+            "oneOf": [
+                {
+                    "$ref": "#/$defs/RacetimeStatusDisconnected"
+                },
+                {
+                    "$ref": "#/$defs/RacetimeStatusConnected"
+                }
+            ]
+        },
+        "spectator": {
+            "type": "boolean"
+        },
+        "monitor": {
+            "type": "boolean"
+        }
     },
     "$defs": {
         "RacetimeStatusDisconnected": {
-            "required": ["connected"],
+            "required": [
+                "connected"
+            ],
             "additionalProperties": false,
             "properties": {
-                "connected": {"const": false}
+                "connected": {
+                    "const": false
+                }
             }
         },
         "RacetimeStatusConnected": {
-            "required": ["connected", "username", "status"],
+            "required": [
+                "connected",
+                "username",
+                "status"
+            ],
             "additionalProperties": false,
             "properties": {
-                "connected": {"const": true},
+                "connected": {
+                    "const": true
+                },
                 "username": {
                     "type": "string",
                     "description": "Racetime username connected to this player for the race"

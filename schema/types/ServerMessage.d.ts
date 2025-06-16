@@ -27,9 +27,8 @@ export type ServerMessage = (
       action: "connected";
       board: Board;
       chatHistory: ChatMessage[];
-      nickname?: string;
-      color?: string;
       roomData?: RoomData;
+      identity?: Player;
     }
   | {
       action: "unauthorized";
@@ -131,6 +130,7 @@ export interface RacetimeConnection {
   ended?: string;
 }
 export interface Player {
+  id: string;
   nickname: string;
   color: string;
   goalCount: number;
