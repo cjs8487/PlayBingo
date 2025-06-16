@@ -327,36 +327,44 @@ export default class Room {
     getPlayers() {
         const players: Player[] = [];
         this.connections.forEach((_, k) => {
-            const i = this.identities.get(k);
-            if (!i) return;
-            const rtUser = this.racetimeHandler.getPlayer(i.racetimeId ?? '');
-            players.push({
-                nickname: i.nickname,
-                color: i.color,
-                goalCount: this.board.board.reduce((prev, row) => {
-                    return (
-                        prev +
-                        row.reduce((p, cell) => {
-                            if (cell.colors.includes(i.color)) {
-                                return p + 1;
-                            }
-                            return p;
-                        }, 0)
-                    );
-                }, 0),
-                racetimeStatus: rtUser
-                    ? {
-                          connected: true,
-                          username: rtUser.user.full_name,
-                          status: rtUser.status.verbose_value,
-                          finishTime: rtUser.finish_time ?? undefined,
-                      }
-                    : { connected: false },
-                spectator: i.spectator,
-                monitor: i.monitor,
-            });
+            const p = this.getPlayer(k);
+            if (p) {
+                players.push(p);
+            }
         });
         return players;
+    }
+
+    private getPlayer(id: string): Player | undefined {
+        const i = this.identities.get(id);
+        if (!i) return undefined;
+        const rtUser = this.racetimeHandler.getPlayer(i.racetimeId ?? '');
+        return {
+            id,
+            nickname: i.nickname,
+            color: i.color,
+            goalCount: this.board.board.reduce((prev, row) => {
+                return (
+                    prev +
+                    row.reduce((p, cell) => {
+                        if (cell.colors.includes(i.color)) {
+                            return p + 1;
+                        }
+                        return p;
+                    }, 0)
+                );
+            }, 0),
+            racetimeStatus: rtUser
+                ? {
+                      connected: true,
+                      username: rtUser.user.full_name,
+                      status: rtUser.status.verbose_value,
+                      finishTime: rtUser.finish_time ?? undefined,
+                  }
+                : { connected: false },
+            spectator: i.spectator,
+            monitor: i.monitor,
+        };
     }
 
     //#region Handlers
@@ -396,8 +404,7 @@ export default class Room {
             action: 'connected',
             board: this.hideCard ? { hidden: true } : this.board,
             chatHistory: this.chatHistory,
-            nickname: identity.nickname,
-            color: identity.color,
+            identity: this.getPlayer(auth.uuid),
             roomData: {
                 game: this.game,
                 slug: this.slug,

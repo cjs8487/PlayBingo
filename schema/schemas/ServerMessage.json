@@ -5,80 +5,144 @@
     "required": [],
     "description": "An incoming websocket message from the server telling the client of a change in room state or instructing it to take an action",
     "properties": {
-        "players": {"type": "array", "items": {"$ref": "./Player.json"}}
+        "players": {
+            "type": "array",
+            "items": {
+                "$ref": "./Player.json"
+            }
+        }
     },
     "anyOf": [
         {
-            "required": ["action", "message"],
+            "required": [
+                "action",
+                "message"
+            ],
             "additionalProperties": false,
             "properties": {
                 "action": "chat",
-                "message": {"$ref": "./ChatMessage.json"}
+                "message": {
+                    "$ref": "./ChatMessage.json"
+                }
             }
         },
         {
-            "required": ["action", "row", "col", "cell"],
+            "required": [
+                "action",
+                "row",
+                "col",
+                "cell"
+            ],
             "additionalProperties": false,
             "properties": {
                 "action": "cellUpdate",
-                "row": {"type": "number"},
-                "col": {"type": "number"},
-                "cell": {"$ref": "./Cell.json"}
+                "row": {
+                    "type": "number"
+                },
+                "col": {
+                    "type": "number"
+                },
+                "cell": {
+                    "$ref": "./Cell.json"
+                }
             }
         },
         {
-            "required": ["action", "board", "roomData"],
+            "required": [
+                "action",
+                "board",
+                "roomData"
+            ],
             "additionalProperties": false,
             "properties": {
                 "action": "syncBoard",
-                "board": {"$ref": "./Board.json"}
+                "board": {
+                    "$ref": "./Board.json"
+                }
             }
         },
         {
-            "required": ["action", "board", "chatHistory", "players"],
+            "required": [
+                "action",
+                "board",
+                "chatHistory",
+                "players"
+            ],
             "additionalProperties": false,
             "properties": {
                 "action": "connected",
-                "board": {"$ref": "./Board.json"},
-                "chatHistory": {"type": "array", "items": {"$ref": "./ChatMessage.json"} },
-                "nickname": {"type": "string"},
-                "color": {"type": "string"},
-                "roomData": {"$ref": "./RoomData.json"}
+                "board": {
+                    "$ref": "./Board.json"
+                },
+                "chatHistory": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "./ChatMessage.json"
+                    }
+                },
+                "roomData": {
+                    "$ref": "./RoomData.json"
+                },
+                "identity": {
+                    "$ref": "./Player.json"
+                }
             }
         },
         {
-            "required": ["action"],
+            "required": [
+                "action"
+            ],
             "additionalProperties": false,
             "properties": {
                 "action": "unauthorized"
             }
         },
         {
-            "required": ["action"],
+            "required": [
+                "action"
+            ],
             "additionalProperties": false,
             "properties": {
                 "action": "disconnected"
             }
         },
         {
-            "required": ["action", "roomData"],
+            "required": [
+                "action",
+                "roomData"
+            ],
             "additionalProperties": false,
             "properties": {
                 "action": "updateRoomData",
-                "roomData": {"$ref": "./RoomData.json"}
+                "roomData": {
+                    "$ref": "./RoomData.json"
+                }
             }
         },
         {
-            "required": ["action", "players", "racetimeConnection"],
+            "required": [
+                "action",
+                "players",
+                "racetimeConnection"
+            ],
             "additionalProperties": false,
             "properties": {
                 "action": "syncRaceData",
-                "players":  {"type": "array", "items": {"$ref": "./Player.json"}},
-                "racetimeConnection": {"$ref": "./RoomData.json#/$defs/RacetimeConnection"}
+                "players": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "./Player.json"
+                    }
+                },
+                "racetimeConnection": {
+                    "$ref": "./RoomData.json#/$defs/RacetimeConnection"
+                }
             }
         },
         {
-            "required": ["action"],
+            "required": [
+                "action"
+            ],
             "additionalProperties": false,
             "properties": {
                 "action": "forbidden"

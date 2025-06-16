@@ -1,7 +1,8 @@
-import { useContext } from 'react';
-import { RoomContext } from '../../context/RoomContext';
 import { Box, Card, CardContent, CardHeader, Typography } from '@mui/material';
 import { Duration } from 'luxon';
+import { Sword } from 'mdi-material-ui';
+import { useContext } from 'react';
+import { RoomContext } from '../../context/RoomContext';
 
 export default function PlayerList() {
     const {
@@ -13,6 +14,8 @@ export default function PlayerList() {
 
     const players = allPlayers.filter((p) => !p.spectator);
     const spectators = allPlayers.filter((p) => p.spectator);
+
+    console.log(allPlayers);
 
     return (
         <Card
@@ -26,7 +29,7 @@ export default function PlayerList() {
                 title={`Connected Players (${players.length})`}
                 sx={{ py: 0 }}
                 slotProps={{
-                    title: { variant: 'h6' }
+                    title: { variant: 'h6' },
                 }}
             />
             <CardContent sx={{ maxHeight: '80%', overflowY: 'auto' }}>
@@ -40,21 +43,29 @@ export default function PlayerList() {
                     }}
                 >
                     {players.map((player) => (
-                        <Box key={player.nickname}>
+                        <Box key={player.id}>
                             <Box
                                 sx={{
-                                    display: "flex",
-                                    columnGap: 2
-                                }}>
+                                    display: 'flex',
+                                    columnGap: 2,
+                                }}
+                            >
                                 <Box
                                     style={{ background: player.color }}
                                     sx={{
                                         px: 0.5,
                                         border: 1,
-                                        borderColor: "divider"
-                                    }}>
+                                        borderColor: 'divider',
+                                    }}
+                                >
                                     <Typography>{player.goalCount}</Typography>
                                 </Box>
+                                {player.monitor && (
+                                    <Sword
+                                        fontSize="small"
+                                        sx={{ color: 'green' }}
+                                    />
+                                )}
                                 <Typography>{player.nickname}</Typography>
                             </Box>
                             {racetimeConnected && (
@@ -75,24 +86,31 @@ export default function PlayerList() {
                         </Box>
                     ))}
                 </Box>
-                <Typography variant="h6" sx={{
-                    pb: 1
-                }}>
+                <Typography variant="h6" sx={{ pb: 1 }}>
                     Spectators
                 </Typography>
                 <Box
                     sx={{
-                        display: "flex",
-                        flexDirection: "column",
-                        rowGap: 3
-                    }}>
+                        display: 'flex',
+                        flexDirection: 'column',
+                        rowGap: 3,
+                    }}
+                >
                     {spectators.map((player) => (
-                        <Box key={player.nickname}>
+                        <Box key={player.id}>
                             <Box
                                 sx={{
-                                    display: "flex",
-                                    columnGap: 2
-                                }}>
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    columnGap: 0.5,
+                                }}
+                            >
+                                {player.monitor && (
+                                    <Sword
+                                        fontSize="small"
+                                        sx={{ color: 'green' }}
+                                    />
+                                )}
                                 <Typography>{player.nickname}</Typography>
                             </Box>
                         </Box>

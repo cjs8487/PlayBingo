@@ -56,6 +56,8 @@ interface RoomContext {
     starredGoals: number[];
     showGoalDetails: boolean;
     showCounters: boolean;
+    spectator: boolean;
+    monitor: boolean;
     connect: (
         nickname: string,
         password: string,
@@ -88,6 +90,8 @@ export const RoomContext = createContext<RoomContext>({
     starredGoals: [],
     showGoalDetails: false,
     showCounters: false,
+    spectator: true,
+    monitor: false,
     async connect() {
         return { success: false };
     },
@@ -133,6 +137,8 @@ export function RoomContextProvider({
             (serverRoomData.token ? user?.username : '') ??
             '',
     );
+    const [spectator, setSpectator] = useState(true);
+    const [monitor, setMonitor] = useState(false);
     const [color, setColor] = useState('blue');
     const [connectionStatusState, setConnectionStatus] = useState(
         //if there is already an auth token present, start the connection
@@ -180,14 +186,13 @@ export function RoomContextProvider({
             board: Board,
             chatHistory: ChatMessage[],
             roomData: RoomData,
-            nickname?: string,
-            color?: string,
+            identity?: Player,
         ) => {
-            if (nickname) {
-                setNickname(nickname);
-            }
-            if (color) {
-                setColor(color);
+            if (identity) {
+                setNickname(identity.nickname);
+                setColor(identity.color);
+                setSpectator(identity.spectator);
+                setMonitor(identity.monitor);
             }
             emitBoardUpdate({ action: 'board', board });
             setMessages(chatHistory);
@@ -257,8 +262,7 @@ export function RoomContextProvider({
                             payload.board,
                             payload.chatHistory,
                             payload.roomData,
-                            payload.nickname,
-                            payload.color,
+                            payload.identity,
                         );
                         break;
                     case 'unauthorized':
@@ -488,6 +492,8 @@ export function RoomContextProvider({
                 starredGoals,
                 showGoalDetails,
                 showCounters,
+                spectator,
+                monitor,
                 connect,
                 sendChatMessage,
                 markGoal,
