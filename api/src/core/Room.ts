@@ -189,7 +189,7 @@ export default class Room {
         this.lastMessage = Date.now();
         this.inactivityWarningTimeout = setTimeout(
             this.warnClose.bind(this),
-            1000 * 60 * 60 * 3,
+            roomCleanupInactive,
         );
     }
 
