@@ -326,31 +326,31 @@ export default class Room {
 
     getPlayers() {
         const players: Player[] = [];
-        this.connections.forEach((_, k) => {
-            const p = this.getPlayer(k);
-            if (p) {
-                players.push(p);
+        this.connections.forEach((_, id) => {
+            const player = this.getPlayer(id);
+            if (player) {
+                players.push(player);
             }
         });
         return players;
     }
 
     private getPlayer(id: string): Player | undefined {
-        const i = this.identities.get(id);
-        if (!i) return undefined;
-        const rtUser = this.racetimeHandler.getPlayer(i.racetimeId ?? '');
+        const ident = this.identities.get(id);
+        if (!ident) return undefined;
+        const rtUser = this.racetimeHandler.getPlayer(ident.racetimeId ?? '');
         return {
             id,
-            nickname: i.nickname,
-            color: i.color,
+            nickname: ident.nickname,
+            color: ident.color,
             goalCount: this.board.board.reduce((prev, row) => {
                 return (
                     prev +
-                    row.reduce((p, cell) => {
-                        if (cell.colors.includes(i.color)) {
-                            return p + 1;
+                    row.reduce((rowPrev, cell) => {
+                        if (cell.colors.includes(ident.color)) {
+                            return rowPrev + 1;
                         }
-                        return p;
+                        return rowPrev;
                     }, 0)
                 );
             }, 0),
@@ -362,8 +362,8 @@ export default class Room {
                       finishTime: rtUser.finish_time ?? undefined,
                   }
                 : { connected: false },
-            spectator: i.spectator,
-            monitor: i.monitor,
+            spectator: ident.spectator,
+            monitor: ident.monitor,
         };
     }
 
@@ -489,7 +489,7 @@ export default class Room {
                 contents: identity.nickname,
                 color: identity.color,
             },
-            ` is marking (${row},${col})`,
+            ` marked ${this.board.board[row][col].goal.goal} (${row},${col})`,
         ]);
         addMarkAction(
             this.id,
@@ -517,7 +517,7 @@ export default class Room {
         this.sendCellUpdate(unRow, unCol);
         this.sendChat([
             { contents: identity.nickname, color: identity.color },
-            ` is unmarking (${unRow},${unCol})`,
+            ` unmarked ${this.board.board[unRow][unCol].goal.goal} (${unRow},${unCol})`,
         ]);
         addUnmarkAction(
             this.id,

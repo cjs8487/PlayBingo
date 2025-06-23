@@ -219,7 +219,7 @@ async function getOrLoadRoom(slug: string): Promise<Room | null> {
                     newRoom.sendCellUpdate(row, col);
                     newRoom.sendChat([
                         { contents: nickname, color },
-                        ` is marking (${row},${col})`,
+                        ` is marked ${newRoom.board.board[row][col].goal.goal} (${row},${col})`,
                     ]);
                 }
                 break;
@@ -230,7 +230,7 @@ async function getOrLoadRoom(slug: string): Promise<Room | null> {
                 newRoom.sendCellUpdate(row, col);
                 newRoom.sendChat([
                     { contents: nickname, color },
-                    ` is unmarking (${row},${col})`,
+                    ` is unmarked ${newRoom.board.board[row][col].goal.goal} (${row},${col})`,
                 ]);
                 break;
             case 'CHAT':
