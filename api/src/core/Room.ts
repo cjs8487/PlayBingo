@@ -21,6 +21,7 @@ import {
     GenerationListTransform,
 } from '@prisma/client';
 import { OPEN, WebSocket } from 'ws';
+import { roomCleanupInactive } from '../Environment';
 import { logError, logInfo, logWarn } from '../Logger';
 import { invalidateToken, RoomTokenPayload } from '../auth/RoomAuth';
 import {
@@ -45,6 +46,7 @@ import {
     CompletedLines,
     listToBoard,
 } from '../util/RoomUtils';
+import BoardGenerator from './generation/BoardGenerator';
 import {
     GeneratorGoal,
     GlobalGenerationState,
@@ -52,7 +54,7 @@ import {
 import { generateFullRandom, generateRandomTyped } from './generation/Random';
 import { generateSRLv5 } from './generation/SRLv5';
 import RacetimeHandler, { RaceData } from './integration/RacetimeHandler';
-import BoardGenerator from './generation/BoardGenerator';
+import { allRooms } from './RoomServer';
 
 type RoomIdentity = {
     nickname: string;
@@ -132,6 +134,11 @@ export default class Room {
     racetimeEligible: boolean;
     racetimeHandler: RacetimeHandler;
 
+    lastMessage: number;
+
+    inactivityWarningTimeout?: NodeJS.Timeout;
+    closeTimeout?: NodeJS.Timeout;
+
     constructor(
         name: string,
         game: string,
@@ -178,6 +185,12 @@ export default class Room {
 
         this.generatorConfig = generatorConfig;
         this.newGenerator = !!generatorConfig;
+
+        this.lastMessage = Date.now();
+        this.inactivityWarningTimeout = setTimeout(
+            () => this.warnClose(),
+            roomCleanupInactive,
+        );
     }
 
     async generateBoard(options: BoardGenerationOptions) {
@@ -413,6 +426,9 @@ export default class Room {
         this.identities.delete(auth.uuid);
         this.connections.delete(auth.uuid);
         addLeaveAction(this.id, identity.nickname, identity.color).then();
+        if (this.connections.size === 0) {
+            this.close();
+        }
         return { action: 'disconnected' };
     }
 
@@ -558,6 +574,10 @@ export default class Room {
                 'has left.',
             ]);
             addLeaveAction(this.id, identity.nickname, identity.color).then();
+
+            if (this.connections.size === 0) {
+                this.close();
+            }
             return true;
         }
         return false;
@@ -615,6 +635,7 @@ export default class Room {
     }
     //#endregion
 
+    //#region Send Messages
     sendChat(message: string): void;
     sendChat(message: ChatMessage): void;
 
@@ -626,6 +647,11 @@ export default class Room {
             this.chatHistory.push(message);
             this.sendServerMessage({ action: 'chat', message: message });
         }
+    }
+
+    sendSystemMessage(message: string) {
+        this.chatHistory.push([message]);
+        this.sendServerMessage({ action: 'chat', message: [message] }, false);
     }
 
     sendCellUpdate(row: number, col: number) {
@@ -660,7 +686,10 @@ export default class Room {
         });
     }
 
-    private sendServerMessage(message: ServerMessage) {
+    private sendServerMessage(
+        message: ServerMessage,
+        updateInactivity: boolean = true,
+    ) {
         this.connections.forEach((client) => {
             if (client.readyState === OPEN) {
                 client.send(
@@ -668,6 +697,13 @@ export default class Room {
                 );
             }
         });
+
+        if (updateInactivity) {
+            this.lastMessage = Date.now();
+            this.inactivityWarningTimeout?.refresh();
+            clearTimeout(this.closeTimeout);
+            this.closeTimeout = undefined;
+        }
     }
 
     private checkWinConditions() {
@@ -841,6 +877,41 @@ export default class Room {
 
     logError(message: string, metadata?: { [k: string]: string }) {
         logError(message, { room: this.slug, ...metadata });
+    }
+    //#endregion
+
+    //#region Utilities
+    warnClose() {
+        this.logInfo('Sending inactivity warning.');
+        this.sendSystemMessage(
+            'This room close in 5 minutes if no activity is detected.',
+        );
+        this.closeTimeout = setTimeout(this.close.bind(this), 5 * 60 * 1000);
+    }
+
+    /**
+     * Determines if this room can be closed, which removes it from working memory because the room is no longer being
+     * used.
+     * @returns true if the room can be closed.
+     */
+    canClose() {
+        if (Date.now() - this.lastMessage > roomCleanupInactive) {
+            return this.connections.size <= 0;
+        }
+        return false;
+    }
+
+    /**
+     * Runs room level cleanup tasks and closes all open connections to the room
+     */
+    close() {
+        this.logInfo('Closing room.');
+        this.sendSystemMessage('This room has been closed due to inactivity.');
+        this.connections.forEach((connection) => {
+            this.handleSocketClose(connection);
+            connection.close(1001, 'Room is closing.');
+        });
+        allRooms.delete(this.slug);
     }
     //#endregion
 }

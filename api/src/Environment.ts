@@ -3,6 +3,10 @@ import 'dotenv/config';
 export const port = process.env.PORT || 8000;
 export const testing = !!process.env.TESTING;
 export const roomTokenSecret = process.env.ROOM_TOKEN_SECRET || '';
+export const roomCleanupInterval =
+    Number(process.env.ROOM_CLEANUP_INTERVAL) || 1000 * 60 * 60;
+export const roomCleanupInactive =
+    Number(process.env.ROOM_CLEANUP_INACTIVE) || 1000 * 60 * 60 * 3;
 export const sessionSecret = process.env.SESSION_SECRET || '';
 export const clientUrl = process.env.CLIENT_URL ?? '';
 export const smtpHost = process.env.SMTP_HOST ?? '';
