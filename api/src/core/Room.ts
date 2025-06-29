@@ -188,7 +188,7 @@ export default class Room {
 
         this.lastMessage = Date.now();
         this.inactivityWarningTimeout = setTimeout(
-            this.warnClose.bind(this),
+            () => this.warnClose(),
             roomCleanupInactive,
         );
     }
@@ -881,7 +881,7 @@ export default class Room {
     //#endregion
 
     //#region Utilities
-    private warnClose() {
+    warnClose() {
         this.logInfo('Sending inactivity warning.');
         this.sendSystemMessage(
             'This room close in 5 minutes if no activity is detected.',
