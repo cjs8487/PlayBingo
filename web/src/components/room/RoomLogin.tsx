@@ -16,75 +16,75 @@ export default function RoomLogin() {
     return (
         <Box
             sx={{
-                display: "flex",
+                display: 'flex',
                 flexGrow: 1,
-                alignItems: "center",
-                justifyContent: "center"
-            }}>
-            <Paper
-                sx={{
-                    p: 4,
+                alignItems: 'center',
+                justifyContent: 'center',
+            }}
+        >
+            <Formik
+                initialValues={{
+                    nickname: '',
+                    password: '',
+                    spectator: false,
+                }}
+                onSubmit={async ({ nickname, password, spectator }) => {
+                    const result = await connect(nickname, password, spectator);
+                    if (!result.success) {
+                        setError(result.message);
+                    }
                 }}
             >
-                <Formik
-                    initialValues={{
-                        nickname: '',
-                        password: '',
-                        spectator: false,
-                    }}
-                    onSubmit={async ({ nickname, password, spectator }) => {
-                        const result = await connect(
-                            nickname,
-                            password,
-                            spectator,
-                        );
-                        if (!result.success) {
-                            setError(result.message);
-                        }
-                    }}
-                >
-                    <Form>
-                        {error && (
-                            <Typography color="error" variant="body2" sx={{
-                                pb: 1
-                            }}>
-                                {error}
-                            </Typography>
-                        )}
+                <Form>
+                    {error && (
+                        <Typography
+                            color="error"
+                            variant="body2"
+                            sx={{
+                                pb: 1,
+                            }}
+                        >
+                            {error}
+                        </Typography>
+                    )}
+                    <Box
+                        sx={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            rowGap: 2,
+                        }}
+                    >
+                        <FormikTextField
+                            id="nickname"
+                            name="nickname"
+                            label="Nickname"
+                        />
+                        <FormikTextField
+                            id="password"
+                            name="password"
+                            type="password"
+                            label="Password"
+                        />
+                        <FormikSwitch
+                            name="spectator"
+                            id="spectator"
+                            label="Join as spectator?"
+                        />
+                    </Box>
+                    <Box
+                        sx={{
+                            display: 'flex',
+                        }}
+                    >
                         <Box
                             sx={{
-                                display: "flex",
-                                flexDirection: "column",
-                                rowGap: 2
-                            }}>
-                            <FormikTextField
-                                id="nickname"
-                                name="nickname"
-                                label="Nickname"
-                            />
-                            <FormikTextField
-                                id="password"
-                                name="password"
-                                type="password"
-                                label="Password"
-                            />
-                            <FormikSwitch
-                                name="spectator"
-                                id="spectator"
-                                label="Join as spectator?"
-                            />
-                        </Box>
-                        <Box sx={{
-                            display: "flex"
-                        }}>
-                            <Box sx={{
-                                flexGrow: 1
-                            }} />
-                            <Button type="submit">Join Room</Button>
-                        </Box>
-                    </Form>
-                </Formik>
-            </Paper>
+                                flexGrow: 1,
+                            }}
+                        />
+                        <Button type="submit">Join Room</Button>
+                    </Box>
+                </Form>
+            </Formik>
         </Box>
     );
 }

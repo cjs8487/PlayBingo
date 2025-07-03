@@ -28,6 +28,10 @@
         },
         "newGenerator": {
             "type": "boolean"
+        },
+        "token": {
+            "type": "string",
+            "description": "The auto-authentication token generated for the logged in user."
         }
     },
     "$defs": {

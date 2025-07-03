@@ -4,7 +4,14 @@ import RoomChat from '@/components/room/RoomChat';
 import RoomInfo from '@/components/room/RoomInfo';
 import RoomLogin from '@/components/room/RoomLogin';
 import { ConnectionStatus, useRoomContext } from '@/context/RoomContext';
-import { Alert, Box, Container, Link } from '@mui/material';
+import {
+    Alert,
+    Box,
+    Container,
+    Dialog,
+    DialogContent,
+    Link,
+} from '@mui/material';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import PlayerList from '../../../../components/room/PlayerList';
 import RacetimeCard from '../../../../components/room/racetime/RacetimeCard';
@@ -15,90 +22,110 @@ import { useState } from 'react';
 export default function Room() {
     const { connectionStatus, roomData } = useRoomContext();
 
+    let showLogin = false;
     if (connectionStatus === ConnectionStatus.UNINITIALIZED) {
-        return <RoomLogin />;
+        showLogin = true;
     }
 
     // something went wrong attempting to connect to the server, show the login
     // page which when submitted will restart the connection process, or show an
     // adequate error message on failure
     if (connectionStatus === ConnectionStatus.CLOSED && !roomData) {
-        return <RoomLogin />;
+        showLogin = true;
     }
 
     return (
-        <Box sx={{ width: '100%' }}>
-            {roomData?.newGenerator && <NewGeneratorBanner />}
-            <AutoSizer>
-                {({ width, height }) => (
-                    <>
-                        <Box
-                            sx={{
-                                display: { xs: 'flex', sm: 'none' },
-                                width: width,
-                                height: height - 50,
-                                overflowY: 'auto',
-                                flexDirection: 'column',
-                                rowGap: 1.5,
-                                p: 1,
-                            }}
-                        >
-                            <RoomXs />
-                        </Box>
-                        <Box
-                            sx={{
-                                display: { xs: 'none', sm: 'flex', md: 'none' },
-                                width: width,
-                                height: height - 50,
-                                overflowY: 'auto',
-                                flexDirection: 'column',
-                                rowGap: 1.5,
-                                p: 1,
-                            }}
-                        >
-                            <RoomSm />
-                        </Box>
-                        <Box
-                            sx={{
-                                display: { xs: 'none', md: 'flex', lg: 'none' },
-                                width: width,
-                                height: height - 50,
-                                overflowY: 'auto',
-                                flexDirection: 'column',
-                                rowGap: 1.5,
-                                p: 1,
-                            }}
-                        >
-                            <RoomMd />
-                        </Box>
-                        <Box
-                            sx={{
-                                display: { xs: 'none', lg: 'flex', xl: 'none' },
-                                width: width,
-                                height: height - 50,
-                                overflowY: 'auto',
-                                columnGap: 1,
-                                p: 1,
-                            }}
-                        >
-                            <RoomLg />
-                        </Box>
-                        <Box
-                            sx={{
-                                display: { xs: 'none', xl: 'flex' },
-                                width: width,
-                                height: height - 50,
-                                overflowY: 'auto',
-                                columnGap: 1,
-                                p: 1,
-                            }}
-                        >
-                            <RoomXl />
-                        </Box>
-                    </>
-                )}
-            </AutoSizer>
-        </Box>
+        <>
+            <Box sx={{ width: '100%' }}>
+                {roomData?.newGenerator && <NewGeneratorBanner />}
+                <AutoSizer>
+                    {({ width, height }) => (
+                        <>
+                            <Box
+                                sx={{
+                                    display: { xs: 'flex', sm: 'none' },
+                                    width: width,
+                                    height: height - 50,
+                                    overflowY: 'auto',
+                                    flexDirection: 'column',
+                                    rowGap: 1.5,
+                                    p: 1,
+                                }}
+                            >
+                                <RoomXs />
+                            </Box>
+                            <Box
+                                sx={{
+                                    display: {
+                                        xs: 'none',
+                                        sm: 'flex',
+                                        md: 'none',
+                                    },
+                                    width: width,
+                                    height: height - 50,
+                                    overflowY: 'auto',
+                                    flexDirection: 'column',
+                                    rowGap: 1.5,
+                                    p: 1,
+                                }}
+                            >
+                                <RoomSm />
+                            </Box>
+                            <Box
+                                sx={{
+                                    display: {
+                                        xs: 'none',
+                                        md: 'flex',
+                                        lg: 'none',
+                                    },
+                                    width: width,
+                                    height: height - 50,
+                                    overflowY: 'auto',
+                                    flexDirection: 'column',
+                                    rowGap: 1.5,
+                                    p: 1,
+                                }}
+                            >
+                                <RoomMd />
+                            </Box>
+                            <Box
+                                sx={{
+                                    display: {
+                                        xs: 'none',
+                                        lg: 'flex',
+                                        xl: 'none',
+                                    },
+                                    width: width,
+                                    height: height - 50,
+                                    overflowY: 'auto',
+                                    columnGap: 1,
+                                    p: 1,
+                                }}
+                            >
+                                <RoomLg />
+                            </Box>
+                            <Box
+                                sx={{
+                                    display: { xs: 'none', xl: 'flex' },
+                                    width: width,
+                                    height: height - 50,
+                                    overflowY: 'auto',
+                                    columnGap: 1,
+                                    p: 1,
+                                }}
+                            >
+                                <RoomXl />
+                            </Box>
+                        </>
+                    )}
+                </AutoSizer>
+            </Box>
+            <Dialog open={showLogin}>
+                <DialogContent>
+                    <RoomLogin />
+                </DialogContent>
+            </Dialog>
+        </>
     );
 }
 

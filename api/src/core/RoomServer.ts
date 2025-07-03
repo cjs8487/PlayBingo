@@ -2,7 +2,7 @@ import { RoomAction } from '@playbingo/types';
 import { WebSocketServer } from 'ws';
 import { hasPermission, verifyRoomToken } from '../auth/RoomAuth';
 import { roomCleanupInterval } from '../Environment';
-import { logInfo } from '../Logger';
+import { logInfo, logWarn } from '../Logger';
 import Room from './Room';
 
 export const roomWebSocketServer: WebSocketServer = new WebSocketServer({
@@ -138,6 +138,11 @@ roomWebSocketServer.on('connection', (ws, req) => {
             if (found) return;
             found = room.handleSocketClose(ws);
         });
+        if (!found) {
+            logWarn(
+                'Received a close frame for a websocket connection, but there was no matching socket associated with a room',
+            );
+        }
     });
 });
 

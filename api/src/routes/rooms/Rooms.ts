@@ -18,6 +18,7 @@ import { chunk } from '../../util/Array';
 import { randomWord, slugAdjectives, slugNouns } from '../../util/Words';
 import { handleAction } from './actions/Actions';
 import { getGoalList } from '../../database/games/Goals';
+import { RoomData } from '@playbingo/types';
 
 const MIN_ROOM_GOALS_REQUIRED = 25;
 const rooms = Router();
@@ -161,18 +162,14 @@ rooms.post('/', async (req, res) => {
     res.status(200).json({ slug, authToken: token });
 });
 
-rooms.get('/:slug', async (req, res) => {
-    const { slug } = req.params;
-    if (allRooms.get(slug)) {
-        res.sendStatus(200);
-        return;
-    }
+async function getOrLoadRoom(slug: string): Promise<Room | null> {
+    let room = allRooms.get(slug);
+    if (room) return room;
+
     const dbRoom = await getRoomFromSlug(slug);
-    if (!dbRoom) {
-        res.sendStatus(404);
-        return;
-    }
-    const room = new Room(
+    if (!dbRoom) return null;
+
+    const newRoom = new Room(
         dbRoom.name,
         dbRoom.game?.name ?? 'Deleted Game',
         dbRoom.game?.slug ?? '',
@@ -188,7 +185,8 @@ rooms.get('/:slug', async (req, res) => {
             !!dbRoom.racetimeRoom,
         dbRoom.racetimeRoom ?? '',
     );
-    room.board = {
+
+    newRoom.board = {
         board: chunk(
             (await getGoalList(dbRoom.board)).map((goal) => ({
                 goal: goal,
@@ -197,47 +195,49 @@ rooms.get('/:slug', async (req, res) => {
             5,
         ),
     };
+
     dbRoom.history.forEach((action) => {
         const { nickname, color, newColor, oldColor, row, col, message } =
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             action.payload as any;
+
         switch (action.action) {
             case 'JOIN':
-                room.sendChat([{ contents: nickname, color }, ' has joined.']);
-                break;
-            case 'LEAVE':
-                room.sendChat([{ contents: nickname, color }, ' has left.']);
-                break;
-            case 'MARK':
-                if (room.board.board[row][col].colors.includes(color)) return;
-                room.board.board[row][col].colors.push(color);
-                room.board.board[row][col].colors.sort((a, b) =>
-                    a.localeCompare(b),
-                );
-                room.sendCellUpdate(row, col);
-                room.sendChat([
-                    {
-                        contents: nickname,
-                        color: color,
-                    },
-                    ` is marking (${row},${col})`,
+                newRoom.sendChat([
+                    { contents: nickname, color },
+                    ' has joined.',
                 ]);
                 break;
+            case 'LEAVE':
+                newRoom.sendChat([{ contents: nickname, color }, ' has left.']);
+                break;
+            case 'MARK':
+                if (!newRoom.board.board[row][col].colors.includes(color)) {
+                    newRoom.board.board[row][col].colors.push(color);
+                    newRoom.board.board[row][col].colors.sort((a, b) =>
+                        a.localeCompare(b),
+                    );
+                    newRoom.sendCellUpdate(row, col);
+                    newRoom.sendChat([
+                        { contents: nickname, color },
+                        ` is marked ${newRoom.board.board[row][col].goal.goal} (${row},${col})`,
+                    ]);
+                }
+                break;
             case 'UNMARK':
-                room.board.board[row][col].colors = room.board.board[row][
+                newRoom.board.board[row][col].colors = newRoom.board.board[row][
                     col
                 ].colors.filter((c) => c !== color);
-                room.sendCellUpdate(row, col);
-                room.sendChat([
-                    { contents: nickname, color: color },
-                    ` is unmarking (${row},${col})`,
+                newRoom.sendCellUpdate(row, col);
+                newRoom.sendChat([
+                    { contents: nickname, color },
+                    ` is unmarked ${newRoom.board.board[row][col].goal.goal} (${row},${col})`,
                 ]);
                 break;
             case 'CHAT':
-                room.sendChat(`${nickname}: ${message}`);
+                newRoom.sendChat(`${nickname}: ${message}`);
                 break;
             case 'CHANGECOLOR':
-                room.sendChat([
+                newRoom.sendChat([
                     { contents: nickname, color: oldColor },
                     ' has changed their color to ',
                     { contents: color, color: newColor },
@@ -245,7 +245,42 @@ rooms.get('/:slug', async (req, res) => {
                 break;
         }
     });
-    allRooms.set(slug, room);
+
+    allRooms.set(slug, newRoom);
+    return newRoom;
+}
+
+rooms.get('/:slug', async (req, res) => {
+    const { slug } = req.params;
+    const room = await getOrLoadRoom(slug);
+
+    if (!room) {
+        res.sendStatus(404);
+        return;
+    }
+
+    const roomData: RoomData = {
+        game: room.game,
+        slug: room.slug,
+        name: room.name,
+        gameSlug: room.gameSlug,
+        newGenerator: room.newGenerator,
+        racetimeConnection: {
+            gameActive: room.racetimeEligible,
+            url: room.racetimeHandler.url,
+            startDelay: room.racetimeHandler.data?.start_delay,
+            started: room.racetimeHandler.data?.started_at ?? undefined,
+            ended: room.racetimeHandler.data?.ended_at ?? undefined,
+            status: room.racetimeHandler.data?.status.verbose_value,
+        },
+    };
+
+    const perms = await room.canAutoAuthenticate(req.session.user);
+    if (perms) {
+        roomData.token = createRoomToken(room, perms);
+    }
+
+    res.status(200).json(roomData);
 });
 
 rooms.post('/:slug/authorize', (req, res) => {
@@ -265,52 +300,49 @@ rooms.post('/:slug/authorize', (req, res) => {
     res.status(200).send({ authToken: token });
 });
 
-rooms.post<{ slug: string; action: string }>(
-    '/:slug/actions',
-    async (req, res) => {
-        const { slug } = req.params;
-        const { authToken, action } = req.body;
+rooms.post('/:slug/actions', async (req, res) => {
+    const { slug } = req.params;
+    const { authToken, action } = req.body;
 
-        if (!req.session.user) {
-            logWarn(`Unauthorized action request ${action}`);
-            res.sendStatus(401);
-            return;
-        }
+    if (!req.session.user) {
+        logWarn(`Unauthorized action request ${action}`);
+        res.sendStatus(401);
+        return;
+    }
 
-        if (!authToken) {
-            logInfo(`Malformed action body request - missing authToken`);
-            res.status(400).send('Missing required body parameter');
-            return;
-        }
+    if (!authToken) {
+        logInfo(`Malformed action body request - missing authToken`);
+        res.status(400).send('Missing required body parameter');
+        return;
+    }
 
-        const room = allRooms.get(slug);
-        if (!room) {
-            logInfo(`Unable to find room to take action on`);
-            res.sendStatus(404);
-            return;
-        }
+    const room = allRooms.get(slug);
+    if (!room) {
+        logInfo(`Unable to find room to take action on`);
+        res.sendStatus(404);
+        return;
+    }
 
-        const authPayload = verifyRoomToken(authToken, slug);
-        if (!authPayload) {
-            room.logWarn(`Unauthorized action request`);
-            res.sendStatus(403);
-            return;
-        }
+    const authPayload = verifyRoomToken(authToken, slug);
+    if (!authPayload) {
+        room.logWarn(`Unauthorized action request`);
+        res.sendStatus(403);
+        return;
+    }
 
-        const result = await handleAction(
-            room,
-            action,
-            req.session.user,
-            authPayload,
-        );
+    const result = await handleAction(
+        room,
+        action,
+        req.session.user,
+        authPayload,
+    );
 
-        res.status(result.code);
-        if ('message' in result) {
-            res.send(result.message);
-        } else {
-            res.json(result.value);
-        }
-    },
-);
+    res.status(result.code);
+    if ('message' in result) {
+        res.send(result.message);
+    } else {
+        res.json(result.value);
+    }
+});
 
 export default rooms;
