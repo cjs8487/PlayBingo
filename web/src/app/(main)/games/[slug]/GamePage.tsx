@@ -14,11 +14,12 @@ import GoalManagement from '../../../../components/game/goals/GoalManagement';
 import { GoalManagerContextProvider } from '../../../../context/GoalManagerContext';
 import { alertError, gameCoverUrl } from '../../../../lib/Utils';
 import GenerationPage from './Generation';
+import Summary from './Summary';
 
 export default function GamePage({ gameData }: { gameData: Game }) {
     const [isOwner, setIsOwner] = useState(false);
     const [canModerate, setCanModerate] = useState(false);
-    const [tab, setTab] = useState('Goals');
+    const [tab, setTab] = useState('Overview');
     const handleChange = (event: React.SyntheticEvent, newValue: string) => {
         setTab(newValue);
     };
@@ -39,7 +40,7 @@ export default function GamePage({ gameData }: { gameData: Game }) {
         loadPermissions();
     }, [gameData]);
 
-    const tabs = ['Goals'];
+    const tabs = ['Overview', 'Goals'];
     if (canModerate) {
         tabs.push('Goal Categories');
     }
@@ -129,6 +130,9 @@ export default function GamePage({ gameData }: { gameData: Game }) {
                         ))}
                     </TabList>
                 </Box>
+                <TabPanel value="Overview">
+                    <Summary gameData={gameData} />
+                </TabPanel>
                 <TabPanel
                     value="Goals"
                     sx={{
