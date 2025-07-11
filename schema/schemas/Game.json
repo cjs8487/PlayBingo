@@ -78,6 +78,12 @@
         },
         "newGeneratorBeta": {
             "type": "boolean"
+        },
+        "descriptionMd": {
+            "type": "string"
+        },
+        "setupMd": {
+            "type": "string"
         }
     },
     "$defs": {

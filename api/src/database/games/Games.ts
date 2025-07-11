@@ -178,6 +178,14 @@ export const updateSlugWords = (slug: string, slugWords: string[]) => {
     return prisma.game.update({ where: { slug }, data: { slugWords } });
 };
 
+export const updateDescription = (slug: string, descriptionMd: string) => {
+    return prisma.game.update({ where: { slug }, data: { descriptionMd } });
+};
+
+export const updateSetup = (slug: string, setupMd: string) => {
+    return prisma.game.update({ where: { slug }, data: { setupMd } });
+};
+
 export const getRacetimeConfiguration = (slug: string) => {
     return prisma.game.findUnique({
         select: { racetimeCategory: true, racetimeGoal: true },

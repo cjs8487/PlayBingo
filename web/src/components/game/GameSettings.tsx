@@ -26,6 +26,7 @@ import FormikSwitch from '../input/FormikSwitch';
 import FormikTextField from '../input/FormikTextField';
 import NumberInput from '../input/NumberInput';
 import FormikFileUpload from '../input/FileUpload';
+import { MarkdownField } from '../input/MarkdownField';
 
 async function validateRacetimeCategory(value: string) {
     if (value) {
@@ -154,6 +155,8 @@ export default function GameSettings({ gameData }: GameSettingsProps) {
                     difficultyGroups: gameData.difficultyGroups ?? 0,
                     slugWords: gameData.slugWords?.join('\n') ?? '',
                     useTypedRandom: gameData.useTypedRandom,
+                    descriptionMd: gameData.descriptionMd ?? '',
+                    setupMd: gameData.setupMd ?? '',
                 }}
                 onSubmit={async ({
                     name,
@@ -165,9 +168,10 @@ export default function GameSettings({ gameData }: GameSettingsProps) {
                     difficultyGroups,
                     slugWords,
                     useTypedRandom,
+                    descriptionMd,
+                    setupMd,
                 }) => {
                     let shouldDeleteCover = gameData.coverImage && !coverImage;
-                    console.log(coverImage !== gameData.coverImage);
                     const res = await fetch(`/api/games/${gameData.slug}`, {
                         method: 'POST',
                         headers: {
@@ -188,6 +192,8 @@ export default function GameSettings({ gameData }: GameSettingsProps) {
                                 slugWords === '' ? [] : slugWords.split('\n'),
                             useTypedRandom,
                             shouldDeleteCover,
+                            descriptionMd,
+                            setupMd,
                         }),
                     });
                     if (!res.ok) {
@@ -374,6 +380,14 @@ export default function GameSettings({ gameData }: GameSettingsProps) {
                                 Enter each word on a new line. No numbers or
                                 special characters are allowed.
                             </Typography>
+                        </Box>
+                        <Box>
+                            <Typography>Description</Typography>
+                            <MarkdownField name="descriptionMd" />
+                        </Box>
+                        <Box>
+                            <Typography>Setup Instructions</Typography>
+                            <MarkdownField name="setupMd" />
                         </Box>
                         <Box
                             sx={{

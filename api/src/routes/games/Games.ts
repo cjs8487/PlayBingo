@@ -24,6 +24,7 @@ import {
     removeModerator,
     removeOwner,
     unfavoriteGame,
+    updateDescription,
     updateDifficultyGroups,
     updateDifficultyVariant,
     updateDifficultyVariantsEnabled,
@@ -32,6 +33,7 @@ import {
     updateGeneratorConfig,
     updateRacetimeCategory,
     updateRacetimeGoal,
+    updateSetup,
     updateSlugWords,
     updateSRLv5Enabled,
     updateUseTypedRandom,
@@ -88,6 +90,8 @@ games.get('/:slug', async (req, res) => {
             cellRestrictions: game.generationGoalRestrictions,
             globalAdjustments: game.generationGlobalAdjustments,
         },
+        descriptionMd: game.descriptionMd ?? undefined,
+        setupMd: game.setupMd ?? undefined,
     };
     res.status(200).json(result);
 });
@@ -138,6 +142,8 @@ games.post('/:slug', async (req, res) => {
         slugWords,
         useTypedRandom,
         shouldDeleteCover,
+        descriptionMd,
+        setupMd,
     } = req.body;
 
     let result = undefined;
@@ -195,6 +201,12 @@ games.post('/:slug', async (req, res) => {
     }
     if (useTypedRandom !== undefined) {
         result = await updateUseTypedRandom(slug, !!useTypedRandom);
+    }
+    if (descriptionMd !== undefined) {
+        result = await updateDescription(slug, descriptionMd);
+    }
+    if (setupMd !== undefined) {
+        result = await updateSetup(slug, setupMd);
     }
 
     if (!result) {
