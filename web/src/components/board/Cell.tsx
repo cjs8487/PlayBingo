@@ -7,6 +7,7 @@ import { Cell } from '@playbingo/types';
 import { useCallback, useContext, useMemo, useState } from 'react';
 import { RoomContext } from '../../context/RoomContext';
 import TextFit from '../TextFit';
+import GoalCategories from '../game/GoalCategories';
 
 interface CellProps {
     cell: Cell;
@@ -57,8 +58,12 @@ export default function BoardCell({
                 showGoalDetails ? (
                     <>
                         <Box sx={{ pb: 1.5 }}>{goal.description}</Box>
-                        <Box>Difficulty: {goal.difficulty}</Box>
-                        <Box>Categories: {goal.categories?.join(', ')}</Box>
+                        {goal.difficulty && (
+                            <Box>Difficulty: {goal.difficulty}</Box>
+                        )}
+                        {goal.categories && (
+                            <Box>Categories: {goal.categories.join(', ')}</Box>
+                        )}
                     </>
                 ) : (
                     goal.description
