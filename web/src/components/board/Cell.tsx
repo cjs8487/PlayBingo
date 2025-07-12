@@ -7,6 +7,7 @@ import { Cell } from '@playbingo/types';
 import { useCallback, useContext, useMemo, useState } from 'react';
 import { RoomContext } from '../../context/RoomContext';
 import TextFit from '../TextFit';
+import GoalCategories from '../game/GoalCategories';
 
 interface CellProps {
     cell: Cell;
@@ -57,8 +58,12 @@ export default function BoardCell({
                 showGoalDetails ? (
                     <>
                         <Box sx={{ pb: 1.5 }}>{goal.description}</Box>
-                        <Box>Difficulty: {goal.difficulty}</Box>
-                        <Box>Categories: {goal.categories?.join(', ')}</Box>
+                        {goal.difficulty && (
+                            <Box>Difficulty: {goal.difficulty}</Box>
+                        )}
+                        {goal.categories && (
+                            <Box>Categories: {goal.categories.join(', ')}</Box>
+                        )}
                     </>
                 ) : (
                     goal.description
@@ -95,6 +100,12 @@ export default function BoardCell({
                         zIndex: 10,
                         scale: '110%',
                     },
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: '100%',
+                    height: '100%',
                 }}
                 onClick={toggleSpace}
                 onContextMenu={(e) => {
@@ -107,7 +118,7 @@ export default function BoardCell({
             >
                 <Box
                     sx={{
-                        position: 'absolute',
+                        // position: 'absolute',
                         zIndex: 10,
                         display: 'flex',
                         height: '100%',
@@ -143,12 +154,10 @@ export default function BoardCell({
                 {showCounters && (
                     <Box
                         sx={{
-                            position: 'absolute',
                             bottom: 0,
                             display: 'flex',
                             backgroundColor: 'rgba(0,0,0,0.7)',
                             px: 0.5,
-                            py: 0.2,
                             width: '100%',
                             zIndex: 30,
                         }}
@@ -159,6 +168,7 @@ export default function BoardCell({
                                 updateProgress(-1);
                                 e.stopPropagation;
                             }}
+                            sx={{ padding: 0.25 }}
                         >
                             <Remove fontSize="small" />
                         </IconButton>
@@ -178,6 +188,7 @@ export default function BoardCell({
                                 updateProgress(+1);
                                 e.stopPropagation();
                             }}
+                            sx={{ padding: 0.25 }}
                         >
                             <Add fontSize="small" />
                         </IconButton>

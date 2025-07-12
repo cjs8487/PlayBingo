@@ -344,7 +344,7 @@ function RoomXl() {
                             columnGap: 1,
                         }}
                     >
-                        <Box>
+                        <Box sx={{ flexGrow: 1 }}>
                             <RoomInfo />
                         </Box>
                         <Box>
