@@ -33,15 +33,7 @@ export default function RoomControlDialog({
     show,
     close,
 }: RoomControlDialogProps) {
-    const {
-        roomData,
-        regenerateCard,
-        board,
-        showGoalDetails,
-        toggleGoalDetails,
-        showCounters,
-        toggleCounters,
-    } = useContext(RoomContext);
+    const { roomData, regenerateCard, board } = useContext(RoomContext);
 
     const modes = useAsync(async () => {
         if (!roomData) {
@@ -156,25 +148,6 @@ export default function RoomControlDialog({
                         pt: 2,
                     }}
                 >
-                    <Typography variant="h6">Settings</Typography>
-                    <FormControlLabel
-                        control={
-                            <Switch
-                                checked={showCounters}
-                                onChange={toggleCounters}
-                            />
-                        }
-                        label="Show Counters"
-                    />
-                    <FormControlLabel
-                        control={
-                            <Switch
-                                checked={showGoalDetails}
-                                onChange={toggleGoalDetails}
-                            />
-                        }
-                        label="Show All Goal Details"
-                    />
                     <Typography variant="h6">Local Actions</Typography>
                     <Typography variant="caption">
                         These actions are potentially destructive and should
