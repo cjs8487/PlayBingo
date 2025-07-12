@@ -27,6 +27,7 @@ import { userAvatarUrl } from '../../lib/Utils';
 export const pages = [
     { name: 'Games', path: '/games' },
     { name: 'Play', path: '/rooms' },
+    { name: 'Discord', path: 'https://discord.gg/8sKNBaq8gu' },
 ];
 
 export default function Header() {
