@@ -100,6 +100,12 @@ export default function BoardCell({
                         zIndex: 10,
                         scale: '110%',
                     },
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: '100%',
+                    height: '100%',
                 }}
                 onClick={toggleSpace}
                 onContextMenu={(e) => {
@@ -112,7 +118,7 @@ export default function BoardCell({
             >
                 <Box
                     sx={{
-                        position: 'absolute',
+                        // position: 'absolute',
                         zIndex: 10,
                         display: 'flex',
                         height: '100%',
@@ -148,12 +154,10 @@ export default function BoardCell({
                 {showCounters && (
                     <Box
                         sx={{
-                            position: 'absolute',
                             bottom: 0,
                             display: 'flex',
                             backgroundColor: 'rgba(0,0,0,0.7)',
                             px: 0.5,
-                            py: 0.2,
                             width: '100%',
                             zIndex: 30,
                         }}
@@ -164,6 +168,7 @@ export default function BoardCell({
                                 updateProgress(-1);
                                 e.stopPropagation;
                             }}
+                            sx={{ padding: 0.25 }}
                         >
                             <Remove fontSize="small" />
                         </IconButton>
@@ -183,6 +188,7 @@ export default function BoardCell({
                                 updateProgress(+1);
                                 e.stopPropagation();
                             }}
+                            sx={{ padding: 0.25 }}
                         >
                             <Add fontSize="small" />
                         </IconButton>
