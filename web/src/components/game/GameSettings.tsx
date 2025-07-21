@@ -26,6 +26,7 @@ import FormikSwitch from '../input/FormikSwitch';
 import FormikTextField from '../input/FormikTextField';
 import NumberInput from '../input/NumberInput';
 import FormikFileUpload from '../input/FileUpload';
+import { MarkdownField } from '../input/MarkdownField';
 
 async function validateRacetimeCategory(value: string) {
     if (value) {
@@ -107,97 +108,122 @@ function RacetimeSettings() {
     );
 }
 
-interface GameSettingsProps {
+interface LinkRowProps {
+    index: number;
+}
+
+function LinkRow({ index }: LinkRowProps) {
+    return (
+        <Box
+            sx={{
+                mt: 1,
+                display: 'flex',
+                gap: 2,
+            }}
+        >
+            <FormikTextField
+                name={`links.${index}.url`}
+                label="URL"
+                sx={{ flexGrow: 2 }}
+            />
+            <FormikTextField
+                name={`links.${index}.text`}
+                label="Label"
+                sx={{ flexGrow: 1 }}
+            />
+            <FormikTextField
+                name={`links.${index}.description`}
+                label="Description"
+                sx={{ flexGrow: 6 }}
+            />
+        </Box>
+    );
+}
+
+interface FormProps {
     gameData: Game;
 }
 
-export default function GameSettings({ gameData }: GameSettingsProps) {
-    const router = useRouter();
-    const confirmDialogRef = useRef<DialogRef | null>(null);
-
+function SettingsForm({ gameData }: FormProps) {
     return (
-        <div>
-            <Box
-                sx={{
-                    display: 'flex',
-                }}
-            >
-                <Typography
-                    variant="h5"
-                    align="center"
-                    sx={{
-                        flexGrow: 1,
-                    }}
-                >
-                    Game Settings
-                </Typography>
-                <Button
-                    sx={{ float: 'right' }}
-                    color="error"
-                    startIcon={<Delete />}
-                    onClick={async () => {
-                        confirmDialogRef.current?.open();
-                    }}
-                >
-                    Delete Game
-                </Button>
-            </Box>
-            <Formik
-                initialValues={{
-                    name: gameData.name,
-                    coverImage: gameData.coverImage,
-                    enableSRLv5: gameData.enableSRLv5,
-                    racetimeCategory: gameData.racetimeCategory,
-                    racetimeGoal: gameData.racetimeGoal,
-                    difficultyVariantsEnabled:
-                        gameData.difficultyVariantsEnabled,
-                    difficultyGroups: gameData.difficultyGroups ?? 0,
-                    slugWords: gameData.slugWords?.join('\n') ?? '',
-                    useTypedRandom: gameData.useTypedRandom,
-                }}
-                onSubmit={async ({
-                    name,
-                    coverImage,
-                    enableSRLv5,
-                    racetimeCategory,
-                    racetimeGoal,
-                    difficultyVariantsEnabled,
-                    difficultyGroups,
-                    slugWords,
-                    useTypedRandom,
-                }) => {
-                    let shouldDeleteCover = gameData.coverImage && !coverImage;
-                    console.log(coverImage !== gameData.coverImage);
-                    const res = await fetch(`/api/games/${gameData.slug}`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            name,
-                            coverImage:
-                                coverImage !== gameData.coverImage
-                                    ? coverImage
-                                    : undefined,
-                            enableSRLv5,
-                            racetimeCategory,
-                            racetimeGoal,
-                            difficultyVariantsEnabled,
-                            difficultyGroups,
-                            slugWords:
-                                slugWords === '' ? [] : slugWords.split('\n'),
-                            useTypedRandom,
-                            shouldDeleteCover,
-                        }),
-                    });
-                    if (!res.ok) {
-                        const error = await res.text();
-                        alertError(`Failed to update game - ${error}`);
-                        return;
-                    }
-                    mutate(`/api/games/${gameData.slug}`);
-                }}
-            >
+        <Formik
+            initialValues={{
+                name: gameData.name,
+                coverImage: gameData.coverImage,
+                enableSRLv5: gameData.enableSRLv5,
+                racetimeCategory: gameData.racetimeCategory,
+                racetimeGoal: gameData.racetimeGoal,
+                difficultyVariantsEnabled: gameData.difficultyVariantsEnabled,
+                difficultyGroups: gameData.difficultyGroups ?? 0,
+                slugWords: gameData.slugWords?.join('\n') ?? '',
+                useTypedRandom: gameData.useTypedRandom,
+                descriptionMd: gameData.descriptionMd ?? '',
+                setupMd: gameData.setupMd ?? '',
+                links: Array.from(
+                    (
+                        gameData.linksMd?.matchAll(
+                            /^(?<text>\[.+\])(?<url>\(.+\))(?: - (?<description>.+$))?/gm,
+                        ) ?? []
+                    ).map((match) => ({
+                        text: match.groups?.text,
+                        url: match.groups?.url,
+                        description: match.groups?.description,
+                    })),
+                ),
+            }}
+            onSubmit={async ({
+                name,
+                coverImage,
+                enableSRLv5,
+                racetimeCategory,
+                racetimeGoal,
+                difficultyVariantsEnabled,
+                difficultyGroups,
+                slugWords,
+                useTypedRandom,
+                descriptionMd,
+                setupMd,
+                links,
+            }) => {
+                const linksMd = links?.map(
+                    (link) =>
+                        `[${link.text}](${link.url}) ${link.description ? ` - ${link.description}` : ''}`,
+                );
+                let shouldDeleteCover = gameData.coverImage && !coverImage;
+                const res = await fetch(`/api/games/${gameData.slug}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        name,
+                        coverImage:
+                            coverImage !== gameData.coverImage
+                                ? coverImage
+                                : undefined,
+                        enableSRLv5,
+                        racetimeCategory,
+                        racetimeGoal,
+                        difficultyVariantsEnabled,
+                        difficultyGroups,
+                        slugWords:
+                            slugWords === '' ? [] : slugWords.split('\n'),
+                        useTypedRandom,
+                        shouldDeleteCover,
+                        descriptionMd,
+                        setupMd,
+                        linksMd: linksMd.join('\n\n'),
+                    }),
+                });
+                if (!res.ok) {
+                    const error = await res.text();
+                    alertError(`Failed to update game - ${error}`);
+                    return;
+                }
+                mutate(`/api/games/${gameData.slug}`);
+            }}
+        >
+            {({ values, setFieldValue }) => (
                 <Form>
                     <Box
                         sx={{
@@ -375,6 +401,30 @@ export default function GameSettings({ gameData }: GameSettingsProps) {
                                 special characters are allowed.
                             </Typography>
                         </Box>
+                        <Box>
+                            <Typography>Description</Typography>
+                            <MarkdownField name="descriptionMd" />
+                        </Box>
+                        <Box>
+                            <Typography>Setup Instructions</Typography>
+                            <MarkdownField name="setupMd" />
+                        </Box>
+                        <Box>
+                            <Typography>Links</Typography>
+                            {values.links?.map((link, index) => (
+                                <LinkRow index={index} />
+                            ))}
+                            <Button
+                                onClick={() =>
+                                    setFieldValue('links', [
+                                        ...values.links,
+                                        {},
+                                    ])
+                                }
+                            >
+                                Add Link
+                            </Button>
+                        </Box>
                         <Box
                             sx={{
                                 pt: 1,
@@ -396,7 +446,43 @@ export default function GameSettings({ gameData }: GameSettingsProps) {
                         </Box>
                     </Box>
                 </Form>
-            </Formik>
+            )}
+        </Formik>
+    );
+}
+
+interface GameSettingsProps {
+    gameData: Game;
+}
+
+export default function GameSettingsPage({ gameData }: GameSettingsProps) {
+    const router = useRouter();
+    const confirmDialogRef = useRef<DialogRef | null>(null);
+
+    return (
+        <div>
+            <Box sx={{ display: 'flex' }}>
+                <Typography
+                    variant="h5"
+                    align="center"
+                    sx={{
+                        flexGrow: 1,
+                    }}
+                >
+                    Game Settings
+                </Typography>
+                <Button
+                    sx={{ float: 'right' }}
+                    color="error"
+                    startIcon={<Delete />}
+                    onClick={async () => {
+                        confirmDialogRef.current?.open();
+                    }}
+                >
+                    Delete Game
+                </Button>
+            </Box>
+            <SettingsForm gameData={gameData} />
             <Dialog ref={confirmDialogRef}>
                 <DialogTitle>Delete game?</DialogTitle>
                 <DialogContent>

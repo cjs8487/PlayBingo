@@ -25,6 +25,9 @@ export interface Game {
   useTypedRandom?: boolean;
   generationSettings: GeneratorSettings;
   newGeneratorBeta?: boolean;
+  descriptionMd?: string;
+  setupMd?: string;
+  linksMd?: string;
 }
 export interface User {
   id: string;

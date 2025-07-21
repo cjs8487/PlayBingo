@@ -85,6 +85,9 @@ model Game {
   generationGoalRestrictions  GenerationGoalRestriction[]   @default([])
   generationGlobalAdjustments GenerationGlobalAdjustments[] @default([])
   newGeneratorBeta            Boolean                       @default(true)
+  descriptionMd               String?
+  setupMd                     String?
+  linksMd                     String?
 }
 
 model DifficultyVariant {
