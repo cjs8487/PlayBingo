@@ -31,6 +31,7 @@ import {
     updateGameCover,
     updateGameName,
     updateGeneratorConfig,
+    updateLinks,
     updateRacetimeCategory,
     updateRacetimeGoal,
     updateSetup,
@@ -92,6 +93,7 @@ games.get('/:slug', async (req, res) => {
         },
         descriptionMd: game.descriptionMd ?? undefined,
         setupMd: game.setupMd ?? undefined,
+        linksMd: game.linksMd ?? undefined,
     };
     res.status(200).json(result);
 });
@@ -144,6 +146,7 @@ games.post('/:slug', async (req, res) => {
         shouldDeleteCover,
         descriptionMd,
         setupMd,
+        linksMd,
     } = req.body;
 
     let result = undefined;
@@ -207,6 +210,9 @@ games.post('/:slug', async (req, res) => {
     }
     if (setupMd !== undefined) {
         result = await updateSetup(slug, setupMd);
+    }
+    if (linksMd !== undefined) {
+        result = await updateLinks(slug, linksMd);
     }
 
     if (!result) {

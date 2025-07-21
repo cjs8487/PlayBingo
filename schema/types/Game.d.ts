@@ -27,6 +27,7 @@ export interface Game {
   newGeneratorBeta?: boolean;
   descriptionMd?: string;
   setupMd?: string;
+  linksMd?: string;
 }
 export interface User {
   id: string;

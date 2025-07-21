@@ -186,6 +186,10 @@ export const updateSetup = (slug: string, setupMd: string) => {
     return prisma.game.update({ where: { slug }, data: { setupMd } });
 };
 
+export const updateLinks = (slug: string, linksMd: string) => {
+    return prisma.game.update({ where: { slug }, data: { linksMd } });
+};
+
 export const getRacetimeConfiguration = (slug: string) => {
     return prisma.game.findUnique({
         select: { racetimeCategory: true, racetimeGoal: true },

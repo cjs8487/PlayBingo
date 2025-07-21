@@ -43,14 +43,14 @@ export default function Summary({ gameData }: Props) {
                     </CardContent>
                 </Card>
             )}
-            <Card sx={{ gridRow: '1/-1' }}>
-                <CardContent>
-                    <Typography variant="h5">Links</Typography>
-                    <Typography>
-                        <Link href="">Link 1</Link> - description
-                    </Typography>
-                </CardContent>
-            </Card>
+            {gameData.linksMd && (
+                <Card sx={{ gridRow: '1/-1' }}>
+                    <CardContent>
+                        <Typography variant="h5">Links</Typography>
+                        <ReactMarkdown>{gameData.linksMd}</ReactMarkdown>
+                    </CardContent>
+                </Card>
+            )}
             {gameData.setupMd && (
                 <Card>
                     <CardContent>

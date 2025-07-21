@@ -84,6 +84,9 @@
         },
         "setupMd": {
             "type": "string"
+        },
+        "linksMd": {
+            "type": "string"
         }
     },
     "$defs": {
