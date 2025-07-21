@@ -19,10 +19,6 @@ import Summary from './Summary';
 export default function GamePage({ gameData }: { gameData: Game }) {
     const [isOwner, setIsOwner] = useState(false);
     const [canModerate, setCanModerate] = useState(false);
-    const [tab, setTab] = useState('Overview');
-    const handleChange = (event: React.SyntheticEvent, newValue: string) => {
-        setTab(newValue);
-    };
 
     useLayoutEffect(() => {
         async function loadPermissions() {
@@ -40,7 +36,16 @@ export default function GamePage({ gameData }: { gameData: Game }) {
         loadPermissions();
     }, [gameData]);
 
-    const tabs = ['Overview', 'Goals'];
+    const tabs: string[] = [];
+    if (
+        gameData.descriptionMd ||
+        gameData.setupMd ||
+        gameData.linksMd ||
+        (gameData.difficultyVariants?.length ?? 0) > 0
+    ) {
+        tabs.push('Overview');
+    }
+    tabs.push('Goals');
     if (canModerate) {
         tabs.push('Goal Categories');
     }
@@ -54,6 +59,11 @@ export default function GamePage({ gameData }: { gameData: Game }) {
         }
         tabs.push('Settings');
     }
+
+    const [tab, setTab] = useState(tabs[0]);
+    const handleChange = (event: React.SyntheticEvent, newValue: string) => {
+        setTab(newValue);
+    };
 
     return (
         <Container

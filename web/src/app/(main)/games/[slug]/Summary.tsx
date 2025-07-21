@@ -1,6 +1,5 @@
 import { Box, Card, CardContent, Typography } from '@mui/material';
 import { Game } from '@playbingo/types';
-import Link from 'next/link';
 import ReactMarkdown from 'react-markdown';
 
 interface Props {
@@ -20,11 +19,11 @@ export default function Summary({ gameData }: Props) {
                 (gameData.difficultyVariants?.length ?? 0) > 0) && (
                 <Card sx={{ gridRow: '1' }}>
                     <CardContent>
+                        <Typography variant="h5" sx={{ mb: 1 }}>
+                            {gameData.name}
+                        </Typography>
                         {gameData.descriptionMd && (
                             <>
-                                <Typography variant="h5" sx={{ mb: 1 }}>
-                                    {gameData.name}
-                                </Typography>
                                 <ReactMarkdown>
                                     {gameData.descriptionMd}
                                 </ReactMarkdown>
