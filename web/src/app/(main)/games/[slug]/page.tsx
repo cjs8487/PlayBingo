@@ -2,8 +2,7 @@ import { Game } from '@playbingo/types';
 import { Metadata, ResolvingMetadata } from 'next';
 import { notFound } from 'next/navigation';
 import { cache } from 'react';
-import { gameCoverUrl } from '../../../../lib/Utils';
-import { serverFetch } from '../../../ServerUtils';
+import { gameCoverUrl, getFullUrl } from '../../../../lib/Utils';
 import GamePage from './GamePage';
 
 interface Props {
@@ -11,7 +10,7 @@ interface Props {
 }
 
 const getGame = cache(async (slug: string): Promise<Game | undefined> => {
-    const res = await serverFetch(`/api/games/${slug}`);
+    const res = await fetch(getFullUrl(`/api/games/${slug}`));
     if (!res.ok) {
         return undefined;
     }
