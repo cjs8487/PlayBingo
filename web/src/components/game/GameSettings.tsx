@@ -412,7 +412,7 @@ function SettingsForm({ gameData }: FormProps) {
                         <Box>
                             <Typography>Links</Typography>
                             {values.links?.map((link, index) => (
-                                <LinkRow index={index} />
+                                <LinkRow key={link.url} index={index} />
                             ))}
                             <Button
                                 onClick={() =>
