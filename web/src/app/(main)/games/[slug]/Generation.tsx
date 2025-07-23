@@ -215,6 +215,9 @@ export default function GenerationPage({ game }: Props) {
             onSubmit={async (values) => {
                 const res = await fetch(`/api/games/${game.slug}/generation`, {
                     method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
                     body: JSON.stringify(values),
                 });
                 if (!res.ok) {
