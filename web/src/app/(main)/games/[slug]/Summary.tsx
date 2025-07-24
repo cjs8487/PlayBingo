@@ -6,6 +6,11 @@ interface Props {
     gameData: Game;
 }
 export default function Summary({ gameData }: Props) {
+    const hasDescription = !!gameData.descriptionMd;
+    const hasSetup = !!gameData.setupMd;
+    const hasLinks = !!gameData.linksMd;
+    const hasVariants = (gameData.difficultyVariants?.length ?? 0) > 0;
+
     return (
         <Box
             sx={{
@@ -15,21 +20,25 @@ export default function Summary({ gameData }: Props) {
                 gap: 2,
             }}
         >
-            {(gameData.descriptionMd ||
-                (gameData.difficultyVariants?.length ?? 0) > 0) && (
-                <Card sx={{ gridRow: '1' }}>
+            {(hasDescription || hasVariants) && (
+                <Card
+                    sx={{
+                        gridRow: 1,
+                        gridColumn: `1 / ${hasLinks ? 'span 1' : 'span 2'}`,
+                    }}
+                >
                     <CardContent>
                         <Typography variant="h5" sx={{ mb: 1 }}>
                             {gameData.name}
                         </Typography>
-                        {gameData.descriptionMd && (
+                        {hasDescription && (
                             <>
                                 <ReactMarkdown>
                                     {gameData.descriptionMd}
                                 </ReactMarkdown>
                             </>
                         )}
-                        {(gameData.difficultyVariants?.length ?? 0) > 0 && (
+                        {hasVariants && (
                             <Box sx={{ mt: 2 }}>
                                 <Typography variant="h6">Variants</Typography>
                                 {gameData.difficultyVariants?.map((variant) => (
@@ -42,7 +51,7 @@ export default function Summary({ gameData }: Props) {
                     </CardContent>
                 </Card>
             )}
-            {gameData.linksMd && (
+            {hasLinks && (
                 <Card sx={{ gridRow: '1/-1' }}>
                     <CardContent>
                         <Typography variant="h5">Links</Typography>
@@ -50,8 +59,13 @@ export default function Summary({ gameData }: Props) {
                     </CardContent>
                 </Card>
             )}
-            {gameData.setupMd && (
-                <Card>
+            {hasSetup && (
+                <Card
+                    sx={{
+                        gridRow: hasDescription ? 2 : 1,
+                        gridColumn: `1 / ${hasLinks ? 'span 1' : 'span 2'}`,
+                    }}
+                >
                     <CardContent>
                         <Typography variant="h5">Setup</Typography>
                         <ReactMarkdown>{gameData.setupMd}</ReactMarkdown>
