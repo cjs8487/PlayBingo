@@ -27,6 +27,7 @@ import FormikTextField from '../input/FormikTextField';
 import NumberInput from '../input/NumberInput';
 import FormikFileUpload from '../input/FileUpload';
 import { MarkdownField } from '../input/MarkdownField';
+import { revalidatePath } from 'next/cache';
 
 async function validateRacetimeCategory(value: string) {
     if (value) {
@@ -145,6 +146,7 @@ interface FormProps {
 }
 
 function SettingsForm({ gameData }: FormProps) {
+    const router = useRouter();
     return (
         <Formik
             initialValues={{
@@ -162,7 +164,7 @@ function SettingsForm({ gameData }: FormProps) {
                 links: Array.from(
                     (
                         gameData.linksMd?.matchAll(
-                            /^(?<text>\[.+\])(?<url>\(.+\))(?: - (?<description>.+$))?/gm,
+                            /^\[(?<text>.+)\]\((?<url>.+)\)(?: - (?<description>.+$))?/gm,
                         ) ?? []
                     ).map((match) => ({
                         text: match.groups?.text,
@@ -221,6 +223,7 @@ function SettingsForm({ gameData }: FormProps) {
                     return;
                 }
                 mutate(`/api/games/${gameData.slug}`);
+                router.refresh();
             }}
         >
             {({ values, setFieldValue }) => (
