@@ -8,13 +8,14 @@ import {
     DialogContentText,
     DialogTitle,
     FormControl,
+    IconButton,
     InputLabel,
     MenuItem,
     Select,
     Typography,
 } from '@mui/material';
 import { Game } from '@playbingo/types';
-import { Form, Formik, useField, useFormikContext } from 'formik';
+import { Form, Formik, useField, useFormik, useFormikContext } from 'formik';
 import { useRouter } from 'next/navigation';
 import { useRef } from 'react';
 import { useAsync } from 'react-use';
@@ -27,6 +28,7 @@ import FormikTextField from '../input/FormikTextField';
 import NumberInput from '../input/NumberInput';
 import FormikFileUpload from '../input/FileUpload';
 import { MarkdownField } from '../input/MarkdownField';
+import { revalidatePath } from 'next/cache';
 
 async function validateRacetimeCategory(value: string) {
     if (value) {
@@ -113,6 +115,7 @@ interface LinkRowProps {
 }
 
 function LinkRow({ index }: LinkRowProps) {
+    const { values, setFieldValue } = useFormikContext<{ links: {}[] }>();
     return (
         <Box
             sx={{
@@ -136,6 +139,17 @@ function LinkRow({ index }: LinkRowProps) {
                 label="Description"
                 sx={{ flexGrow: 6 }}
             />
+            <IconButton
+                color="error"
+                onClick={() => {
+                    setFieldValue('links', [
+                        ...values.links.slice(0, index),
+                        ...values.links.slice(index + 1, values.links.length),
+                    ]);
+                }}
+            >
+                <Delete />
+            </IconButton>
         </Box>
     );
 }
@@ -145,6 +159,7 @@ interface FormProps {
 }
 
 function SettingsForm({ gameData }: FormProps) {
+    const router = useRouter();
     return (
         <Formik
             initialValues={{
@@ -162,7 +177,7 @@ function SettingsForm({ gameData }: FormProps) {
                 links: Array.from(
                     (
                         gameData.linksMd?.matchAll(
-                            /^(?<text>\[.+\])(?<url>\(.+\))(?: - (?<description>.+$))?/gm,
+                            /^\[(?<text>.+)\]\((?<url>.+)\)(?: - (?<description>.+$))?/gm,
                         ) ?? []
                     ).map((match) => ({
                         text: match.groups?.text,
@@ -221,6 +236,7 @@ function SettingsForm({ gameData }: FormProps) {
                     return;
                 }
                 mutate(`/api/games/${gameData.slug}`);
+                router.refresh();
             }}
         >
             {({ values, setFieldValue }) => (
