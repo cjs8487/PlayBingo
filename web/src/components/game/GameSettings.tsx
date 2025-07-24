@@ -8,13 +8,14 @@ import {
     DialogContentText,
     DialogTitle,
     FormControl,
+    IconButton,
     InputLabel,
     MenuItem,
     Select,
     Typography,
 } from '@mui/material';
 import { Game } from '@playbingo/types';
-import { Form, Formik, useField, useFormikContext } from 'formik';
+import { Form, Formik, useField, useFormik, useFormikContext } from 'formik';
 import { useRouter } from 'next/navigation';
 import { useRef } from 'react';
 import { useAsync } from 'react-use';
@@ -114,6 +115,7 @@ interface LinkRowProps {
 }
 
 function LinkRow({ index }: LinkRowProps) {
+    const { values, setFieldValue } = useFormikContext<{ links: {}[] }>();
     return (
         <Box
             sx={{
@@ -137,6 +139,17 @@ function LinkRow({ index }: LinkRowProps) {
                 label="Description"
                 sx={{ flexGrow: 6 }}
             />
+            <IconButton
+                color="error"
+                onClick={() => {
+                    setFieldValue('links', [
+                        ...values.links.slice(0, index),
+                        ...values.links.slice(index + 1, values.links.length),
+                    ]);
+                }}
+            >
+                <Delete />
+            </IconButton>
         </Box>
     );
 }
