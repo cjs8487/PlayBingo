@@ -1,6 +1,6 @@
 'use client';
 import { Game } from '@playbingo/types';
-import Masonry from '@mui/lab/Masonry';
+import Grid from '@mui/material/Grid';
 import { Box, Button, Typography } from '@mui/material';
 import Link from 'next/link';
 import { useContext } from 'react';
@@ -93,35 +93,40 @@ export default function Games() {
             {Object.keys(games)
                 .filter((k) => games[k].length > 0)
                 .map((key) => (
-                    <Box key={key}>
+                    <Box key={key} sx={{ mb: 4 }}>
                         <Typography
                             variant="h5"
                             sx={{
-                                pb: 1,
+                                pb: 2,
                             }}
                         >
                             {key}
                         </Typography>
-                        <Masonry
-                            columns={{
-                                xs: 1,
-                                sm: 2,
-                                md: 4,
-                                lg: 5,
-                                xl: 6,
+                        <Box
+                            sx={{
+                                display: 'grid',
+                                gap: 2,
+                                gridTemplateColumns: {
+                                    xs: 'repeat(1, 1fr)',
+                                    sm: 'repeat(2, 1fr)',
+                                    md: 'repeat(4, 1fr)',
+                                    lg: 'repeat(5, 1fr)',
+                                    xl: 'repeat(6, 1fr)',
+                                },
                             }}
-                            spacing={2}
                         >
                             {games[key].map((game, index) => (
-                                <GameCard
-                                    key={game.slug}
-                                    game={game}
-                                    index={index}
-                                    localFavorites={localFavorites}
-                                    setLocalFavorites={setLocalFavorites}
-                                />
+                                <Grid item xs={1} key={game.slug}>
+                                    <GameCard
+                                        key={game.slug}
+                                        game={game}
+                                        index={index}
+                                        localFavorites={localFavorites}
+                                        setLocalFavorites={setLocalFavorites}
+                                    />
+                                </Grid>
                             ))}
-                        </Masonry>
+                        </Box>
                     </Box>
                 ))}
         </Box>

@@ -62,35 +62,50 @@ export default function GameCard({
     return (
         <Card
             key={slug}
-            sx={
-                hasRendered
+            sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                height: '100%',
+                ...(hasRendered
                     ? {}
                     : {
                           animation: '1.5s 1 slidein',
                           animationDelay: `${1 + index * 0.1}s`,
                           animationFillMode: 'backwards',
-                      }
-            }
+                      })
+            }}
         >
             <CardHiddenActions align="right">
                 <IconButton onClick={toggleFavorite}>
                     {favorited ? <Star /> : <StarBorder />}
                 </IconButton>
             </CardHiddenActions>
-            <CardActionArea href={`/games/${slug}`} LinkComponent={Link}>
+            <CardActionArea
+                href={`/games/${slug}`}
+                LinkComponent={Link}
+                sx={{ display: 'flex', flexDirection: 'column', flexGrow: 1 }}
+            >
                 {coverImage && (
                     <CardMedia
                         component="img"
                         image={gameCoverUrl(coverImage)}
+                        sx={{
+                            width: '100%',
+                            aspectRatio: '11 / 16',
+                            objectFit: 'cover',
+                        }}
                     />
                 )}
                 {!coverImage && (
                     <Box
                         sx={{
+                            width: '100%',
+                            aspectRatio: '11 / 16',
                             position: 'relative',
                             display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
                             border: '1px',
-                            pt: '80%',
                             boxShadow: 'inset 0 0 12px',
                         }}
                     >
