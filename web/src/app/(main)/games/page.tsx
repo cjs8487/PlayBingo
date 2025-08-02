@@ -28,7 +28,7 @@ type GamesKeys = (typeof gamesKeys)[number];
 export default function Games(): React.ReactNode {
     const { user, loggedIn } = useContext(UserContext);
 
-    const { searchString, updateSearchString } = useState<string>('');
+    const [searchString, updateSearchString] = useState<string>('');
 
     const { data: gameList, isLoading, error } = useApi<Game[]>('/api/games');
 
@@ -48,7 +48,7 @@ export default function Games(): React.ReactNode {
     const toggleSection = (key: GamesKeys) => {
         setCollapsedSections((prev: Record<GamesKeys, boolean>) => ({
             ...prev,
-            [key]: !prev[key],
+            [key]: !prev?.[key],
         }));
     };
 
@@ -98,33 +98,42 @@ export default function Games(): React.ReactNode {
                 sx={{
                     display: 'flex',
                     alignItems: 'center',
+                    gap: 2,
                     mb: 4,
                     py: 1,
                     borderBottom: 2,
                     borderColor: 'divider',
+                    flexWrap: 'wrap',
                 }}
             >
                 <Typography>{gameList.length} games loaded</Typography>
-                <TextField
-                    label="Search games"
-                    variant="outlined"
-                    size="small"
-                    fullWidth
-                    value={searchString}
-                    onChange={(e) => updateSearchString(e.target.value)}
-                    sx={{ mb: 4 }}
-                />
-                <Box
-                    sx={{
-                        flexGrow: 1,
-                    }}
-                />
-                {loggedIn && (
-                    <div>
-                        <Button href="/games/new" LinkComponent={Link}>
-                            Create a new game
+                
+                <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1, maxWidth: '50%' }}>
+                    <TextField
+                        label="Search games"
+                        variant="outlined"
+                        size="small"
+                        fullWidth
+                        value={searchString}
+                        onChange={(e) => updateSearchString(e.target.value)}
+                    />
+                    {searchString && (
+                        <Button
+                            onClick={() => updateSearchString('')}
+                            size="small"
+                            sx={{ ml: 1, whiteSpace: 'nowrap' }}
+                        >
+                            Clear
                         </Button>
-                    </div>
+                    )}
+                </Box>
+                
+                <Box sx={{ flexGrow: 1 }} />
+                
+                {loggedIn && (
+                    <Button href="/games/new" LinkComponent={Link}>
+                        Create a new game
+                    </Button>
                 )}
             </Box>
             {Object.keys(games)
@@ -153,17 +162,14 @@ export default function Games(): React.ReactNode {
                                     alignItems: 'center',
                                     cursor: 'pointer',
                                     mb: 1,
+                                    gap: 1,
                                 }}
-                                onClick={() => toggleSection(key)}
+                                onClick={() => toggleSection(key as GamesKeys)}
                             >
-                                <IconButton size="small">
-                                    {isCollapsed ? (
-                                        <ExpandMore />
-                                    ) : (
-                                        <ExpandLess />
-                                    )}
+                                <IconButton size="small" sx={{ p: 0.5 }}>
+                                    {isCollapsed ? <ExpandMore /> : <ExpandLess />}
                                 </IconButton>
-                                <Typography variant="h5" sx={{ pb: 2 }}>
+                                <Typography variant="h5" sx={{ lineHeight: 1 }}>
                                     {key}
                                 </Typography>
                             </Box>
