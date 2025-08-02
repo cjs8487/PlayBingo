@@ -25,6 +25,7 @@ model Goal {
   createdAt     DateTime   @default(now())
   updatedAt     DateTime   @updatedAt
   gameId        String
+  comments      Comment[]
 }
 
 model Category {
@@ -84,6 +85,7 @@ model Game {
   descriptionMd               String?
   setupMd                     String?
   linksMd                     String?
+  comments                    Comment[]
 }
 
 model DifficultyVariant {
@@ -108,6 +110,7 @@ model User {
   resetToken     PasswordReset?
   favoritedGames Game[]         @relation("GameFavorites")
   Player         Player[]
+  Comment        Comment[]
 }
 
 model PasswordReset {
@@ -146,6 +149,7 @@ model Room {
   variantId        String?
   exploration      Boolean      @default(false)
   explorationStart String?
+  comments         Comment[]
 }
 
 model Player {
@@ -178,6 +182,20 @@ model ApiToken {
   active    Boolean   @default(true)
   createdOn DateTime  @default(now())
   revokedOn DateTime?
+}
+
+model Comment {
+  id      String @id @unique @default(cuid())
+  comment String
+  user    User?  @relation(fields: [userId], references: [id])
+  game    Game?  @relation(fields: [gameId], references: [id])
+  goal    Goal?  @relation(fields: [goalId], references: [id])
+  room    Room?  @relation(fields: [roomId], references: [id])
+
+  gameId String?
+  goalId String?
+  roomId String?
+  userId String?
 }
 
 enum RoomActionType {
