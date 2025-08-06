@@ -372,6 +372,7 @@ export function RoomContextProvider({ slug, children }: RoomContextProps) {
     const createRacetimeRoom = useCallback(async () => {
         const res = await fetch(`/api/rooms/${slug}/actions`, {
             method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 action: 'racetime/create',
                 authToken,
@@ -385,6 +386,7 @@ export function RoomContextProvider({ slug, children }: RoomContextProps) {
     const updateRacetimeRoom = useCallback(async () => {
         const res = await fetch(`/api/rooms/${slug}/actions`, {
             method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ action: 'racetime/refresh', authToken }),
         });
         if (!res.ok) {
@@ -395,6 +397,7 @@ export function RoomContextProvider({ slug, children }: RoomContextProps) {
     const joinRacetimeRoom = useCallback(async () => {
         const res = await fetch(`/api/rooms/${slug}/actions`, {
             method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 action: 'racetime/join',
                 authToken,
@@ -408,6 +411,7 @@ export function RoomContextProvider({ slug, children }: RoomContextProps) {
     const racetimeReady = useCallback(async () => {
         const res = await fetch(`/api/rooms/${slug}/actions`, {
             method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 action: 'racetime/ready',
                 authToken,
@@ -421,6 +425,7 @@ export function RoomContextProvider({ slug, children }: RoomContextProps) {
     const racetimeUnready = useCallback(async () => {
         const res = await fetch(`/api/rooms/${slug}/actions`, {
             method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ action: 'racetime/unready', authToken }),
         });
         if (!res.ok) {
