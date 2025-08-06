@@ -28,12 +28,17 @@ import FormikTextField from '../input/FormikTextField';
 import NumberInput from '../input/NumberInput';
 import FormikFileUpload from '../input/FileUpload';
 import { MarkdownField } from '../input/MarkdownField';
-import { revalidatePath } from 'next/cache';
 
 async function validateRacetimeCategory(value: string) {
     if (value) {
-        const res = await fetch(`http://localhost:8000/${value}/data`);
-        if (!res.ok) {
+        try {
+            const res = await fetch(
+                `${process.env.NEXT_PUBLIC_RT_URL}/${value}/data`,
+            );
+            if (!res.ok) {
+                return 'Invalid slug';
+            }
+        } catch {
             return 'Invalid slug';
         }
     }
@@ -47,7 +52,7 @@ function RacetimeSettings() {
 
     const goals = useAsync(async () => {
         const res = await fetch(
-            `http://localhost:8000/${racetimeCategory}/data`,
+            `${process.env.NEXT_PUBLIC_RT_URL}/${racetimeCategory}/data`,
         );
         if (res.ok) {
             const data = await res.json();
@@ -92,6 +97,7 @@ function RacetimeSettings() {
                     <Select
                         id="racetime-goal"
                         labelId="racetime-goal-label"
+                        label="Racetime Goal"
                         name="racetimeGoal"
                         value={field.value}
                         onBlur={field.onBlur}
