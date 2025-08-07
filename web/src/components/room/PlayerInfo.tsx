@@ -17,13 +17,13 @@ export default function PlayerInfo() {
         nickname,
         disconnect,
         monitor,
-        spectator
+        spectator,
         showGoalDetails,
         toggleGoalDetails,
         showCounters,
         toggleCounters,
     } = useRoomContext();
-    
+
     return (
         <Card>
             <CardContent>
