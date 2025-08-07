@@ -4,7 +4,7 @@ import { roomTokenSecret } from '../Environment';
 import { randomUUID } from 'crypto';
 import { RoomAction } from '@playbingo/types';
 
-type Permissions = {
+export type Permissions = {
     isSpectating: boolean;
     isMonitor: boolean;
 };

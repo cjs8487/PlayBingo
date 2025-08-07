@@ -23,7 +23,11 @@ import {
 import { OPEN, WebSocket } from 'ws';
 import { roomCleanupInactive } from '../Environment';
 import { logError, logInfo, logWarn } from '../Logger';
-import { invalidateToken, RoomTokenPayload } from '../auth/RoomAuth';
+import {
+    invalidateToken,
+    Permissions,
+    RoomTokenPayload,
+} from '../auth/RoomAuth';
 import {
     addChangeColorAction,
     addChatAction,
@@ -33,9 +37,11 @@ import {
     addUnmarkAction,
     setRoomBoard,
 } from '../database/Rooms';
+import { isStaff } from '../database/Users';
 import {
     getDifficultyGroupCount,
     getDifficultyVariant,
+    isModerator,
     useTypedRandom,
 } from '../database/games/Games';
 import { getCategories } from '../database/games/GoalCategories';
@@ -46,6 +52,7 @@ import {
     CompletedLines,
     listToBoard,
 } from '../util/RoomUtils';
+import { allRooms } from './RoomServer';
 import BoardGenerator from './generation/BoardGenerator';
 import {
     GeneratorGoal,
@@ -54,7 +61,6 @@ import {
 import { generateFullRandom, generateRandomTyped } from './generation/Random';
 import { generateSRLv5 } from './generation/SRLv5';
 import RacetimeHandler, { RaceData } from './integration/RacetimeHandler';
-import { allRooms } from './RoomServer';
 
 type RoomIdentity = {
     nickname: string;
@@ -320,35 +326,45 @@ export default class Room {
 
     getPlayers() {
         const players: Player[] = [];
-        this.identities.forEach((i) => {
-            const rtUser = this.racetimeHandler.getPlayer(i.racetimeId ?? '');
-            players.push({
-                nickname: i.nickname,
-                color: i.color,
-                goalCount: this.board.board.reduce((prev, row) => {
-                    return (
-                        prev +
-                        row.reduce((p, cell) => {
-                            if (cell.colors.includes(i.color)) {
-                                return p + 1;
-                            }
-                            return p;
-                        }, 0)
-                    );
-                }, 0),
-                racetimeStatus: rtUser
-                    ? {
-                          connected: true,
-                          username: rtUser.user.full_name,
-                          status: rtUser.status.verbose_value,
-                          finishTime: rtUser.finish_time ?? undefined,
-                      }
-                    : { connected: false },
-                spectator: i.spectator,
-                monitor: i.monitor,
-            });
+        this.connections.forEach((_, id) => {
+            const player = this.getPlayer(id);
+            if (player) {
+                players.push(player);
+            }
         });
         return players;
+    }
+
+    private getPlayer(id: string): Player | undefined {
+        const ident = this.identities.get(id);
+        if (!ident) return undefined;
+        const rtUser = this.racetimeHandler.getPlayer(ident.racetimeId ?? '');
+        return {
+            id,
+            nickname: ident.nickname,
+            color: ident.color,
+            goalCount: this.board.board.reduce((prev, row) => {
+                return (
+                    prev +
+                    row.reduce((rowPrev, cell) => {
+                        if (cell.colors.includes(ident.color)) {
+                            return rowPrev + 1;
+                        }
+                        return rowPrev;
+                    }, 0)
+                );
+            }, 0),
+            racetimeStatus: rtUser
+                ? {
+                      connected: true,
+                      username: rtUser.user.full_name,
+                      status: rtUser.status.verbose_value,
+                      finishTime: rtUser.finish_time ?? undefined,
+                  }
+                : { connected: false },
+            spectator: ident.spectator,
+            monitor: ident.monitor,
+        };
     }
 
     //#region Handlers
@@ -388,8 +404,7 @@ export default class Room {
             action: 'connected',
             board: this.hideCard ? { hidden: true } : this.board,
             chatHistory: this.chatHistory,
-            nickname: identity.nickname,
-            color: identity.color,
+            identity: this.getPlayer(auth.uuid),
             roomData: {
                 game: this.game,
                 slug: this.slug,
@@ -423,7 +438,6 @@ export default class Room {
             ' has left.',
         ]);
         invalidateToken(token);
-        this.identities.delete(auth.uuid);
         this.connections.delete(auth.uuid);
         addLeaveAction(this.id, identity.nickname, identity.color).then();
         if (this.connections.size === 0) {
@@ -475,7 +489,7 @@ export default class Room {
                 contents: identity.nickname,
                 color: identity.color,
             },
-            ` is marking (${row},${col})`,
+            ` marked ${this.board.board[row][col].goal.goal} (${row},${col})`,
         ]);
         addMarkAction(
             this.id,
@@ -503,7 +517,7 @@ export default class Room {
         this.sendCellUpdate(unRow, unCol);
         this.sendChat([
             { contents: identity.nickname, color: identity.color },
-            ` is unmarking (${unRow},${unCol})`,
+            ` unmarked ${this.board.board[unRow][unCol].goal.goal} (${unRow},${unCol})`,
         ]);
         addUnmarkAction(
             this.id,
@@ -810,6 +824,39 @@ export default class Room {
             }
         });
         this.completed = allComplete;
+    }
+
+    /**
+     * Determines if authentication is required in order to access the room.
+     * Staff and category moderators are always allowed to access rooms, though
+     * they will need to provide the password in order to elevate from spectator
+     * permissions.
+     *
+     * @param user The id of the currently logged in user
+     * @returns False if authentication is required in order to grant the
+     * provided user minimal room permissions, or a Permissions object
+     * containing he appropriate permissions based on the user
+     */
+    async canAutoAuthenticate(user?: string): Promise<false | Permissions> {
+        if (!user) {
+            return false;
+        }
+
+        if (await isModerator(this.gameSlug, user)) {
+            this.logInfo(
+                `${user} is being automatically authenticated as a room monitor due to being a game moderator or owner.`,
+            );
+            return { isMonitor: true, isSpectating: true };
+        }
+
+        if (await isStaff(user)) {
+            this.logInfo(
+                `${user} is being automatically authenticated as a room monitor due to being a member of PlayBingo staff.`,
+            );
+            return { isMonitor: true, isSpectating: true };
+        }
+
+        return false;
     }
 
     //#region Racetime Integration

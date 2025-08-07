@@ -27,9 +27,8 @@ export type ServerMessage = (
       action: "connected";
       board: Board;
       chatHistory: ChatMessage[];
-      nickname?: string;
-      color?: string;
       roomData?: RoomData;
+      identity?: Player;
     }
   | {
       action: "unauthorized";
@@ -95,6 +94,10 @@ export interface RoomData {
   gameSlug: string;
   racetimeConnection?: RacetimeConnection;
   newGenerator: boolean;
+  /**
+   * The auto-authentication token generated for the logged in user.
+   */
+  token?: string;
 }
 export interface RacetimeConnection {
   /**
@@ -127,6 +130,7 @@ export interface RacetimeConnection {
   ended?: string;
 }
 export interface Player {
+  id: string;
   nickname: string;
   color: string;
   goalCount: number;

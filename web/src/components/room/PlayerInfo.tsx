@@ -9,17 +9,21 @@ import {
 } from '@mui/material';
 import { ConnectionStatus, useRoomContext } from '../../context/RoomContext';
 import ColorSelect from './ColorSelect';
+import { Sword } from 'mdi-material-ui';
 
 export default function PlayerInfo() {
     const {
         connectionStatus,
         nickname,
         disconnect,
+        monitor,
+        spectator
         showGoalDetails,
         toggleGoalDetails,
         showCounters,
         toggleCounters,
     } = useRoomContext();
+    
     return (
         <Card>
             <CardContent>
@@ -28,16 +32,14 @@ export default function PlayerInfo() {
                         display: 'flex',
                         alignItems: 'center',
                         flexGrow: 1,
+                        columnGap: 1,
                     }}
                 >
-                    <Typography
-                        variant="h6"
-                        sx={{
-                            flexGrow: 1,
-                        }}
-                    >
-                        Playing as {nickname}
+                    <Typography variant="h6">
+                        {spectator ? 'Spectating' : 'Playing'} as {nickname}
                     </Typography>
+                    {monitor && <Sword sx={{ color: 'green' }} />}
+                    <Box sx={{ flexGrow: 1 }} />
                     {connectionStatus !== ConnectionStatus.CLOSED && (
                         <Button onClick={disconnect}>Disconnect</Button>
                     )}

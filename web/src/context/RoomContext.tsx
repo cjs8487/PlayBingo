@@ -1,10 +1,17 @@
 'use client';
 import {
+    Board,
+    Cell,
+    ChatMessage,
+    Player,
+    RoomData,
+    ServerMessage,
+} from '@playbingo/types';
+import {
     ReactNode,
     createContext,
     useCallback,
     useContext,
-    useEffect,
     useState,
     useSyncExternalStore,
 } from 'react';
@@ -16,12 +23,8 @@ import {
     getServerSnapshot,
     subscribeToBoardUpdates,
 } from '../lib/BoardStore';
-import { Board, Cell } from '@playbingo/types';
-import { RoomData } from '@playbingo/types';
-import { ChatMessage, Player, ServerMessage } from '@playbingo/types';
 import { alertError } from '../lib/Utils';
-import { Box, Link, Typography } from '@mui/material';
-import NextLink from 'next/link';
+import { useUserContext } from './UserContext';
 
 const websocketBase = (process.env.NEXT_PUBLIC_API_PATH ?? '').replace(
     'http',
@@ -53,6 +56,8 @@ interface RoomContext {
     starredGoals: number[];
     showGoalDetails: boolean;
     showCounters: boolean;
+    spectator: boolean;
+    monitor: boolean;
     connect: (
         nickname: string,
         password: string,
@@ -85,6 +90,8 @@ export const RoomContext = createContext<RoomContext>({
     starredGoals: [],
     showGoalDetails: false,
     showCounters: false,
+    spectator: true,
+    monitor: false,
     async connect() {
         return { success: false };
     },
@@ -106,24 +113,41 @@ export const RoomContext = createContext<RoomContext>({
 });
 
 interface RoomContextProps {
-    slug: string;
     children: ReactNode;
+    serverRoomData: RoomData;
 }
 
-export function RoomContextProvider({ slug, children }: RoomContextProps) {
+export function RoomContextProvider({
+    children,
+    serverRoomData,
+}: RoomContextProps) {
+    const { user } = useUserContext();
+
     // state
     const [messages, setMessages] = useState<ChatMessage[]>([]);
-    const [connectionStatusState, setConnectionStatus] = useState(
-        ConnectionStatus.UNINITIALIZED,
-    );
-    const [authToken, setAuthToken] = useState<string>();
-    const [nickname, setNickname] = useState('');
-    const [color, setColor] = useState('blue');
-    const [roomData, setRoomData] = useState<RoomData>();
-    const [loading, setLoading] = useState(true);
-    const [players, setPlayers] = useState<Player[]>([]);
+    const [roomData, setRoomData] = useState<RoomData>(serverRoomData);
 
-    const [notFound, setNotFound] = useState(false);
+    const [authToken, setAuthToken] = useState<string>(
+        localStorage.getItem(`authToken-${serverRoomData.slug}`) ??
+            serverRoomData.token ??
+            '',
+    );
+    const [nickname, setNickname] = useState(
+        localStorage.getItem('PlayBingo.temp.nickname') ??
+            (serverRoomData.token ? user?.username : '') ??
+            '',
+    );
+    const [spectator, setSpectator] = useState(true);
+    const [monitor, setMonitor] = useState(false);
+    const [color, setColor] = useState('blue');
+    const [connectionStatusState, setConnectionStatus] = useState(
+        //if there is already an auth token present, start the connection
+        //process automatically
+        authToken
+            ? ConnectionStatus.CONNECTING
+            : ConnectionStatus.UNINITIALIZED,
+    );
+    const [players, setPlayers] = useState<Player[]>([]);
 
     const [starredGoals, { push, clear, filter }] = useList<number>([]);
 
@@ -162,14 +186,13 @@ export function RoomContextProvider({ slug, children }: RoomContextProps) {
             board: Board,
             chatHistory: ChatMessage[],
             roomData: RoomData,
-            nickname?: string,
-            color?: string,
+            identity?: Player,
         ) => {
-            if (nickname) {
-                setNickname(nickname);
-            }
-            if (color) {
-                setColor(color);
+            if (identity) {
+                setNickname(identity.nickname);
+                setColor(identity.color);
+                setSpectator(identity.spectator);
+                setMonitor(identity.monitor);
             }
             emitBoardUpdate({ action: 'board', board });
             setMessages(chatHistory);
@@ -181,15 +204,15 @@ export function RoomContextProvider({ slug, children }: RoomContextProps) {
     const onUnauthorized = useCallback(() => {
         setAuthToken('');
         setConnectionStatus(ConnectionStatus.UNAUTHORIZED);
-        localStorage.removeItem(`authToken-${slug}`);
-    }, [slug]);
+        localStorage.removeItem(`authToken-${roomData.slug}`);
+    }, [roomData.slug]);
     const onUpdateRoomData = useCallback((roomData: RoomData) => {
         setRoomData(roomData);
     }, []);
 
     // websocket
     const { sendJsonMessage } = useWebSocket(
-        `${websocketBase}/socket/${slug}`,
+        `${websocketBase}/socket/${roomData.slug}`,
         {
             share: true,
             heartbeat: {
@@ -197,6 +220,9 @@ export function RoomContextProvider({ slug, children }: RoomContextProps) {
                 message: 'ping',
                 returnMessage: 'pong',
                 timeout: 2 * 60 * 1000,
+            },
+            onOpen() {
+                join(authToken, nickname);
             },
             onMessage(message) {
                 if (message.data === 'pong') return;
@@ -236,8 +262,7 @@ export function RoomContextProvider({ slug, children }: RoomContextProps) {
                             payload.board,
                             payload.chatHistory,
                             payload.roomData,
-                            payload.nickname,
-                            payload.color,
+                            payload.identity,
                         );
                         break;
                     case 'unauthorized':
@@ -272,6 +297,7 @@ export function RoomContextProvider({ slug, children }: RoomContextProps) {
     // actions
     const join = useCallback(
         (token: string, nickname?: string) => {
+            setConnectionStatus(ConnectionStatus.CONNECTING);
             sendJsonMessage({
                 action: 'join',
                 authToken: token,
@@ -282,7 +308,7 @@ export function RoomContextProvider({ slug, children }: RoomContextProps) {
     );
     const connect = useCallback(
         async (nickname: string, password: string, spectator: boolean) => {
-            const res = await fetch(`/api/rooms/${slug}/authorize`, {
+            const res = await fetch(`/api/rooms/${roomData.slug}/authorize`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ password, spectator }),
@@ -298,13 +324,13 @@ export function RoomContextProvider({ slug, children }: RoomContextProps) {
             }
             const token = await res.json();
             setAuthToken(token.authToken);
-            localStorage.setItem(`authToken-${slug}`, token.authToken);
+            localStorage.setItem(`authToken-${roomData.slug}`, token.authToken);
             setConnectionStatus(ConnectionStatus.CONNECTING);
             setNickname(nickname);
             join(token.authToken, nickname);
             return { success: true };
         },
-        [slug, join],
+        [roomData.slug, join],
     );
     const disconnect = useCallback(async () => {
         sendJsonMessage({ action: 'leave', authToken });
@@ -370,7 +396,7 @@ export function RoomContextProvider({ slug, children }: RoomContextProps) {
         [authToken, sendJsonMessage],
     );
     const createRacetimeRoom = useCallback(async () => {
-        const res = await fetch(`/api/rooms/${slug}/actions`, {
+        const res = await fetch(`/api/rooms/${roomData.slug}/actions`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -384,7 +410,7 @@ export function RoomContextProvider({ slug, children }: RoomContextProps) {
         }
     }, [roomData, authToken]);
     const updateRacetimeRoom = useCallback(async () => {
-        const res = await fetch(`/api/rooms/${slug}/actions`, {
+        const res = await fetch(`/api/rooms/${roomData.slug}/actions`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ action: 'racetime/refresh', authToken }),
@@ -395,7 +421,7 @@ export function RoomContextProvider({ slug, children }: RoomContextProps) {
         }
     }, [roomData, authToken]);
     const joinRacetimeRoom = useCallback(async () => {
-        const res = await fetch(`/api/rooms/${slug}/actions`, {
+        const res = await fetch(`/api/rooms/${roomData.slug}/actions`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -409,7 +435,7 @@ export function RoomContextProvider({ slug, children }: RoomContextProps) {
         }
     }, [roomData, authToken]);
     const racetimeReady = useCallback(async () => {
-        const res = await fetch(`/api/rooms/${slug}/actions`, {
+        const res = await fetch(`/api/rooms/${roomData.slug}/actions`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -423,7 +449,7 @@ export function RoomContextProvider({ slug, children }: RoomContextProps) {
         }
     }, [roomData, authToken]);
     const racetimeUnready = useCallback(async () => {
-        const res = await fetch(`/api/rooms/${slug}/actions`, {
+        const res = await fetch(`/api/rooms/${roomData.slug}/actions`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ action: 'racetime/unready', authToken }),
@@ -453,81 +479,6 @@ export function RoomContextProvider({ slug, children }: RoomContextProps) {
         });
     }, []);
 
-    // effects
-    // slug changed, try to establish initial connection from storage
-    useEffect(() => {
-        async function checkRoom() {
-            const res = await fetch(`/api/rooms/${slug}`);
-            if (!res.ok) {
-                if (res.status === 404) {
-                    setNotFound(true);
-                } else {
-                    const error = await res.text();
-                    alertError(`Unable to load room data - ${error}`);
-                }
-                return;
-            }
-            if (connectionStatus === ConnectionStatus.UNINITIALIZED) {
-                // load a cached token and use it if present
-                const storedToken = localStorage.getItem(`authToken-${slug}`);
-                const tempNickname = localStorage.getItem(
-                    'PlayBingo.temp.nickname',
-                );
-                localStorage.removeItem('PlayBingo.temp.nickname');
-                if (storedToken) {
-                    setAuthToken(storedToken);
-                    if (tempNickname) {
-                        setNickname(tempNickname);
-                    }
-                    setConnectionStatus(ConnectionStatus.CONNECTING);
-                    join(storedToken, tempNickname ?? undefined);
-                }
-            }
-        }
-        checkRoom();
-        setLoading(false);
-    }, [slug, connectionStatus, join]);
-
-    // prevent UI flash when restoring from local storage due to SSR, reducing
-    // the number of re-renders for the room page since all the state changes
-    // after connection will usually be batched
-    if (loading) {
-        return 'loading...';
-    }
-
-    if (notFound) {
-        return (
-            <Box
-                sx={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    flexGrow: 1,
-                    p: 5,
-                }}
-            >
-                <Typography
-                    variant="h4"
-                    sx={{
-                        pb: 2,
-                    }}
-                >
-                    Not Found
-                </Typography>
-                <Typography>The room {slug} couldn&#39;t be found.</Typography>
-                <Box
-                    sx={{
-                        pt: 0.5,
-                    }}
-                >
-                    <Link href="/rooms" component={NextLink}>
-                        ← Return to room list
-                    </Link>
-                </Box>
-            </Box>
-        );
-    }
-
     return (
         <RoomContext.Provider
             value={{
@@ -541,6 +492,8 @@ export function RoomContextProvider({ slug, children }: RoomContextProps) {
                 starredGoals,
                 showGoalDetails,
                 showCounters,
+                spectator,
+                monitor,
                 connect,
                 sendChatMessage,
                 markGoal,

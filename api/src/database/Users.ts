@@ -167,3 +167,7 @@ export const updateEmail = (id: string, email: string) => {
 export const updateAvatar = (id: string, avatar: string | null) => {
     return prisma.user.update({ where: { id }, data: { avatar } });
 };
+
+export const isStaff = async (id: string) => {
+    return (await prisma.user.findUnique({ where: { id } }))?.staff;
+};
