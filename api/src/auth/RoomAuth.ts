@@ -12,6 +12,8 @@ export type Permissions = {
 export type RoomTokenPayload = {
     roomSlug: string;
     uuid: string;
+    playerId: string;
+    user?: string;
 } & Permissions;
 
 const tokenStore: string[] = [];
@@ -19,12 +21,16 @@ const tokenStore: string[] = [];
 export const createRoomToken = (
     room: Room,
     { isSpectating, isMonitor }: Partial<Permissions>,
+    playerKey: string,
+    user?: string,
 ) => {
     const payload: RoomTokenPayload = {
         roomSlug: room.slug,
         uuid: randomUUID(),
+        user,
         isSpectating: !!isSpectating,
         isMonitor: !!isMonitor,
+        playerId: `${user ? 'user' : 'session'}:${playerKey}`,
     };
     const token = sign(payload, roomTokenSecret);
     tokenStore.push(token);

@@ -154,10 +154,15 @@ rooms.post('/', async (req, res) => {
     await room.generateBoard(options);
     allRooms.set(slug, room);
 
-    const token = createRoomToken(room, {
-        isSpectating: spectator,
-        isMonitor: true,
-    });
+    const token = createRoomToken(
+        room,
+        {
+            isSpectating: spectator,
+            isMonitor: true,
+        },
+        req.session.user ?? req.session.id,
+        req.session.user,
+    );
 
     res.status(200).json({ slug, authToken: token });
 });
@@ -277,7 +282,12 @@ rooms.get('/:slug', async (req, res) => {
 
     const perms = await room.canAutoAuthenticate(req.session.user);
     if (perms) {
-        roomData.token = createRoomToken(room, perms);
+        roomData.token = createRoomToken(
+            room,
+            perms,
+            req.session.user ?? req.session.id,
+            req.session.user,
+        );
     }
 
     res.status(200).json(roomData);
@@ -296,7 +306,14 @@ rooms.post('/:slug/authorize', (req, res) => {
         return;
     }
 
-    const token = createRoomToken(room, { isSpectating: spectator });
+    const token = createRoomToken(
+        room,
+        {
+            isSpectating: spectator,
+        },
+        req.session.user ?? req.session.id,
+        req.session.user,
+    );
     res.status(200).send({ authToken: token });
 });
 
