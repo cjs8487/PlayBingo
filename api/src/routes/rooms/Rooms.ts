@@ -272,11 +272,11 @@ rooms.get('/:slug', async (req, res) => {
         newGenerator: room.newGenerator,
         racetimeConnection: {
             gameActive: room.racetimeEligible,
-            url: room.racetimeHandler.url,
-            startDelay: room.racetimeHandler.data?.start_delay,
-            started: room.racetimeHandler.data?.started_at ?? undefined,
-            ended: room.racetimeHandler.data?.ended_at ?? undefined,
-            status: room.racetimeHandler.data?.status.verbose_value,
+            url: room.raceHandler.url,
+            startDelay: room.raceHandler.data?.start_delay,
+            started: room.raceHandler.data?.started_at ?? undefined,
+            ended: room.raceHandler.data?.ended_at ?? undefined,
+            status: room.raceHandler.data?.status.verbose_value,
         },
     };
 
