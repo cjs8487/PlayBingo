@@ -60,7 +60,7 @@ import {
 } from './generation/GeneratorCore';
 import { generateFullRandom, generateRandomTyped } from './generation/Random';
 import { generateSRLv5 } from './generation/SRLv5';
-import RacetimeHandler, { RaceData } from './integration/RacetimeHandler';
+import RaceHandler, { RaceData } from './integration/RacetimeHandler';
 import Player from './Player';
 
 export enum BoardGenerationMode {
@@ -128,7 +128,7 @@ export default class Room {
     newGenerator: boolean;
 
     racetimeEligible: boolean;
-    racetimeHandler: RacetimeHandler;
+    raceHandler: RaceHandler;
 
     lastMessage: number;
 
@@ -164,7 +164,7 @@ export default class Room {
         this.lastGenerationMode = { mode: BoardGenerationMode.RANDOM };
 
         this.racetimeEligible = !!racetimeEligible;
-        this.racetimeHandler = new RacetimeHandler(this);
+        this.raceHandler = new RaceHandler(this);
 
         this.board = {
             board: [],
@@ -172,7 +172,7 @@ export default class Room {
         };
 
         if (racetimeUrl) {
-            this.racetimeHandler.connect(racetimeUrl);
+            this.raceHandler.connect(racetimeUrl);
         }
 
         this.hideCard = hideCard;
@@ -369,11 +369,11 @@ export default class Room {
                 newGenerator: this.newGenerator,
                 racetimeConnection: {
                     gameActive: this.racetimeEligible,
-                    url: this.racetimeHandler.url,
-                    startDelay: this.racetimeHandler.data?.start_delay,
-                    started: this.racetimeHandler.data?.started_at ?? undefined,
-                    ended: this.racetimeHandler.data?.ended_at ?? undefined,
-                    status: this.racetimeHandler.data?.status.verbose_value,
+                    url: this.raceHandler.url,
+                    startDelay: this.raceHandler.data?.start_delay,
+                    started: this.raceHandler.data?.started_at ?? undefined,
+                    ended: this.raceHandler.data?.ended_at ?? undefined,
+                    status: this.raceHandler.data?.status.verbose_value,
                 },
             },
             players: this.getPlayers(),
@@ -567,12 +567,12 @@ export default class Room {
             },
         });
         this.sendChat(`Racetime.gg room created ${url}`);
-        this.racetimeHandler.connect(url);
-        this.racetimeHandler.connectWebsocket();
+        this.raceHandler.connect(url);
+        this.raceHandler.connectWebsocket();
     }
 
     handleRacetimeRoomDisconnected() {
-        this.racetimeHandler.disconnect();
+        this.raceHandler.disconnect();
         this.sendServerMessage({
             action: 'updateRoomData',
             roomData: {
@@ -646,7 +646,7 @@ export default class Room {
             players: this.getPlayers(),
             racetimeConnection: {
                 gameActive: this.racetimeEligible,
-                url: this.racetimeHandler.url,
+                url: this.raceHandler.url,
                 startDelay: data.start_delay ?? undefined,
                 started: data.started_at ?? undefined,
                 ended: data.ended_at ?? undefined,
@@ -810,7 +810,7 @@ export default class Room {
 
     //#region Racetime Integration
     async connectRacetimeWebSocket() {
-        this.racetimeHandler.connectWebsocket();
+        this.raceHandler.connectWebsocket();
     }
 
     joinRacetimeRoom(
@@ -825,11 +825,11 @@ export default class Room {
         }
         this.logInfo(`Connecting ${player.nickname} to racetime`);
         player.racetimeId = racetimeId;
-        return this.racetimeHandler.joinUser(token);
+        return this.raceHandler.joinPlayer(token);
     }
 
     async refreshRacetimeHandler() {
-        this.racetimeHandler.refresh();
+        this.raceHandler.refresh();
     }
 
     readyPlayer(token: string, roomAuth: RoomTokenPayload) {
@@ -839,7 +839,7 @@ export default class Room {
             return false;
         }
         this.logInfo(`Readying ${player.nickname} to race`);
-        return this.racetimeHandler.ready(token);
+        return this.raceHandler.joinPlayer(token);
     }
 
     unreadyPlayer(token: string, roomAuth: RoomTokenPayload) {
@@ -851,7 +851,7 @@ export default class Room {
             return false;
         }
         this.logInfo(`Readying ${player.nickname} to race`);
-        return this.racetimeHandler.unready(token);
+        return this.raceHandler.unreadyPlayer(token);
     }
     //#endregion
 
