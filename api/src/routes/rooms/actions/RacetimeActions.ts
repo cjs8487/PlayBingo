@@ -28,25 +28,17 @@ export const handleRacetimeAction = async (
         };
     }
 
-    const token = await getAccessToken(user);
-    if (!token) {
-        return {
-            code: 403,
-            message: 'Forbidden',
-        };
-    }
-
     switch (action) {
         case 'create':
-            return createRacetimeRoom(room, token);
+            return createRacetimeRoom(room, user);
         case 'refresh':
             return refreshConnection(room);
         case 'join':
             return joinPlayer(room, user, roomToken, rtConnection.serviceId);
         case 'ready':
-            return readyPlayer(room, token, roomToken);
+            return readyPlayer(room, roomToken);
         case 'unready':
-            return unreadyPlayer(room, token, roomToken);
+            return unreadyPlayer(room, roomToken);
         default:
             return unknownAction(room);
     }
@@ -54,7 +46,7 @@ export const handleRacetimeAction = async (
 
 const createRacetimeRoom = async (
     room: Room,
-    token: string,
+    user: string,
 ): Promise<ActionResult> => {
     const racetimeConfiguration = await getRacetimeConfiguration(room.gameSlug);
     if (
@@ -66,6 +58,14 @@ const createRacetimeRoom = async (
             code: 400,
             message:
                 "This game isn't properly configured for racetime.gg integration",
+        };
+    }
+
+    const token = await getAccessToken(user);
+    if (!token) {
+        return {
+            code: 403,
+            message: 'Unable to get auth token',
         };
     }
 
@@ -132,18 +132,7 @@ const joinPlayer = async (
     roomToken: RoomTokenPayload,
     racetimeId: string,
 ): Promise<ActionResult> => {
-    const token = await getAccessToken(user);
-    if (!token) {
-        room.logInfo(
-            'Unable to join a user to the racetime room - unable to generate token',
-        );
-        return {
-            code: 403,
-            message: 'Forbidden',
-        };
-    }
-
-    if (!room.joinRacetimeRoom(token, racetimeId, roomToken)) {
+    if (!room.joinRaceRoom(racetimeId, roomToken)) {
         return {
             code: 403,
             message: 'Forbidden',
@@ -157,10 +146,14 @@ const joinPlayer = async (
 
 const readyPlayer = async (
     room: Room,
-    token: string,
     roomToken: RoomTokenPayload,
 ): Promise<ActionResult> => {
-    room.readyPlayer(token, roomToken);
+    if (!room.readyPlayer(roomToken)) {
+        return {
+            code: 403,
+            message: 'Forbidden',
+        };
+    }
     return {
         code: 200,
         value: {},
@@ -169,10 +162,14 @@ const readyPlayer = async (
 
 const unreadyPlayer = async (
     room: Room,
-    token: string,
     roomToken: RoomTokenPayload,
 ): Promise<ActionResult> => {
-    room.unreadyPlayer(token, roomToken);
+    if (!room.unreadyPlayer(roomToken)) {
+        return {
+            code: 403,
+            message: 'Forbidden',
+        };
+    }
     return {
         code: 200,
         value: {},

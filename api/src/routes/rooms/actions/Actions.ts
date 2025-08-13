@@ -2,7 +2,7 @@ import { RoomTokenPayload } from '../../../auth/RoomAuth';
 import Room from '../../../core/Room';
 import { handleRacetimeAction } from './RacetimeActions';
 
-// Actions are psuedo-endpoints that allow consumers to execute actions on a bingo
+// Actions are pseudo-endpoints that allow consumers to execute actions on a bingo
 // room. These endpoints offer simpler setup for performing actions than doing so over
 // websocket, especially when the action requires access to web sessions. While websocket
 // connections are allowed access to web sessions, not all consumers are eligible for or
@@ -39,7 +39,7 @@ interface ActionResultError extends ActionResultBase {
     message: string;
 }
 
-interface ActionResultValue<T> extends ActionResultBase {
+export interface ActionResultValue<T> extends ActionResultBase {
     value: T;
 }
 

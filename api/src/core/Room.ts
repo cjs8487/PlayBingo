@@ -333,7 +333,12 @@ export default class Room {
         let player: Player | undefined;
         let newPlayer = false;
         if (action.payload) {
-            player = new Player(auth, action.payload.nickname);
+            player = new Player(
+                this,
+                this.raceHandler,
+                auth,
+                action.payload.nickname,
+            );
             this.players.set(player.id, player);
             newPlayer = true;
         } else {
@@ -813,11 +818,7 @@ export default class Room {
         this.raceHandler.connectWebsocket();
     }
 
-    joinRacetimeRoom(
-        token: string,
-        racetimeId: string,
-        authToken: RoomTokenPayload,
-    ) {
+    joinRaceRoom(racetimeId: string, authToken: RoomTokenPayload) {
         const player = this.players.get(authToken.playerId);
         if (!player) {
             this.logWarn('Unable to find a player for a verified room token');
@@ -825,24 +826,24 @@ export default class Room {
         }
         this.logInfo(`Connecting ${player.nickname} to racetime`);
         player.racetimeId = racetimeId;
-        return this.raceHandler.joinPlayer(token);
+        return player.joinRace();
     }
 
     async refreshRacetimeHandler() {
         this.raceHandler.refresh();
     }
 
-    readyPlayer(token: string, roomAuth: RoomTokenPayload) {
+    readyPlayer(roomAuth: RoomTokenPayload) {
         const player = this.players.get(roomAuth.playerId);
         if (!player) {
             this.logWarn('Unable to find a player for a verified room token');
             return false;
         }
         this.logInfo(`Readying ${player.nickname} to race`);
-        return this.raceHandler.joinPlayer(token);
+        return player.ready();
     }
 
-    unreadyPlayer(token: string, roomAuth: RoomTokenPayload) {
+    unreadyPlayer(roomAuth: RoomTokenPayload) {
         const player = this.players.get(roomAuth.playerId);
         if (!player) {
             this.logWarn(
@@ -851,7 +852,7 @@ export default class Room {
             return false;
         }
         this.logInfo(`Readying ${player.nickname} to race`);
-        return this.raceHandler.unreadyPlayer(token);
+        return player.unready();
     }
     //#endregion
 

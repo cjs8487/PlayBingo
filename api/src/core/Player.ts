@@ -6,6 +6,9 @@ import {
 import { OPEN, WebSocket } from 'ws';
 import { RoomTokenPayload } from '../auth/RoomAuth';
 import { Player as PlayerClientData } from '@playbingo/types';
+import RaceHandler from './integration/races/RaceHandler';
+import { getAccessToken } from '../lib/RacetimeConnector';
+import Room from './Room';
 
 /**
  * Represents a player connected to a room. While largely just a data class, this
@@ -25,6 +28,7 @@ import { Player as PlayerClientData } from '@playbingo/types';
  * meaningful.
  */
 export default class Player {
+    room: Room;
     /** Unique player identifier */
     id: string;
     /** Player display name */
@@ -48,21 +52,32 @@ export default class Player {
      * is authorized for the connection */
     connections: Map<string, WebSocket>;
 
+    raceHandler: RaceHandler;
+    raceId: string;
+
     constructor(
+        room: Room,
+        raceHandler: RaceHandler,
         auth: RoomTokenPayload,
         nickname: string,
         color: string = 'blue',
     ) {
+        this.room = room;
         this.id = auth.playerId;
         this.nickname = nickname;
         this.color = color;
         this.spectator = auth.isSpectating;
         this.monitor = auth.isMonitor;
+        this.userId = auth.user;
 
         this.goalCount = 0;
         this.goalComplete = false;
         this.racetimeStatus = { connected: false };
         this.connections = new Map<string, WebSocket>();
+
+        this.raceHandler = raceHandler;
+        this.raceId = '';
+        console.log(raceHandler);
     }
 
     doesTokenMatch(token: RoomTokenPayload) {
@@ -152,4 +167,50 @@ export default class Player {
             }
         });
     }
+
+    //#region Races
+    private async tryRaceAction(
+        action: (token: string) => Promise<boolean>,
+        failMsg: string,
+    ) {
+        if (this.userId) {
+            const token = await getAccessToken(this.userId);
+            if (token) {
+                return action(token);
+            } else {
+                this.room.logInfo(`${failMsg} - failed to generate token`);
+                return false;
+            }
+        } else {
+            this.room.logInfo(`${failMsg} - player is anonymous`);
+            return false;
+        }
+    }
+    async joinRace() {
+        return this.tryRaceAction(
+            this.raceHandler.joinPlayer.bind(this.raceHandler),
+            'Unable to join race room',
+        );
+    }
+
+    async leaveRace() {
+        return this.tryRaceAction(
+            this.raceHandler.leavePlayer.bind(this.raceHandler),
+            'Unable to leave race room',
+        );
+    }
+
+    async ready() {
+        return this.tryRaceAction(
+            this.raceHandler.readyPlayer.bind(this.raceHandler),
+            'Unable to ready in race room',
+        );
+    }
+    async unready() {
+        return this.tryRaceAction(
+            this.raceHandler.unreadyPlayer.bind(this.raceHandler),
+            'Unable to unready in race room',
+        );
+    }
+    //#endregion
 }
