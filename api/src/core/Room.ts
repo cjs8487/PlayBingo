@@ -60,7 +60,7 @@ import {
 } from './generation/GeneratorCore';
 import { generateFullRandom, generateRandomTyped } from './generation/Random';
 import { generateSRLv5 } from './generation/SRLv5';
-import RaceHandler, { RaceData } from './integration/RacetimeHandler';
+import RaceHandler, { RaceData } from './integration/races/RacetimeHandler';
 import Player from './Player';
 
 export enum BoardGenerationMode {
