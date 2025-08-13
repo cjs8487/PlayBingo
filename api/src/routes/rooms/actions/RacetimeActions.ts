@@ -30,14 +30,38 @@ export const handleRacetimeAction = async (
 
     switch (action) {
         case 'create':
+            if (!roomToken.isMonitor) {
+                return {
+                    code: 403,
+                    message: 'Forbidden',
+                };
+            }
             return createRacetimeRoom(room, user);
         case 'refresh':
             return refreshConnection(room);
         case 'join':
-            return joinPlayer(room, user, roomToken, rtConnection.serviceId);
+            if (roomToken.isSpectating) {
+                return {
+                    code: 403,
+                    message: 'Forbidden',
+                };
+            }
+            return joinPlayer(room, roomToken, rtConnection.serviceId);
         case 'ready':
+            if (roomToken.isSpectating) {
+                return {
+                    code: 403,
+                    message: 'Forbidden',
+                };
+            }
             return readyPlayer(room, roomToken);
         case 'unready':
+            if (roomToken.isSpectating) {
+                return {
+                    code: 403,
+                    message: 'Forbidden',
+                };
+            }
             return unreadyPlayer(room, roomToken);
         default:
             return unknownAction(room);
@@ -128,7 +152,6 @@ const refreshConnection = async (room: Room): Promise<ActionResult> => {
 
 const joinPlayer = async (
     room: Room,
-    user: string,
     roomToken: RoomTokenPayload,
     racetimeId: string,
 ): Promise<ActionResult> => {
