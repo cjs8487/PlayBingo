@@ -1,9 +1,9 @@
 import { RawData, WebSocket } from 'ws';
-import { racetimeHost } from '../../Environment';
-import { disconnectRoomFromRacetime } from '../../database/Rooms';
-import Room from '../Room';
-import { logInfo } from '../../Logger';
-import RaceHandler from './races/RaceHandler';
+import { racetimeHost } from '../../../Environment';
+import { disconnectRoomFromRacetime } from '../../../database/Rooms';
+import Room from '../../Room';
+import { logInfo } from '../../../Logger';
+import RaceHandler from './RaceHandler';
 
 interface User {
     id: string;
