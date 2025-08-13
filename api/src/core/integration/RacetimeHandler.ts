@@ -250,7 +250,15 @@ export default class RacetimeHandler implements RaceHandler {
     }
 
     getPlayer(id: string) {
-        return this.data?.entrants.find((u) => u.user.id === id);
+        const user = this.data?.entrants.find((u) => u.user.id === id);
+        if (user) {
+            return {
+                username: user.user.full_name,
+                status: user.status.verbose_value,
+                finishTime: user.finish_time ?? undefined,
+            };
+        }
+        return undefined;
     }
 
     async joinPlayer(token: string) {

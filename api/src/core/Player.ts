@@ -36,7 +36,6 @@ export default class Player {
     /** The players chosen color */
     color: string;
     userId?: string;
-    racetimeId?: string;
     racetimeStatus: RacetimeStatusDisconnected | RacetimeStatusConnected;
     /** If the player is in spectator mode or not */
     spectator: boolean;
@@ -77,7 +76,6 @@ export default class Player {
 
         this.raceHandler = raceHandler;
         this.raceId = '';
-        console.log(raceHandler);
     }
 
     doesTokenMatch(token: RoomTokenPayload) {
@@ -141,20 +139,18 @@ export default class Player {
      * @returns Client representation of this player's data
      */
     toClientData(): PlayerClientData {
+        const raceUser = this.raceHandler.getPlayer(this.raceId);
         return {
             id: this.id,
             nickname: this.nickname,
             color: this.color,
             goalCount: this.goalCount,
-            // racetimeStatus: rtUser
-            //     ? {
-            //           connected: true,
-            //           username: rtUser.user.full_name,
-            //           status: rtUser.status.verbose_value,
-            //           finishTime: rtUser.finish_time ?? undefined,
-            //       }
-            //     : { connected: false },
-            racetimeStatus: { connected: false },
+            racetimeStatus: raceUser
+                ? {
+                      connected: true,
+                      ...raceUser,
+                  }
+                : { connected: false },
             spectator: this.spectator,
             monitor: this.monitor,
         };

@@ -1,3 +1,5 @@
+import { RacetimeStatusConnected } from '@playbingo/types';
+
 /**
  * Represents an arbitrary connection to a service that tracks racing status.
  * Provides a uniform interface for the bingo room to interact with that
@@ -49,4 +51,14 @@ export default interface RaceHandler {
      * Refreshes the local cache of data
      */
     refresh(): Promise<void>;
+
+    /**
+     * Returns client side data representation of the race state for
+     * the specified player.
+     *
+     * @param id The service id of the player
+     */
+    getPlayer(
+        id: string,
+    ): Omit<RacetimeStatusConnected, 'connected'> | undefined;
 }
