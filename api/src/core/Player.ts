@@ -4,6 +4,7 @@ import { RoomTokenPayload } from '../auth/RoomAuth';
 import { getAccessToken } from '../lib/RacetimeConnector';
 import RaceHandler from './integration/races/RaceHandler';
 import Room from './Room';
+import { prisma } from '../database/Database';
 
 /**
  * Represents a player connected to a room. While largely just a data class, this
@@ -50,24 +51,25 @@ export default class Player {
 
     constructor(
         room: Room,
-        raceHandler: RaceHandler,
-        auth: RoomTokenPayload,
+        id: string,
         nickname: string,
         color: string = 'blue',
+        spectator: boolean,
+        monitor: boolean,
+        userId?: string,
     ) {
         this.room = room;
-        this.id = auth.playerId;
-        this.nickname = nickname;
+        (this.id = id), (this.nickname = nickname);
         this.color = color;
-        this.spectator = auth.isSpectating;
-        this.monitor = auth.isMonitor;
-        this.userId = auth.user;
+        this.spectator = spectator;
+        this.monitor = monitor;
+        this.userId = userId;
 
         this.goalCount = 0;
         this.goalComplete = false;
         this.connections = new Map<string, WebSocket>();
 
-        this.raceHandler = raceHandler;
+        this.raceHandler = room.raceHandler;
         this.raceId = '';
     }
 

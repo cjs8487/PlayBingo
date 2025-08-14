@@ -19,6 +19,7 @@ import { randomWord, slugAdjectives, slugNouns } from '../../util/Words';
 import { handleAction } from './actions/Actions';
 import { getGoalList } from '../../database/games/Goals';
 import { RoomData } from '@playbingo/types';
+import Player from '../../core/Player';
 
 const MIN_ROOM_GOALS_REQUIRED = 25;
 const rooms = Router();
@@ -201,6 +202,19 @@ async function getOrLoadRoom(slug: string): Promise<Room | null> {
         ),
     };
 
+    dbRoom.players.forEach((dbPlayer) => {
+        const player = new Player(
+            newRoom,
+            dbPlayer.key,
+            dbPlayer.nickname,
+            dbPlayer.color,
+            dbPlayer.spectator,
+            dbPlayer.monitor,
+            dbPlayer.userId ?? undefined,
+        );
+        newRoom.players.set(player.id, player);
+    });
+
     dbRoom.history.forEach((action) => {
         const { nickname, color, newColor, oldColor, row, col, message } =
             action.payload as any;
@@ -224,7 +238,7 @@ async function getOrLoadRoom(slug: string): Promise<Room | null> {
                     newRoom.sendCellUpdate(row, col);
                     newRoom.sendChat([
                         { contents: nickname, color },
-                        ` is marked ${newRoom.board.board[row][col].goal.goal} (${row},${col})`,
+                        ` marked ${newRoom.board.board[row][col].goal.goal} (${row},${col})`,
                     ]);
                 }
                 break;
@@ -235,7 +249,7 @@ async function getOrLoadRoom(slug: string): Promise<Room | null> {
                 newRoom.sendCellUpdate(row, col);
                 newRoom.sendChat([
                     { contents: nickname, color },
-                    ` is unmarked ${newRoom.board.board[row][col].goal.goal} (${row},${col})`,
+                    ` unmarked ${newRoom.board.board[row][col].goal.goal} (${row},${col})`,
                 ]);
                 break;
             case 'CHAT':
@@ -245,7 +259,7 @@ async function getOrLoadRoom(slug: string): Promise<Room | null> {
                 newRoom.sendChat([
                     { contents: nickname, color: oldColor },
                     ' has changed their color to ',
-                    { contents: color, color: newColor },
+                    { contents: newColor, color: newColor },
                 ]);
                 break;
         }
