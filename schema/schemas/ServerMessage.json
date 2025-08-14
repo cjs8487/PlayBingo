@@ -10,6 +10,9 @@
             "items": {
                 "$ref": "./Player.json"
             }
+        },
+        "connectedPlayer": {
+            "$ref": "./Player.json"
         }
     },
     "anyOf": [

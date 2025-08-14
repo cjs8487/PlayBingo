@@ -254,7 +254,7 @@ export default class RacetimeHandler implements RaceHandler {
         if (user) {
             return {
                 username: user.user.full_name,
-                status: user.status.verbose_value,
+                ready: user.status.value === 'ready',
                 finishTime: user.finish_time ?? undefined,
             };
         }

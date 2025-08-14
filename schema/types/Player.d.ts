@@ -10,23 +10,20 @@ export interface Player {
   nickname: string;
   color: string;
   goalCount: number;
-  racetimeStatus: RacetimeStatusDisconnected | RacetimeStatusConnected;
+  raceStatus: RaceStatusDisconnected | RaceStatusConnected;
   spectator: boolean;
   monitor: boolean;
 }
-export interface RacetimeStatusDisconnected {
+export interface RaceStatusDisconnected {
   connected: false;
 }
-export interface RacetimeStatusConnected {
+export interface RaceStatusConnected {
   connected: true;
   /**
-   * Racetime username connected to this player for the race
+   * Username connected to this player for the race, if it is separate from PlayBingo
    */
   username: string;
-  /**
-   * Racetime race status
-   */
-  status: string;
+  ready?: boolean;
   /**
    * Race finish time (ISO 8601 duration)
    */
