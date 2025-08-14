@@ -111,6 +111,7 @@ model User {
   moderatedGames Game[]         @relation("GameModerators")
   resetToken     PasswordReset?
   favoritedGames Game[]         @relation("GameFavorites")
+  Player         Player[]
 }
 
 model PasswordReset {
@@ -144,6 +145,22 @@ model Room {
   hideCard     Boolean      @default(false)
   bingoMode    BingoMode    @default(LINES)
   lineCount    Int          @default(1)
+  players      Player[]
+}
+
+model Player {
+  id        String  @id @unique @default(cuid())
+  key       String
+  user      User?   @relation(fields: [userId], references: [id])
+  room      Room    @relation(fields: [roomId], references: [id])
+  nickname  String
+  color     String  @default("blue")
+  spectator Boolean
+  monitor   Boolean @default(false)
+  roomId    String
+  userId    String?
+
+  @@unique([key, roomId])
 }
 
 model RoomAction {

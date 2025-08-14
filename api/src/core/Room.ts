@@ -35,6 +35,7 @@ import {
     addLeaveAction,
     addMarkAction,
     addUnmarkAction,
+    createUpdatePlayer,
     setRoomBoard,
 } from '../database/Rooms';
 import { isStaff } from '../database/Users';
@@ -320,10 +321,6 @@ export default class Room {
         return Array.from(this.players, ([k, player]) => player.toClientData());
     }
 
-    private findPlayerForToken(token: RoomTokenPayload) {
-        return this.players.get(token.playerId);
-    }
-
     //#region Handlers
     handleJoin(
         action: JoinAction,
@@ -332,17 +329,25 @@ export default class Room {
     ): ServerMessage {
         let player: Player | undefined;
         let newPlayer = false;
-        if (action.payload) {
+        if (this.players.has(auth.playerId)) {
+            player = this.players.get(auth.playerId);
+            if (!player) {
+                return { action: 'unauthorized' };
+            }
+        } else if (action.payload) {
             player = new Player(
                 this,
-                this.raceHandler,
-                auth,
+                auth.playerId,
                 action.payload.nickname,
+                undefined,
+                auth.isSpectating,
+                auth.isMonitor,
+                auth.user,
             );
             this.players.set(player.id, player);
             newPlayer = true;
         } else {
-            player = this.findPlayerForToken(auth);
+            player = this.players.get(auth.playerId);
             if (!player) {
                 return { action: 'unauthorized' };
             }
@@ -361,6 +366,7 @@ export default class Room {
 
         player.addConnection(auth.uuid, socket);
         addJoinAction(this.id, player.nickname, player.color).then();
+        createUpdatePlayer(this.id, player).then();
         return {
             action: 'connected',
             board: this.hideCard ? { hidden: true } : this.board,
@@ -505,7 +511,6 @@ export default class Room {
         if (!color) {
             return;
         }
-        player.color = color;
         this.sendChat([
             { contents: player.nickname, color: player.color },
             ' has changed their color to ',
@@ -517,6 +522,8 @@ export default class Room {
             player.color,
             color,
         ).then();
+        player.color = color;
+        createUpdatePlayer(this.id, player).then();
     }
 
     handleNewCard(action: NewCardAction) {
