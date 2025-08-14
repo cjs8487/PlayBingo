@@ -21,6 +21,9 @@ export default function RacetimeCard() {
         joinRacetimeRoom,
         racetimeReady,
         racetimeUnready,
+        monitor,
+        spectator,
+        connectedPlayer,
     } = useRoomContext();
     const { loggedIn, user } = useUserContext();
 
@@ -52,7 +55,7 @@ export default function RacetimeCard() {
                         >
                             Not connected
                         </Typography>
-                        {loggedIn && (
+                        {loggedIn && monitor && (
                             <Button onClick={createRacetimeRoom}>
                                 Create race room
                             </Button>
@@ -77,17 +80,27 @@ export default function RacetimeCard() {
                             <IconButton onClick={updateRacetimeRoom}>
                                 <Refresh />
                             </IconButton>
-                            {user?.racetimeConnected && (
+                            {user?.racetimeConnected && !spectator && (
                                 <>
                                     <Button onClick={joinRacetimeRoom}>
                                         Join Race
                                     </Button>
-                                    <Button onClick={racetimeReady}>
-                                        Ready
-                                    </Button>
-                                    <Button onClick={racetimeUnready}>
-                                        Not ready
-                                    </Button>
+                                    {connectedPlayer?.raceStatus.connected && (
+                                        <>
+                                            {connectedPlayer.raceStatus
+                                                .ready ? (
+                                                <Button
+                                                    onClick={racetimeUnready}
+                                                >
+                                                    Not ready
+                                                </Button>
+                                            ) : (
+                                                <Button onClick={racetimeReady}>
+                                                    Ready
+                                                </Button>
+                                            )}
+                                        </>
+                                    )}
                                 </>
                             )}
                         </Box>

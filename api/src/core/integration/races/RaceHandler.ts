@@ -1,4 +1,4 @@
-import { RacetimeStatusConnected } from '@playbingo/types';
+import { RaceStatusConnected } from '@playbingo/types';
 
 /**
  * Represents an arbitrary connection to a service that tracks racing status.
@@ -58,7 +58,5 @@ export default interface RaceHandler {
      *
      * @param id The service id of the player
      */
-    getPlayer(
-        id: string,
-    ): Omit<RacetimeStatusConnected, 'connected'> | undefined;
+    getPlayer(id: string): Omit<RaceStatusConnected, 'connected'> | undefined;
 }

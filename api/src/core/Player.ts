@@ -1,13 +1,8 @@
-import {
-    RacetimeStatusConnected,
-    RacetimeStatusDisconnected,
-    ServerMessage,
-} from '@playbingo/types';
+import { Player as PlayerClientData, ServerMessage } from '@playbingo/types';
 import { OPEN, WebSocket } from 'ws';
 import { RoomTokenPayload } from '../auth/RoomAuth';
-import { Player as PlayerClientData } from '@playbingo/types';
-import RaceHandler from './integration/races/RaceHandler';
 import { getAccessToken } from '../lib/RacetimeConnector';
+import RaceHandler from './integration/races/RaceHandler';
 import Room from './Room';
 
 /**
@@ -36,7 +31,6 @@ export default class Player {
     /** The players chosen color */
     color: string;
     userId?: string;
-    racetimeStatus: RacetimeStatusDisconnected | RacetimeStatusConnected;
     /** If the player is in spectator mode or not */
     spectator: boolean;
     /** If the player has permission to perform monitor actions in the room */
@@ -71,7 +65,6 @@ export default class Player {
 
         this.goalCount = 0;
         this.goalComplete = false;
-        this.racetimeStatus = { connected: false };
         this.connections = new Map<string, WebSocket>();
 
         this.raceHandler = raceHandler;
@@ -145,7 +138,7 @@ export default class Player {
             nickname: this.nickname,
             color: this.color,
             goalCount: this.goalCount,
-            racetimeStatus: raceUser
+            raceStatus: raceUser
                 ? {
                       connected: true,
                       ...raceUser,
@@ -159,7 +152,12 @@ export default class Player {
     sendMessage(message: ServerMessage) {
         this.connections.forEach((socket) => {
             if (socket.readyState === OPEN) {
-                socket.send(JSON.stringify({ ...message }));
+                socket.send(
+                    JSON.stringify({
+                        ...message,
+                        connectedPlayer: this.toClientData(),
+                    }),
+                );
             }
         });
     }

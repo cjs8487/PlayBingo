@@ -58,6 +58,7 @@ interface RoomContext {
     showCounters: boolean;
     spectator: boolean;
     monitor: boolean;
+    connectedPlayer?: Player;
     connect: (
         nickname: string,
         password: string,
@@ -148,6 +149,7 @@ export function RoomContextProvider({
             : ConnectionStatus.UNINITIALIZED,
     );
     const [players, setPlayers] = useState<Player[]>([]);
+    const [connectedPlayer, setConnectedPlayer] = useState<Player>();
 
     const [starredGoals, { push, filter }] = useList<number>([]);
 
@@ -232,6 +234,9 @@ export function RoomContextProvider({
                 }
                 if (payload.players) {
                     setPlayers(payload.players);
+                }
+                if (payload.connectedPlayer) {
+                    setConnectedPlayer(payload.connectedPlayer);
                 }
                 switch (payload.action) {
                     case 'chat':
@@ -396,6 +401,9 @@ export function RoomContextProvider({
         [authToken, sendJsonMessage],
     );
     const createRacetimeRoom = useCallback(async () => {
+        if (!connectedPlayer?.monitor) {
+            return;
+        }
         const res = await fetch(`/api/rooms/${roomData.slug}/actions`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -408,7 +416,7 @@ export function RoomContextProvider({
             alertError(await res.text());
             return;
         }
-    }, [roomData, authToken]);
+    }, [roomData, authToken, connectedPlayer]);
     const updateRacetimeRoom = useCallback(async () => {
         const res = await fetch(`/api/rooms/${roomData.slug}/actions`, {
             method: 'POST',
@@ -421,6 +429,9 @@ export function RoomContextProvider({
         }
     }, [roomData, authToken]);
     const joinRacetimeRoom = useCallback(async () => {
+        if (connectedPlayer?.spectator) {
+            return;
+        }
         const res = await fetch(`/api/rooms/${roomData.slug}/actions`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -433,8 +444,11 @@ export function RoomContextProvider({
             alertError(await res.text());
             return;
         }
-    }, [roomData, authToken]);
+    }, [roomData, authToken, connectedPlayer]);
     const racetimeReady = useCallback(async () => {
+        if (connectedPlayer?.spectator) {
+            return;
+        }
         const res = await fetch(`/api/rooms/${roomData.slug}/actions`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -447,8 +461,11 @@ export function RoomContextProvider({
             alertError(await res.text());
             return;
         }
-    }, [roomData, authToken]);
+    }, [roomData, authToken, connectedPlayer]);
     const racetimeUnready = useCallback(async () => {
+        if (connectedPlayer?.spectator) {
+            return;
+        }
         const res = await fetch(`/api/rooms/${roomData.slug}/actions`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -458,7 +475,7 @@ export function RoomContextProvider({
             alertError(await res.text());
             return;
         }
-    }, [roomData, authToken]);
+    }, [roomData, authToken, connectedPlayer]);
     const toggleGoalStar = useCallback(
         (row: number, col: number) => {
             const index = row * 5 + col;
@@ -494,6 +511,7 @@ export function RoomContextProvider({
                 showCounters,
                 spectator,
                 monitor,
+                connectedPlayer,
                 connect,
                 sendChatMessage,
                 markGoal,
