@@ -6,10 +6,57 @@ export const listToBoard = (list: GeneratorGoal[]): Cell[][] => {
     return chunk(
         list.map((g) => ({
             goal: g,
-            colors: [],
+            completedPlayers: [],
         })),
         5,
     );
+};
+
+export const computeLineMasks = (rows: number, cols: number): bigint[] => {
+    const masks: bigint[] = [];
+
+    // rows
+    for (let r = 0; r < rows; r++) {
+        let mask = 0n;
+        for (let c = 0; c < cols; c++) {
+            const idx = r * cols + c;
+            mask |= 1n << BigInt(idx);
+        }
+        masks.push(mask);
+    }
+
+    // cols
+    for (let c = 0; c < cols; c++) {
+        let mask = 0n;
+        for (let r = 0; r < rows; r++) {
+            const idx = r * cols + c;
+            mask |= 1n << BigInt(idx);
+        }
+        masks.push(mask);
+    }
+
+    let mainDiag = 0n;
+    for (let i = 0; i < Math.min(rows, cols); i++) {
+        const idx = i * cols + i;
+        mainDiag |= 1n << BigInt(idx);
+    }
+    masks.push(mainDiag);
+
+    let antiDiag = 0n;
+    for (let i = 0; i < Math.min(rows, cols); i++) {
+        const idx = i * cols + (cols - 1 - i);
+        antiDiag |= 1n << BigInt(idx);
+    }
+    masks.push(antiDiag);
+
+    return masks;
+};
+
+export const hasLineCompletion = (
+    bitset: bigint,
+    lineMask: bigint,
+): boolean => {
+    return (bitset & lineMask) === lineMask;
 };
 
 export type CompletedLines = { [color: string]: number };
@@ -19,40 +66,40 @@ export const checkCompletedLines = (grid: Cell[][]): CompletedLines => {
     const numCols = grid[0]?.length || 0;
     const completedLines: CompletedLines = {};
 
-    const allColors = new Set<string>();
+    const allPlayers = new Set<string>();
     grid.forEach((row) =>
         row.forEach((cell) =>
-            cell.colors.forEach((color) => allColors.add(color)),
+            cell.completedPlayers.forEach((player) => allPlayers.add(player)),
         ),
     );
 
-    const incrementLineCount = (lineColors: Set<string>) => {
-        for (const color of lineColors) {
-            completedLines[color] = (completedLines[color] || 0) + 1;
+    const incrementLineCount = (linePlayers: Set<string>) => {
+        for (const player of linePlayers) {
+            completedLines[player] = (completedLines[player] || 0) + 1;
         }
     };
 
     // Check rows
     for (const row of grid) {
-        const commonColors = new Set(row[0]?.colors || []);
+        const commonPlayers = new Set(row[0]?.completedPlayers || []);
         for (const cell of row) {
-            for (const color of [...commonColors]) {
-                if (!cell.colors.includes(color)) {
-                    commonColors.delete(color);
+            for (const player of [...commonPlayers]) {
+                if (!cell.completedPlayers.includes(player)) {
+                    commonPlayers.delete(player);
                 }
             }
         }
-        incrementLineCount(commonColors);
+        incrementLineCount(commonPlayers);
     }
 
     // Check columns
     for (let col = 0; col < numCols; col++) {
-        const commonColors = new Set(grid[0]?.[col]?.colors || []);
+        const commonColors = new Set(grid[0]?.[col]?.completedPlayers || []);
         for (let row = 0; row < numRows; row++) {
             const cell = grid[row][col];
-            for (const color of commonColors) {
-                if (!cell.colors.includes(color)) {
-                    commonColors.delete(color);
+            for (const player of commonColors) {
+                if (!cell.completedPlayers.includes(player)) {
+                    commonColors.delete(player);
                 }
             }
         }
@@ -61,34 +108,36 @@ export const checkCompletedLines = (grid: Cell[][]): CompletedLines => {
 
     // Check diagonals (top-left to bottom-right)
     if (numRows === numCols) {
-        const mainDiagonalColors = new Set(grid[0]?.[0]?.colors || []);
+        const mainDiagonalPlayers = new Set(
+            grid[0]?.[0]?.completedPlayers || [],
+        );
         for (let i = 0; i < numRows; i++) {
             const cell = grid[i][i];
-            for (const color of [...mainDiagonalColors]) {
-                if (!cell.colors.includes(color)) {
-                    mainDiagonalColors.delete(color);
+            for (const player of [...mainDiagonalPlayers]) {
+                if (!cell.completedPlayers.includes(player)) {
+                    mainDiagonalPlayers.delete(player);
                 }
             }
         }
-        incrementLineCount(mainDiagonalColors);
+        incrementLineCount(mainDiagonalPlayers);
 
         // Check anti-diagonal (top-right to bottom-left)
-        const antiDiagonalColors = new Set(
-            grid[0]?.[numCols - 1]?.colors || [],
+        const antiDiagonalPlayers = new Set(
+            grid[0]?.[numCols - 1]?.completedPlayers || [],
         );
         for (let i = 0; i < numRows; i++) {
             const cell = grid[i][numCols - 1 - i];
-            for (const color of [...antiDiagonalColors]) {
-                if (!cell.colors.includes(color)) {
-                    antiDiagonalColors.delete(color);
+            for (const player of [...antiDiagonalPlayers]) {
+                if (!cell.completedPlayers.includes(player)) {
+                    antiDiagonalPlayers.delete(player);
                 }
             }
         }
-        incrementLineCount(antiDiagonalColors);
+        incrementLineCount(antiDiagonalPlayers);
     }
 
     // Ensure all colors are included in the result
-    allColors.forEach((color) => {
+    allPlayers.forEach((color) => {
         if (!(color in completedLines)) {
             completedLines[color] = 0;
         }

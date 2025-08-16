@@ -50,19 +50,17 @@ export const addLeaveAction = (room: string, nickname: string, color: string) =>
 
 export const addMarkAction = (
     room: string,
-    nickname: string,
-    color: string,
+    player: string,
     row: number,
     col: number,
-) => addRoomAction(room, RoomActionType.MARK, { nickname, color, row, col });
+) => addRoomAction(room, RoomActionType.MARK, { player, row, col });
 
 export const addUnmarkAction = (
     room: string,
-    nickname: string,
-    color: string,
+    player: string,
     row: number,
     col: number,
-) => addRoomAction(room, RoomActionType.UNMARK, { nickname, color, row, col });
+) => addRoomAction(room, RoomActionType.UNMARK, { player, row, col });
 
 export const addChatAction = (
     room: string,
