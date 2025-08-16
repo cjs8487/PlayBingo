@@ -164,6 +164,10 @@ export default class Player {
         });
     }
 
+    showInRoom() {
+        return this.connections.size > 0;
+    }
+
     //#region Races
     private async tryRaceAction(
         action: (token: string) => Promise<boolean>,
