@@ -12,6 +12,7 @@ import {
     createContext,
     useCallback,
     useContext,
+    useMemo,
     useState,
     useSyncExternalStore,
 } from 'react';
@@ -59,6 +60,7 @@ interface RoomContext {
     spectator: boolean;
     monitor: boolean;
     connectedPlayer?: Player;
+    colorMap: { [k: string]: string };
     connect: (
         nickname: string,
         password: string,
@@ -93,6 +95,7 @@ export const RoomContext = createContext<RoomContext>({
     showCounters: false,
     spectator: true,
     monitor: false,
+    colorMap: {},
     async connect() {
         return { success: false };
     },
@@ -148,6 +151,12 @@ export function RoomContextProvider({
     );
     const [players, setPlayers] = useState<Player[]>([]);
     const [connectedPlayer, setConnectedPlayer] = useState<Player>();
+    const colorMap = useMemo(() => {
+        console.log('calculating color map');
+        const colorMap: { [k: string]: string } = {};
+        players.forEach((player) => (colorMap[player.id] = player.color));
+        return colorMap;
+    }, [players]);
 
     const [starredGoals, { push, filter }] = useList<number>([]);
 
@@ -231,6 +240,7 @@ export function RoomContextProvider({
                     return;
                 }
                 if (payload.players) {
+                    console.log('updating players');
                     setPlayers(payload.players);
                 }
                 if (payload.connectedPlayer) {
@@ -510,6 +520,7 @@ export function RoomContextProvider({
                 spectator,
                 monitor,
                 connectedPlayer,
+                colorMap,
                 connect,
                 sendChatMessage,
                 markGoal,

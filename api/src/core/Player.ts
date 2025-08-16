@@ -37,6 +37,8 @@ export default class Player {
     /** If the player has permission to perform monitor actions in the room */
     monitor: boolean;
 
+    /** Bitset of the goals the player has marked */
+    markedGoals: bigint;
     /** The number of goals the player has marked */
     goalCount: number;
     /** Whether or not the player has completed the goal of the room */
@@ -65,6 +67,7 @@ export default class Player {
         this.monitor = monitor;
         this.userId = userId;
 
+        this.markedGoals = 0n;
         this.goalCount = 0;
         this.goalComplete = false;
         this.connections = new Map<string, WebSocket>();
@@ -167,6 +170,29 @@ export default class Player {
     showInRoom() {
         return this.connections.size > 0;
     }
+
+    //#region Goal Tracking
+    mark(cellIndex: number) {
+        const mask = 1n << BigInt(cellIndex);
+        if ((this.markedGoals & mask) === 0n) {
+            this.markedGoals |= mask;
+            this.goalCount++;
+        }
+    }
+
+    unmark(cellIndex: number) {
+        const mask = 1n << BigInt(cellIndex);
+        if ((this.markedGoals & mask) !== 0n) {
+            this.markedGoals &= ~mask;
+            this.goalCount--;
+        }
+    }
+
+    hasMarked(cellIndex: number): boolean {
+        const mask = 1n << BigInt(cellIndex);
+        return (this.markedGoals & mask) !== 0n;
+    }
+    //#endregion
 
     //#region Races
     private async tryRaceAction(

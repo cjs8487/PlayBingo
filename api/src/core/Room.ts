@@ -51,6 +51,7 @@ import { shuffle } from '../util/Array';
 import {
     checkCompletedLines,
     CompletedLines,
+    computeLineMasks,
     listToBoard,
 } from '../util/RoomUtils';
 import { allRooms } from './RoomServer';
@@ -122,6 +123,7 @@ export default class Room {
 
     lastGenerationMode: BoardGenerationOptions;
 
+    victoryMasks: bigint[];
     lastLineStatus: CompletedLines;
     completed: boolean;
 
@@ -174,6 +176,18 @@ export default class Room {
 
         if (racetimeUrl) {
             this.raceHandler.connect(racetimeUrl);
+        }
+
+        if (bingoMode === BingoMode.LINES) {
+            this.victoryMasks = computeLineMasks(5, 5);
+        } else if (bingoMode === BingoMode.BLACKOUT) {
+            let mask = 0n;
+            for (let i = 0; i < 25; i++) {
+                mask |= 1n << BigInt(i);
+            }
+            this.victoryMasks = [mask];
+        } else {
+            this.victoryMasks = [];
         }
 
         this.hideCard = hideCard;
@@ -456,14 +470,19 @@ export default class Room {
         }
         const { row, col } = action.payload;
         if (row === undefined || col === undefined) return;
-        if (this.board.board[row][col].colors.includes(player.color)) return;
+        const index = row * 5 + col;
+        if (player.hasMarked(index)) return;
+
         if (
             this.bingoMode === BingoMode.LOCKOUT &&
-            this.board.board[row][col].colors.length > 0
+            this.board.board[row][col].completedPlayers.length > 0
         )
             return;
-        this.board.board[row][col].colors.push(player.color);
-        this.board.board[row][col].colors.sort((a, b) => a.localeCompare(b));
+        this.board.board[row][col].completedPlayers.push(player.id);
+        this.board.board[row][col].completedPlayers.sort((a, b) =>
+            a.localeCompare(b),
+        );
+        player.mark(index);
         this.sendCellUpdate(row, col);
         this.sendChat([
             {
@@ -472,7 +491,7 @@ export default class Room {
             },
             ` marked ${this.board.board[row][col].goal.goal} (${row},${col})`,
         ]);
-        addMarkAction(this.id, player.nickname, player.color, row, col).then();
+        addMarkAction(this.id, player.id, row, col).then();
         this.checkWinConditions();
     }
 
@@ -486,21 +505,18 @@ export default class Room {
         }
         const { row: unRow, col: unCol } = action.payload;
         if (unRow === undefined || unCol === undefined) return;
-        this.board.board[unRow][unCol].colors = this.board.board[unRow][
-            unCol
-        ].colors.filter((color) => color !== player.color);
+        const index = unRow * 5 + unCol;
+        if (!player.hasMarked(index)) return;
+        this.board.board[unRow][unCol].completedPlayers = this.board.board[
+            unRow
+        ][unCol].completedPlayers.filter((playerId) => playerId !== player.id);
+        player.unmark(index);
         this.sendCellUpdate(unRow, unCol);
         this.sendChat([
             { contents: player.nickname, color: player.color },
             ` unmarked ${this.board.board[unRow][unCol].goal.goal} (${unRow},${unCol})`,
         ]);
-        addUnmarkAction(
-            this.id,
-            player.nickname,
-            player.color,
-            unRow,
-            unCol,
-        ).then();
+        addUnmarkAction(this.id, player.id, unRow, unCol).then();
         this.checkWinConditions();
     }
 
@@ -516,11 +532,6 @@ export default class Room {
         if (!color) {
             return;
         }
-        this.sendChat([
-            { contents: player.nickname, color: player.color },
-            ' has changed their color to ',
-            { contents: color, color },
-        ]);
         addChangeColorAction(
             this.id,
             player.nickname,
@@ -529,6 +540,11 @@ export default class Room {
         ).then();
         player.color = color;
         createUpdatePlayer(this.id, player).then();
+        this.sendChat([
+            { contents: player.nickname, color: player.color },
+            ' has changed their color to ',
+            { contents: color, color },
+        ]);
     }
 
     handleNewCard(action: NewCardAction) {
@@ -720,7 +736,9 @@ export default class Room {
             case 'BLACKOUT':
                 this.players.forEach((player) => {
                     const hasBlackout = this.board.board.every((row) =>
-                        row.every((cell) => cell.colors.includes(player.color)),
+                        row.every((cell) =>
+                            cell.completedPlayers.includes(player.id),
+                        ),
                     );
                     if (hasBlackout && !player.goalComplete) {
                         player.goalComplete = true;
@@ -750,7 +768,9 @@ export default class Room {
                         return (
                             prev +
                             row.reduce((p, cell) => {
-                                if (cell.colors.includes(player.color)) {
+                                if (
+                                    cell.completedPlayers.includes(player.color)
+                                ) {
                                     return p + 1;
                                 }
                                 return p;

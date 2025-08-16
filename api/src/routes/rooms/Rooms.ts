@@ -196,7 +196,7 @@ async function getOrLoadRoom(slug: string): Promise<Room | null> {
         board: chunk(
             (await getGoalList(dbRoom.board)).map((goal) => ({
                 goal: goal,
-                colors: [],
+                completedPlayers: [],
             })),
             5,
         ),
@@ -216,8 +216,16 @@ async function getOrLoadRoom(slug: string): Promise<Room | null> {
     });
 
     dbRoom.history.forEach((action) => {
-        const { nickname, color, newColor, oldColor, row, col, message } =
-            action.payload as any;
+        const {
+            nickname,
+            color,
+            newColor,
+            oldColor,
+            row,
+            col,
+            message,
+            player,
+        } = action.payload as any;
 
         switch (action.action) {
             case 'JOIN':
@@ -230,10 +238,14 @@ async function getOrLoadRoom(slug: string): Promise<Room | null> {
                 newRoom.sendChat([{ contents: nickname, color }, ' has left.']);
                 break;
             case 'MARK':
-                if (!newRoom.board.board[row][col].colors.includes(color)) {
-                    newRoom.board.board[row][col].colors.push(color);
-                    newRoom.board.board[row][col].colors.sort((a, b) =>
-                        a.localeCompare(b),
+                if (
+                    !newRoom.board.board[row][col].completedPlayers.includes(
+                        player,
+                    )
+                ) {
+                    newRoom.board.board[row][col].completedPlayers.push(player);
+                    newRoom.board.board[row][col].completedPlayers.sort(
+                        (a, b) => a.localeCompare(b),
                     );
                     newRoom.sendCellUpdate(row, col);
                     newRoom.sendChat([
@@ -243,9 +255,10 @@ async function getOrLoadRoom(slug: string): Promise<Room | null> {
                 }
                 break;
             case 'UNMARK':
-                newRoom.board.board[row][col].colors = newRoom.board.board[row][
-                    col
-                ].colors.filter((c) => c !== color);
+                newRoom.board.board[row][col].completedPlayers =
+                    newRoom.board.board[row][col].completedPlayers.filter(
+                        (p) => p !== player,
+                    );
                 newRoom.sendCellUpdate(row, col);
                 newRoom.sendChat([
                     { contents: nickname, color },
