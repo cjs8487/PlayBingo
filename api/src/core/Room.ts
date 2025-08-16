@@ -318,7 +318,13 @@ export default class Room {
     }
 
     getPlayers(): PlayerData[] {
-        return Array.from(this.players, ([k, player]) => player.toClientData());
+        const players: PlayerData[] = [];
+        this.players.forEach((player) => {
+            if (player.showInRoom()) {
+                players.push(player.toClientData());
+            }
+        });
+        return players;
     }
 
     //#region Handlers
@@ -413,7 +419,6 @@ export default class Room {
                 ' has left.',
             ]);
             addLeaveAction(this.id, player.nickname, player.color).then();
-            this.players.delete(player.id);
             if (this.players.size === 0) {
                 this.close();
             }
@@ -554,7 +559,6 @@ export default class Room {
                     'has left.',
                 ]);
                 addLeaveAction(this.id, player.nickname, player.color).then();
-                this.players.delete(player.id);
                 if (this.players.size === 0) {
                     this.close();
                 }
@@ -793,14 +797,29 @@ export default class Room {
      * they will need to provide the password in order to elevate from spectator
      * permissions.
      *
+     * Players who have previously successfully authenticated within their
+     * session context are also eligible for auto authentication, pulling
+     * permissions from their previous connection.
+     *
      * @param user The id of the currently logged in user
      * @returns False if authentication is required in order to grant the
      * provided user minimal room permissions, or a Permissions object
      * containing he appropriate permissions based on the user
      */
     async canAutoAuthenticate(user?: string): Promise<false | Permissions> {
+        console.log(user);
         if (!user) {
             return false;
+        }
+
+        const player = this.players.get(`user:${user}`);
+        console.log(this.players);
+        // console.log(player);
+        if (player) {
+            return {
+                isMonitor: player.monitor,
+                isSpectating: player.spectator,
+            };
         }
 
         if (await isModerator(this.gameSlug, user)) {
