@@ -224,8 +224,11 @@ async function getOrLoadRoom(slug: string): Promise<Room | null> {
             row,
             col,
             message,
-            player,
+            player: playerId,
         } = action.payload as any;
+
+        const player = newRoom.players.get(playerId)!;
+        const index = row * 5 + col;
 
         switch (action.action) {
             case 'JOIN':
@@ -238,15 +241,14 @@ async function getOrLoadRoom(slug: string): Promise<Room | null> {
                 newRoom.sendChat([{ contents: nickname, color }, ' has left.']);
                 break;
             case 'MARK':
-                if (
-                    !newRoom.board.board[row][col].completedPlayers.includes(
-                        player,
-                    )
-                ) {
-                    newRoom.board.board[row][col].completedPlayers.push(player);
+                if (!player.hasMarked(index)) {
+                    newRoom.board.board[row][col].completedPlayers.push(
+                        playerId,
+                    );
                     newRoom.board.board[row][col].completedPlayers.sort(
                         (a, b) => a.localeCompare(b),
                     );
+                    player.mark(index);
                     newRoom.sendCellUpdate(row, col);
                     newRoom.sendChat([
                         { contents: nickname, color },
@@ -255,15 +257,18 @@ async function getOrLoadRoom(slug: string): Promise<Room | null> {
                 }
                 break;
             case 'UNMARK':
-                newRoom.board.board[row][col].completedPlayers =
-                    newRoom.board.board[row][col].completedPlayers.filter(
-                        (p) => p !== player,
-                    );
-                newRoom.sendCellUpdate(row, col);
-                newRoom.sendChat([
-                    { contents: nickname, color },
-                    ` unmarked ${newRoom.board.board[row][col].goal.goal} (${row},${col})`,
-                ]);
+                if (player.hasMarked(index)) {
+                    newRoom.board.board[row][col].completedPlayers =
+                        newRoom.board.board[row][col].completedPlayers.filter(
+                            (p) => p !== playerId,
+                        );
+                    player.unmark(index);
+                    newRoom.sendCellUpdate(row, col);
+                    newRoom.sendChat([
+                        { contents: nickname, color },
+                        ` unmarked ${newRoom.board.board[row][col].goal.goal} (${row},${col})`,
+                    ]);
+                }
                 break;
             case 'CHAT':
                 newRoom.sendChat(`${nickname}: ${message}`);
