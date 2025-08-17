@@ -119,14 +119,18 @@ export const createUpdatePlayer = async (room: string, player: Player) => {
             nickname: player.nickname,
             color: player.color,
             room: { connect: { id: room } },
-            user: { connect: { id: player.userId } },
+            user: player.userId
+                ? { connect: { id: player.userId } }
+                : undefined,
             spectator: player.spectator,
             monitor: player.monitor,
         },
         update: {
             nickname: player.nickname,
             color: player.color,
-            user: { connect: { id: player.userId } },
+            user: player.userId
+                ? { connect: { id: player.userId } }
+                : { disconnect: true },
             spectator: player.spectator,
             monitor: player.monitor,
         },
