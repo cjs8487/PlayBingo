@@ -152,7 +152,6 @@ export function RoomContextProvider({
     const [players, setPlayers] = useState<Player[]>([]);
     const [connectedPlayer, setConnectedPlayer] = useState<Player>();
     const colorMap = useMemo(() => {
-        console.log('calculating color map');
         const colorMap: { [k: string]: string } = {};
         players.forEach((player) => (colorMap[player.id] = player.color));
         return colorMap;
@@ -202,6 +201,7 @@ export function RoomContextProvider({
                 setColor(identity.color);
                 setSpectator(identity.spectator);
                 setMonitor(identity.monitor);
+                setConnectedPlayer(identity);
             }
             emitBoardUpdate({ action: 'board', board });
             setMessages(chatHistory);
@@ -240,7 +240,6 @@ export function RoomContextProvider({
                     return;
                 }
                 if (payload.players) {
-                    console.log('updating players');
                     setPlayers(payload.players);
                 }
                 if (payload.connectedPlayer) {
@@ -300,7 +299,6 @@ export function RoomContextProvider({
             onClose() {
                 setAuthToken('');
                 setConnectionStatus(ConnectionStatus.CLOSED);
-                console.log('closing ws connection');
             },
         },
         connectionStatus === ConnectionStatus.CONNECTING ||
