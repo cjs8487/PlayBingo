@@ -572,7 +572,7 @@ export default class Room {
             if (!player.hasConnections()) {
                 this.sendChat([
                     { contents: player.nickname, color: player.color },
-                    'has left.',
+                    ' has left.',
                 ]);
                 addLeaveAction(this.id, player.nickname, player.color).then();
                 if (this.players.size === 0) {
