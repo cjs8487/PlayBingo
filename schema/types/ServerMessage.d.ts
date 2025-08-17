@@ -28,7 +28,6 @@ export type ServerMessage = (
       board: Board;
       chatHistory: ChatMessage[];
       roomData?: RoomData;
-      identity?: Player;
     }
   | {
       action: "unauthorized";

@@ -391,7 +391,7 @@ export default class Room {
             action: 'connected',
             board: this.hideCard ? { hidden: true } : this.board,
             chatHistory: this.chatHistory,
-            identity: player.toClientData(),
+            connectedPlayer: player.toClientData(),
             roomData: {
                 game: this.game,
                 slug: this.slug,
