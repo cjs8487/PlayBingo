@@ -190,19 +190,7 @@ export function RoomContextProvider({
         emitBoardUpdate({ action: 'board', board });
     }, []);
     const onConnected = useCallback(
-        (
-            board: Board,
-            chatHistory: ChatMessage[],
-            roomData: RoomData,
-            identity?: Player,
-        ) => {
-            if (identity) {
-                setNickname(identity.nickname);
-                setColor(identity.color);
-                setSpectator(identity.spectator);
-                setMonitor(identity.monitor);
-                setConnectedPlayer(identity);
-            }
+        (board: Board, chatHistory: ChatMessage[], roomData: RoomData) => {
             emitBoardUpdate({ action: 'board', board });
             setMessages(chatHistory);
             setConnectionStatus(ConnectionStatus.CONNECTED);
@@ -274,7 +262,6 @@ export function RoomContextProvider({
                             payload.board,
                             payload.chatHistory,
                             payload.roomData,
-                            payload.identity,
                         );
                         break;
                     case 'unauthorized':

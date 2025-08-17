@@ -69,7 +69,8 @@
                 "action",
                 "board",
                 "chatHistory",
-                "players"
+                "players",
+                "connectedPlayer"
             ],
             "additionalProperties": false,
             "properties": {
@@ -85,9 +86,6 @@
                 },
                 "roomData": {
                     "$ref": "./RoomData.json"
-                },
-                "identity": {
-                    "$ref": "./Player.json"
                 }
             }
         },
