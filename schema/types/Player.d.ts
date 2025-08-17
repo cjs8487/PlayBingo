@@ -13,6 +13,7 @@ export interface Player {
   raceStatus: RaceStatusDisconnected | RaceStatusConnected;
   spectator: boolean;
   monitor: boolean;
+  showInRoom: boolean;
 }
 export interface RaceStatusDisconnected {
   connected: false;

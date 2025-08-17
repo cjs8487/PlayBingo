@@ -334,9 +334,7 @@ export default class Room {
     getPlayers(): PlayerData[] {
         const players: PlayerData[] = [];
         this.players.forEach((player) => {
-            if (player.showInRoom()) {
-                players.push(player.toClientData());
-            }
+            players.push(player.toClientData());
         });
         return players;
     }
