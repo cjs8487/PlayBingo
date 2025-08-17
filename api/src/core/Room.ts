@@ -20,7 +20,7 @@ import {
     GenerationListMode,
     GenerationListTransform,
 } from '@prisma/client';
-import { OPEN, WebSocket } from 'ws';
+import { WebSocket } from 'ws';
 import { roomCleanupInactive } from '../Environment';
 import { logError, logInfo, logWarn } from '../Logger';
 import {
@@ -54,6 +54,7 @@ import {
     computeLineMasks,
     listToBoard,
 } from '../util/RoomUtils';
+import Player from './Player';
 import { allRooms } from './RoomServer';
 import BoardGenerator from './generation/BoardGenerator';
 import {
@@ -63,7 +64,6 @@ import {
 import { generateFullRandom, generateRandomTyped } from './generation/Random';
 import { generateSRLv5 } from './generation/SRLv5';
 import RaceHandler, { RaceData } from './integration/races/RacetimeHandler';
-import Player from './Player';
 
 export enum BoardGenerationMode {
     RANDOM = 'Random',
@@ -827,14 +827,11 @@ export default class Room {
      * containing he appropriate permissions based on the user
      */
     async canAutoAuthenticate(user?: string): Promise<false | Permissions> {
-        console.log(user);
         if (!user) {
             return false;
         }
 
         const player = this.players.get(`user:${user}`);
-        console.log(this.players);
-        // console.log(player);
         if (player) {
             return {
                 isMonitor: player.monitor,
