@@ -704,8 +704,8 @@ export default class Room {
     }
 
     private checkWinConditions() {
-        if (this.bingoMode === BingoMode.LOCKOUT) {
-            this.players.forEach((player) => {
+        this.players.forEach((player) => {
+            if (this.bingoMode === BingoMode.LOCKOUT) {
                 if (!player.goalComplete && player.goalCount >= 13) {
                     this.sendChat([
                         {
@@ -726,10 +726,8 @@ export default class Room {
                     ]);
                     player.goalComplete = false;
                 }
-            });
-        } else {
-            if (this.bingoMode === BingoMode.LINES) {
-                this.players.forEach((player) => {
+            } else {
+                if (this.bingoMode === BingoMode.LINES) {
                     const linesComplete = this.victoryMasks.reduce(
                         (count, mask) =>
                             count + (player.hasCompletedGoals(mask) ? 1 : 0),
@@ -737,7 +735,10 @@ export default class Room {
                     );
                     if (linesComplete > player.linesComplete) {
                         this.sendChat([
-                            { contents: player.nickname, color: player.color },
+                            {
+                                contents: player.nickname,
+                                color: player.color,
+                            },
                             ' has completed a line!',
                         ]);
                     }
@@ -747,7 +748,10 @@ export default class Room {
                     ) {
                         player.goalComplete = true;
                         this.sendChat([
-                            { contents: player.nickname, color: player.color },
+                            {
+                                contents: player.nickname,
+                                color: player.color,
+                            },
                             ' has completed the goal!',
                         ]);
                     } else if (
@@ -756,33 +760,40 @@ export default class Room {
                     ) {
                         player.goalComplete = false;
                         this.sendChat([
-                            { contents: player.nickname, color: player.color },
+                            {
+                                contents: player.nickname,
+                                color: player.color,
+                            },
                             ' has no longer completed the goal.',
                         ]);
                     }
                     player.linesComplete = linesComplete;
-                });
-            } else {
-                this.players.forEach((player) => {
+                } else {
                     const complete = this.victoryMasks.every((mask) =>
                         player.hasCompletedGoals(mask),
                     );
                     if (complete && !player.goalComplete) {
                         player.goalComplete = true;
                         this.sendChat([
-                            { contents: player.nickname, color: player.color },
+                            {
+                                contents: player.nickname,
+                                color: player.color,
+                            },
                             ' has achieved blackout!',
                         ]);
                     } else if (!complete && player.goalComplete) {
                         player.goalComplete = false;
                         this.sendChat([
-                            { contents: player.nickname, color: player.color },
+                            {
+                                contents: player.nickname,
+                                color: player.color,
+                            },
                             ' no longer has blackout.',
                         ]);
                     }
-                });
+                }
             }
-        }
+        });
         let allComplete = true;
         this.players.forEach((player) => {
             if (!player.spectator && !player.goalComplete) {
