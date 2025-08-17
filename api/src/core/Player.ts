@@ -43,6 +43,7 @@ export default class Player {
     goalCount: number;
     /** Whether or not the player has completed the goal of the room */
     goalComplete: boolean;
+    linesComplete: number;
 
     /** Open connections for the player, mapped by the id in the auth token that
      * is authorized for the connection */
@@ -70,6 +71,8 @@ export default class Player {
         this.markedGoals = 0n;
         this.goalCount = 0;
         this.goalComplete = false;
+        this.linesComplete = 0;
+
         this.connections = new Map<string, WebSocket>();
 
         this.raceHandler = room.raceHandler;
@@ -191,6 +194,15 @@ export default class Player {
     hasMarked(cellIndex: number): boolean {
         const mask = 1n << BigInt(cellIndex);
         return (this.markedGoals & mask) !== 0n;
+    }
+
+    /**
+     * Checks if this player has completed a set of goals on the board
+     *
+     * @param mask The bitmask containing the goals to check for
+     */
+    hasCompletedGoals(mask: bigint) {
+        return (this.markedGoals & mask) === mask;
     }
     //#endregion
 
