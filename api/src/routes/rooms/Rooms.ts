@@ -251,7 +251,7 @@ async function getOrLoadRoom(slug: string): Promise<Room | null> {
                     player.mark(index);
                     newRoom.sendCellUpdate(row, col);
                     newRoom.sendChat([
-                        { contents: nickname, color },
+                        { contents: player.nickname, color: player.color },
                         ` marked ${newRoom.board.board[row][col].goal.goal} (${row},${col})`,
                     ]);
                 }
@@ -265,7 +265,7 @@ async function getOrLoadRoom(slug: string): Promise<Room | null> {
                     player.unmark(index);
                     newRoom.sendCellUpdate(row, col);
                     newRoom.sendChat([
-                        { contents: nickname, color },
+                        { contents: player.nickname, color: player.color },
                         ` unmarked ${newRoom.board.board[row][col].goal.goal} (${row},${col})`,
                     ]);
                 }
