@@ -704,103 +704,84 @@ export default class Room {
     }
 
     private checkWinConditions() {
-        switch (this.bingoMode) {
-            case 'LINES':
-                const lineCounts = checkCompletedLines(this.board.board);
-                Object.keys(lineCounts).forEach((color) => {});
+        if (this.bingoMode === BingoMode.LOCKOUT) {
+            this.players.forEach((player) => {
+                if (!player.goalComplete && player.goalCount >= 13) {
+                    this.sendChat([
+                        {
+                            contents: player.nickname,
+                            color: player.color,
+                        },
+                        ' has achieved lockout!',
+                    ]);
+                    player.goalComplete = true;
+                }
+                if (player.goalComplete && player.goalCount < 13) {
+                    this.sendChat([
+                        {
+                            contents: player.nickname,
+                            color: player.color,
+                        },
+                        ' no longer has lockout.',
+                    ]);
+                    player.goalComplete = false;
+                }
+            });
+        } else {
+            if (this.bingoMode === BingoMode.LINES) {
                 this.players.forEach((player) => {
-                    const { color, nickname, goalComplete } = player;
-                    if (lineCounts[color] > this.lastLineStatus[color]) {
+                    const linesComplete = this.victoryMasks.reduce(
+                        (count, mask) =>
+                            count + (player.hasCompletedGoals(mask) ? 1 : 0),
+                        0,
+                    );
+                    if (linesComplete > player.linesComplete) {
                         this.sendChat([
-                            { contents: nickname, color },
-                            ' has completed a line',
+                            { contents: player.nickname, color: player.color },
+                            ' has completed a line!',
                         ]);
                     }
-                    if (!goalComplete && lineCounts[color] >= this.lineCount) {
+                    if (
+                        linesComplete >= this.lineCount &&
+                        !player.goalComplete
+                    ) {
+                        player.goalComplete = true;
                         this.sendChat([
-                            { contents: nickname, color },
+                            { contents: player.nickname, color: player.color },
                             ' has completed the goal!',
                         ]);
-                        player.goalComplete = true;
-                    }
-                    if (goalComplete && lineCounts[color] < this.lineCount) {
+                    } else if (
+                        linesComplete < this.lineCount &&
+                        player.goalComplete
+                    ) {
                         player.goalComplete = false;
                         this.sendChat([
-                            { contents: nickname, color },
+                            { contents: player.nickname, color: player.color },
                             ' has no longer completed the goal.',
                         ]);
                     }
+                    player.linesComplete = linesComplete;
                 });
-                this.lastLineStatus = lineCounts;
-                break;
-            case 'BLACKOUT':
+            } else {
                 this.players.forEach((player) => {
-                    const hasBlackout = this.board.board.every((row) =>
-                        row.every((cell) =>
-                            cell.completedPlayers.includes(player.id),
-                        ),
+                    const complete = this.victoryMasks.every((mask) =>
+                        player.hasCompletedGoals(mask),
                     );
-                    if (hasBlackout && !player.goalComplete) {
+                    if (complete && !player.goalComplete) {
                         player.goalComplete = true;
                         this.sendChat([
-                            {
-                                color: player.color,
-                                contents: player.nickname,
-                            },
+                            { contents: player.nickname, color: player.color },
                             ' has achieved blackout!',
                         ]);
-                    }
-                    if (!hasBlackout && player.goalComplete) {
+                    } else if (!complete && player.goalComplete) {
                         player.goalComplete = false;
                         this.sendChat([
-                            {
-                                color: player.color,
-                                contents: player.nickname,
-                            },
-                            ' no longer has blackout',
+                            { contents: player.nickname, color: player.color },
+                            ' no longer has blackout.',
                         ]);
                     }
                 });
-                break;
-            case 'LOCKOUT':
-                this.players.forEach((player) => {
-                    const goalCount = this.board.board.reduce((prev, row) => {
-                        return (
-                            prev +
-                            row.reduce((p, cell) => {
-                                if (
-                                    cell.completedPlayers.includes(player.color)
-                                ) {
-                                    return p + 1;
-                                }
-                                return p;
-                            }, 0)
-                        );
-                    }, 0);
-                    if (!player.goalComplete && goalCount >= 13) {
-                        this.sendChat([
-                            {
-                                contents: player.nickname,
-                                color: player.color,
-                            },
-                            ' has achieved lockout!',
-                        ]);
-                        player.goalComplete = true;
-                    }
-                    if (player.goalComplete && goalCount < 13) {
-                        this.sendChat([
-                            {
-                                contents: player.nickname,
-                                color: player.color,
-                            },
-                            ' no longer has lockout.',
-                        ]);
-                        player.goalComplete = false;
-                    }
-                });
-                break;
-            default:
-                break;
+            }
         }
         let allComplete = true;
         this.players.forEach((player) => {
