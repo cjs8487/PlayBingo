@@ -31,8 +31,6 @@ export default function BoardCell({
         colorMap,
     } = useContext(RoomContext);
 
-    console.log('cell render');
-
     // callbacks
     const toggleSpace = useCallback(() => {
         if (!connectedPlayer) {
