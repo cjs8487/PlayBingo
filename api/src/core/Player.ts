@@ -154,6 +154,7 @@ export default class Player {
                 : { connected: false },
             spectator: this.spectator,
             monitor: this.monitor,
+            showInRoom: this.showInRoom(),
         };
     }
 

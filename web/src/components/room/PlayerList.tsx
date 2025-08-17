@@ -32,50 +32,51 @@ export default function PlayerList() {
                     rowGap: 1,
                 }}
             >
-                {players.map((player) => (
-                    <Box key={player.id}>
-                        <Box
-                            sx={{
-                                display: 'flex',
-                                columnGap: 1,
-                                alignItems: 'center',
-                            }}
-                        >
+                {players
+                    .filter((player) => player.showInRoom)
+                    .map((player) => (
+                        <Box key={player.id}>
                             <Box
-                                style={{ background: player.color }}
                                 sx={{
-                                    px: 0.5,
-                                    border: 1,
-                                    borderColor: 'divider',
+                                    display: 'flex',
+                                    columnGap: 2,
                                 }}
                             >
-                                <Typography>{player.goalCount}</Typography>
+                                <Box
+                                    style={{ background: player.color }}
+                                    sx={{
+                                        px: 0.5,
+                                        border: 1,
+                                        borderColor: 'divider',
+                                    }}
+                                >
+                                    <Typography>{player.goalCount}</Typography>
+                                </Box>
+                                {player.monitor && (
+                                    <Sword
+                                        fontSize="small"
+                                        sx={{ color: 'green' }}
+                                    />
+                                )}
+                                <Typography>{player.nickname}</Typography>
                             </Box>
-                            {player.monitor && (
-                                <Sword
-                                    fontSize="small"
-                                    sx={{ color: 'green' }}
-                                />
+                            {racetimeConnected && (
+                                <>
+                                    {!player.raceStatus.connected && (
+                                        <Typography>Not connected</Typography>
+                                    )}
+                                    {player.raceStatus.connected && (
+                                        <Typography>
+                                            {player.raceStatus.username} -{' '}
+                                            {player.raceStatus.status}
+                                            {player.raceStatus.finishTime &&
+                                                ` - ${Duration.fromISO(player.raceStatus.finishTime).toFormat('h:mm:ss')}`}
+                                        </Typography>
+                                    )}
+                                </>
                             )}
-                            <Typography>{player.nickname}</Typography>
                         </Box>
-                        {racetimeConnected && (
-                            <>
-                                {!player.racetimeStatus.connected && (
-                                    <Typography>Not connected</Typography>
-                                )}
-                                {player.racetimeStatus.connected && (
-                                    <Typography>
-                                        {player.racetimeStatus.username} -{' '}
-                                        {player.racetimeStatus.status}
-                                        {player.racetimeStatus.finishTime &&
-                                            ` - ${Duration.fromISO(player.racetimeStatus.finishTime).toFormat('h:mm:ss')}`}
-                                    </Typography>
-                                )}
-                            </>
-                        )}
-                    </Box>
-                ))}
+                    ))}
                 {spectators.length > 0 && (
                     <>
                         <Typography variant="h6">Spectators</Typography>
