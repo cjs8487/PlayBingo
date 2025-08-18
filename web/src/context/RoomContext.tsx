@@ -57,8 +57,6 @@ interface RoomContext {
     starredGoals: number[];
     showGoalDetails: boolean;
     showCounters: boolean;
-    spectator: boolean;
-    monitor: boolean;
     connectedPlayer?: Player;
     colorMap: { [k: string]: string };
     connect: (
@@ -93,8 +91,6 @@ export const RoomContext = createContext<RoomContext>({
     starredGoals: [],
     showGoalDetails: false,
     showCounters: false,
-    spectator: true,
-    monitor: false,
     colorMap: {},
     async connect() {
         return { success: false };
@@ -139,8 +135,6 @@ export function RoomContextProvider({
             (serverRoomData.token ? user?.username : '') ??
             '',
     );
-    const [spectator, setSpectator] = useState(true);
-    const [monitor, setMonitor] = useState(false);
     const [color, setColor] = useState('blue');
     const [connectionStatusState, setConnectionStatus] = useState(
         //if there is already an auth token present, start the connection
@@ -502,8 +496,6 @@ export function RoomContextProvider({
                 starredGoals,
                 showGoalDetails,
                 showCounters,
-                spectator,
-                monitor,
                 connectedPlayer,
                 colorMap,
                 connect,

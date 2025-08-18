@@ -24,7 +24,6 @@ export default async function RoomLayout({
 }: {
     params: Promise<{ slug: string }>;
     children: ReactNode;
-    modal: ReactNode;
 }) {
     const { slug } = await params;
     const room = await getRoom(slug);

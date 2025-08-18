@@ -71,18 +71,19 @@ export default function PlayerList() {
                                 </Box>
                                 {racetimeConnected && (
                                     <>
-                                        {!player.racetimeStatus.connected && (
+                                        {!player.raceStatus.connected && (
                                             <Typography>
                                                 Not connected
                                             </Typography>
                                         )}
-                                        {player.racetimeStatus.connected && (
+                                        {player.raceStatus.connected && (
                                             <Typography>
-                                                {player.racetimeStatus.username}{' '}
-                                                - {player.racetimeStatus.status}
-                                                {player.racetimeStatus
-                                                    .finishTime &&
-                                                    ` - ${Duration.fromISO(player.racetimeStatus.finishTime).toFormat('h:mm:ss')}`}
+                                                {player.raceStatus.username} -{' '}
+                                                {player.raceStatus.ready
+                                                    ? 'Ready'
+                                                    : 'Not ready'}
+                                                {player.raceStatus.finishTime &&
+                                                    ` - ${Duration.fromISO(player.raceStatus.finishTime).toFormat('h:mm:ss')}`}
                                             </Typography>
                                         )}
                                     </>
