@@ -48,12 +48,7 @@ import {
 import { getCategories } from '../database/games/GoalCategories';
 import { goalsForGame } from '../database/games/Goals';
 import { shuffle } from '../util/Array';
-import {
-    checkCompletedLines,
-    CompletedLines,
-    computeLineMasks,
-    listToBoard,
-} from '../util/RoomUtils';
+import { computeLineMasks, listToBoard } from '../util/RoomUtils';
 import Player from './Player';
 import { allRooms } from './RoomServer';
 import BoardGenerator from './generation/BoardGenerator';
@@ -124,7 +119,6 @@ export default class Room {
     lastGenerationMode: BoardGenerationOptions;
 
     victoryMasks: bigint[];
-    lastLineStatus: CompletedLines;
     completed: boolean;
 
     generatorConfig?: GeneratorConfig;
@@ -191,7 +185,6 @@ export default class Room {
         }
 
         this.hideCard = hideCard;
-        this.lastLineStatus = {};
         this.completed = false;
 
         this.generatorConfig = generatorConfig;
