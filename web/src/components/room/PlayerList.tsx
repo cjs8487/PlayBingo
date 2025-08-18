@@ -68,7 +68,9 @@ export default function PlayerList() {
                                     {player.raceStatus.connected && (
                                         <Typography>
                                             {player.raceStatus.username} -{' '}
-                                            {player.raceStatus.status}
+                                            {player.raceStatus.ready
+                                                ? 'Ready'
+                                                : 'Not ready'}
                                             {player.raceStatus.finishTime &&
                                                 ` - ${Duration.fromISO(player.raceStatus.finishTime).toFormat('h:mm:ss')}`}
                                         </Typography>

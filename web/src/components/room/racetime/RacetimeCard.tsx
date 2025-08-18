@@ -21,8 +21,6 @@ export default function RacetimeCard() {
         joinRacetimeRoom,
         racetimeReady,
         racetimeUnready,
-        monitor,
-        spectator,
         connectedPlayer,
     } = useRoomContext();
     const { loggedIn, user } = useUserContext();
@@ -55,7 +53,7 @@ export default function RacetimeCard() {
                         >
                             Not connected
                         </Typography>
-                        {loggedIn && monitor && (
+                        {loggedIn && connectedPlayer?.monitor && (
                             <Button onClick={createRacetimeRoom}>
                                 Create race room
                             </Button>
@@ -80,29 +78,35 @@ export default function RacetimeCard() {
                             <IconButton onClick={updateRacetimeRoom}>
                                 <Refresh />
                             </IconButton>
-                            {user?.racetimeConnected && !spectator && (
-                                <>
-                                    <Button onClick={joinRacetimeRoom}>
-                                        Join Race
-                                    </Button>
-                                    {connectedPlayer?.raceStatus.connected && (
-                                        <>
-                                            {connectedPlayer.raceStatus
-                                                .ready ? (
-                                                <Button
-                                                    onClick={racetimeUnready}
-                                                >
-                                                    Not ready
-                                                </Button>
-                                            ) : (
-                                                <Button onClick={racetimeReady}>
-                                                    Ready
-                                                </Button>
-                                            )}
-                                        </>
-                                    )}
-                                </>
-                            )}
+                            {user?.racetimeConnected &&
+                                !connectedPlayer?.spectator && (
+                                    <>
+                                        <Button onClick={joinRacetimeRoom}>
+                                            Join Race
+                                        </Button>
+                                        {connectedPlayer?.raceStatus
+                                            .connected && (
+                                            <>
+                                                {connectedPlayer.raceStatus
+                                                    .ready ? (
+                                                    <Button
+                                                        onClick={
+                                                            racetimeUnready
+                                                        }
+                                                    >
+                                                        Not ready
+                                                    </Button>
+                                                ) : (
+                                                    <Button
+                                                        onClick={racetimeReady}
+                                                    >
+                                                        Ready
+                                                    </Button>
+                                                )}
+                                            </>
+                                        )}
+                                    </>
+                                )}
                         </Box>
                     </Box>
                 )}
