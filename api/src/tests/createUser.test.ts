@@ -2,8 +2,23 @@ import request from 'supertest';
 import { app } from '../main';
 import http from 'http';
 import { mockFindToken } from './setup';
+import { prisma } from '../database/Database';
 
 let server: http.Server;
+
+const mockCreateUser = jest.spyOn(prisma.user, 'create').mockResolvedValue({
+    id: 'validuser',
+    username: 'testuser',
+    email: 'test@test.com',
+    password: new Uint8Array(),
+    salt: new Uint8Array(),
+    avatar: null,
+    staff: false,
+});
+
+const mockFindUnique = jest
+    .spyOn(prisma.user, 'findUnique')
+    .mockResolvedValue(null);
 
 beforeAll(() => {
     // Start the server on a random port
@@ -52,6 +67,15 @@ describe('Basic Test to create a new user', () => {
             })
             .expect(201);
         expect(mockFindToken).toHaveBeenCalled();
+        expect(mockCreateUser).toHaveBeenCalled();
+        expect(mockFindUnique).toHaveBeenCalledWith({
+            select: { id: true },
+            where: { username: 'Test' },
+        });
+        expect(mockFindUnique).toHaveBeenCalledWith({
+            select: { id: true },
+            where: { email: 'test@gmail.com' },
+        });
         expect(res.status).toBe(201);
     });
 });
