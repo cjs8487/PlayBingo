@@ -7,9 +7,10 @@
         "nickname",
         "color",
         "goalCount",
-        "racetimeStatus",
+        "raceStatus",
         "spectator",
-        "monitor"
+        "monitor",
+        "showInRoom"
     ],
     "properties": {
         "id": {
@@ -24,13 +25,13 @@
         "goalCount": {
             "type": "number"
         },
-        "racetimeStatus": {
+        "raceStatus": {
             "oneOf": [
                 {
-                    "$ref": "#/$defs/RacetimeStatusDisconnected"
+                    "$ref": "#/$defs/RaceStatusDisconnected"
                 },
                 {
-                    "$ref": "#/$defs/RacetimeStatusConnected"
+                    "$ref": "#/$defs/RaceStatusConnected"
                 }
             ]
         },
@@ -39,10 +40,13 @@
         },
         "monitor": {
             "type": "boolean"
+        },
+        "showInRoom": {
+            "type": "boolean"
         }
     },
     "$defs": {
-        "RacetimeStatusDisconnected": {
+        "RaceStatusDisconnected": {
             "required": [
                 "connected"
             ],
@@ -53,7 +57,7 @@
                 }
             }
         },
-        "RacetimeStatusConnected": {
+        "RaceStatusConnected": {
             "required": [
                 "connected",
                 "username",
@@ -66,11 +70,10 @@
                 },
                 "username": {
                     "type": "string",
-                    "description": "Racetime username connected to this player for the race"
+                    "description": "Username connected to this player for the race, if it is separate from PlayBingo"
                 },
-                "status": {
-                    "type": "string",
-                    "description": "Racetime race status"
+                "ready": {
+                    "type": "boolean"
                 },
                 "finishTime": {
                     "type": "string",

@@ -16,12 +16,11 @@ export default function PlayerInfo() {
         connectionStatus,
         nickname,
         disconnect,
-        monitor,
-        spectator,
         showGoalDetails,
         toggleGoalDetails,
         showCounters,
         toggleCounters,
+        connectedPlayer,
     } = useRoomContext();
 
     return (
@@ -36,9 +35,12 @@ export default function PlayerInfo() {
                     }}
                 >
                     <Typography variant="h6">
-                        {spectator ? 'Spectating' : 'Playing'} as {nickname}
+                        {connectedPlayer?.spectator ? 'Spectating' : 'Playing'}{' '}
+                        as {nickname}
                     </Typography>
-                    {monitor && <Sword sx={{ color: 'green' }} />}
+                    {connectedPlayer?.monitor && (
+                        <Sword sx={{ color: 'green' }} />
+                    )}
                     <Box sx={{ flexGrow: 1 }} />
                     {connectionStatus !== ConnectionStatus.CLOSED && (
                         <Button onClick={disconnect}>Disconnect</Button>

@@ -10,7 +10,7 @@
  */
 export interface Cell {
   goal: Goal;
-  colors: string[];
+  completedPlayers: string[];
 }
 /**
  * A single objective for a bingo game.

@@ -1,6 +1,8 @@
 import { BingoMode, RoomActionType } from '@prisma/client';
 import { prisma } from './Database';
 import { JsonObject } from '@prisma/client/runtime/library';
+import Player from '../core/Player';
+import Room from '../core/Room';
 
 export const createRoom = (
     slug: string,
@@ -48,19 +50,17 @@ export const addLeaveAction = (room: string, nickname: string, color: string) =>
 
 export const addMarkAction = (
     room: string,
-    nickname: string,
-    color: string,
+    player: string,
     row: number,
     col: number,
-) => addRoomAction(room, RoomActionType.MARK, { nickname, color, row, col });
+) => addRoomAction(room, RoomActionType.MARK, { player, row, col });
 
 export const addUnmarkAction = (
     room: string,
-    nickname: string,
-    color: string,
+    player: string,
     row: number,
     col: number,
-) => addRoomAction(room, RoomActionType.UNMARK, { nickname, color, row, col });
+) => addRoomAction(room, RoomActionType.UNMARK, { player, row, col });
 
 export const addChatAction = (
     room: string,
@@ -96,7 +96,7 @@ export const getAllRooms = () => {
 export const getRoomFromSlug = (slug: string) => {
     return prisma.room.findUnique({
         where: { slug },
-        include: { history: true, game: true },
+        include: { history: true, game: true, players: true },
     });
 };
 
@@ -108,5 +108,31 @@ export const disconnectRoomFromRacetime = (slug: string) => {
     return prisma.room.update({
         where: { slug },
         data: { racetimeRoom: null },
+    });
+};
+
+export const createUpdatePlayer = async (room: string, player: Player) => {
+    return prisma.player.upsert({
+        where: { key_roomId: { key: player.id, roomId: room } },
+        create: {
+            key: player.id,
+            nickname: player.nickname,
+            color: player.color,
+            room: { connect: { id: room } },
+            user: player.userId
+                ? { connect: { id: player.userId } }
+                : undefined,
+            spectator: player.spectator,
+            monitor: player.monitor,
+        },
+        update: {
+            nickname: player.nickname,
+            color: player.color,
+            user: player.userId
+                ? { connect: { id: player.userId } }
+                : { disconnect: true },
+            spectator: player.spectator,
+            monitor: player.monitor,
+        },
     });
 };

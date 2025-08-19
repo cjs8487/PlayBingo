@@ -4,15 +4,14 @@ import {
     Button,
     Card,
     CardContent,
-    CardHeader,
     IconButton,
     Link,
     Typography,
 } from '@mui/material';
 import NextLink from 'next/link';
 import { useRoomContext } from '../../../context/RoomContext';
-import Timer from './Timer';
 import { useUserContext } from '../../../context/UserContext';
+import Timer from './Timer';
 
 export default function RacetimeCard() {
     const {
@@ -22,6 +21,7 @@ export default function RacetimeCard() {
         joinRacetimeRoom,
         racetimeReady,
         racetimeUnready,
+        connectedPlayer,
     } = useRoomContext();
     const { loggedIn, user } = useUserContext();
 
@@ -45,12 +45,15 @@ export default function RacetimeCard() {
                 <Typography variant="h6">racetime.gg</Typography>
                 {!url && (
                     <>
-                        <Typography variant="body2" sx={{
-                            fontStyle: "italic"
-                        }}>
+                        <Typography
+                            variant="body2"
+                            sx={{
+                                fontStyle: 'italic',
+                            }}
+                        >
                             Not connected
                         </Typography>
-                        {loggedIn && (
+                        {loggedIn && connectedPlayer?.monitor && (
                             <Button onClick={createRacetimeRoom}>
                                 Create race room
                             </Button>
@@ -61,9 +64,10 @@ export default function RacetimeCard() {
                     <Box>
                         <Box
                             sx={{
-                                display: "flex",
-                                alignItems: "center"
-                            }}>
+                                display: 'flex',
+                                alignItems: 'center',
+                            }}
+                        >
                             <Link
                                 component={NextLink}
                                 href={url}
@@ -74,19 +78,35 @@ export default function RacetimeCard() {
                             <IconButton onClick={updateRacetimeRoom}>
                                 <Refresh />
                             </IconButton>
-                            {user?.racetimeConnected && (
-                                <>
-                                    <Button onClick={joinRacetimeRoom}>
-                                        Join Race
-                                    </Button>
-                                    <Button onClick={racetimeReady}>
-                                        Ready
-                                    </Button>
-                                    <Button onClick={racetimeUnready}>
-                                        Not ready
-                                    </Button>
-                                </>
-                            )}
+                            {user?.racetimeConnected &&
+                                !connectedPlayer?.spectator && (
+                                    <>
+                                        <Button onClick={joinRacetimeRoom}>
+                                            Join Race
+                                        </Button>
+                                        {connectedPlayer?.raceStatus
+                                            .connected && (
+                                            <>
+                                                {connectedPlayer.raceStatus
+                                                    .ready ? (
+                                                    <Button
+                                                        onClick={
+                                                            racetimeUnready
+                                                        }
+                                                    >
+                                                        Not ready
+                                                    </Button>
+                                                ) : (
+                                                    <Button
+                                                        onClick={racetimeReady}
+                                                    >
+                                                        Ready
+                                                    </Button>
+                                                )}
+                                            </>
+                                        )}
+                                    </>
+                                )}
                         </Box>
                     </Box>
                 )}

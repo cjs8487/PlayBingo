@@ -28,15 +28,27 @@ Establishing a WebSocket connection with the server is a multi-step process:
 4. **Send a `join` message** with your authorization token and nickname.
 
 Authorization tokens remain valid as long as the room is active and the token is
-not revoked. Tokens are not tied to individual connections, however the do
-uniquely identify the user within the room. It is recommended to avoid using the
-same token across multiple connections to prevent identity conflicts.
+not revoked. Tokens are not tied to individual connections, however they do
+uniquely identify the user within the room. As of the release of PlayBingo beta
+12, it is generally safe to use the same authorization token across multiple
+websocket connections, though it is still not recommended.
 
 Connections identified as inactive may be closed by the server. Spectator
 connections are particularly susceptible to this if left open for extended
 periods. If a connection is closed, you must repeat the authorization process.
-This will result in a new identity for the connection, which can affect features
-like racetime.gg integration. 
+As of beta 12, repeating the authentication process will not result in the
+creation of new player unless the room is unable to reconcile the authorization
+request with an existing player in the room.
+
+### Automatic Authentication
+Under special circumstances, services can bypass the normal authentication flow
+through a process known as automatic authentication. Automatic authentication is
+triggered automatically by making a request to GET request to
+`/api/rooms/{slug}`. If automatic authentication is allowed, an authorization
+token will be provided in the body of the response. Automatic authentication is
+available only when a valid login session present, which is only available to
+registered applications with a valid API key. The automatic authentication
+framework will be expanded in the future as the service continues to grow.
 
 ### Post-Connection
 Once the `join` message is sent, you should receive a `connected` message from
@@ -56,12 +68,23 @@ All server messages follow this base format:
 }
 ```
 
-Some server messages may also include a `players` array, indicating that player
-information has changed:
+Some information is sent across multiple server message types, and the presence
+of the field does not indicate that any special event or change has occurred.
+The `players` field contains up to date information about all players connected
+to the room and the `connectedPlayer` field contains up to date information on
+the player this message was sent to.
 
 ```json
 {
-  "players": []
+  "players": [],
+  "connectedPlayer": {
+    "id": "abc",
+    "nickname": "player",
+    "color": "blue",
+    "goalCount": 0,
+    "spectator": false,
+    "monitor": true
+  }
 }
 ```
 
@@ -83,7 +106,7 @@ information and the current room state.
             "difficulty": 1,
             "categories": ["cat1", "cat2"]
         },
-        "colors": ["blue", "#00ffaa"]
+        "completedPlayers": ["player1", "player3"]
       }
     ]
   },
@@ -132,7 +155,7 @@ message includes the updated cell data.
   "cell": {
     "goal": "Complete a line of goals",
     "description": "Complete a line of goals in any direction",
-    "colors": ["green", "#ff0000"]
+    "completedPlayers": ["green", "#ff0000"]
   }
 }
 ```
@@ -156,7 +179,7 @@ contains the new board state.
             "difficulty": 1,
             "categories": ["cat2"]
         },
-          "colors": ["red"]
+          "completedPlayers": ["player2"]
         },
         {
           "goal": "goal": {
@@ -166,7 +189,7 @@ contains the new board state.
             "difficulty": 1,
             "categories": ["cat1",]
         },
-          "colors": ["blue"]
+          "completedPlayers": ["player1"]
         }
       ]
     ]
@@ -358,7 +381,8 @@ code.
 ### New Card
 Regenerates the room's bingo card. If parameters are not provided, the previous
 values will be reused, except for the seed, which will be randomized if left
-blank.
+blank. This action is only available if the authorization token it is sent with
+has the monitor permission.
 
 **Sample Message:**
 

@@ -6,93 +6,55 @@ export const listToBoard = (list: GeneratorGoal[]): Cell[][] => {
     return chunk(
         list.map((g) => ({
             goal: g,
-            colors: [],
+            completedPlayers: [],
         })),
         5,
     );
 };
 
-export type CompletedLines = { [color: string]: number };
+export const computeLineMasks = (rows: number, cols: number): bigint[] => {
+    const masks: bigint[] = [];
 
-export const checkCompletedLines = (grid: Cell[][]): CompletedLines => {
-    const numRows = grid.length;
-    const numCols = grid[0]?.length || 0;
-    const completedLines: CompletedLines = {};
-
-    const allColors = new Set<string>();
-    grid.forEach((row) =>
-        row.forEach((cell) =>
-            cell.colors.forEach((color) => allColors.add(color)),
-        ),
-    );
-
-    const incrementLineCount = (lineColors: Set<string>) => {
-        for (const color of lineColors) {
-            completedLines[color] = (completedLines[color] || 0) + 1;
+    // rows
+    for (let r = 0; r < rows; r++) {
+        let mask = 0n;
+        for (let c = 0; c < cols; c++) {
+            const idx = r * cols + c;
+            mask |= 1n << BigInt(idx);
         }
-    };
-
-    // Check rows
-    for (const row of grid) {
-        const commonColors = new Set(row[0]?.colors || []);
-        for (const cell of row) {
-            for (const color of [...commonColors]) {
-                if (!cell.colors.includes(color)) {
-                    commonColors.delete(color);
-                }
-            }
-        }
-        incrementLineCount(commonColors);
+        masks.push(mask);
     }
 
-    // Check columns
-    for (let col = 0; col < numCols; col++) {
-        const commonColors = new Set(grid[0]?.[col]?.colors || []);
-        for (let row = 0; row < numRows; row++) {
-            const cell = grid[row][col];
-            for (const color of commonColors) {
-                if (!cell.colors.includes(color)) {
-                    commonColors.delete(color);
-                }
-            }
+    // cols
+    for (let c = 0; c < cols; c++) {
+        let mask = 0n;
+        for (let r = 0; r < rows; r++) {
+            const idx = r * cols + c;
+            mask |= 1n << BigInt(idx);
         }
-        incrementLineCount(commonColors);
+        masks.push(mask);
     }
 
-    // Check diagonals (top-left to bottom-right)
-    if (numRows === numCols) {
-        const mainDiagonalColors = new Set(grid[0]?.[0]?.colors || []);
-        for (let i = 0; i < numRows; i++) {
-            const cell = grid[i][i];
-            for (const color of [...mainDiagonalColors]) {
-                if (!cell.colors.includes(color)) {
-                    mainDiagonalColors.delete(color);
-                }
-            }
-        }
-        incrementLineCount(mainDiagonalColors);
-
-        // Check anti-diagonal (top-right to bottom-left)
-        const antiDiagonalColors = new Set(
-            grid[0]?.[numCols - 1]?.colors || [],
-        );
-        for (let i = 0; i < numRows; i++) {
-            const cell = grid[i][numCols - 1 - i];
-            for (const color of [...antiDiagonalColors]) {
-                if (!cell.colors.includes(color)) {
-                    antiDiagonalColors.delete(color);
-                }
-            }
-        }
-        incrementLineCount(antiDiagonalColors);
+    let mainDiag = 0n;
+    for (let i = 0; i < Math.min(rows, cols); i++) {
+        const idx = i * cols + i;
+        mainDiag |= 1n << BigInt(idx);
     }
+    masks.push(mainDiag);
 
-    // Ensure all colors are included in the result
-    allColors.forEach((color) => {
-        if (!(color in completedLines)) {
-            completedLines[color] = 0;
-        }
-    });
+    let antiDiag = 0n;
+    for (let i = 0; i < Math.min(rows, cols); i++) {
+        const idx = i * cols + (cols - 1 - i);
+        antiDiag |= 1n << BigInt(idx);
+    }
+    masks.push(antiDiag);
 
-    return completedLines;
+    return masks;
+};
+
+export const hasLineCompletion = (
+    bitset: bigint,
+    lineMask: bigint,
+): boolean => {
+    return (bitset & lineMask) === lineMask;
 };
