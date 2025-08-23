@@ -68,10 +68,9 @@ export default function GamePage({ gameData }: { gameData: Game }) {
     return (
         <Container
             sx={{
-                flexGrow: 1,
-                display: 'flex',
-                flexDirection: 'column',
                 pt: 2,
+                display: 'grid',
+                gridTemplateRows: '90px 50px 1fr',
             }}
         >
             <Box sx={{ display: 'flex' }}>
@@ -143,13 +142,7 @@ export default function GamePage({ gameData }: { gameData: Game }) {
                 <TabPanel value="Overview">
                     <Summary gameData={gameData} />
                 </TabPanel>
-                <TabPanel
-                    value="Goals"
-                    sx={{
-                        display: tab === 'Goals' ? 'flex' : 'none',
-                        flexGrow: 1,
-                    }}
-                >
+                <TabPanel value="Goals">
                     <GoalManagerContextProvider
                         slug={gameData.slug}
                         canModerate={canModerate}
