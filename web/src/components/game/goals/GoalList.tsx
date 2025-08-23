@@ -98,7 +98,8 @@ export default function GoalList() {
                                     <IconButton
                                         aria-label="delete"
                                         onClick={(e) => {
-                                            deleteGoal(props.context.id);
+                                            console.log(props);
+                                            deleteGoal(props.item.id);
                                             e.preventDefault();
                                             e.stopPropagation();
                                         }}
