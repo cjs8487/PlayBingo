@@ -1,4 +1,11 @@
-import { Box, Card, CardContent, CardHeader, Typography } from '@mui/material';
+import {
+    Box,
+    Card,
+    CardContent,
+    CardHeader,
+    Paper,
+    Typography,
+} from '@mui/material';
 import { Duration } from 'luxon';
 import { Sword } from 'mdi-material-ui';
 import { useContext } from 'react';
@@ -14,22 +21,22 @@ export default function PlayerList() {
     const players = allPlayers.filter((p) => !p.spectator);
     const spectators = allPlayers.filter((p) => p.spectator);
     return (
-        <Card
+        <Paper
             sx={{
-                height: '100%',
-                pt: 1,
+                display: 'flex',
+                maxHeight: '100%',
+                flexDirection: 'column',
+                rowGap: 1,
+                p: 2,
             }}
         >
-            <CardHeader
-                title={`Connected Players (${players.length})`}
-                sx={{ py: 0 }}
-                slotProps={{ title: { variant: 'h6' } }}
-            />
-            <CardContent
+            <Typography variant="h6">
+                Connected Players ({players.length})
+            </Typography>
+            <Box
                 sx={{
-                    height: 'calc(100% - 32px)',
-                    maxHeight: '100%',
                     flexGrow: 1,
+                    maxHeight: '100%',
                     overflowY: 'auto',
                     display: 'flex',
                     flexDirection: 'column',
@@ -107,7 +114,7 @@ export default function PlayerList() {
                         </Box>
                     </>
                 )}
-            </CardContent>
-        </Card>
+            </Box>
+        </Paper>
     );
 }
