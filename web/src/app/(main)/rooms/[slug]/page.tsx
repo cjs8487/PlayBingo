@@ -36,7 +36,7 @@ export default function Room() {
 
     return (
         <>
-            <Box sx={{ width: '100%' }}>
+            <Box sx={{ width: '100%', height: '100%' }}>
                 {roomData?.newGenerator && <NewGeneratorBanner />}
                 <AutoSizer>
                     {({ width, height }) => (
@@ -293,9 +293,6 @@ function RoomLg() {
                     flexGrow: 1,
                     maxWidth: '75%',
                     maxHeight: '100%',
-                    display: 'flex',
-                    alignContent: 'center',
-                    justifyContent: 'center',
                 }}
             >
                 <Board />
@@ -361,7 +358,7 @@ function RoomXl() {
                         display: 'flex',
                         flexDirection: 'column',
                         rowGap: 1,
-                        maxHeight: '100%',
+                        height: '100%',
                         overflowY: 'auto',
                     }}
                 >
