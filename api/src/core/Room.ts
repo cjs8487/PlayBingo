@@ -61,7 +61,6 @@ import {
 import { generateFullRandom, generateRandomTyped } from './generation/Random';
 import { generateSRLv5 } from './generation/SRLv5';
 import RacetimeHandler, { RaceData } from './integration/RacetimeHandler';
-import { randomUUID } from 'crypto';
 
 type RoomIdentity = {
     nickname: string;

@@ -316,46 +316,6 @@ function RoomLg() {
                 <RoomChat />
             </Box>
         </Box>
-        // <>
-        //     <Box
-        //         sx={{
-        //             flexGrow: 1,
-        //             maxWidth: '75%',
-        //             maxHeight: '100%',
-        //         }}
-        //     >
-        //         <Board />
-        //     </Box>
-        //     <Box
-        //         sx={{
-        //             display: 'flex',
-        //             flexDirection: 'column',
-        //             rowGap: 1,
-        //             maxHeight: '100%',
-        //             overflowY: 'auto',
-        //         }}
-        //     >
-        //         <Box>
-        //             <RoomInfo />
-        //         </Box>
-        //         <Box>
-        //             <PlayerInfo />
-        //         </Box>
-        //         <Box>
-        //             <RacetimeCard />
-        //         </Box>
-        //         <Box>
-        //             <PlayerList />
-        //         </Box>
-        //         <Box
-        //             sx={{
-        //                 maxHeight: '85%',
-        //             }}
-        //         >
-        //             <RoomChat />
-        //         </Box>
-        //     </Box>
-        // </>
     );
 }
 
