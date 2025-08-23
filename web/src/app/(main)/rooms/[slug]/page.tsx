@@ -287,46 +287,75 @@ function RoomMd() {
 
 function RoomLg() {
     return (
-        <>
-            <Box
-                sx={{
-                    flexGrow: 1,
-                    maxWidth: '75%',
-                    maxHeight: '100%',
-                }}
-            >
+        <Box
+            sx={{
+                width: '100%',
+                height: '100%',
+                display: 'grid',
+                gridTemplateRows: 'repeat(3, auto) 1fr auto 1fr auto',
+                gridTemplateColumns: '1fr minmax(auto, 500px)',
+                gap: 1,
+            }}
+        >
+            <Box sx={{ gridRow: '1 / -1' }}>
                 <Board />
             </Box>
-            <Box
-                sx={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    rowGap: 1,
-                    maxHeight: '100%',
-                    overflowY: 'auto',
-                }}
-            >
-                <Box>
-                    <RoomInfo />
-                </Box>
-                <Box>
-                    <PlayerInfo />
-                </Box>
-                <Box>
-                    <RacetimeCard />
-                </Box>
-                <Box>
-                    <PlayerList />
-                </Box>
-                <Box
-                    sx={{
-                        maxHeight: '85%',
-                    }}
-                >
-                    <RoomChat />
-                </Box>
+            <Box>
+                <RoomInfo />
             </Box>
-        </>
+            <Box>
+                <PlayerInfo />
+            </Box>
+            <Box>
+                <RacetimeCard />
+            </Box>
+            <Box sx={{ gridRow: '4 / span 2' }}>
+                <PlayerList />
+            </Box>
+            <Box sx={{ gridRow: '6 / -1' }}>
+                <RoomChat />
+            </Box>
+        </Box>
+        // <>
+        //     <Box
+        //         sx={{
+        //             flexGrow: 1,
+        //             maxWidth: '75%',
+        //             maxHeight: '100%',
+        //         }}
+        //     >
+        //         <Board />
+        //     </Box>
+        //     <Box
+        //         sx={{
+        //             display: 'flex',
+        //             flexDirection: 'column',
+        //             rowGap: 1,
+        //             maxHeight: '100%',
+        //             overflowY: 'auto',
+        //         }}
+        //     >
+        //         <Box>
+        //             <RoomInfo />
+        //         </Box>
+        //         <Box>
+        //             <PlayerInfo />
+        //         </Box>
+        //         <Box>
+        //             <RacetimeCard />
+        //         </Box>
+        //         <Box>
+        //             <PlayerList />
+        //         </Box>
+        //         <Box
+        //             sx={{
+        //                 maxHeight: '85%',
+        //             }}
+        //         >
+        //             <RoomChat />
+        //         </Box>
+        //     </Box>
+        // </>
     );
 }
 
