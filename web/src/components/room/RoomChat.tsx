@@ -19,7 +19,7 @@ export default function RoomChat() {
         <Paper
             sx={{
                 display: 'flex',
-                maxHeight: '100%',
+                height: '100%',
                 flexDirection: 'column',
                 rowGap: 1,
                 p: 1,
@@ -60,9 +60,10 @@ export default function RoomChat() {
             </Box>
             <Box
                 sx={{
-                    display: "flex",
-                    columnGap: 1
-                }}>
+                    display: 'flex',
+                    columnGap: 1,
+                }}
+            >
                 <TextField
                     size="small"
                     variant="outlined"
