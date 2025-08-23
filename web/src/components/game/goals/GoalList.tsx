@@ -86,7 +86,6 @@ export default function GoalList() {
                 Item: ({ children, ...props }) => {
                     return (
                         <ListItemHiddenSecondary
-                            components={{ Root: 'div' }}
                             disableGutters
                             disablePadding
                             {...props}
@@ -94,6 +93,21 @@ export default function GoalList() {
                                 margin: 0,
                                 position: 'relative',
                             }}
+                            secondaryAction={
+                                canModerate ? (
+                                    <IconButton
+                                        aria-label="delete"
+                                        onClick={(e) => {
+                                            console.log(props);
+                                            deleteGoal(props.item.id);
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                        }}
+                                    >
+                                        <DeleteIcon />
+                                    </IconButton>
+                                ) : null
+                            }
                         >
                             {children}
                         </ListItemHiddenSecondary>
@@ -115,7 +129,7 @@ export default function GoalList() {
                     ),
             }}
             data={shownGoals}
-            style={{ flexGrow: 1 }}
+            style={{ height: '100%', width: '100%' }}
             itemContent={(index, goal) => (
                 <>
                     <ListItemButton
@@ -132,20 +146,6 @@ export default function GoalList() {
                             }
                         />
                     </ListItemButton>
-                    {canModerate && (
-                        <ListItemSecondaryAction>
-                            <IconButton
-                                aria-label="delete"
-                                onClick={(e) => {
-                                    deleteGoal(goal.id);
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                }}
-                            >
-                                <DeleteIcon />
-                            </IconButton>
-                        </ListItemSecondaryAction>
-                    )}
                 </>
             )}
         />

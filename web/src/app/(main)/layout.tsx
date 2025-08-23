@@ -17,9 +17,12 @@ export default function CoreLayout({
     return (
         <Box
             sx={{
-                display: 'flex',
-                flexDirection: 'column',
-                minHeight: '100vh',
+                display: 'grid',
+                gridTemplateColumns: '1fr',
+                gridTemplateRows: 'auto 1fr auto',
+                height: '100%',
+                maxHeight: '100%',
+                overflow: 'auto',
             }}
         >
             <Header />
@@ -35,15 +38,7 @@ export default function CoreLayout({
                 This website uses cookies to provide some parts of its
                 functionality.
             </CookieConsent>
-            <Box
-                sx={{
-                    flexGrow: 1,
-                    height: '100%',
-                    display: 'flex',
-                }}
-            >
-                {children}
-            </Box>
+            {children}
             <Footer />
             <ToastContainer />
             {modal}

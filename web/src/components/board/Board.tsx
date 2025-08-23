@@ -1,18 +1,35 @@
-import { useContext } from 'react';
+import { useContext, useLayoutEffect, useRef, useState } from 'react';
 import { RoomContext } from '../../context/RoomContext';
 import Cell from './Cell';
 import { Box } from '@mui/material';
+import { useWindowSize } from 'react-use';
 
 export default function Board() {
     const { board, revealCard } = useContext(RoomContext);
 
+    const ref = useRef<HTMLDivElement>(null);
+
+    const [dimension, setDimension] = useState(0);
+
+    useWindowSize();
+    useLayoutEffect(() => {
+        setDimension(
+            Math.min(
+                ref.current?.clientWidth ?? 0,
+                ref.current?.clientHeight ?? 0,
+            ),
+        );
+    });
+
     if (board.hidden) {
         return (
             <Box
+                ref={ref}
                 sx={{
-                    aspectRatio: '1 / 1',
-                    maxHeight: '100%',
+                    width: `${dimension}px`,
                     maxWidth: '100%',
+                    height: `${dimension}px`,
+                    maxHeight: '100%',
                     border: 1,
                     borderColor: 'divider',
                     display: 'flex',
@@ -32,35 +49,42 @@ export default function Board() {
 
     return (
         <Box
+            ref={ref}
             sx={{
-                aspectRatio: '1 / 1',
-                maxHeight: '100%',
-                maxWidth: '100%',
-                border: 1,
-                borderColor: 'divider',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: '100%',
+                height: '100%',
             }}
         >
-            {board.board.map((row, rowIndex) => (
-                <Box
-                    key={rowIndex}
-                    sx={{
-                        display: 'flex',
-                        height: '20%',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        textAlign: 'center',
-                    }}
-                >
-                    {row.map((goal, colIndex) => (
+            <Box
+                sx={{
+                    width: `${dimension}px`,
+                    maxWidth: '100%',
+                    height: `${dimension}px`,
+                    maxHeight: '100%',
+                    border: 1,
+                    borderColor: 'divider',
+                    display: 'grid',
+                    gridTemplateRows: 'repeat(5, 1fr)',
+                    gridTemplateColumns: 'repeat(5, 1fr)',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    textAlign: 'center',
+                }}
+            >
+                {board.board.map((row, rowIndex) =>
+                    row.map((goal, colIndex) => (
                         <Cell
                             key={goal.goal.id}
                             row={rowIndex}
                             col={colIndex}
                             cell={goal}
                         />
-                    ))}
-                </Box>
-            ))}
+                    )),
+                )}
+            </Box>
         </Box>
     );
 }

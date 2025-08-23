@@ -1,16 +1,16 @@
+import { DeleteConfirmationDialogContent } from '@/components/input/DeleteConfirmationDialogContent';
+import { SettingsDialogContent } from '@/components/input/SettingsDialogContent';
+import { notifyMessage } from '@/lib/Utils';
 import Settings from '@mui/icons-material/Settings';
 import UploadIcon from '@mui/icons-material/Upload';
 import { Box, Button, IconButton, Typography } from '@mui/material';
-import { useRef, useState, ReactNode } from 'react';
+import { ReactNode, useRef, useState } from 'react';
 import { useGoalManagerContext } from '../../../context/GoalManagerContext';
 import Dialog, { DialogRef } from '../../Dialog';
 import GoalEditor from './GoalEditor';
+import GoalList from './GoalList';
 import GoalUpload from './GoalUpload';
 import Search from './Search';
-import GoalList from './GoalList';
-import { SettingsDialogContent } from '@/components/input/SettingsDialogContent';
-import { DeleteConfirmationDialogContent } from '@/components/input/DeleteConfirmationDialogContent';
-import { notifyMessage } from '@/lib/Utils';
 
 export default function GoalManagement() {
     const {
@@ -20,9 +20,7 @@ export default function GoalManagement() {
         goals,
         shownGoals,
         catList,
-        settings,
         mutateGoals,
-        setSettings,
         newGoal,
         setNewGoal,
     } = useGoalManagerContext();
@@ -71,11 +69,12 @@ export default function GoalManagement() {
         <>
             <Box
                 sx={{
-                    display: 'flex',
-                    flexGrow: 1,
-                    flexDirection: 'column',
+                    display: 'grid',
+                    gridTemplateRows: '30px 80px 1fr',
+                    gridTemplateColumns: '1fr 2fr',
                     rowGap: 3,
-                    maxWidth: '100%',
+                    columnGap: 5,
+                    height: '100%',
                 }}
             >
                 <Box
@@ -84,6 +83,7 @@ export default function GoalManagement() {
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
+                        gridColumn: '1 / span 2',
                     }}
                 >
                     <Typography variant="h5" align="center">
@@ -110,7 +110,7 @@ export default function GoalManagement() {
                         </IconButton>
                     </Box>
                 </Box>
-                <Box>
+                <Box sx={{ gridColumn: '1 / span 2' }}>
                     <Box sx={{ display: 'flex', columnGap: 4, width: '100%' }}>
                         <Search />
                     </Box>
@@ -118,32 +118,30 @@ export default function GoalManagement() {
                         {goals.length} total goals, {shownGoals.length} shown
                     </Typography>
                 </Box>
-                <Box sx={{ display: 'flex', flexGrow: 1, columnGap: 5 }}>
-                    <Box sx={{ display: 'flex', flexGrow: 1, maxWidth: '33%' }}>
-                        <GoalList />
-                    </Box>
-                    <Box sx={{ flexGrow: 1, maxWidth: '67%' }}>
-                        {!newGoal && selectedGoal && (
-                            <GoalEditor
-                                slug={slug}
-                                goal={selectedGoal}
-                                mutateGoals={mutateGoals}
-                                categories={catList}
-                                canModerate={canModerate}
-                            />
-                        )}
-                        {newGoal && (
-                            <GoalEditor
-                                slug={slug}
-                                goal={{ id: '', goal: '', description: '' }}
-                                isNew
-                                cancelNew={() => setNewGoal(false)}
-                                mutateGoals={mutateGoals}
-                                categories={catList}
-                                canModerate={canModerate}
-                            />
-                        )}
-                    </Box>
+                <Box sx={{ height: '100%' }}>
+                    <GoalList />
+                </Box>
+                <Box sx={{ flexGrow: 1, height: '100%', overflowY: 'auto' }}>
+                    {!newGoal && selectedGoal && (
+                        <GoalEditor
+                            slug={slug}
+                            goal={selectedGoal}
+                            mutateGoals={mutateGoals}
+                            categories={catList}
+                            canModerate={canModerate}
+                        />
+                    )}
+                    {newGoal && (
+                        <GoalEditor
+                            slug={slug}
+                            goal={{ id: '', goal: '', description: '' }}
+                            isNew
+                            cancelNew={() => setNewGoal(false)}
+                            mutateGoals={mutateGoals}
+                            categories={catList}
+                            canModerate={canModerate}
+                        />
+                    )}
                     <GoalUpload
                         isOpen={goalUploadOpen}
                         close={() => setGoalUploadOpen(false)}

@@ -36,7 +36,7 @@ export default function Room() {
 
     return (
         <>
-            <Box sx={{ width: '100%' }}>
+            <Box sx={{ width: '100%', height: '100%' }}>
                 {roomData?.newGenerator && <NewGeneratorBanner />}
                 <AutoSizer>
                     {({ width, height }) => (
@@ -287,113 +287,74 @@ function RoomMd() {
 
 function RoomLg() {
     return (
-        <>
-            <Box
-                sx={{
-                    flexGrow: 1,
-                    maxWidth: '75%',
-                    maxHeight: '100%',
-                    display: 'flex',
-                    alignContent: 'center',
-                    justifyContent: 'center',
-                }}
-            >
+        <Box
+            sx={{
+                width: '100%',
+                height: '100%',
+                display: 'grid',
+                gridTemplateRows: 'repeat(3, auto) 1fr auto 1fr auto',
+                gridTemplateColumns: '1fr minmax(auto, 500px)',
+                gap: 1,
+            }}
+        >
+            <Box sx={{ gridRow: '1 / -1' }}>
                 <Board />
             </Box>
-            <Box
-                sx={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    rowGap: 1,
-                    maxHeight: '100%',
-                    overflowY: 'auto',
-                }}
-            >
-                <Box>
-                    <RoomInfo />
-                </Box>
-                <Box>
-                    <PlayerInfo />
-                </Box>
-                <Box>
-                    <RacetimeCard />
-                </Box>
-                <Box>
-                    <PlayerList />
-                </Box>
-                <Box
-                    sx={{
-                        maxHeight: '85%',
-                    }}
-                >
-                    <RoomChat />
-                </Box>
+            <Box>
+                <RoomInfo />
             </Box>
-        </>
+            <Box>
+                <PlayerInfo />
+            </Box>
+            <Box>
+                <RacetimeCard />
+            </Box>
+            <Box sx={{ gridRow: '4 / span 2' }}>
+                <PlayerList />
+            </Box>
+            <Box sx={{ gridRow: '6 / -1' }}>
+                <RoomChat />
+            </Box>
+        </Box>
     );
 }
 
 function RoomXl() {
     return (
-        <>
+        <Box
+            sx={{
+                width: '100%',
+                height: '100%',
+                display: 'grid',
+                gridTemplateRows: 'repeat(4, auto) 1fr',
+                gridTemplateColumns: '1fr auto minmax(auto, 400px)',
+                gap: 2,
+            }}
+        >
             <Box
                 sx={{
-                    flexGrow: 1,
-                    maxWidth: '50%',
-                    maxHeight: '100%',
-                    display: 'flex',
-                    alignContent: 'center',
-                    justifyContent: 'center',
+                    width: '100%',
+                    height: '100%',
+                    gridRow: '1 / -1',
                 }}
             >
                 <Board />
             </Box>
-            <Box
-                sx={{
-                    display: 'flex',
-                    columnGap: 1,
-                    maxWidth: '50%',
-                    maxHeight: '100%',
-                }}
-            >
-                <Box
-                    sx={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        rowGap: 1,
-                        maxHeight: '100%',
-                        overflowY: 'auto',
-                    }}
-                >
-                    <Box
-                        sx={{
-                            display: 'flex',
-                            columnGap: 1,
-                        }}
-                    >
-                        <Box sx={{ flexGrow: 1 }}>
-                            <RoomInfo />
-                        </Box>
-                        <Box>
-                            <RacetimeCard />
-                        </Box>
-                    </Box>
-                    <Box>
-                        <PlayerInfo />
-                    </Box>
-                    <Box>
-                        <PlayerList />
-                    </Box>
-                </Box>
-                <Box
-                    sx={{
-                        flexGrow: 1,
-                        maxWidth: '40%',
-                    }}
-                >
-                    <RoomChat />
-                </Box>
+            <Box>
+                <RoomInfo />
             </Box>
-        </>
+            <Box>
+                <PlayerInfo />
+            </Box>
+            <Box>
+                <RacetimeCard />
+            </Box>
+            <Box sx={{ gridRow: '4 / -1', gridColumn: 2 }}>
+                <PlayerList />
+            </Box>
+            <Box sx={{ gridRow: '1 / -1', gridColumn: 3 }}>
+                <RoomChat />
+            </Box>
+        </Box>
     );
 }
