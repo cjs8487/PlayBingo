@@ -66,10 +66,12 @@ export default function Games(): React.ReactNode {
         return 'Unable to load game list.';
     }
 
-    const gamesBase: { [k: GamesKeys]: Game[] } = {};
-    gamesBase[modKey] = [];
-    gamesBase[favoritesKey] = [];
-    gamesBase[allKey] = [];
+    const gamesBase: { [k in GamesKeys]: Game[] } = {
+        [allKey]: [],
+        [favoritesKey]: [],
+        [modKey]: [],
+    };
+    
     const filteredList = searchString
         ? gameList.filter((game) =>
               searchString
@@ -80,8 +82,8 @@ export default function Games(): React.ReactNode {
                   : true,
           )
         : gameList;
-    const games = filteredList.reduce<{ [k: GamesKeys]: Game[] }>(
-        (curr, game) => {
+    const games = filteredList.reduce<{ [k in GamesKeys]: Game[] }>(
+        (curr: { [k in GamesKeys]: Game[] }, game) => {
             if (loggedIn && user && game.isMod) {
                 curr[modKey].push(game);
             }
@@ -95,7 +97,7 @@ export default function Games(): React.ReactNode {
         gamesBase,
     );
 
-    Object.values(games).forEach((list) =>
+    Object.values(games).forEach((list: Game[]) =>
         list.sort((a, b) => {
             if (
                 (a.favorited || localFavorites?.includes(a.slug)) ===
@@ -187,8 +189,10 @@ export default function Games(): React.ReactNode {
                 )}
             </Box>
             {Object.keys(games)
-                .filter((k) => games[k].length > 0)
-                .map((key) => {
+                .filter((k) => games[k as GamesKeys].length > 0)
+                .map((k) => {
+                    // need to specifically type key as GamesKeys here so ts can properly reduce the string
+                    const key: GamesKeys = k as GamesKeys;
                     const filteredGames = games[key];
 
                     if (filteredGames.length === 0) return null;
@@ -220,7 +224,7 @@ export default function Games(): React.ReactNode {
                                     }}
                                 >
                                     {filteredGames.map((game, index) => (
-                                        <Grid item xs={1} key={game.slug}>
+                                        <Grid key={game.slug}>
                                             <GameCard
                                                 key={game.slug}
                                                 game={game}
