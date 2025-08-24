@@ -63,8 +63,6 @@ export default function GameCard({
         <Card
             key={slug}
             sx={{
-                display: 'flex',
-                flexDirection: 'column',
                 height: '100%',
                 ...(hasRendered
                     ? {}
@@ -72,7 +70,7 @@ export default function GameCard({
                           animation: '1.5s 1 slidein',
                           animationDelay: `${1 + index * 0.1}s`,
                           animationFillMode: 'backwards',
-                      })
+                      }),
             }}
         >
             <CardHiddenActions align="right">
@@ -83,7 +81,12 @@ export default function GameCard({
             <CardActionArea
                 href={`/games/${slug}`}
                 LinkComponent={Link}
-                sx={{ display: 'flex', flexDirection: 'column', flexGrow: 1 }}
+                sx={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    flexGrow: 1,
+                    height: '100%',
+                }}
             >
                 {coverImage && (
                     <CardMedia
@@ -125,13 +128,8 @@ export default function GameCard({
                         </Typography>
                     </Box>
                 )}
-                <CardContent>
-                    <Typography
-                        variant="h6"
-                        sx={{
-                            textAlign: 'center',
-                        }}
-                    >
+                <CardContent sx={{ flexGrow: 1 }}>
+                    <Typography variant="h6" sx={{ textAlign: 'center' }}>
                         {name}
                     </Typography>
                 </CardContent>
