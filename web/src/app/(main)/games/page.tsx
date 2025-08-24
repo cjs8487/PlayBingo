@@ -4,7 +4,6 @@ import {
     Box,
     Button,
     Typography,
-    Collapse,
     IconButton,
     TextField,
     InputAdornment,
