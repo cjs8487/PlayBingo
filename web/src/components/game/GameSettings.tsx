@@ -208,7 +208,7 @@ function SettingsForm({ gameData }: FormProps) {
             }) => {
                 const linksMd = links?.map(
                     (link) =>
-                        `[${link.text}](${link.url}) ${link.description ? ` - ${link.description}` : ''}`,
+                        `[${link.text}](${link.url})${link.description ? ` - ${link.description}` : ''}`,
                 );
                 let shouldDeleteCover = gameData.coverImage && !coverImage;
                 const res = await fetch(`/api/games/${gameData.slug}`, {
