@@ -1,6 +1,5 @@
 'use client';
 import { Game } from '@playbingo/types';
-import Grid from '@mui/material/Grid';
 import {
     Box,
     Button,
@@ -8,14 +7,19 @@ import {
     Collapse,
     IconButton,
     TextField,
+    InputAdornment,
+    Grid,
+    Accordion,
+    AccordionSummary,
+    AccordionDetails,
 } from '@mui/material';
-import { ExpandMore, ExpandLess } from '@mui/icons-material';
+import { ExpandMore, Clear } from '@mui/icons-material';
+import { inputBaseClasses } from '@mui/material/InputBase';
 import Link from 'next/link';
 import React, { useContext, useState } from 'react';
 import { useLocalStorage } from 'react-use';
 import { UserContext } from '../../../context/UserContext';
 import { useApi } from '../../../lib/Hooks';
-import { isUserModerator } from '../../../lib/Utils';
 import GameCard from '../rooms/GameCard';
 
 const modKey = 'Moderated Games';
@@ -45,12 +49,14 @@ export default function Games(): React.ReactNode {
         [modKey]: false,
     });
 
-    const toggleSection = (key: GamesKeys) => {
-        setCollapsedSections((prev: Record<GamesKeys, boolean>) => ({
-            ...prev,
-            [key]: !prev?.[key],
-        }));
-    };
+    const handleAccordionChange =
+        (key: GamesKeys) =>
+        (event: React.SyntheticEvent, isExpanded: boolean) => {
+            if (!collapsedSections) return;
+            const newState = collapsedSections;
+            newState[key] = !collapsedSections[key];
+            setCollapsedSections(newState);
+        };
 
     if (!gameList || isLoading) {
         return null;
@@ -64,17 +70,31 @@ export default function Games(): React.ReactNode {
     gamesBase[modKey] = [];
     gamesBase[favoritesKey] = [];
     gamesBase[allKey] = [];
-    const games = gameList.reduce<{ [k: GamesKeys]: Game[] }>((curr, game) => {
-        if (loggedIn && user && game.isMod) {
-            curr[modKey].push(game);
-        }
-        if (game.favorited || localFavorites?.includes(game.slug)) {
-            curr[favoritesKey].push(game);
-        }
-        curr[allKey].push(game);
+    const filteredList = searchString
+        ? gameList.filter((game) =>
+              searchString
+                  ? game.name
+                        .toLowerCase()
+                        .includes(searchString.toLowerCase()) ||
+                    game.slug.toLowerCase().includes(searchString.toLowerCase())
+                  : true,
+          )
+        : gameList;
+    const games = filteredList.reduce<{ [k: GamesKeys]: Game[] }>(
+        (curr, game) => {
+            if (loggedIn && user && game.isMod) {
+                curr[modKey].push(game);
+            }
+            if (game.favorited || localFavorites?.includes(game.slug)) {
+                curr[favoritesKey].push(game);
+            }
+            curr[allKey].push(game);
 
-        return curr;
-    }, gamesBase);
+            return curr;
+        },
+        gamesBase,
+    );
+
     Object.values(games).forEach((list) =>
         list.sort((a, b) => {
             if (
@@ -107,8 +127,15 @@ export default function Games(): React.ReactNode {
                 }}
             >
                 <Typography>{gameList.length} games loaded</Typography>
-                
-                <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1, maxWidth: '50%' }}>
+
+                <Box
+                    sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        flexGrow: 1,
+                        maxWidth: '50%',
+                    }}
+                >
                     <TextField
                         label="Search games"
                         variant="outlined"
@@ -116,20 +143,43 @@ export default function Games(): React.ReactNode {
                         fullWidth
                         value={searchString}
                         onChange={(e) => updateSearchString(e.target.value)}
+                        slotProps={{
+                            input: {
+                                endAdornment: (
+                                    <InputAdornment
+                                        position="end"
+                                        sx={{
+                                            alignSelf: 'flex-end',
+                                            opacity: 0,
+                                            [`[data-shrink=true] ~ .${inputBaseClasses.root} > &`]:
+                                                {
+                                                    opacity: 1,
+                                                },
+                                            alignItems: 'center',
+                                        }}
+                                    >
+                                        <IconButton
+                                            onClick={() =>
+                                                updateSearchString('')
+                                            }
+                                            size="small"
+                                            sx={{ ml: 1, whiteSpace: 'nowrap' }}
+                                        >
+                                            <Clear />
+                                        </IconButton>
+                                    </InputAdornment>
+                                ),
+                            },
+                        }}
                     />
-                    {searchString && (
-                        <Button
-                            onClick={() => updateSearchString('')}
-                            size="small"
-                            sx={{ ml: 1, whiteSpace: 'nowrap' }}
-                        >
-                            Clear
-                        </Button>
-                    )}
                 </Box>
-                
+
+                {searchString && (
+                    <Typography>Found {filteredList.length} games</Typography>
+                )}
+
                 <Box sx={{ flexGrow: 1 }} />
-                
+
                 {loggedIn && (
                     <Button href="/games/new" LinkComponent={Link}>
                         Create a new game
@@ -139,45 +189,23 @@ export default function Games(): React.ReactNode {
             {Object.keys(games)
                 .filter((k) => games[k].length > 0)
                 .map((key) => {
-                    const filteredGames = games[key].filter((game) =>
-                        searchString
-                            ? game.name
-                                  .toLowerCase()
-                                  .includes(searchString.toLowerCase()) ||
-                              game.slug
-                                  .toLowerCase()
-                                  .includes(searchString.toLowerCase())
-                            : true,
-                    );
+                    const filteredGames = games[key];
 
                     if (filteredGames.length === 0) return null;
 
                     // this is always defined because we initialize the value, alltho even if it wasn't we'd still get a falsy value
                     const isCollapsed = collapsedSections![key];
                     return (
-                        <Box key={key} sx={{ mb: 4 }}>
-                            <Box
-                                sx={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    cursor: 'pointer',
-                                    mb: 1,
-                                    gap: 1,
-                                }}
-                                onClick={() => toggleSection(key as GamesKeys)}
-                            >
-                                <IconButton size="small" sx={{ p: 0.5 }}>
-                                    {isCollapsed ? <ExpandMore /> : <ExpandLess />}
-                                </IconButton>
+                        <Accordion
+                            expanded={!isCollapsed}
+                            onChange={handleAccordionChange(key)}
+                        >
+                            <AccordionSummary expandIcon={<ExpandMore />}>
                                 <Typography variant="h5" sx={{ lineHeight: 1 }}>
                                     {key}
                                 </Typography>
-                            </Box>
-                            <Collapse
-                                in={!isCollapsed}
-                                timeout="auto"
-                                unmountOnExit
-                            >
+                            </AccordionSummary>
+                            <AccordionDetails>
                                 <Box
                                     sx={{
                                         display: 'grid',
@@ -205,8 +233,8 @@ export default function Games(): React.ReactNode {
                                         </Grid>
                                     ))}
                                 </Box>
-                            </Collapse>
-                        </Box>
+                            </AccordionDetails>
+                        </Accordion>
                     );
                 })}
         </Box>
