@@ -202,6 +202,9 @@ export default function Games(): React.ReactNode {
                         <Accordion
                             expanded={!isCollapsed}
                             onChange={handleAccordionChange(key)}
+                            sx={{
+                                background: 'transparent'
+                            }}
                         >
                             <AccordionSummary expandIcon={<ExpandMore />}>
                                 <Typography variant="h5" sx={{ lineHeight: 1 }}>
