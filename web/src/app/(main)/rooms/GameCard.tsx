@@ -10,7 +10,7 @@ import {
     Typography,
 } from '@mui/material';
 import Link from 'next/link';
-import { Dispatch, SetStateAction, useCallback, useState } from 'react';
+import React, { Dispatch, SetStateAction, useCallback, useState } from 'react';
 import { useTimeoutFn } from 'react-use';
 import { mutate } from 'swr';
 import CardHiddenActions from '../../../components/CardHiddenActions';
@@ -29,7 +29,7 @@ export default function GameCard({
     index,
     localFavorites,
     setLocalFavorites,
-}: IGameCardProps) {
+}: IGameCardProps): React.ReactNode {
     const { loggedIn } = useUserContext();
 
     const [hasRendered, setHasRendered] = useState(false);
@@ -37,7 +37,7 @@ export default function GameCard({
     const toggleFavorite = useCallback(async () => {
         if (!loggedIn) {
             if (localFavorites?.includes(slug)) {
-                const vals = localFavorites.filter((s) => s !== slug);
+                const vals = localFavorites!.filter((s) => s !== slug);
                 setLocalFavorites(vals);
             } else {
                 const vals = localFavorites?.slice();
@@ -63,6 +63,7 @@ export default function GameCard({
         <Card
             key={slug}
             sx={{
+                position: 'relative',
                 height: '100%',
                 ...(hasRendered
                     ? {}
