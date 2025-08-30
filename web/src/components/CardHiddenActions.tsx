@@ -1,4 +1,4 @@
-import { Box, SxProps } from '@mui/material';
+import { Box } from '@mui/material';
 import { PropsWithChildren } from 'react';
 
 interface CardHiddenActionsProps extends PropsWithChildren {
@@ -13,9 +13,14 @@ export default function CardHiddenActions({
         <Box
             className="hidden-controls"
             sx={{
-                width: 'inherit',
-                paddingRight: '8px',
-                justifyContent: align ?? 'left',
+                position: 'absolute',
+                top: 8,
+                left: align === 'left' ? 8 : 'auto',
+                right: align === 'right' ? 8 : 'auto',
+                display: 'flex',
+                justifyContent:
+                    align === 'center' ? 'center' : 'flex-start',
+                width: align === 'center' ? '100%' : 'auto'
             }}
         >
             <Box sx={{
