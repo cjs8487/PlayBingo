@@ -1,18 +1,18 @@
 'use client';
-import { ErrorMessage, FastField, Field, Form, Formik } from 'formik';
+import { Box, Button, Link, Paper, Typography } from '@mui/material';
+import { Form, Formik } from 'formik';
 import NextLink from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useContext, useEffect } from 'react';
 import * as yup from 'yup';
-import { UserContext } from '../../../context/UserContext';
-import { alertError } from '../../../lib/Utils';
-import FormikTextField from '../../../components/input/FormikTextField';
-import { Box, Button, Link, Paper, Typography } from '@mui/material';
 import {
     emailAvailable,
     register,
     usernameAvailable,
 } from '../../../actions/Registration';
+import FormikTextField from '../../../components/input/FormikTextField';
+import { UserContext } from '../../../context/UserContext';
+import { alertError } from '../../../lib/Utils';
 
 const validationSchema = yup.object({
     email: yup
@@ -42,7 +42,7 @@ const validationSchema = yup.object({
         .string()
         .required('Password is required.')
         .matches(
-            /^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[*.!@$%^&(){}\[\]:;<>,.?\/~_+-=|]).{8,}$/,
+            /^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[*.!@$%^&(){}[\]:;<>,.?/~_+\-=|]).{8,}$/,
             'Password does not meet strength requirements.',
         ),
     passwordConfirmation: yup
@@ -191,7 +191,7 @@ export default function Register() {
                                             variant="caption"
                                             color={
                                                 password.match(
-                                                    /[*.!@$%^&(){}\[\]:;<>,.?\/~_\+\-=|\\]+/,
+                                                    /[*.!@$%^&(){}[\]:;<>,.?/~_+\-=|\\]+/,
                                                 )
                                                     ? 'success.main'
                                                     : ''

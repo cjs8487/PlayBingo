@@ -45,12 +45,11 @@ export default async function WebsocketDocs() {
         >
             <ReactMarkdown
                 components={{
-                    code({ node, className, children, ...props }) {
+                    code({ className, children, ...props }) {
                         const match = /language-(\w+)/.exec(className || '');
                         return match ? (
                             <SyntaxHighlighter
-                                //@ts-ignore for some reason ts doesn't like
-                                //this line
+                                //@ts-expect-error for some reason ts doesn't like this line
                                 style={a11yDark}
                                 language={match[1]}
                                 PreTag="div"

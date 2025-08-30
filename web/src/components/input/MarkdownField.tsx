@@ -1,16 +1,12 @@
-import { useState } from 'react';
-import DOMPurify from 'dompurify';
-import { marked } from 'marked';
-import { TextField, Box, Typography, Collapse, Button } from '@mui/material';
-import { useField, useFormikContext } from 'formik';
 import MDEditor from '@uiw/react-md-editor';
+import { useField } from 'formik';
 
 interface Props {
     name: string;
 }
 
 export function MarkdownField({ name }: Props) {
-    const [field, meta, { setValue }] = useField<string>({ name });
+    const [field, , { setValue }] = useField<string>({ name });
 
     return (
         <MDEditor

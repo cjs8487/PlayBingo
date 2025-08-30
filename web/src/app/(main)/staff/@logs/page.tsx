@@ -233,11 +233,12 @@ export default function Logs() {
     return (
         <Box
             sx={{
-                width: "100%",
-                height: "100%",
-                display: "flex",
-                flexDirection: "column"
-            }}>
+                width: '100%',
+                height: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+            }}
+        >
             <Box sx={{ display: 'flex' }}>
                 <FormControlLabel
                     control={

@@ -1,6 +1,6 @@
-import { useContext, useMemo } from 'react';
+import { Paper, Typography } from '@mui/material';
+import { useContext } from 'react';
 import { ConnectionStatus, RoomContext } from '../../context/RoomContext';
-import { Box, Card, CardContent, Paper, Typography } from '@mui/material';
 
 function getStatusContents(status: ConnectionStatus) {
     switch (status) {
@@ -45,7 +45,7 @@ function getStatusContents(status: ConnectionStatus) {
 export default function ConnectionState() {
     const { connectionStatus } = useContext(RoomContext);
 
-    const contents = getStatusContents(ConnectionStatus.CONNECTED);
+    const contents = getStatusContents(connectionStatus);
 
     return (
         <Paper elevation={8} sx={{ py: 1, backgroundColor: contents.color }}>

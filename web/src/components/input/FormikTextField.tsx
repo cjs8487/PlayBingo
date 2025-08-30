@@ -81,7 +81,8 @@ export default function FormikTextField({
             placeholder={placeholder}
             slotProps={{
                 htmlInput: { pattern, inputMode },
-                inputLabel: { shrink: shrinkLabel }
-            }} />
+                inputLabel: { shrink: shrinkLabel },
+            }}
+        />
     );
 }

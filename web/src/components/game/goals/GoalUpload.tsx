@@ -1,8 +1,5 @@
-import { SRLv5UploadForm } from './uploadForms/Srlv5';
-import { ListUploadForm } from './uploadForms/List';
-import { Fragment, useState } from 'react';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faExclamation } from '@fortawesome/free-solid-svg-icons';
+import Warning from '@mui/icons-material/Warning';
+import { TabContext, TabList, TabPanel } from '@mui/lab';
 import {
     Box,
     Dialog,
@@ -12,9 +9,10 @@ import {
     Tab,
     Typography,
 } from '@mui/material';
-import { TabContext, TabList, TabPanel } from '@mui/lab';
-import Warning from '@mui/icons-material/Warning';
 import NextLink from 'next/link';
+import { useState } from 'react';
+import { ListUploadForm } from './uploadForms/List';
+import { SRLv5UploadForm } from './uploadForms/Srlv5';
 
 export interface UploadFormProps {
     slug: string;
@@ -65,9 +63,11 @@ export default function GoalUpload({ isOpen, close, slug }: GoalUploadProps) {
                                 }}
                             >
                                 <Warning />
-                                <Box sx={{
-                                    color: "warning.contrastText"
-                                }}>
+                                <Box
+                                    sx={{
+                                        color: 'warning.contrastText',
+                                    }}
+                                >
                                     <Typography variant="body2">
                                         Please ensure that the list you upload
                                         is a proper json array.
@@ -110,7 +110,7 @@ export default function GoalUpload({ isOpen, close, slug }: GoalUploadProps) {
                                 <Typography
                                     variant="body2"
                                     sx={{
-                                        color: "warning.contrastText"
+                                        color: 'warning.contrastText',
                                     }}
                                 >
                                     Only use this upload method if you trust the

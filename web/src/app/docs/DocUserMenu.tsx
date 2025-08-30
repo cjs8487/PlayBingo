@@ -19,7 +19,7 @@ import LinkButton from '../../components/LinkButton';
 import { UserContext } from '../../context/UserContext';
 
 export default function DocUserMenu() {
-    const { user, loggedIn, logout } = useContext(UserContext);
+    const { user, logout } = useContext(UserContext);
 
     const [anchorElUser, setAnchorElUser] = useState<null | HTMLElement>(null);
 
@@ -87,9 +87,13 @@ export default function DocUserMenu() {
                     <ListItemIcon>
                         <IconLogout fontSize="small" />
                     </ListItemIcon>
-                    <Typography sx={{
-                        textAlign: "center"
-                    }}>Logout</Typography>
+                    <Typography
+                        sx={{
+                            textAlign: 'center',
+                        }}
+                    >
+                        Logout
+                    </Typography>
                 </MenuItem>
             </Menu>
         </Box>

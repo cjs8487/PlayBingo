@@ -29,9 +29,9 @@ interface StepProps {
 }
 
 function GenerationStepSingle({
-    step: { value: name, displayName, description, required, availableRules },
+    step: { value: name, displayName, description, availableRules },
 }: StepProps) {
-    const [{}, meta] = useField<GeneratorConfigSingle>(name);
+    const [, meta] = useField<GeneratorConfigSingle>(name);
 
     const options = useMemo(
         () =>

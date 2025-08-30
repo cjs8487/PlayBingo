@@ -14,7 +14,6 @@ import {
     TextField,
     Tooltip,
 } from '@mui/material';
-import { reverse } from 'dns';
 import {
     SortOptions,
     useGoalManagerContext,
@@ -40,9 +39,11 @@ export default function GoalSearch() {
     } = useGoalManagerContext();
     return (
         <>
-            <Box sx={{
-                width: "33%"
-            }}>
+            <Box
+                sx={{
+                    width: '33%',
+                }}
+            >
                 <Autocomplete
                     multiple
                     id="filter-categories"

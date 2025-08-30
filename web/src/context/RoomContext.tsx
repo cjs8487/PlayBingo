@@ -95,9 +95,9 @@ export const RoomContext = createContext<RoomContext>({
     async connect() {
         return { success: false };
     },
-    sendChatMessage(message) {},
-    markGoal(row, col) {},
-    unmarkGoal(row, col) {},
+    sendChatMessage() {},
+    markGoal() {},
+    unmarkGoal() {},
     changeColor() {},
     regenerateCard() {},
     disconnect() {},
@@ -149,7 +149,7 @@ export function RoomContextProvider({
     );
     const [players, setPlayers] = useState<Player[]>([]);
 
-    const [starredGoals, { push, clear, filter }] = useList<number>([]);
+    const [starredGoals, { push, filter }] = useList<number>([]);
 
     const [showGoalDetails, setShoWGoalDetails] = useState(false);
 

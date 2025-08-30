@@ -1,4 +1,5 @@
 'use client';
+import Delete from '@mui/icons-material/Delete';
 import {
     Box,
     Button,
@@ -15,15 +16,13 @@ import {
     TableProps,
     TableRow,
 } from '@mui/material';
+import { Game } from '@playbingo/types';
 import { forwardRef, ReactNode, useCallback, useRef, useState } from 'react';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import { TableVirtuoso } from 'react-virtuoso';
-import { useApi } from '../../../../lib/Hooks';
-import { Game } from '@playbingo/types';
-import Delete from '@mui/icons-material/Delete';
-import { alertError, notifyMessage } from '../../../../lib/Utils';
-import router from 'next/router';
 import Dialog, { DialogRef } from '../../../../components/Dialog';
+import { useApi } from '../../../../lib/Hooks';
+import { alertError } from '../../../../lib/Utils';
 
 const Scroller = forwardRef<HTMLDivElement>(function Scroller(props, ref) {
     return <TableContainer {...props} ref={ref} />;
@@ -105,8 +104,6 @@ export default function StaffGamesTab() {
     if (isLoading || !games || error) {
         return null;
     }
-
-    const gameList = [...games, ...games, ...games];
 
     return (
         <Box

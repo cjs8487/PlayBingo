@@ -1,12 +1,9 @@
 import { CssBaseline, ThemeProvider } from '@mui/material';
 import { AppRouterCacheProvider } from '@mui/material-nextjs/v14-appRouter';
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
 import { UserContextProvider } from '../context/UserContext';
 import theme from '../theme';
 import './globals.css';
-
-const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
     title: { template: '%s | PlayBingo', default: 'PlayBingo' },
@@ -26,7 +23,7 @@ export default function RootLayout({
 }) {
     return (
         <html lang="en">
-            <body style={{}}>
+            <body>
                 <AppRouterCacheProvider options={{ enableCssLayer: true }}>
                     <ThemeProvider theme={theme}>
                         <CssBaseline />

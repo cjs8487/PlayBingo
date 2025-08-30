@@ -25,8 +25,8 @@ const modKey = 'Moderated Games';
 const favoritesKey = 'Favorites';
 const allKey = 'All Games';
 
-const gamesKeys = [modKey, favoritesKey, allKey] as const;
-type GamesKeys = (typeof gamesKeys)[number];
+type gamesKeys = typeof modKey | typeof favoritesKey | typeof allKey;
+type GamesKeys = gamesKeys[number];
 
 export default function Games(): React.ReactNode {
     const { user, loggedIn } = useContext(UserContext);
@@ -48,14 +48,12 @@ export default function Games(): React.ReactNode {
         [modKey]: false,
     });
 
-    const handleAccordionChange =
-        (key: GamesKeys) =>
-        (event: React.SyntheticEvent, isExpanded: boolean) => {
-            if (!collapsedSections) return;
-            const newState = collapsedSections;
-            newState[key] = !collapsedSections[key];
-            setCollapsedSections(newState);
-        };
+    const handleAccordionChange = (key: GamesKeys) => () => {
+        if (!collapsedSections) return;
+        const newState = collapsedSections;
+        newState[key] = !collapsedSections[key];
+        setCollapsedSections(newState);
+    };
 
     if (!gameList || isLoading) {
         return null;
@@ -70,7 +68,7 @@ export default function Games(): React.ReactNode {
         [favoritesKey]: [],
         [modKey]: [],
     };
-    
+
     const filteredList = searchString
         ? gameList.filter((game) =>
               searchString
@@ -203,8 +201,9 @@ export default function Games(): React.ReactNode {
                             expanded={!isCollapsed}
                             onChange={handleAccordionChange(key)}
                             sx={{
-                                background: 'transparent'
+                                background: 'transparent',
                             }}
+                            key={k}
                         >
                             <AccordionSummary expandIcon={<ExpandMore />}>
                                 <Typography variant="h5" sx={{ lineHeight: 1 }}>

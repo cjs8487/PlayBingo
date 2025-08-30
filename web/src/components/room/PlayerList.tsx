@@ -1,21 +1,10 @@
-import {
-    Box,
-    Card,
-    CardContent,
-    CardHeader,
-    Paper,
-    Typography,
-} from '@mui/material';
+import { Box, Paper, Typography } from '@mui/material';
 import { Duration } from 'luxon';
 import { Sword } from 'mdi-material-ui';
 import { useContext } from 'react';
 import { RoomContext } from '../../context/RoomContext';
 export default function PlayerList() {
-    const {
-        players: allPlayers,
-        roomData,
-        joinRacetimeRoom,
-    } = useContext(RoomContext);
+    const { players: allPlayers, roomData } = useContext(RoomContext);
     const racetimeConnected = !!roomData?.racetimeConnection?.url;
 
     const players = allPlayers.filter((p) => !p.spectator);

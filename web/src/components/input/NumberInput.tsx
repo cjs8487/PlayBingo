@@ -1,6 +1,6 @@
 import { Box, Button, TextField } from '@mui/material';
-import { ErrorMessage, FieldProps, useField } from 'formik';
-import { useCallback, useEffect, useState } from 'react';
+import { ErrorMessage, useField } from 'formik';
+import { useCallback } from 'react';
 
 interface NumberInputProps {
     id?: string;
@@ -31,7 +31,7 @@ export default function NumberInput({
     disabled,
     required,
 }: NumberInputProps) {
-    const [{ value }, meta, helpers] = useField<number>(name);
+    const [{ value }, , helpers] = useField<number>(name);
     const setValue = useCallback(
         (v: number) => {
             if (required && Number.isNaN(v)) return;
@@ -53,9 +53,10 @@ export default function NumberInput({
         <>
             <Box
                 sx={{
-                    display: "flex",
-                    height: "max-content"
-                }}>
+                    display: 'flex',
+                    height: 'max-content',
+                }}
+            >
                 <Button
                     type="button"
                     variant="contained"
@@ -89,8 +90,9 @@ export default function NumberInput({
 
                         htmlInput: {
                             pattern: '[0-9]*',
-                        }
-                    }} />
+                        },
+                    }}
+                />
                 <Button
                     type="button"
                     variant="contained"

@@ -29,7 +29,7 @@ interface CategorySelectProps {
 }
 
 function CategorySelect({ categories }: CategorySelectProps) {
-    const [field, meta, helpers] = useField<string[]>('categories');
+    const [field, , helpers] = useField<string[]>('categories');
 
     const catList = categories.map((c) => ({ value: c, display: c }));
     return (

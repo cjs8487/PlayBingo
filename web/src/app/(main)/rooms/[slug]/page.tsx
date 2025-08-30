@@ -4,20 +4,13 @@ import RoomChat from '@/components/room/RoomChat';
 import RoomInfo from '@/components/room/RoomInfo';
 import RoomLogin from '@/components/room/RoomLogin';
 import { ConnectionStatus, useRoomContext } from '@/context/RoomContext';
-import {
-    Alert,
-    Box,
-    Container,
-    Dialog,
-    DialogContent,
-    Link,
-} from '@mui/material';
-import AutoSizer from 'react-virtualized-auto-sizer';
-import PlayerList from '../../../../components/room/PlayerList';
-import RacetimeCard from '../../../../components/room/racetime/RacetimeCard';
-import PlayerInfo from '../../../../components/room/PlayerInfo';
+import { Alert, Box, Dialog, DialogContent, Link } from '@mui/material';
 import NextLink from 'next/link';
 import { useState } from 'react';
+import AutoSizer from 'react-virtualized-auto-sizer';
+import PlayerInfo from '../../../../components/room/PlayerInfo';
+import PlayerList from '../../../../components/room/PlayerList';
+import RacetimeCard from '../../../../components/room/racetime/RacetimeCard';
 
 export default function Room() {
     const { connectionStatus, roomData } = useRoomContext();

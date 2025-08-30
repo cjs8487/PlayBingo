@@ -4,6 +4,7 @@ import { Form, Formik } from 'formik';
 import { Box, Button } from '@mui/material';
 import { object, string } from 'yup';
 import FormikTextField from '../../../../components/input/FormikTextField';
+import { alertError } from '../../../../lib/Utils';
 
 const tokenValidationSchema = object().shape({
     name: string().required('Application name is required'),
@@ -22,14 +23,18 @@ export default function CreateTokenForm({
             validationSchema={tokenValidationSchema}
             onSubmit={async ({ name }) => {
                 const res = await createToken(name);
+                if (!res.ok) {
+                    alertError('Failed to create token');
+                }
             }}
         >
             <Form>
                 <Box
                     sx={{
-                        display: "flex",
-                        alignItems: "center"
-                    }}>
+                        display: 'flex',
+                        alignItems: 'center',
+                    }}
+                >
                     <FormikTextField
                         id="token-name"
                         type="text"

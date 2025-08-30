@@ -1,9 +1,9 @@
 'use client';
+import { Box } from '@mui/material';
 import { useContext, useRef, useState } from 'react';
 import { SketchPicker } from 'react-color';
 import { useClickAway, useLocalStorage } from 'react-use';
 import { RoomContext } from '../../context/RoomContext';
-import { Box, ButtonBase, Typography } from '@mui/material';
 
 export default function ColorSelect() {
     const { color, changeColor } = useContext(RoomContext);
@@ -27,12 +27,13 @@ export default function ColorSelect() {
     return (
         <Box
             sx={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
                 columnGap: 2,
-                rowGap: 1
-            }}>
+                rowGap: 1,
+            }}
+        >
             {colors.map((colorItem) => (
                 <Box
                     key={colorItem}
@@ -48,16 +49,18 @@ export default function ColorSelect() {
 
                         ':hover': {
                             scale: '110%',
-                        }
-                    }}>
+                        },
+                    }}
+                >
                     {colorItem}
                 </Box>
             ))}
             <Box
                 sx={{
-                    display: "flex",
-                    flexDirection: "column"
-                }}>
+                    display: 'flex',
+                    flexDirection: 'column',
+                }}
+            >
                 <Box
                     sx={{
                         backgroundColor: customColor,
@@ -78,9 +81,10 @@ export default function ColorSelect() {
                     <Box
                         ref={pickerRef}
                         sx={{
-                            position: "absolute",
-                            zIndex: 20
-                        }}>
+                            position: 'absolute',
+                            zIndex: 20,
+                        }}
+                    >
                         <SketchPicker
                             color={customColor}
                             onChange={(color) => {

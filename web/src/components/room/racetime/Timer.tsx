@@ -1,6 +1,6 @@
 import { Typography } from '@mui/material';
 import { DateTime, Duration } from 'luxon';
-import { useContext, useEffect, useRef, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { useInterval } from 'react-use';
 import { RoomContext } from '../../../context/RoomContext';
 

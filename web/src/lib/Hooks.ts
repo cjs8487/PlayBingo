@@ -1,7 +1,10 @@
 'use client';
 import useSWR, { SWRResponse } from 'swr';
 
-export const useApi = <T>(route: string, immutable?: boolean): SWRResponse<T> => {
+export const useApi = <T>(
+    route: string,
+    immutable?: boolean,
+): SWRResponse<T> => {
     const options = {
         revalidateIfStale: !immutable,
         revalidateOnFocus: !immutable,

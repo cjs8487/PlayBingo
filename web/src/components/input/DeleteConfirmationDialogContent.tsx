@@ -1,5 +1,13 @@
 // DeleteConfirmationDialogContent.tsx
-import { DialogContent, DialogTitle, DialogActions, Button, TextField, Typography, CircularProgress } from '@mui/material';
+import {
+    DialogContent,
+    DialogTitle,
+    DialogActions,
+    Button,
+    TextField,
+    Typography,
+    CircularProgress,
+} from '@mui/material';
 import { useState } from 'react';
 
 interface DeleteConfirmationDialogContentProps {
@@ -8,15 +16,18 @@ interface DeleteConfirmationDialogContentProps {
     loading: boolean;
 }
 
-export const DeleteConfirmationDialogContent: React.FC<DeleteConfirmationDialogContentProps> = ({ onConfirm, onCancel, loading }) => {
-    const [deleteConfirmationText, setDeleteConfirmationText] = useState("");
+export const DeleteConfirmationDialogContent: React.FC<
+    DeleteConfirmationDialogContentProps
+> = ({ onConfirm, onCancel, loading }) => {
+    const [deleteConfirmationText, setDeleteConfirmationText] = useState('');
 
     return (
         <>
             <DialogTitle>Confirm Delete All Goals</DialogTitle>
             <DialogContent>
                 <Typography>
-                    To confirm deletion of all goals, type <strong>DELETE</strong> below:
+                    To confirm deletion of all goals, type{' '}
+                    <strong>DELETE</strong> below:
                 </Typography>
                 <TextField
                     autoFocus
@@ -36,7 +47,7 @@ export const DeleteConfirmationDialogContent: React.FC<DeleteConfirmationDialogC
                 <Button
                     onClick={onConfirm}
                     color="error"
-                    disabled={deleteConfirmationText !== "DELETE" || loading}
+                    disabled={deleteConfirmationText !== 'DELETE' || loading}
                     startIcon={loading ? <CircularProgress size={20} /> : null}
                 >
                     {loading ? 'Deleting...' : 'Confirm Delete'}

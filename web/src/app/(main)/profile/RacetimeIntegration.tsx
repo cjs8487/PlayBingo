@@ -35,9 +35,10 @@ export default async function RacetimeIntegration() {
             {!hasRacetimeConnection && (
                 <Box
                     sx={{
-                        display: "flex",
-                        alignItems: "center"
-                    }}>
+                        display: 'flex',
+                        alignItems: 'center',
+                    }}
+                >
                     <Link href={`/api/connect/racetime`} component={NextLink}>
                         Connect to racetime.gg
                     </Link>
@@ -46,10 +47,11 @@ export default async function RacetimeIntegration() {
             {hasRacetimeConnection && (
                 <Box
                     sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        columnGap: 1
-                    }}>
+                        display: 'flex',
+                        alignItems: 'center',
+                        columnGap: 1,
+                    }}
+                >
                     <Typography>Connected as {racetimeUser}</Typography>
                     <DisconnectButton disconnect={disconnectRacetime} />
                 </Box>

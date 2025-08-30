@@ -31,7 +31,7 @@ export const pages = [
 ];
 
 export default function Header() {
-    const { user, loggedIn, logout } = useContext(UserContext);
+    const { user, logout } = useContext(UserContext);
 
     const [anchorElUser, setAnchorElUser] = useState<null | HTMLElement>(null);
 

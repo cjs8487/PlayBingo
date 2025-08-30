@@ -12,6 +12,7 @@ export default function Board() {
     const [dimension, setDimension] = useState(0);
 
     useWindowSize();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     useLayoutEffect(() => {
         setDimension(
             Math.min(

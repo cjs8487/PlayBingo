@@ -18,14 +18,17 @@ export default function CardHiddenActions({
                 left: align === 'left' ? 8 : 'auto',
                 right: align === 'right' ? 8 : 'auto',
                 display: 'flex',
-                justifyContent:
-                    align === 'center' ? 'center' : 'flex-start',
-                width: align === 'center' ? '100%' : 'auto'
+                justifyContent: align === 'center' ? 'center' : 'flex-start',
+                width: align === 'center' ? '100%' : 'auto',
             }}
         >
-            <Box sx={{
-                zIndex: 1
-            }}>{children}</Box>
+            <Box
+                sx={{
+                    zIndex: 1,
+                }}
+            >
+                {children}
+            </Box>
         </Box>
     );
 }

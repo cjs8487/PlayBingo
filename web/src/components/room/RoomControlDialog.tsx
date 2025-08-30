@@ -9,19 +9,17 @@ import {
     DialogContent,
     DialogTitle,
     FormControl,
-    FormControlLabel,
     InputLabel,
     MenuItem,
     Select,
-    Switch,
     Typography,
 } from '@mui/material';
-import { Field, Form, Formik } from 'formik';
+import { Game } from '@playbingo/types';
+import { Form, Formik } from 'formik';
 import { useContext } from 'react';
 import { toast } from 'react-toastify';
 import { useAsync, useCopyToClipboard } from 'react-use';
 import { RoomContext } from '../../context/RoomContext';
-import { Game } from '@playbingo/types';
 import FormikTextField from '../input/FormikTextField';
 
 interface RoomControlDialogProps {

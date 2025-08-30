@@ -19,7 +19,8 @@ export const parseSRLv5BingoList = (input: string): GoalObject[][] | false => {
     const func = new Function(wrappedInput);
     try {
         return func();
-    } catch (error) {
+    } catch {
+        //TODO: do something with this error
         return false;
     }
 };

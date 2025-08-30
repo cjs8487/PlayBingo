@@ -1,9 +1,9 @@
-import { Field, Form, Formik } from 'formik';
+import { Box, Button } from '@mui/material';
+import { Form, Formik } from 'formik';
 import { parseSRLv5BingoList } from '../../../../lib/goals/SRLv5Parser';
 import { alertError } from '../../../../lib/Utils';
-import type { UploadFormProps } from '../GoalUpload';
-import { Box, Button } from '@mui/material';
 import FormikTextField from '../../../input/FormikTextField';
+import type { UploadFormProps } from '../GoalUpload';
 
 export function SRLv5UploadForm({ slug, close }: UploadFormProps) {
     return (
@@ -76,14 +76,17 @@ export function SRLv5UploadForm({ slug, close }: UploadFormProps) {
                 <Box
                     sx={{
                         mt: 2,
-                        display: "flex"
-                    }}>
+                        display: 'flex',
+                    }}
+                >
                     <Button type="button" color="error" onClick={close}>
                         Cancel
                     </Button>
-                    <Box sx={{
-                        flexGrow: 1
-                    }} />
+                    <Box
+                        sx={{
+                            flexGrow: 1,
+                        }}
+                    />
                     <Button type="submit" variant="contained" color="success">
                         Submit
                     </Button>

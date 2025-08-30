@@ -1,14 +1,14 @@
 'use client';
-import { Box, Button, Paper, Typography } from '@mui/material';
+import { Box, Button, Typography } from '@mui/material';
 import { Form, Formik } from 'formik';
 import { useContext, useState } from 'react';
 import { RoomContext } from '../../context/RoomContext';
-import FormikTextField from '../input/FormikTextField';
 import FormikSwitch from '../input/FormikSwitch';
+import FormikTextField from '../input/FormikTextField';
 
 export default function RoomLogin() {
     // context
-    const { connect, roomData } = useContext(RoomContext);
+    const { connect } = useContext(RoomContext);
 
     // state
     const [error, setError] = useState<string>();

@@ -1,16 +1,15 @@
 'use client';
+import { User } from '@playbingo/types';
+import { useRouter } from 'next/navigation';
 import {
     createContext,
     useCallback,
     useContext,
-    useEffect,
     useLayoutEffect,
     useState,
 } from 'react';
-import { User } from '@playbingo/types';
-import { useRouter } from 'next/navigation';
-import { alertError } from '../lib/Utils';
 import { logout } from '../actions/Session';
+import { alertError } from '../lib/Utils';
 
 interface UserContext {
     loggedIn: boolean;

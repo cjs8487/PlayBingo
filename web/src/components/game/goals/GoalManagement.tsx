@@ -56,7 +56,7 @@ export default function GoalManagement() {
             });
             if (response.ok) notifyMessage('All goals deleted successfully');
             else notifyMessage('Failed to delete all goals');
-        } catch (error) {
+        } catch {
             // TODO: error handler
         } finally {
             mutateGoals();

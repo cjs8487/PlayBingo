@@ -1,4 +1,5 @@
 import AddIcon from '@mui/icons-material/Add';
+import DeleteIcon from '@mui/icons-material/Delete';
 import {
     Box,
     Chip,
@@ -7,15 +8,13 @@ import {
     ListItem,
     ListItemButton,
     ListItemIcon,
-    ListItemSecondaryAction,
     ListItemText,
     Typography,
     styled,
 } from '@mui/material';
+import { Goal } from '@playbingo/types';
 import { forwardRef } from 'react';
 import { Virtuoso } from 'react-virtuoso';
-import { Goal } from '@playbingo/types';
-import DeleteIcon from '@mui/icons-material/Delete';
 import { useGoalManagerContext } from '../../../context/GoalManagerContext';
 
 const ListItemHiddenSecondary = styled(ListItem)(() => ({

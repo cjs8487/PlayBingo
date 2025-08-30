@@ -1,12 +1,11 @@
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Fragment, useCallback, useState } from 'react';
-import { mutate } from 'swr';
-import { Game } from '@playbingo/types';
-import UserSearch from '../UserSearch';
-import { alertError } from '../../lib/Utils';
-import { Box, Button, IconButton, Typography } from '@mui/material';
-import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
+import DeleteIcon from '@mui/icons-material/Delete';
+import { Box, Button, IconButton, Typography } from '@mui/material';
+import { Game } from '@playbingo/types';
+import { useCallback, useState } from 'react';
+import { mutate } from 'swr';
+import { alertError } from '../../lib/Utils';
+import UserSearch from '../UserSearch';
 
 interface PermissionsManagementProps {
     slug: string;

@@ -15,7 +15,7 @@ import {
     Typography,
 } from '@mui/material';
 import { Game } from '@playbingo/types';
-import { Form, Formik, useField, useFormik, useFormikContext } from 'formik';
+import { Form, Formik, useField, useFormikContext } from 'formik';
 import { useRouter } from 'next/navigation';
 import { useRef } from 'react';
 import { useAsync } from 'react-use';
@@ -23,11 +23,11 @@ import { mutate } from 'swr';
 import { alertError, notifyMessage } from '../../lib/Utils';
 import Dialog, { DialogRef } from '../Dialog';
 import HoverIcon from '../HoverIcon';
+import FormikFileUpload from '../input/FileUpload';
 import FormikSwitch from '../input/FormikSwitch';
 import FormikTextField from '../input/FormikTextField';
-import NumberInput from '../input/NumberInput';
-import FormikFileUpload from '../input/FileUpload';
 import { MarkdownField } from '../input/MarkdownField';
+import NumberInput from '../input/NumberInput';
 
 async function validateRacetimeCategory(value: string) {
     if (value) {
@@ -48,7 +48,7 @@ function RacetimeSettings() {
     const {
         values: { racetimeCategory },
     } = useFormikContext<{ racetimeCategory: string }>();
-    const [field, meta] = useField<string>('racetimeGoal');
+    const [field] = useField<string>('racetimeGoal');
 
     const goals = useAsync(async () => {
         const res = await fetch(
@@ -121,7 +121,7 @@ interface LinkRowProps {
 }
 
 function LinkRow({ index }: LinkRowProps) {
-    const { values, setFieldValue } = useFormikContext<{ links: {}[] }>();
+    const { values, setFieldValue } = useFormikContext<{ links: unknown[] }>();
     return (
         <Box
             sx={{
@@ -210,7 +210,7 @@ function SettingsForm({ gameData }: FormProps) {
                     (link) =>
                         `[${link.text}](${link.url})${link.description ? ` - ${link.description}` : ''}`,
                 );
-                let shouldDeleteCover = gameData.coverImage && !coverImage;
+                const shouldDeleteCover = gameData.coverImage && !coverImage;
                 const res = await fetch(`/api/games/${gameData.slug}`, {
                     method: 'POST',
                     headers: {

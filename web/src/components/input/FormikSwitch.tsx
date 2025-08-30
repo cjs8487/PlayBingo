@@ -7,12 +7,13 @@ interface FormikSwitchProps {
     label: string;
 }
 export default function FormikSwitch({ id, name, label }: FormikSwitchProps) {
-    const [field, meta, helpers] = useField<boolean>(name);
+    const [field, , helpers] = useField<boolean>(name);
 
     return (
         <FormControlLabel
             control={
                 <Switch
+                    id={id}
                     checked={field.value}
                     onChange={(e) => helpers.setValue(e.target.checked)}
                     onBlur={field.onBlur}

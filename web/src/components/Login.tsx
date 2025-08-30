@@ -24,12 +24,16 @@ export default function Login({ useRouterBack }: LoginProps) {
             <Box
                 sx={{
                     paddingBottom: 2,
-                    textAlign: "center"
-                }}>
+                    textAlign: 'center',
+                }}
+            >
                 <Typography variant="h4">Login to PlayBingo</Typography>
-                <Typography variant="caption" sx={{
-                    color: "text.secondary"
-                }}>
+                <Typography
+                    variant="caption"
+                    sx={{
+                        color: 'text.secondary',
+                    }}
+                >
                     No login is required to play bingo.
                 </Typography>
                 {error && (
@@ -90,9 +94,11 @@ export default function Login({ useRouterBack }: LoginProps) {
                                 Forgot password?
                             </Link>
                         </Box>
-                        <Box sx={{
-                            textAlign: "right"
-                        }}>
+                        <Box
+                            sx={{
+                                textAlign: 'right',
+                            }}
+                        >
                             <Button href="/register" component={NextLink}>
                                 Register
                             </Button>

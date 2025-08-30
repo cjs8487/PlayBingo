@@ -1,24 +1,15 @@
-import {
-    Box,
-    Button,
-    IconButton,
-    List,
-    ListItem,
-    Typography,
-} from '@mui/material';
-import { DifficultyVariant, Game } from '@playbingo/types';
-import Add from '@mui/icons-material/Add';
-import Edit from '@mui/icons-material/Edit';
 import Check from '@mui/icons-material/Check';
 import Close from '@mui/icons-material/Close';
 import Delete from '@mui/icons-material/Delete';
+import Edit from '@mui/icons-material/Edit';
+import { Box, IconButton, List, ListItem, Typography } from '@mui/material';
+import { DifficultyVariant, Game } from '@playbingo/types';
 import { FieldArray, Form, Formik } from 'formik';
-import FormikTextField from '../input/FormikTextField';
-import NumberInput from '../input/NumberInput';
 import { useState } from 'react';
-import { useList } from 'react-use';
 import { mutate } from 'swr';
 import { alertError } from '../../lib/Utils';
+import FormikTextField from '../input/FormikTextField';
+import NumberInput from '../input/NumberInput';
 
 interface DifficultyVariantEditRowProps {
     slug: string;
@@ -97,7 +88,8 @@ function DificultyVariantEditRow({
                                 <IconButton
                                     edge="end"
                                     onClick={() => {
-                                        resetForm(), done();
+                                        resetForm();
+                                        done();
                                     }}
                                     color="error"
                                 >

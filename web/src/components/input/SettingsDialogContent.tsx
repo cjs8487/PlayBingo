@@ -6,11 +6,7 @@ import {
 } from '@mui/material';
 import { useGoalManagerContext } from '../../context/GoalManagerContext';
 
-interface SettingsDialogContentProps {}
-
-export const SettingsDialogContent: React.FC<
-    SettingsDialogContentProps
-> = ({}) => {
+export const SettingsDialogContent: React.FC = () => {
     const { settings, setSettings } = useGoalManagerContext();
 
     return (
@@ -22,7 +18,7 @@ export const SettingsDialogContent: React.FC<
                         <Switch
                             checked={settings.showDetails}
                             onChange={(e) =>
-                                setSettings((curr) => ({
+                                setSettings(() => ({
                                     ...settings,
                                     showDetails: e.target.checked,
                                 }))

@@ -21,9 +21,10 @@ export default function MobileMenu() {
         <>
             <Box
                 sx={{
-                    display: "flex",
-                    justifyItems: "center"
-                }}>
+                    display: 'flex',
+                    justifyItems: 'center',
+                }}
+            >
                 <IconButton
                     size="large"
                     aria-label="account of current user"
@@ -52,9 +53,11 @@ export default function MobileMenu() {
                     {pages.map((page) => (
                         <MenuItem key={page.name} onClick={handleCloseNavMenu}>
                             <Link href={page.path}>
-                                <Typography sx={{
-                                    textAlign: "center"
-                                }}>
+                                <Typography
+                                    sx={{
+                                        textAlign: 'center',
+                                    }}
+                                >
                                     {page.name}
                                 </Typography>
                             </Link>
@@ -65,9 +68,11 @@ export default function MobileMenu() {
             <LinkButton href="/">
                 <Image src={logo} alt="PlayBingo logo" height={52} />
             </LinkButton>
-            <Box sx={{
-                flexGrow: 1
-            }} />
+            <Box
+                sx={{
+                    flexGrow: 1,
+                }}
+            />
         </>
     );
 }

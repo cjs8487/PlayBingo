@@ -4,10 +4,9 @@ import Remove from '@mui/icons-material/Remove';
 import Star from '@mui/icons-material/Star';
 import { Box, IconButton, Tooltip, Typography } from '@mui/material';
 import { Cell } from '@playbingo/types';
-import { useCallback, useContext, useMemo, useState } from 'react';
+import { useCallback, useContext, useState } from 'react';
 import { RoomContext } from '../../context/RoomContext';
 import TextFit from '../TextFit';
-import GoalCategories from '../game/GoalCategories';
 
 interface CellProps {
     cell: Cell;
@@ -166,7 +165,7 @@ export default function BoardCell({
                             size="small"
                             onClick={(e) => {
                                 updateProgress(-1);
-                                e.stopPropagation;
+                                e.stopPropagation();
                             }}
                             sx={{ padding: 0.25 }}
                         >

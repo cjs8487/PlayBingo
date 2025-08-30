@@ -1,8 +1,8 @@
-import { Field, Form, Formik } from 'formik';
-import { alertError } from '../../../../lib/Utils';
-import type { UploadFormProps } from '../GoalUpload';
-import FormikTextField from '../../../input/FormikTextField';
 import { Box, Button } from '@mui/material';
+import { Form, Formik } from 'formik';
+import { alertError } from '../../../../lib/Utils';
+import FormikTextField from '../../../input/FormikTextField';
+import type { UploadFormProps } from '../GoalUpload';
 
 export function ListUploadForm({ slug, close }: UploadFormProps) {
     return (
@@ -12,7 +12,8 @@ export function ListUploadForm({ slug, close }: UploadFormProps) {
                 let parsedList;
                 try {
                     parsedList = parseList(data);
-                } catch (error) {
+                } catch {
+                    //TODO: do something with error
                     alertError('Unable to parse file contents');
                     return;
                 }
@@ -51,14 +52,17 @@ export function ListUploadForm({ slug, close }: UploadFormProps) {
                 <Box
                     sx={{
                         mt: 2,
-                        display: "flex"
-                    }}>
+                        display: 'flex',
+                    }}
+                >
                     <Button type="button" color="error" onClick={close}>
                         Cancel
                     </Button>
-                    <Box sx={{
-                        flexGrow: 1
-                    }} />
+                    <Box
+                        sx={{
+                            flexGrow: 1,
+                        }}
+                    />
                     <Button type="submit" variant="contained" color="success">
                         Submit
                     </Button>

@@ -69,14 +69,16 @@ export default function UserSearch({
         return null;
     }
 
-    let listedUsers = (users as User[])
+    const listedUsers = (users as User[])
         .toSorted((a, b) => a.username.localeCompare(b.username))
         .filter((user) => {
             if (!searchString || searchString.length === 0) {
                 return true;
             }
             return (
-                user.username.toLowerCase().startsWith(searchString.toLowerCase()) ||
+                user.username
+                    .toLowerCase()
+                    .startsWith(searchString.toLowerCase()) ||
                 user.username.toLowerCase().includes(searchString.toLowerCase())
             );
         });

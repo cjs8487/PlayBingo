@@ -115,6 +115,8 @@ export default function NotFound() {
         revealCard: () => {},
         toggleGoalDetails: () => {},
         toggleCounters: () => {},
+        spectator: false,
+        monitor: false,
     };
 
     const { title, subtitle } =

@@ -27,7 +27,7 @@ export const emitBoardUpdate = (event: BoardEvent) => {
         case 'board':
             board = event.board;
             break;
-        case 'cell':
+        case 'cell': {
             if (board.hidden) {
                 break;
             }
@@ -35,6 +35,7 @@ export const emitBoardUpdate = (event: BoardEvent) => {
             newCells[event.row][event.col] = event.cell;
             board = { board: newCells };
             break;
+        }
     }
     listeners.forEach((listener) => {
         listener();

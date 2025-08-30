@@ -13,6 +13,7 @@ import { alertError } from '../../../lib/Utils';
 import { useUserContext } from '../../../context/UserContext';
 import FormikFileUpload from '../../../components/input/FileUpload';
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const validationSchema = object({
     email: string()
         .required('Email is required.')

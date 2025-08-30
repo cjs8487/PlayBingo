@@ -1,11 +1,11 @@
+import ArrowDownward from '@mui/icons-material/ArrowDownward';
+import ArrowUpward from '@mui/icons-material/ArrowUpward';
 import Check from '@mui/icons-material/Check';
 import Close from '@mui/icons-material/Close';
 import Delete from '@mui/icons-material/Delete';
 import Edit from '@mui/icons-material/Edit';
 import {
-    Autocomplete,
     Box,
-    Checkbox,
     FormControl,
     IconButton,
     InputLabel,
@@ -25,8 +25,6 @@ import { useApi } from '../../lib/Hooks';
 import { alertError } from '../../lib/Utils';
 import FormikTextField from '../input/FormikTextField';
 import NumberInput from '../input/NumberInput';
-import ArrowDownward from '@mui/icons-material/ArrowDownward';
-import ArrowUpward from '@mui/icons-material/ArrowUpward';
 
 interface CategoryFormProps {
     cat: GoalCategory;

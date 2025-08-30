@@ -1,6 +1,10 @@
 'use client';
 
+import Close from '@mui/icons-material/Close';
+import FileUpload from '@mui/icons-material/FileUpload';
+import { Box, IconButton, Theme, Typography } from '@mui/material';
 import { useField } from 'formik';
+import { useEffect, useMemo, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import {
     alertError,
@@ -8,10 +12,6 @@ import {
     getMediaForWorkflow,
     MediaWorkflow,
 } from '../../lib/Utils';
-import { Box, IconButton, Theme, Typography } from '@mui/material';
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import FileUpload from '@mui/icons-material/FileUpload';
-import Close from '@mui/icons-material/Close';
 
 const baseStyle = {
     flex: 1,
@@ -78,7 +78,7 @@ export default function FormikFileUpload({
     circle,
     size,
 }: Props) {
-    const [{ value }, _meta, { setValue }] = useField<string>(name);
+    const [{ value }, , { setValue }] = useField<string>(name);
     const [file, setFile] = useState<{ preview: string }>();
     const [uploading, setUploading] = useState(false);
     const [changed, setChanged] = useState(false);
@@ -88,7 +88,7 @@ export default function FormikFileUpload({
         if (value) {
             setFile({ preview: getMediaForWorkflow(workflow, value) });
         }
-    }, []);
+    }, [value, workflow]);
 
     const {
         getRootProps,
@@ -149,7 +149,15 @@ export default function FormikFileUpload({
             ...(isDragReject ? rejectStyle : {}),
             ...(file ? uploadedStyle : {}),
         }),
-        [isFocused, isDragAccept, isDragReject, file],
+        [
+            isFocused,
+            isDragAccept,
+            isDragReject,
+            file,
+            aspectRatio,
+            borderRadius,
+            padding,
+        ],
     );
 
     const imgWidth = circle ? size : '100%';
@@ -172,6 +180,9 @@ export default function FormikFileUpload({
                 })}
             >
                 {file && (
+                    //TODO: eventually we should replace this with the next
+                    //image component for efficiency
+                    // eslint-disable-next-line @next/next/no-img-element
                     <img
                         src={file.preview}
                         style={{
@@ -186,6 +197,7 @@ export default function FormikFileUpload({
                         onLoad={() => {
                             URL.revokeObjectURL(file.preview);
                         }}
+                        alt=""
                     />
                 )}
                 <input {...getInputProps()} />

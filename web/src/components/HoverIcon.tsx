@@ -1,5 +1,5 @@
-import { Paper, Tooltip } from '@mui/material';
-import { ReactElement, ReactNode, useState } from 'react';
+import { Tooltip } from '@mui/material';
+import { ReactElement, ReactNode } from 'react';
 
 interface HoverIconProps {
     icon: ReactElement;

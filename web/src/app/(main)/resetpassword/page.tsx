@@ -1,18 +1,18 @@
 'use client';
-import { Formik, Form, Field, ErrorMessage, FastField } from 'formik';
+import { Box, Button, Container, Typography } from '@mui/material';
+import { Form, Formik } from 'formik';
 import { useRouter, useSearchParams } from 'next/navigation';
 import * as yup from 'yup';
-import { alertError } from '../../../lib/Utils';
-import { Box, Button, Container, Typography } from '@mui/material';
-import FormikTextField from '../../../components/input/FormikTextField';
 import { resetPassword } from '../../../actions/Auth';
+import FormikTextField from '../../../components/input/FormikTextField';
+import { alertError } from '../../../lib/Utils';
 
 const validationSchema = yup.object({
     password: yup
         .string()
         .required('Password is required.')
         .matches(
-            /^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[*.!@$%^&(){}\[\]:;<>,.?\/~_+-=|]).{8,}$/,
+            /^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[*.!@$%^&(){}[\]:;<>,.?/~_+\-=|]).{8,}$/,
             'Password does not meet strength requirements.',
         ),
     passwordConfirmation: yup
@@ -121,7 +121,7 @@ export default function ResetPassword() {
                                     variant="caption"
                                     color={
                                         password.match(
-                                            /[*.!@$%^&(){}\[\]:;<>,.?\/~_\+\-=|\\]+/,
+                                            /[*.!@$%^&(){}[\]:;<>,.?/~_+\-=|\\]+/,
                                         )
                                             ? 'success.main'
                                             : ''

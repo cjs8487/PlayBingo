@@ -72,7 +72,7 @@ const validationSchema = object({
     newPassword: string()
         .required('New Password is required.')
         .matches(
-            /^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[*.!@$%^&(){}\[\]:;<>,.?\/~_+-=|]).{8,}$/,
+            /^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[*.!@$%^&(){}[\]:;<>,.?/~_+\-=|]).{8,}$/,
             'New password does not meet strength requirements.',
         ),
     confirmNewPassword: string()
@@ -202,7 +202,7 @@ const PasswordForm = forwardRef<HTMLFormElement, FormProps>(
                                         variant="caption"
                                         color={
                                             newPassword.match(
-                                                /[*.!@$%^&(){}\[\]:;<>,.?\/~_\+\-=|\\]+/,
+                                                /[*.!@$%^&(){}[\]:;<>,.?/~_+\-=|\\]+/,
                                             )
                                                 ? 'success.main'
                                                 : ''

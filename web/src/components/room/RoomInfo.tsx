@@ -1,8 +1,6 @@
 import { Card, CardActionArea, CardContent, Typography } from '@mui/material';
 import { useCallback, useContext, useState } from 'react';
-import { useAsync, useCopyToClipboard } from 'react-use';
 import { RoomContext } from '../../context/RoomContext';
-import { Game } from '@playbingo/types';
 import ConnectionState from './ConnectionState';
 import RoomControlDialog from './RoomControlDialog';
 

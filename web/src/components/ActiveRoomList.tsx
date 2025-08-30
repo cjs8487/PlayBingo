@@ -4,13 +4,12 @@ import {
     CardContent,
     List,
     ListItem,
-    Paper,
     Typography,
 } from '@mui/material';
-import { use } from 'react';
 import { RoomData } from '@playbingo/types';
-import CacheBreaker from './CacheBreaker';
 import Link from 'next/link';
+import { use } from 'react';
+import CacheBreaker from './CacheBreaker';
 
 async function getRooms(): Promise<RoomData[]> {
     const res = await fetch(`${process.env.NEXT_PUBLIC_API_PATH}/api/rooms`);
