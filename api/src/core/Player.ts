@@ -80,7 +80,7 @@ export default class Player {
     }
 
     doesTokenMatch(token: RoomTokenPayload) {
-        return token.user === this.userId;
+        return token.userId === this.userId;
     }
 
     /**
@@ -118,9 +118,9 @@ export default class Player {
      */
     handleSocketClose(ws: WebSocket) {
         let socketKey;
-        this.connections.forEach((v, k) => {
-            if (v === ws) {
-                socketKey = k;
+        this.connections.forEach((socket, id) => {
+            if (socket === ws) {
+                socketKey = id;
             }
         });
         if (socketKey) {

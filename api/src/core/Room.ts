@@ -353,7 +353,7 @@ export default class Room {
                 undefined,
                 auth.isSpectating,
                 auth.isMonitor,
-                auth.user,
+                auth.userId,
             );
             this.players.set(player.id, player);
             newPlayer = true;
