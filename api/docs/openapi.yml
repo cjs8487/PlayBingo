@@ -83,6 +83,7 @@ components:
         - game
         - slug
         - gameSlug
+        - newGenerator
       properties:
         name:
           type: string
@@ -101,6 +102,19 @@ components:
             from the server
         roomRacetimeConnection:
           $ref: "#/components/schemas/roomRacetimeConnection"
+        newGenerator:
+          type: boolean
+          description: 
+            Flag indicating if this game has opted in the new generator system.
+            By default, new games are automatically opted in.
+        token:
+          type: string
+          description:
+            A newly created valid authorization token for this room that is tied
+            to the logged in user. This token is generated and provided by the
+            automatic authentication framework, which allows logged in users to
+            bypass the room authentication process if they have previously
+            connected to the room or are a moderator or owner for the game.
     roomRacetimeConnection:
       type: object
       required:

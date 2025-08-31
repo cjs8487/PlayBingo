@@ -19,6 +19,7 @@ import { randomWord, slugAdjectives, slugNouns } from '../../util/Words';
 import { handleAction } from './actions/Actions';
 import { getGoalList } from '../../database/games/Goals';
 import { RoomData } from '@playbingo/types';
+import Player from '../../core/Player';
 
 const MIN_ROOM_GOALS_REQUIRED = 25;
 const rooms = Router();
@@ -154,10 +155,15 @@ rooms.post('/', async (req, res) => {
     await room.generateBoard(options);
     allRooms.set(slug, room);
 
-    const token = createRoomToken(room, {
-        isSpectating: spectator,
-        isMonitor: true,
-    });
+    const token = createRoomToken(
+        room,
+        {
+            isSpectating: spectator,
+            isMonitor: true,
+        },
+        req.session.user ?? req.session.id,
+        req.session.user,
+    );
 
     res.status(200).json({ slug, authToken: token });
 });
@@ -190,15 +196,39 @@ async function getOrLoadRoom(slug: string): Promise<Room | null> {
         board: chunk(
             (await getGoalList(dbRoom.board)).map((goal) => ({
                 goal: goal,
-                colors: [],
+                completedPlayers: [],
             })),
             5,
         ),
     };
 
+    dbRoom.players.forEach((dbPlayer) => {
+        const player = new Player(
+            newRoom,
+            dbPlayer.key,
+            dbPlayer.nickname,
+            dbPlayer.color,
+            dbPlayer.spectator,
+            dbPlayer.monitor,
+            dbPlayer.userId ?? undefined,
+        );
+        newRoom.players.set(player.id, player);
+    });
+
     dbRoom.history.forEach((action) => {
-        const { nickname, color, newColor, oldColor, row, col, message } =
-            action.payload as any;
+        const {
+            nickname,
+            color,
+            newColor,
+            oldColor,
+            row,
+            col,
+            message,
+            player: playerId,
+        } = action.payload as any;
+
+        const player = newRoom.players.get(playerId)!;
+        const index = row * 5 + col;
 
         switch (action.action) {
             case 'JOIN':
@@ -211,27 +241,34 @@ async function getOrLoadRoom(slug: string): Promise<Room | null> {
                 newRoom.sendChat([{ contents: nickname, color }, ' has left.']);
                 break;
             case 'MARK':
-                if (!newRoom.board.board[row][col].colors.includes(color)) {
-                    newRoom.board.board[row][col].colors.push(color);
-                    newRoom.board.board[row][col].colors.sort((a, b) =>
-                        a.localeCompare(b),
+                if (!player.hasMarked(index)) {
+                    newRoom.board.board[row][col].completedPlayers.push(
+                        playerId,
                     );
+                    newRoom.board.board[row][col].completedPlayers.sort(
+                        (a, b) => a.localeCompare(b),
+                    );
+                    player.mark(index);
                     newRoom.sendCellUpdate(row, col);
                     newRoom.sendChat([
-                        { contents: nickname, color },
-                        ` is marked ${newRoom.board.board[row][col].goal.goal} (${row},${col})`,
+                        { contents: player.nickname, color: player.color },
+                        ` marked ${newRoom.board.board[row][col].goal.goal} (${row},${col})`,
                     ]);
                 }
                 break;
             case 'UNMARK':
-                newRoom.board.board[row][col].colors = newRoom.board.board[row][
-                    col
-                ].colors.filter((c) => c !== color);
-                newRoom.sendCellUpdate(row, col);
-                newRoom.sendChat([
-                    { contents: nickname, color },
-                    ` is unmarked ${newRoom.board.board[row][col].goal.goal} (${row},${col})`,
-                ]);
+                if (player.hasMarked(index)) {
+                    newRoom.board.board[row][col].completedPlayers =
+                        newRoom.board.board[row][col].completedPlayers.filter(
+                            (p) => p !== playerId,
+                        );
+                    player.unmark(index);
+                    newRoom.sendCellUpdate(row, col);
+                    newRoom.sendChat([
+                        { contents: player.nickname, color: player.color },
+                        ` unmarked ${newRoom.board.board[row][col].goal.goal} (${row},${col})`,
+                    ]);
+                }
                 break;
             case 'CHAT':
                 newRoom.sendChat(`${nickname}: ${message}`);
@@ -240,7 +277,7 @@ async function getOrLoadRoom(slug: string): Promise<Room | null> {
                 newRoom.sendChat([
                     { contents: nickname, color: oldColor },
                     ' has changed their color to ',
-                    { contents: color, color: newColor },
+                    { contents: newColor, color: newColor },
                 ]);
                 break;
         }
@@ -267,17 +304,22 @@ rooms.get('/:slug', async (req, res) => {
         newGenerator: room.newGenerator,
         racetimeConnection: {
             gameActive: room.racetimeEligible,
-            url: room.racetimeHandler.url,
-            startDelay: room.racetimeHandler.data?.start_delay,
-            started: room.racetimeHandler.data?.started_at ?? undefined,
-            ended: room.racetimeHandler.data?.ended_at ?? undefined,
-            status: room.racetimeHandler.data?.status.verbose_value,
+            url: room.raceHandler.url,
+            startDelay: room.raceHandler.data?.start_delay,
+            started: room.raceHandler.data?.started_at ?? undefined,
+            ended: room.raceHandler.data?.ended_at ?? undefined,
+            status: room.raceHandler.data?.status.verbose_value,
         },
     };
 
     const perms = await room.canAutoAuthenticate(req.session.user);
     if (perms) {
-        roomData.token = createRoomToken(room, perms);
+        roomData.token = createRoomToken(
+            room,
+            perms,
+            req.session.user ?? req.session.id,
+            req.session.user,
+        );
     }
 
     res.status(200).json(roomData);
@@ -296,7 +338,14 @@ rooms.post('/:slug/authorize', (req, res) => {
         return;
     }
 
-    const token = createRoomToken(room, { isSpectating: spectator });
+    const token = createRoomToken(
+        room,
+        {
+            isSpectating: spectator,
+        },
+        req.session.user ?? req.session.id,
+        req.session.user,
+    );
     res.status(200).send({ authToken: token });
 });
 

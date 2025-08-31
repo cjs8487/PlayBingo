@@ -12,6 +12,8 @@ export type Permissions = {
 export type RoomTokenPayload = {
     roomSlug: string;
     uuid: string;
+    playerId: string;
+    userId?: string;
 } & Permissions;
 
 const tokenStore: string[] = [];
@@ -19,12 +21,16 @@ const tokenStore: string[] = [];
 export const createRoomToken = (
     room: Room,
     { isSpectating, isMonitor }: Partial<Permissions>,
+    playerKey: string,
+    userId?: string,
 ) => {
     const payload: RoomTokenPayload = {
         roomSlug: room.slug,
         uuid: randomUUID(),
+        userId,
         isSpectating: !!isSpectating,
         isMonitor: !!isMonitor,
+        playerId: `${userId ? 'user' : 'session'}:${playerKey}`,
     };
     const token = sign(payload, roomTokenSecret);
     tokenStore.push(token);
@@ -66,8 +72,7 @@ export const hasPermission = (
         case 'unmark':
             return !payload.isSpectating;
         case 'newCard':
-            return true;
-        // return payload.isMonitor;
+            return payload.isMonitor;
         case 'changeColor':
             return !payload.isSpectating;
         default:

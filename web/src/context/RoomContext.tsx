@@ -12,6 +12,7 @@ import {
     createContext,
     useCallback,
     useContext,
+    useMemo,
     useState,
     useSyncExternalStore,
 } from 'react';
@@ -56,8 +57,8 @@ interface RoomContext {
     starredGoals: number[];
     showGoalDetails: boolean;
     showCounters: boolean;
-    spectator: boolean;
-    monitor: boolean;
+    connectedPlayer?: Player;
+    colorMap: { [k: string]: string };
     connect: (
         nickname: string,
         password: string,
@@ -90,8 +91,7 @@ export const RoomContext = createContext<RoomContext>({
     starredGoals: [],
     showGoalDetails: false,
     showCounters: false,
-    spectator: true,
-    monitor: false,
+    colorMap: {},
     async connect() {
         return { success: false };
     },
@@ -128,17 +128,13 @@ export function RoomContextProvider({
     const [roomData, setRoomData] = useState<RoomData>(serverRoomData);
 
     const [authToken, setAuthToken] = useState<string>(
-        localStorage.getItem(`authToken-${serverRoomData.slug}`) ??
-            serverRoomData.token ??
-            '',
+        serverRoomData.token ?? '',
     );
     const [nickname, setNickname] = useState(
         localStorage.getItem('PlayBingo.temp.nickname') ??
             (serverRoomData.token ? user?.username : '') ??
             '',
     );
-    const [spectator, setSpectator] = useState(true);
-    const [monitor, setMonitor] = useState(false);
     const [color, setColor] = useState('blue');
     const [connectionStatusState, setConnectionStatus] = useState(
         //if there is already an auth token present, start the connection
@@ -148,6 +144,12 @@ export function RoomContextProvider({
             : ConnectionStatus.UNINITIALIZED,
     );
     const [players, setPlayers] = useState<Player[]>([]);
+    const [connectedPlayer, setConnectedPlayer] = useState<Player>();
+    const colorMap = useMemo(() => {
+        const colorMap: { [k: string]: string } = {};
+        players.forEach((player) => (colorMap[player.id] = player.color));
+        return colorMap;
+    }, [players]);
 
     const [starredGoals, { push, filter }] = useList<number>([]);
 
@@ -182,18 +184,7 @@ export function RoomContextProvider({
         emitBoardUpdate({ action: 'board', board });
     }, []);
     const onConnected = useCallback(
-        (
-            board: Board,
-            chatHistory: ChatMessage[],
-            roomData: RoomData,
-            identity?: Player,
-        ) => {
-            if (identity) {
-                setNickname(identity.nickname);
-                setColor(identity.color);
-                setSpectator(identity.spectator);
-                setMonitor(identity.monitor);
-            }
+        (board: Board, chatHistory: ChatMessage[], roomData: RoomData) => {
             emitBoardUpdate({ action: 'board', board });
             setMessages(chatHistory);
             setConnectionStatus(ConnectionStatus.CONNECTED);
@@ -233,6 +224,9 @@ export function RoomContextProvider({
                 if (payload.players) {
                     setPlayers(payload.players);
                 }
+                if (payload.connectedPlayer) {
+                    setConnectedPlayer(payload.connectedPlayer);
+                }
                 switch (payload.action) {
                     case 'chat':
                         if (!payload.message) return;
@@ -262,7 +256,6 @@ export function RoomContextProvider({
                             payload.board,
                             payload.chatHistory,
                             payload.roomData,
-                            payload.identity,
                         );
                         break;
                     case 'unauthorized':
@@ -287,7 +280,6 @@ export function RoomContextProvider({
             onClose() {
                 setAuthToken('');
                 setConnectionStatus(ConnectionStatus.CLOSED);
-                console.log('closing ws connection');
             },
         },
         connectionStatus === ConnectionStatus.CONNECTING ||
@@ -396,6 +388,9 @@ export function RoomContextProvider({
         [authToken, sendJsonMessage],
     );
     const createRacetimeRoom = useCallback(async () => {
+        if (!connectedPlayer?.monitor) {
+            return;
+        }
         const res = await fetch(`/api/rooms/${roomData.slug}/actions`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -408,7 +403,7 @@ export function RoomContextProvider({
             alertError(await res.text());
             return;
         }
-    }, [roomData, authToken]);
+    }, [roomData, authToken, connectedPlayer]);
     const updateRacetimeRoom = useCallback(async () => {
         const res = await fetch(`/api/rooms/${roomData.slug}/actions`, {
             method: 'POST',
@@ -421,6 +416,9 @@ export function RoomContextProvider({
         }
     }, [roomData, authToken]);
     const joinRacetimeRoom = useCallback(async () => {
+        if (connectedPlayer?.spectator) {
+            return;
+        }
         const res = await fetch(`/api/rooms/${roomData.slug}/actions`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -433,8 +431,11 @@ export function RoomContextProvider({
             alertError(await res.text());
             return;
         }
-    }, [roomData, authToken]);
+    }, [roomData, authToken, connectedPlayer]);
     const racetimeReady = useCallback(async () => {
+        if (connectedPlayer?.spectator) {
+            return;
+        }
         const res = await fetch(`/api/rooms/${roomData.slug}/actions`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -447,8 +448,11 @@ export function RoomContextProvider({
             alertError(await res.text());
             return;
         }
-    }, [roomData, authToken]);
+    }, [roomData, authToken, connectedPlayer]);
     const racetimeUnready = useCallback(async () => {
+        if (connectedPlayer?.spectator) {
+            return;
+        }
         const res = await fetch(`/api/rooms/${roomData.slug}/actions`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -458,7 +462,7 @@ export function RoomContextProvider({
             alertError(await res.text());
             return;
         }
-    }, [roomData, authToken]);
+    }, [roomData, authToken, connectedPlayer]);
     const toggleGoalStar = useCallback(
         (row: number, col: number) => {
             const index = row * 5 + col;
@@ -492,8 +496,8 @@ export function RoomContextProvider({
                 starredGoals,
                 showGoalDetails,
                 showCounters,
-                spectator,
-                monitor,
+                connectedPlayer,
+                colorMap,
                 connect,
                 sendChatMessage,
                 markGoal,

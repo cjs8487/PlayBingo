@@ -15,33 +15,40 @@ interface CellProps {
 }
 
 export default function BoardCell({
-    cell: { goal, colors },
+    cell: { goal, completedPlayers },
     row,
     col,
 }: CellProps) {
     // context
     const {
-        color,
         markGoal,
         unmarkGoal,
         starredGoals,
         toggleGoalStar,
         showGoalDetails,
         showCounters,
+        connectedPlayer,
+        colorMap,
     } = useContext(RoomContext);
 
     // callbacks
     const toggleSpace = useCallback(() => {
-        if (colors.includes(color)) {
+        if (!connectedPlayer) {
+            return;
+        }
+        if (completedPlayers.includes(connectedPlayer.id)) {
             unmarkGoal(row, col);
         } else {
             markGoal(row, col);
         }
-    }, [row, col, markGoal, unmarkGoal, color, colors]);
+    }, [row, col, markGoal, unmarkGoal, connectedPlayer, completedPlayers]);
 
     // calculations
-    const colorPortion = 360 / colors.length;
+    const colorPortion = 360 / completedPlayers.length;
     const isStarred = starredGoals.includes(row * 5 + col);
+    const colors = completedPlayers
+        .map((player) => colorMap[player])
+        .filter((c) => !!c);
 
     const [counter, setCounter] = useState(0);
     const updateProgress = useCallback((delta: number) => {

@@ -6,7 +6,7 @@ import {
     LeaveAction,
     MarkAction,
     NewCardAction,
-    Player,
+    Player as PlayerData,
     RevealedBoard,
     ServerMessage,
     UnmarkAction,
@@ -20,7 +20,7 @@ import {
     GenerationListMode,
     GenerationListTransform,
 } from '@prisma/client';
-import { OPEN, WebSocket } from 'ws';
+import { WebSocket } from 'ws';
 import { roomCleanupInactive } from '../Environment';
 import { logError, logInfo, logWarn } from '../Logger';
 import {
@@ -35,6 +35,7 @@ import {
     addLeaveAction,
     addMarkAction,
     addUnmarkAction,
+    createUpdatePlayer,
     setRoomBoard,
 } from '../database/Rooms';
 import { isStaff } from '../database/Users';
@@ -47,11 +48,8 @@ import {
 import { getCategories } from '../database/games/GoalCategories';
 import { goalsForGame } from '../database/games/Goals';
 import { shuffle } from '../util/Array';
-import {
-    checkCompletedLines,
-    CompletedLines,
-    listToBoard,
-} from '../util/RoomUtils';
+import { computeLineMasks, listToBoard } from '../util/RoomUtils';
+import Player from './Player';
 import { allRooms } from './RoomServer';
 import BoardGenerator from './generation/BoardGenerator';
 import {
@@ -60,16 +58,7 @@ import {
 } from './generation/GeneratorCore';
 import { generateFullRandom, generateRandomTyped } from './generation/Random';
 import { generateSRLv5 } from './generation/SRLv5';
-import RacetimeHandler, { RaceData } from './integration/RacetimeHandler';
-
-type RoomIdentity = {
-    nickname: string;
-    color: string;
-    racetimeId?: string;
-    spectator: boolean;
-    monitor: boolean;
-    goalComplete: boolean;
-};
+import RaceHandler, { RaceData } from './integration/races/RacetimeHandler';
 
 export enum BoardGenerationMode {
     RANDOM = 'Random',
@@ -120,9 +109,7 @@ export default class Room {
     gameSlug: string;
     password: string;
     slug: string;
-    connections: Map<string, WebSocket>;
     board: RevealedBoard;
-    identities: Map<string, RoomIdentity>;
     chatHistory: ChatMessage[];
     id: string;
     hideCard: boolean;
@@ -131,19 +118,21 @@ export default class Room {
 
     lastGenerationMode: BoardGenerationOptions;
 
-    lastLineStatus: CompletedLines;
+    victoryMasks: bigint[];
     completed: boolean;
 
     generatorConfig?: GeneratorConfig;
     newGenerator: boolean;
 
     racetimeEligible: boolean;
-    racetimeHandler: RacetimeHandler;
+    raceHandler: RaceHandler;
 
     lastMessage: number;
 
     inactivityWarningTimeout?: NodeJS.Timeout;
     closeTimeout?: NodeJS.Timeout;
+
+    players: Map<string, Player>;
 
     constructor(
         name: string,
@@ -164,8 +153,6 @@ export default class Room {
         this.gameSlug = gameSlug;
         this.password = password;
         this.slug = slug;
-        this.identities = new Map();
-        this.connections = new Map();
         this.chatHistory = [];
         this.id = id;
         this.bingoMode = bingoMode;
@@ -174,7 +161,7 @@ export default class Room {
         this.lastGenerationMode = { mode: BoardGenerationMode.RANDOM };
 
         this.racetimeEligible = !!racetimeEligible;
-        this.racetimeHandler = new RacetimeHandler(this);
+        this.raceHandler = new RaceHandler(this);
 
         this.board = {
             board: [],
@@ -182,11 +169,22 @@ export default class Room {
         };
 
         if (racetimeUrl) {
-            this.racetimeHandler.connect(racetimeUrl);
+            this.raceHandler.connect(racetimeUrl);
+        }
+
+        if (bingoMode === BingoMode.LINES) {
+            this.victoryMasks = computeLineMasks(5, 5);
+        } else if (bingoMode === BingoMode.BLACKOUT) {
+            let mask = 0n;
+            for (let i = 0; i < 25; i++) {
+                mask |= 1n << BigInt(i);
+            }
+            this.victoryMasks = [mask];
+        } else {
+            this.victoryMasks = [];
         }
 
         this.hideCard = hideCard;
-        this.lastLineStatus = {};
         this.completed = false;
 
         this.generatorConfig = generatorConfig;
@@ -197,6 +195,8 @@ export default class Room {
             () => this.warnClose(),
             roomCleanupInactive,
         );
+
+        this.players = new Map<string, Player>();
     }
 
     async generateBoard(options: BoardGenerationOptions) {
@@ -324,47 +324,12 @@ export default class Room {
         );
     }
 
-    getPlayers() {
-        const players: Player[] = [];
-        this.connections.forEach((_, id) => {
-            const player = this.getPlayer(id);
-            if (player) {
-                players.push(player);
-            }
+    getPlayers(): PlayerData[] {
+        const players: PlayerData[] = [];
+        this.players.forEach((player) => {
+            players.push(player.toClientData());
         });
         return players;
-    }
-
-    private getPlayer(id: string): Player | undefined {
-        const ident = this.identities.get(id);
-        if (!ident) return undefined;
-        const rtUser = this.racetimeHandler.getPlayer(ident.racetimeId ?? '');
-        return {
-            id,
-            nickname: ident.nickname,
-            color: ident.color,
-            goalCount: this.board.board.reduce((prev, row) => {
-                return (
-                    prev +
-                    row.reduce((rowPrev, cell) => {
-                        if (cell.colors.includes(ident.color)) {
-                            return rowPrev + 1;
-                        }
-                        return rowPrev;
-                    }, 0)
-                );
-            }, 0),
-            racetimeStatus: rtUser
-                ? {
-                      connected: true,
-                      username: rtUser.user.full_name,
-                      status: rtUser.status.verbose_value,
-                      finishTime: rtUser.finish_time ?? undefined,
-                  }
-                : { connected: false },
-            spectator: ident.spectator,
-            monitor: ident.monitor,
-        };
     }
 
     //#region Handlers
@@ -373,38 +338,51 @@ export default class Room {
         auth: RoomTokenPayload,
         socket: WebSocket,
     ): ServerMessage {
-        let identity: RoomIdentity | undefined;
-        if (action.payload) {
-            identity = {
-                nickname: action.payload.nickname,
-                color: auth.isSpectating ? '' : 'blue',
-                spectator: auth.isSpectating,
-                monitor: auth.isMonitor,
-                goalComplete: false,
-            };
-            this.identities.set(auth.uuid, identity);
+        let player: Player | undefined;
+        let newPlayer = false;
+        if (this.players.has(auth.playerId)) {
+            player = this.players.get(auth.playerId);
+            if (!player) {
+                return { action: 'unauthorized' };
+            }
+        } else if (action.payload) {
+            player = new Player(
+                this,
+                auth.playerId,
+                action.payload.nickname,
+                undefined,
+                auth.isSpectating,
+                auth.isMonitor,
+                auth.userId,
+            );
+            this.players.set(player.id, player);
+            newPlayer = true;
         } else {
-            identity = this.identities.get(auth.uuid);
-            if (!identity) {
+            player = this.players.get(auth.playerId);
+            if (!player) {
                 return { action: 'unauthorized' };
             }
         }
-        if (auth.isSpectating) {
-            this.sendChat(`${identity.nickname} is now spectating`);
-        } else {
-            this.sendChat([
-                { contents: identity.nickname, color: identity.color },
-                ' has joined.',
-            ]);
+
+        if (newPlayer) {
+            if (auth.isSpectating) {
+                this.sendChat(`${player.nickname} is now spectating`);
+            } else {
+                this.sendChat([
+                    { contents: player.nickname, color: player.color },
+                    ' has joined.',
+                ]);
+            }
         }
 
-        this.connections.set(auth.uuid, socket);
-        addJoinAction(this.id, identity.nickname, identity.color).then();
+        player.addConnection(auth.uuid, socket);
+        addJoinAction(this.id, player.nickname, player.color).then();
+        createUpdatePlayer(this.id, player).then();
         return {
             action: 'connected',
             board: this.hideCard ? { hidden: true } : this.board,
             chatHistory: this.chatHistory,
-            identity: this.getPlayer(auth.uuid),
+            connectedPlayer: player.toClientData(),
             roomData: {
                 game: this.game,
                 slug: this.slug,
@@ -413,11 +391,11 @@ export default class Room {
                 newGenerator: this.newGenerator,
                 racetimeConnection: {
                     gameActive: this.racetimeEligible,
-                    url: this.racetimeHandler.url,
-                    startDelay: this.racetimeHandler.data?.start_delay,
-                    started: this.racetimeHandler.data?.started_at ?? undefined,
-                    ended: this.racetimeHandler.data?.ended_at ?? undefined,
-                    status: this.racetimeHandler.data?.status.verbose_value,
+                    url: this.raceHandler.url,
+                    startDelay: this.raceHandler.data?.start_delay,
+                    started: this.raceHandler.data?.started_at ?? undefined,
+                    ended: this.raceHandler.data?.ended_at ?? undefined,
+                    status: this.raceHandler.data?.status.verbose_value,
                 },
             },
             players: this.getPlayers(),
@@ -429,20 +407,28 @@ export default class Room {
         auth: RoomTokenPayload,
         token: string,
     ): ServerMessage {
-        const identity = this.identities.get(auth.uuid);
-        if (!identity) {
+        let player: Player | undefined = undefined;
+        for (const p of this.players.values()) {
+            if (p.closeConnection(auth.uuid)) {
+                player = p;
+                break;
+            }
+        }
+        if (!player) {
             return { action: 'unauthorized' };
         }
-        this.sendChat([
-            { contents: identity.nickname, color: identity.color },
-            ' has left.',
-        ]);
-        invalidateToken(token);
-        this.connections.delete(auth.uuid);
-        addLeaveAction(this.id, identity.nickname, identity.color).then();
-        if (this.connections.size === 0) {
-            this.close();
+        const hasLeft = !player.hasConnections();
+        if (hasLeft) {
+            this.sendChat([
+                { contents: player.nickname, color: player.color },
+                ' has left.',
+            ]);
+            addLeaveAction(this.id, player.nickname, player.color).then();
+            if (this.players.size === 0) {
+                this.close();
+            }
         }
+        invalidateToken(token);
         return { action: 'disconnected' };
     }
 
@@ -450,17 +436,17 @@ export default class Room {
         action: ChatAction,
         auth: RoomTokenPayload,
     ): ServerMessage | undefined {
-        const identity = this.identities.get(auth.uuid);
-        if (!identity) {
+        const player = this.players.get(auth.playerId);
+        if (!player) {
             return { action: 'unauthorized' };
         }
         const { message: chatMessage } = action.payload;
         if (!chatMessage) return;
-        this.sendChat(`${identity.nickname}: ${chatMessage}`);
+        this.sendChat(`${player.nickname}: ${chatMessage}`);
         addChatAction(
             this.id,
-            identity.nickname,
-            identity.color,
+            player.nickname,
+            player.color,
             chatMessage,
         ).then();
     }
@@ -469,35 +455,34 @@ export default class Room {
         action: MarkAction,
         auth: RoomTokenPayload,
     ): ServerMessage | undefined {
-        const identity = this.identities.get(auth.uuid);
-        if (!identity) {
+        const player = this.players.get(auth.playerId);
+        if (!player) {
             return { action: 'unauthorized' };
         }
         const { row, col } = action.payload;
         if (row === undefined || col === undefined) return;
-        if (this.board.board[row][col].colors.includes(identity.color)) return;
+        const index = row * 5 + col;
+        if (player.hasMarked(index)) return;
+
         if (
             this.bingoMode === BingoMode.LOCKOUT &&
-            this.board.board[row][col].colors.length > 0
+            this.board.board[row][col].completedPlayers.length > 0
         )
             return;
-        this.board.board[row][col].colors.push(identity.color);
-        this.board.board[row][col].colors.sort((a, b) => a.localeCompare(b));
+        this.board.board[row][col].completedPlayers.push(player.id);
+        this.board.board[row][col].completedPlayers.sort((a, b) =>
+            a.localeCompare(b),
+        );
+        player.mark(index);
         this.sendCellUpdate(row, col);
         this.sendChat([
             {
-                contents: identity.nickname,
-                color: identity.color,
+                contents: player.nickname,
+                color: player.color,
             },
             ` marked ${this.board.board[row][col].goal.goal} (${row},${col})`,
         ]);
-        addMarkAction(
-            this.id,
-            identity.nickname,
-            identity.color,
-            row,
-            col,
-        ).then();
+        addMarkAction(this.id, player.id, row, col).then();
         this.checkWinConditions();
     }
 
@@ -505,27 +490,24 @@ export default class Room {
         action: UnmarkAction,
         auth: RoomTokenPayload,
     ): ServerMessage | undefined {
-        const identity = this.identities.get(auth.uuid);
-        if (!identity) {
+        const player = this.players.get(auth.playerId);
+        if (!player) {
             return { action: 'unauthorized' };
         }
         const { row: unRow, col: unCol } = action.payload;
         if (unRow === undefined || unCol === undefined) return;
-        this.board.board[unRow][unCol].colors = this.board.board[unRow][
-            unCol
-        ].colors.filter((color) => color !== identity.color);
+        const index = unRow * 5 + unCol;
+        if (!player.hasMarked(index)) return;
+        this.board.board[unRow][unCol].completedPlayers = this.board.board[
+            unRow
+        ][unCol].completedPlayers.filter((playerId) => playerId !== player.id);
+        player.unmark(index);
         this.sendCellUpdate(unRow, unCol);
         this.sendChat([
-            { contents: identity.nickname, color: identity.color },
+            { contents: player.nickname, color: player.color },
             ` unmarked ${this.board.board[unRow][unCol].goal.goal} (${unRow},${unCol})`,
         ]);
-        addUnmarkAction(
-            this.id,
-            identity.nickname,
-            identity.color,
-            unRow,
-            unCol,
-        ).then();
+        addUnmarkAction(this.id, player.id, unRow, unCol).then();
         this.checkWinConditions();
     }
 
@@ -533,29 +515,27 @@ export default class Room {
         action: ChangeColorAction,
         auth: RoomTokenPayload,
     ): ServerMessage | undefined {
-        const identity = this.identities.get(auth.uuid);
-        if (!identity) {
+        const player = this.players.get(auth.playerId);
+        if (!player) {
             return { action: 'unauthorized' };
         }
         const { color } = action.payload;
         if (!color) {
             return;
         }
-        this.identities.set(auth.uuid, {
-            ...identity,
+        addChangeColorAction(
+            this.id,
+            player.nickname,
+            player.color,
             color,
-        });
+        ).then();
+        player.color = color;
+        createUpdatePlayer(this.id, player).then();
         this.sendChat([
-            { contents: identity.nickname, color: identity.color },
+            { contents: player.nickname, color: player.color },
             ' has changed their color to ',
             { contents: color, color },
         ]);
-        addChangeColorAction(
-            this.id,
-            identity.nickname,
-            identity.color,
-            color,
-        ).then();
     }
 
     handleNewCard(action: NewCardAction) {
@@ -573,24 +553,22 @@ export default class Room {
     }
 
     handleSocketClose(ws: WebSocket) {
-        let socketKey;
-        this.connections.forEach((v, k) => {
-            if (v === ws) {
-                socketKey = k;
+        let player: Player | undefined;
+        for (const p of this.players.values()) {
+            if (p.handleSocketClose(ws)) {
+                player = p;
             }
-        });
-        if (socketKey) {
-            const identity = this.identities.get(socketKey);
-            this.connections.delete(socketKey);
-            if (!identity) return true;
-            this.sendChat([
-                { contents: identity.nickname, color: identity.color },
-                'has left.',
-            ]);
-            addLeaveAction(this.id, identity.nickname, identity.color).then();
-
-            if (this.connections.size === 0) {
-                this.close();
+        }
+        if (player) {
+            if (!player.hasConnections()) {
+                this.sendChat([
+                    { contents: player.nickname, color: player.color },
+                    ' has left.',
+                ]);
+                addLeaveAction(this.id, player.nickname, player.color).then();
+                if (this.players.size === 0) {
+                    this.close();
+                }
             }
             return true;
         }
@@ -612,12 +590,12 @@ export default class Room {
             },
         });
         this.sendChat(`Racetime.gg room created ${url}`);
-        this.racetimeHandler.connect(url);
-        this.racetimeHandler.connectWebsocket();
+        this.raceHandler.connect(url);
+        this.raceHandler.connectWebsocket();
     }
 
     handleRacetimeRoomDisconnected() {
-        this.racetimeHandler.disconnect();
+        this.raceHandler.disconnect();
         this.sendServerMessage({
             action: 'updateRoomData',
             roomData: {
@@ -634,14 +612,14 @@ export default class Room {
     }
 
     handleRevealCard(payload: RoomTokenPayload) {
-        const identity = this.identities.get(payload.uuid);
-        if (!identity) {
+        const player = this.players.get(payload.playerId);
+        if (!player) {
             return null;
         }
         this.sendChat([
             {
-                contents: identity.nickname,
-                color: identity.color,
+                contents: player.nickname,
+                color: player.color,
             },
             ' has revealed the card.',
         ]);
@@ -691,7 +669,7 @@ export default class Room {
             players: this.getPlayers(),
             racetimeConnection: {
                 gameActive: this.racetimeEligible,
-                url: this.racetimeHandler.url,
+                url: this.raceHandler.url,
                 startDelay: data.start_delay ?? undefined,
                 started: data.started_at ?? undefined,
                 ended: data.ended_at ?? undefined,
@@ -704,12 +682,8 @@ export default class Room {
         message: ServerMessage,
         updateInactivity: boolean = true,
     ) {
-        this.connections.forEach((client) => {
-            if (client.readyState === OPEN) {
-                client.send(
-                    JSON.stringify({ ...message, players: this.getPlayers() }),
-                );
-            }
+        this.players.forEach((player) => {
+            player.sendMessage({ ...message, players: this.getPlayers() });
         });
 
         if (updateInactivity) {
@@ -721,105 +695,99 @@ export default class Room {
     }
 
     private checkWinConditions() {
-        switch (this.bingoMode) {
-            case 'LINES':
-                const lineCounts = checkCompletedLines(this.board.board);
-                Object.keys(lineCounts).forEach((color) => {});
-                this.identities.forEach((identity) => {
-                    const { color, nickname, goalComplete } = identity;
-                    if (lineCounts[color] > this.lastLineStatus[color]) {
+        this.players.forEach((player) => {
+            if (this.bingoMode === BingoMode.LOCKOUT) {
+                if (!player.goalComplete && player.goalCount >= 13) {
+                    this.sendChat([
+                        {
+                            contents: player.nickname,
+                            color: player.color,
+                        },
+                        ' has achieved lockout!',
+                    ]);
+                    player.goalComplete = true;
+                }
+                if (player.goalComplete && player.goalCount < 13) {
+                    this.sendChat([
+                        {
+                            contents: player.nickname,
+                            color: player.color,
+                        },
+                        ' no longer has lockout.',
+                    ]);
+                    player.goalComplete = false;
+                }
+            } else {
+                if (this.bingoMode === BingoMode.LINES) {
+                    const linesComplete = this.victoryMasks.reduce(
+                        (count, mask) =>
+                            count + (player.hasCompletedGoals(mask) ? 1 : 0),
+                        0,
+                    );
+                    if (linesComplete > player.linesComplete) {
                         this.sendChat([
-                            { contents: nickname, color },
-                            ' has completed a line',
+                            {
+                                contents: player.nickname,
+                                color: player.color,
+                            },
+                            ' has completed a line!',
                         ]);
                     }
-                    if (!goalComplete && lineCounts[color] >= this.lineCount) {
+                    if (
+                        linesComplete >= this.lineCount &&
+                        !player.goalComplete
+                    ) {
+                        player.goalComplete = true;
                         this.sendChat([
-                            { contents: nickname, color },
+                            {
+                                contents: player.nickname,
+                                color: player.color,
+                            },
                             ' has completed the goal!',
                         ]);
-                        identity.goalComplete = true;
-                    }
-                    if (goalComplete && lineCounts[color] < this.lineCount) {
-                        identity.goalComplete = false;
+                    } else if (
+                        linesComplete < this.lineCount &&
+                        player.goalComplete
+                    ) {
+                        player.goalComplete = false;
                         this.sendChat([
-                            { contents: nickname, color },
+                            {
+                                contents: player.nickname,
+                                color: player.color,
+                            },
                             ' has no longer completed the goal.',
                         ]);
                     }
-                });
-                this.lastLineStatus = lineCounts;
-                break;
-            case 'BLACKOUT':
-                this.identities.forEach((identity) => {
-                    const hasBlackout = this.board.board.every((row) =>
-                        row.every((cell) =>
-                            cell.colors.includes(identity.color),
-                        ),
+                    player.linesComplete = linesComplete;
+                } else {
+                    const complete = this.victoryMasks.every((mask) =>
+                        player.hasCompletedGoals(mask),
                     );
-                    if (hasBlackout && !identity.goalComplete) {
-                        identity.goalComplete = true;
+                    if (complete && !player.goalComplete) {
+                        player.goalComplete = true;
                         this.sendChat([
                             {
-                                color: identity.color,
-                                contents: identity.nickname,
+                                contents: player.nickname,
+                                color: player.color,
                             },
                             ' has achieved blackout!',
                         ]);
-                    }
-                    if (!hasBlackout && identity.goalComplete) {
-                        identity.goalComplete = false;
+                    } else if (!complete && player.goalComplete) {
+                        player.goalComplete = false;
                         this.sendChat([
                             {
-                                color: identity.color,
-                                contents: identity.nickname,
+                                contents: player.nickname,
+                                color: player.color,
                             },
-                            ' no longer has blackout',
+                            ' no longer has blackout.',
                         ]);
                     }
-                });
-                break;
-            case 'LOCKOUT':
-                this.identities.forEach((identity) => {
-                    const goalCount = this.board.board.reduce((prev, row) => {
-                        return (
-                            prev +
-                            row.reduce((p, cell) => {
-                                if (cell.colors.includes(identity.color)) {
-                                    return p + 1;
-                                }
-                                return p;
-                            }, 0)
-                        );
-                    }, 0);
-                    if (!identity.goalComplete && goalCount >= 13) {
-                        this.sendChat([
-                            {
-                                contents: identity.nickname,
-                                color: identity.color,
-                            },
-                            ' has achieved lockout!',
-                        ]);
-                        identity.goalComplete = true;
-                    }
-                    if (identity.goalComplete && goalCount < 13) {
-                        this.sendChat([
-                            {
-                                contents: identity.nickname,
-                                color: identity.color,
-                            },
-                            ' no longer has lockout.',
-                        ]);
-                        identity.goalComplete = false;
-                    }
-                });
-                break;
-            default:
-                break;
-        }
+                }
+            }
+        });
         let allComplete = true;
-        this.identities.forEach((i) => {
-            if (!i.spectator && !i.goalComplete) {
+        this.players.forEach((player) => {
+            if (!player.spectator && !player.goalComplete) {
                 allComplete = false;
             }
         });
@@ -832,6 +800,10 @@ export default class Room {
      * they will need to provide the password in order to elevate from spectator
      * permissions.
      *
+     * Players who have previously successfully authenticated within their
+     * session context are also eligible for auto authentication, pulling
+     * permissions from their previous connection.
+     *
      * @param user The id of the currently logged in user
      * @returns False if authentication is required in order to grant the
      * provided user minimal room permissions, or a Permissions object
@@ -840,6 +812,14 @@ export default class Room {
     async canAutoAuthenticate(user?: string): Promise<false | Permissions> {
         if (!user) {
             return false;
+        }
+
+        const player = this.players.get(`user:${user}`);
+        if (player) {
+            return {
+                isMonitor: player.monitor,
+                isSpectating: player.spectator,
+            };
         }
 
         if (await isModerator(this.gameSlug, user)) {
@@ -861,55 +841,44 @@ export default class Room {
 
     //#region Racetime Integration
     async connectRacetimeWebSocket() {
-        this.racetimeHandler.connectWebsocket();
+        this.raceHandler.connectWebsocket();
     }
 
-    joinRacetimeRoom(
-        token: string,
-        racetimeId: string,
-        authToken: RoomTokenPayload,
-    ) {
-        const identity = this.identities.get(authToken.uuid);
-        if (!identity) {
-            this.logWarn(
-                'Unable to find an identity for a verified room token',
-            );
+    joinRaceRoom(racetimeId: string, authToken: RoomTokenPayload) {
+        const player = this.players.get(authToken.playerId);
+        if (!player) {
+            this.logWarn('Unable to find a player for a verified room token');
             return false;
         }
-        this.logInfo(`Connecting ${identity.nickname} to racetime`);
-        this.identities.set(authToken.uuid, {
-            ...identity,
-            racetimeId: racetimeId,
-        });
-        return this.racetimeHandler.joinUser(token);
+        this.logInfo(`Connecting ${player.nickname} to racetime`);
+        player.raceId = racetimeId;
+        return player.joinRace();
     }
 
     async refreshRacetimeHandler() {
-        this.racetimeHandler.refresh();
+        this.raceHandler.refresh();
     }
 
-    readyPlayer(token: string, roomAuth: RoomTokenPayload) {
-        const identity = this.identities.get(roomAuth.uuid);
-        if (!identity) {
+    readyPlayer(roomAuth: RoomTokenPayload) {
+        const player = this.players.get(roomAuth.playerId);
+        if (!player) {
+            this.logWarn('Unable to find a player for a verified room token');
+            return false;
+        }
+        this.logInfo(`Readying ${player.nickname} to race`);
+        return player.ready();
+    }
+
+    unreadyPlayer(roomAuth: RoomTokenPayload) {
+        const player = this.players.get(roomAuth.playerId);
+        if (!player) {
             this.logWarn(
                 'Unable to find an identity for a verified room token',
             );
             return false;
         }
-        this.logInfo(`Readying ${identity.nickname} to race`);
-        return this.racetimeHandler.ready(token);
-    }
-
-    unreadyPlayer(token: string, roomAuth: RoomTokenPayload) {
-        const identity = this.identities.get(roomAuth.uuid);
-        if (!identity) {
-            this.logWarn(
-                'Unable to find an identity for a verified room token',
-            );
-            return false;
-        }
-        this.logInfo(`Readying ${identity.nickname} to race`);
-        return this.racetimeHandler.unready(token);
+        this.logInfo(`Readying ${player.nickname} to race`);
+        return player.unready();
     }
     //#endregion
 
@@ -943,7 +912,7 @@ export default class Room {
      */
     canClose() {
         if (Date.now() - this.lastMessage > roomCleanupInactive) {
-            return this.connections.size <= 0;
+            return this.players.size <= 0;
         }
         return false;
     }
@@ -954,9 +923,11 @@ export default class Room {
     close() {
         this.logInfo('Closing room.');
         this.sendSystemMessage('This room has been closed due to inactivity.');
-        this.connections.forEach((connection) => {
-            this.handleSocketClose(connection);
-            connection.close(1001, 'Room is closing.');
+        this.players.forEach((player) => {
+            player.connections.forEach((connection) => {
+                this.handleSocketClose(connection);
+                connection.close(1001, 'Room is closing.');
+            });
         });
         allRooms.delete(this.slug);
     }

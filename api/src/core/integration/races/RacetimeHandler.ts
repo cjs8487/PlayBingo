@@ -1,8 +1,9 @@
 import { RawData, WebSocket } from 'ws';
-import { racetimeHost } from '../../Environment';
-import { disconnectRoomFromRacetime } from '../../database/Rooms';
-import Room from '../Room';
-import { logInfo } from '../../Logger';
+import { racetimeHost } from '../../../Environment';
+import { disconnectRoomFromRacetime } from '../../../database/Rooms';
+import Room from '../../Room';
+import { logInfo } from '../../../Logger';
+import RaceHandler from './RaceHandler';
 
 interface User {
     id: string;
@@ -88,7 +89,7 @@ type WebSocketMessage =
 
 type SynchronousSocketCallback<T> = (value: T) => void;
 
-export default class RacetimeHandler {
+export default class RacetimeHandler implements RaceHandler {
     /**The room this handler is connected to */
     room: Room;
     /**If the room has an associated racetime race, regardless of current race status */
@@ -249,10 +250,18 @@ export default class RacetimeHandler {
     }
 
     getPlayer(id: string) {
-        return this.data?.entrants.find((u) => u.user.id === id);
+        const user = this.data?.entrants.find((u) => u.user.id === id);
+        if (user) {
+            return {
+                username: user.user.full_name,
+                ready: user.status.value === 'ready',
+                finishTime: user.finish_time ?? undefined,
+            };
+        }
+        return undefined;
     }
 
-    async joinUser(token: string) {
+    async joinPlayer(token: string) {
         if (!this.connected || !this.websocketConnected || !this.socket) {
             logInfo('Unable to join user - room is not connected to racetime');
             return false;
@@ -271,6 +280,10 @@ export default class RacetimeHandler {
             );
             return false;
         }
+    }
+
+    async leavePlayer(token: string): Promise<boolean> {
+        throw new Error('Not implemented');
     }
 
     async refresh() {
@@ -316,7 +329,7 @@ export default class RacetimeHandler {
         this.room.sendRaceData(this.data);
     }
 
-    async ready(token: string) {
+    async readyPlayer(token: string) {
         if (!this.connected || !this.websocketConnected || !this.socket) {
             this.room.logInfo(
                 'Unable to ready - room is not connected to racetime',
@@ -335,7 +348,7 @@ export default class RacetimeHandler {
         }
     }
 
-    async unready(token: string) {
+    async unreadyPlayer(token: string) {
         if (!this.connected || !this.websocketConnected || !this.socket) {
             this.room.logInfo(
                 'Unable to unready - room is not connected to racetime',

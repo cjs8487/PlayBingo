@@ -2,10 +2,10 @@
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "type": "object",
     "additionalProperties": false,
-    "required": ["goal", "description", "colors"],
+    "required": ["goal", "description", "completedPlayers"],
     "description": "An incoming websocket message from the server telling the client of a change in room state or instructing it to take an action",
     "properties": {
         "goal": {"$ref": "./Goal.json"},
-        "colors": {"type": "array", "items": {"type": "string"}}
+        "completedPlayers": {"type": "array", "items": {"type": "string"}}
     }
 }

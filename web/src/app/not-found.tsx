@@ -25,7 +25,7 @@ const mockBoard = {
                 description: '',
             },
             description: '',
-            colors: text === '404' ? [theme.palette.primary.dark] : [],
+            completedPlayers: text === '404' ? ['1'] : [],
         })),
     ),
 };
@@ -99,6 +99,7 @@ export default function NotFound() {
         starredGoals: [],
         showGoalDetails: false,
         showCounters: false,
+        colorMap: { '1': theme.palette.primary.dark },
         connect: async () => ({ success: true }),
         sendChatMessage: () => {},
         markGoal: () => {},
