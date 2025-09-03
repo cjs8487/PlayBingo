@@ -84,6 +84,7 @@ model Game {
   generationGoalSelection     GenerationGoalSelection       @default(RANDOM)
   generationGoalRestrictions  GenerationGoalRestriction[]   @default([])
   generationGlobalAdjustments GenerationGlobalAdjustments[] @default([])
+  generatorConfig             Json                          @default("{}")
   newGeneratorBeta            Boolean                       @default(true)
   descriptionMd               String?
   setupMd                     String?
