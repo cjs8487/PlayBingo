@@ -4,7 +4,7 @@ import {
     GenerationGoalSelection,
     PrismaClient,
 } from '@prisma/client';
-import { GeneratorConfig } from '../../../src/core/generation/GeneratorConfig';
+import { GeneratorConfig } from '@playbingo/shared/GeneratorConfig';
 
 const prisma = new PrismaClient();
 
