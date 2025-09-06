@@ -4,6 +4,7 @@ import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import { cache, ReactNode } from 'react';
 import { gameCoverUrl, getFullUrl, userAvatarUrl } from '../../../../lib/Utils';
+import GameTabs from './GameTabs';
 
 const getGame = cache(async (slug: string): Promise<Game | undefined> => {
     const res = await fetch(getFullUrl(`/api/games/${slug}`));
@@ -23,6 +24,8 @@ export default async function GameLayout({ params, children }: Props) {
 
     const game = await getGame(slug);
 
+    console.log(game);
+
     if (!game) {
         notFound();
     }
@@ -33,7 +36,7 @@ export default async function GameLayout({ params, children }: Props) {
         <Box
             sx={{
                 display: 'grid',
-                gridTemplateRows: '1fr',
+                gridTemplateRows: 'auto 1fr',
                 gridTemplateColumns: 'minmax(auto, 250px) 1fr',
                 height: '100%',
             }}
@@ -167,6 +170,7 @@ export default async function GameLayout({ params, children }: Props) {
                     </Box>
                 )}
             </Box>
+            <GameTabs slug={slug} />
             {/* <Box sx={{ background: 'gray', p: 2 }}>Navigation</Box> */}
             {children}
         </Box>
