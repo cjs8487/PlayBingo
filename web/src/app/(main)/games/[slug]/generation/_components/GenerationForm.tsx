@@ -1,26 +1,27 @@
 'use client';
+import { FormikSelectField } from '@/components/input/FormikSelectField';
+import {
+    JSONSchema,
+    JsonSchemaRenderer,
+    JSONValue,
+} from '@/components/input/JsonSchemaRenderer';
+import { alertError, notifyMessage } from '@/lib/Utils';
 import { Add, Delete } from '@mui/icons-material';
 import {
+    Box,
     Button,
     Card,
-    Box,
     CardActionArea,
     CardContent,
-    CircularProgress,
     FormHelperText,
     IconButton,
     Typography,
 } from '@mui/material';
-import {
-    Game,
-    GeneratorOptions,
-    GeneratorSettings,
-    GeneratorStep,
-} from '@playbingo/types';
+import { GeneratorConfigSchema } from '@playbingo/shared/GeneratorConfig';
+import { Game, GeneratorSettings, GeneratorStep } from '@playbingo/types';
 import { Form, Formik, useField } from 'formik';
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { FormikSelectField } from '../../../../../../components/input/FormikSelectField';
-import { alertError, notifyMessage } from '../../../../../../lib/Utils';
+import { useCallback, useMemo, useState } from 'react';
+import * as z from 'zod';
 
 type GeneratorConfigSingle = string;
 type GeneratorConfigMultiple = string[];
@@ -183,37 +184,46 @@ interface Props {
     game: Game;
 }
 
-export default function GenerationForm({ game }: Props) {
-    const [generatorOptions, setGeneratorOptions] =
-        useState<GeneratorOptions>();
-    const [failed, setFailed] = useState(false);
+const schemaJson = z.toJSONSchema(GeneratorConfigSchema);
 
-    useEffect(() => {
-        async function load() {
-            const res = await fetch(`/api/config/generator`);
-            if (res.ok) {
-                const options = await res.json();
-                setGeneratorOptions(options);
-            } else {
-                setFailed(true);
-            }
-        }
-        load();
-    }, []);
+export default function GenerationPage({ game }: Props) {
+    const [config, setConfig] = useState<JSONValue>({});
 
-    if (!generatorOptions) {
-        if (!failed) {
-            return <CircularProgress />;
-        } else {
-            return (
-                <Typography>
-                    Failed to load generator options from server.
-                </Typography>
-            );
-        }
-    }
+    return (
+        <div>
+            <JsonSchemaRenderer
+                schema={schemaJson as JSONSchema}
+                value={config}
+                onChange={setConfig}
+                labels={{
+                    listMode: 'Goal List Mode',
+                    boardLayout: 'Board Layout',
+                    goalSelection: 'Goal Selection',
+                    restrictions: 'Restrictions',
+                    adjustments: 'Global Adjustments',
+                    include: 'Include Categories',
+                    exclude: 'Exclude Categories',
+                    min: 'Min Difficulty',
+                    max: 'Max Difficulty',
+                }}
+                optionLabels={{
+                    all: 'All Goals',
+                    'difficulty-filter': 'Difficulty Filter',
+                    'category-filter': 'Category Filter',
+                }}
+            />
+            <pre>{JSON.stringify(config, null, 2)}</pre>
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+                <Button color="error" onClick={() => setConfig({})}>
+                    Cancel
+                </Button>
+                <Button type="submit" color="success">
+                    Save
+                </Button>
+            </Box>
+        </div>
+    );
 
-    const { steps } = generatorOptions;
     return (
         <Formik
             initialValues={game.generationSettings}
@@ -286,14 +296,6 @@ export default function GenerationForm({ game }: Props) {
                             />
                         ),
                     )}
-                    <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-                        <Button color="error" onClick={() => resetForm()}>
-                            Cancel
-                        </Button>
-                        <Button type="submit" color="success">
-                            Save
-                        </Button>
-                    </Box>
                 </Form>
             )}
         </Formik>
