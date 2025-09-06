@@ -1,10 +1,8 @@
 'use client';
 
 import { TabContext, TabList, TabPanel } from '@mui/lab';
-import { Box, Container, Link, Tab, Typography } from '@mui/material';
+import { Box, Tab } from '@mui/material';
 import { Game } from '@playbingo/types';
-import Image from 'next/image';
-import NextLink from 'next/link';
 import { useLayoutEffect, useState } from 'react';
 import GameSettings from '../../../../components/game/GameSettings';
 import GoalCategories from '../../../../components/game/GoalCategories';
@@ -12,9 +10,10 @@ import PermissionsManagement from '../../../../components/game/PermissionsManage
 import Variants from '../../../../components/game/Variants';
 import GoalManagement from '../../../../components/game/goals/GoalManagement';
 import { GoalManagerContextProvider } from '../../../../context/GoalManagerContext';
-import { alertError, gameCoverUrl } from '../../../../lib/Utils';
+import { alertError } from '../../../../lib/Utils';
 import GenerationPage from './Generation';
 import Summary from './Summary';
+import { grey } from '@mui/material/colors';
 
 export default function GamePage({ gameData }: { gameData: Game }) {
     const [isOwner, setIsOwner] = useState(false);
@@ -66,68 +65,18 @@ export default function GamePage({ gameData }: { gameData: Game }) {
     };
 
     return (
-        <Container
+        <Box
             sx={{
                 pt: 2,
                 display: 'grid',
-                gridTemplateRows: '90px 50px 1fr',
+                gridTemplateRows: '50px 1fr',
+                height: '100%',
+                maxHeight: '100%',
+                overflowY: 'auto',
+                background: grey[900],
+                px: 4,
             }}
         >
-            <Box sx={{ display: 'flex' }}>
-                <Box
-                    sx={{
-                        position: 'fixed',
-                        mr: 4,
-                    }}
-                >
-                    {gameData.coverImage && (
-                        <Image
-                            src={gameCoverUrl(gameData.coverImage)}
-                            alt=""
-                            fill
-                        />
-                    )}
-                    {!gameData.coverImage && (
-                        <div>
-                            <div>{gameData.slug}</div>
-                        </div>
-                    )}
-                </Box>
-                <Box
-                    sx={{
-                        flexGrow: 1,
-                    }}
-                >
-                    <Link component={NextLink} href={`/games/${gameData.slug}`}>
-                        {gameData.slug}
-                    </Link>
-                    <Typography variant="h6">{gameData.name}</Typography>
-                </Box>
-                <Box
-                    sx={{
-                        minWidth: '30%',
-                    }}
-                >
-                    <Typography
-                        variant="body1"
-                        sx={{ textDecoration: 'underline' }}
-                    >
-                        Owners
-                    </Typography>
-                    <Typography variant="body2">
-                        {gameData.owners?.map((o) => o.username).join(', ')}
-                    </Typography>
-                    <Typography
-                        variant="body1"
-                        sx={{ textDecoration: 'underline' }}
-                    >
-                        Moderators
-                    </Typography>
-                    <Typography variant="body2">
-                        {gameData.moderators?.map((o) => o.username).join(', ')}
-                    </Typography>
-                </Box>
-            </Box>
             <TabContext value={tab}>
                 <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
                     <TabList
@@ -169,6 +118,6 @@ export default function GamePage({ gameData }: { gameData: Game }) {
                     <GameSettings gameData={gameData} />
                 </TabPanel>
             </TabContext>
-        </Container>
+        </Box>
     );
 }
