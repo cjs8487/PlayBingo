@@ -1,3 +1,4 @@
+'use client';
 import {
     Dispatch,
     ReactNode,
@@ -100,7 +101,7 @@ export function GoalManagerContextProvider({
     const [catList, setCatList] = useState<string[]>([]);
     const [newGoal, setNewGoal] = useState(false);
     // search params
-    const [sort, setSort] = useState<SortOptions | null>(null);
+    const [sort, setSort] = useState<SortOptions | null>(SortOptions.DEFAULT);
     const [shownCats, setShownCats] = useState<string[]>([]);
     const [reverse, setReverse] = useState(false);
     const [search, setSearch] = useState('');

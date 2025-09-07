@@ -8,7 +8,7 @@ import GameSettings from '../../../../components/game/GameSettings';
 import GoalCategories from '../../../../components/game/GoalCategories';
 import PermissionsManagement from '../../../../components/game/PermissionsManagement';
 import Variants from '../../../../components/game/Variants';
-import GoalManagement from '../../../../components/game/goals/GoalManagement';
+import GoalManagement from './goals/_components/GoalManagement';
 import { GoalManagerContextProvider } from '../../../../context/GoalManagerContext';
 import { alertError } from '../../../../lib/Utils';
 import GenerationPage from './Generation';

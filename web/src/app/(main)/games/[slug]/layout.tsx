@@ -30,7 +30,6 @@ export default async function GameLayout({ params, children }: Props) {
     }
 
     const { coverImage, name, owners, moderators } = game;
-    console.log(owners);
 
     return (
         <Box
@@ -169,17 +168,15 @@ export default async function GameLayout({ params, children }: Props) {
                 )}
             </Box>
             <GameTabs gameData={game} />
-            {/* <Box sx={{ background: 'gray', p: 2 }}>Navigation</Box> */}
             <Box
                 sx={{
+                    px: 4,
                     pt: 2,
                     display: 'grid',
-                    gridTemplateRows: '50px 1fr',
                     height: '100%',
                     maxHeight: '100%',
                     overflowY: 'auto',
                     background: grey[900],
-                    px: 4,
                     borderLeft: 2,
                     borderColor: 'divider',
                 }}

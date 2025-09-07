@@ -9,6 +9,7 @@ import {
     FormControl,
     IconButton,
     InputLabel,
+    ListItemText,
     MenuItem,
     Select,
     TextField,
@@ -17,7 +18,7 @@ import {
 import {
     SortOptions,
     useGoalManagerContext,
-} from '../../../context/GoalManagerContext';
+} from '../../../../../../context/GoalManagerContext';
 
 const sortOptions = [
     { label: 'Default', value: SortOptions.DEFAULT },
@@ -41,7 +42,7 @@ export default function GoalSearch() {
         <>
             <Box
                 sx={{
-                    width: '33%',
+                    flexGrow: 1,
                 }}
             >
                 <Autocomplete
@@ -53,16 +54,17 @@ export default function GoalSearch() {
                     }}
                     disableCloseOnSelect
                     renderOption={(props, option, { selected }) => {
+                        const { key, ...optionProps } = props;
                         return (
-                            <li {...props}>
+                            <MenuItem key={key} {...optionProps}>
                                 <Checkbox
                                     icon={icon}
                                     checkedIcon={checkedIcon}
                                     style={{ marginRight: 8 }}
                                     checked={selected}
                                 />
-                                {option}
-                            </li>
+                                <ListItemText>{option}</ListItemText>
+                            </MenuItem>
                         );
                     }}
                     renderInput={(params) => (
@@ -74,7 +76,7 @@ export default function GoalSearch() {
             <Box
                 sx={{
                     display: 'flex',
-                    width: '33%',
+                    flexGrow: 1,
                     alignItems: 'center',
                     columnGap: 1,
                 }}
@@ -107,7 +109,7 @@ export default function GoalSearch() {
                 type="text"
                 label="Search"
                 onChange={(e) => setSearch(e.target.value)}
-                sx={{ width: '33%' }}
+                sx={{ flexGrow: 1 }}
             />
         </>
     );
