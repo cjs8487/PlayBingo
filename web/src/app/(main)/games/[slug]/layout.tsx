@@ -5,6 +5,7 @@ import { notFound } from 'next/navigation';
 import { cache, ReactNode } from 'react';
 import { gameCoverUrl, getFullUrl, userAvatarUrl } from '../../../../lib/Utils';
 import GameTabs from './GameTabs';
+import { grey } from '@mui/material/colors';
 
 const getGame = cache(async (slug: string): Promise<Game | undefined> => {
     const res = await fetch(getFullUrl(`/api/games/${slug}`));
@@ -24,13 +25,12 @@ export default async function GameLayout({ params, children }: Props) {
 
     const game = await getGame(slug);
 
-    console.log(game);
-
     if (!game) {
         notFound();
     }
 
     const { coverImage, name, owners, moderators } = game;
+    console.log(owners);
 
     return (
         <Box
@@ -50,8 +50,6 @@ export default async function GameLayout({ params, children }: Props) {
                     flexDirection: 'column',
                     alignItems: 'center',
                     gap: 1,
-                    borderRight: 2,
-                    borderColor: 'divider',
                 }}
             >
                 <Box
@@ -170,9 +168,24 @@ export default async function GameLayout({ params, children }: Props) {
                     </Box>
                 )}
             </Box>
-            <GameTabs slug={slug} />
+            <GameTabs gameData={game} />
             {/* <Box sx={{ background: 'gray', p: 2 }}>Navigation</Box> */}
-            {children}
+            <Box
+                sx={{
+                    pt: 2,
+                    display: 'grid',
+                    gridTemplateRows: '50px 1fr',
+                    height: '100%',
+                    maxHeight: '100%',
+                    overflowY: 'auto',
+                    background: grey[900],
+                    px: 4,
+                    borderLeft: 2,
+                    borderColor: 'divider',
+                }}
+            >
+                {children}
+            </Box>
         </Box>
     );
 }
