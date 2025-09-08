@@ -11,7 +11,6 @@ import Variants from '../../../../components/game/Variants';
 import GoalManagement from './goals/_components/GoalManagement';
 import { GoalManagerContextProvider } from '../../../../context/GoalManagerContext';
 import { alertError } from '../../../../lib/Utils';
-import GenerationPage from './Generation';
 import Summary from './Summary';
 import { grey } from '@mui/material/colors';
 
@@ -110,9 +109,6 @@ export default function GamePage({ gameData }: { gameData: Game }) {
                         slug={gameData.slug}
                         gameData={gameData}
                     />
-                </TabPanel>
-                <TabPanel value="Generation">
-                    <GenerationPage game={gameData} />
                 </TabPanel>
                 <TabPanel value="Settings">
                     <GameSettings gameData={gameData} />

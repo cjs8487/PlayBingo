@@ -1,13 +1,12 @@
 'use client';
 
-import { Box, Button, Link } from '@mui/material';
+import { Box, Button } from '@mui/material';
 import { grey } from '@mui/material/colors';
+import { Game } from '@playbingo/types';
 import NextLink from 'next/link';
 import { useSelectedLayoutSegment } from 'next/navigation';
 import { useLayoutEffect, useState } from 'react';
 import { alertError } from '../../../../lib/Utils';
-import { Game } from '@playbingo/types';
-import { StarFourPointsSmall } from 'mdi-material-ui';
 
 interface Props {
     gameData: Game;
