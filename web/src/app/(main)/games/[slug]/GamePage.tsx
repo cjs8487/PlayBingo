@@ -4,7 +4,7 @@ import { TabContext, TabList, TabPanel } from '@mui/lab';
 import { Box, Tab } from '@mui/material';
 import { Game } from '@playbingo/types';
 import { useLayoutEffect, useState } from 'react';
-import GameSettings from '../../../../components/game/GameSettings';
+import GameSettings from './settings/_components/GameSettings';
 import Variants from '../../../../components/game/Variants';
 import GoalManagement from './goals/_components/GoalManagement';
 import { GoalManagerContextProvider } from '../../../../context/GoalManagerContext';
