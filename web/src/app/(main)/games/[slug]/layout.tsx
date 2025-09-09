@@ -38,6 +38,7 @@ export default async function GameLayout({ params, children }: Props) {
                 gridTemplateRows: 'auto 1fr',
                 gridTemplateColumns: 'minmax(auto, 250px) 1fr',
                 height: '100%',
+                overflowY: 'auto',
             }}
         >
             <Box
