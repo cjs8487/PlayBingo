@@ -9,7 +9,6 @@ import Variants from '../../../../components/game/Variants';
 import GoalManagement from './goals/_components/GoalManagement';
 import { GoalManagerContextProvider } from '../../../../context/GoalManagerContext';
 import { alertError } from '../../../../lib/Utils';
-import Summary from './Summary';
 import { grey } from '@mui/material/colors';
 
 export default function GamePage({ gameData }: { gameData: Game }) {
@@ -85,9 +84,6 @@ export default function GamePage({ gameData }: { gameData: Game }) {
                         ))}
                     </TabList>
                 </Box>
-                <TabPanel value="Overview">
-                    <Summary gameData={gameData} />
-                </TabPanel>
                 <TabPanel value="Goals">
                     <GoalManagerContextProvider
                         slug={gameData.slug}
