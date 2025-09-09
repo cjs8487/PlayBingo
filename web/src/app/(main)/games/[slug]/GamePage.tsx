@@ -6,7 +6,6 @@ import { Game } from '@playbingo/types';
 import { useLayoutEffect, useState } from 'react';
 import GameSettings from '../../../../components/game/GameSettings';
 import GoalCategories from '../../../../components/game/GoalCategories';
-import PermissionsManagement from '../../../../components/game/PermissionsManagement';
 import Variants from '../../../../components/game/Variants';
 import GoalManagement from './goals/_components/GoalManagement';
 import { GoalManagerContextProvider } from '../../../../context/GoalManagerContext';
@@ -103,12 +102,6 @@ export default function GamePage({ gameData }: { gameData: Game }) {
                 </TabPanel>
                 <TabPanel value="Variants">
                     <Variants gameData={gameData} />
-                </TabPanel>
-                <TabPanel value="Permissions">
-                    <PermissionsManagement
-                        slug={gameData.slug}
-                        gameData={gameData}
-                    />
                 </TabPanel>
                 <TabPanel value="Settings">
                     <GameSettings gameData={gameData} />
