@@ -1,3 +1,7 @@
+'use client';
+import FormikTextField from '@/components/input/FormikTextField';
+import NumberInput from '@/components/input/NumberInput';
+import { alertError } from '@/lib/Utils';
 import ArrowDownward from '@mui/icons-material/ArrowDownward';
 import ArrowUpward from '@mui/icons-material/ArrowUpward';
 import Check from '@mui/icons-material/Check';
@@ -17,14 +21,10 @@ import {
     Tooltip,
     Typography,
 } from '@mui/material';
-import { Game, GoalCategory } from '@playbingo/types';
+import { GoalCategory } from '@playbingo/types';
 import { Form, Formik } from 'formik';
 import { useState } from 'react';
 import { mutate } from 'swr';
-import { useApi } from '../../lib/Hooks';
-import { alertError } from '../../lib/Utils';
-import FormikTextField from '../input/FormikTextField';
-import NumberInput from '../input/NumberInput';
 
 interface CategoryFormProps {
     cat: GoalCategory;
@@ -159,29 +159,17 @@ const sortOptions = [
     { label: 'Maximum', value: SortOptions.MAXIMUM },
 ];
 interface GoalCategoriesProps {
-    gameData: Game;
+    slug: string;
+    categories: GoalCategory[];
 }
 
-export default function GoalCategories({ gameData }: GoalCategoriesProps) {
-    const {
-        data: categories,
-        isLoading,
-        error,
-    } = useApi<GoalCategory[]>(`/api/games/${gameData.slug}/categories`);
-
+export default function GoalCategories({
+    slug,
+    categories,
+}: GoalCategoriesProps) {
     const [sort, setSort] = useState<SortOptions>(SortOptions.NAME);
     const [reverse, setReverse] = useState(false);
     const [search, setSearch] = useState('');
-
-    if (!categories || isLoading) {
-        return null;
-    }
-
-    if (error) {
-        return (
-            <Typography>Failed to load goal categories - {error}</Typography>
-        );
-    }
 
     const shownCats = categories
         .filter((c) => {
@@ -253,7 +241,7 @@ export default function GoalCategories({ gameData }: GoalCategoriesProps) {
             </Box>
             <List>
                 {shownCats.map((cat) => (
-                    <CategoryForm key={cat.id} cat={cat} slug={gameData.slug} />
+                    <CategoryForm key={cat.id} cat={cat} slug={slug} />
                 ))}
             </List>
         </>
