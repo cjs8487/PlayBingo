@@ -173,7 +173,6 @@ export default async function GameLayout({ params, children }: Props) {
                 sx={{
                     px: 4,
                     pt: 2,
-                    display: 'grid',
                     height: '100%',
                     maxHeight: '100%',
                     overflowY: 'auto',

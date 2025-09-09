@@ -196,7 +196,13 @@ export default function GoalCategories({
     }
 
     return (
-        <>
+        <Box
+            sx={{
+                display: 'grid',
+                gridTemplateRows: 'auto 1fr',
+                maxHeight: '100%',
+            }}
+        >
             <Box sx={{ display: 'flex', columnGap: 4 }}>
                 <TextField
                     type="text"
@@ -239,11 +245,11 @@ export default function GoalCategories({
                     </Tooltip>
                 </Box>
             </Box>
-            <List>
+            <List sx={{ maxHeight: '100%', overflowY: 'auto' }}>
                 {shownCats.map((cat) => (
                     <CategoryForm key={cat.id} cat={cat} slug={slug} />
                 ))}
             </List>
-        </>
+        </Box>
     );
 }
