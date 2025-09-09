@@ -25,6 +25,7 @@ import { GoalCategory } from '@playbingo/types';
 import { Form, Formik } from 'formik';
 import { useState } from 'react';
 import { mutate } from 'swr';
+import { deleteCategory } from '../../../../../../actions/Game';
 
 interface CategoryFormProps {
     cat: GoalCategory;
@@ -117,15 +118,9 @@ function CategoryForm({ cat, slug }: CategoryFormProps) {
                                 <IconButton
                                     edge="end"
                                     onClick={async () => {
-                                        const res = await fetch(
-                                            `/api/goals/categories/${cat.id}`,
-                                            {
-                                                method: 'DELETE',
-                                                headers: {
-                                                    'Content-Type':
-                                                        'application/json',
-                                                },
-                                            },
+                                        const res = await deleteCategory(
+                                            slug,
+                                            cat.id,
                                         );
 
                                         if (!res.ok) {
@@ -134,7 +129,6 @@ function CategoryForm({ cat, slug }: CategoryFormProps) {
                                             );
                                             return;
                                         }
-                                        mutate(`/api/games/${slug}/categories`);
                                     }}
                                 >
                                     <Delete />
