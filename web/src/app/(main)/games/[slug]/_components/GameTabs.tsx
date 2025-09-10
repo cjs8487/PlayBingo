@@ -53,7 +53,7 @@ export default function GameTabs({
     }
     if (isOwner) {
         if (difficultyVariantsEnabled) {
-            tabs.push('Variants');
+            tabs.push('variants');
         }
         tabs.push('permissions');
         if (newGeneratorBeta) {

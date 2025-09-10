@@ -1,3 +1,4 @@
+'use client';
 import Check from '@mui/icons-material/Check';
 import Close from '@mui/icons-material/Close';
 import Delete from '@mui/icons-material/Delete';
@@ -7,9 +8,9 @@ import { DifficultyVariant, Game } from '@playbingo/types';
 import { FieldArray, Form, Formik } from 'formik';
 import { useState } from 'react';
 import { mutate } from 'swr';
-import { alertError } from '../../lib/Utils';
-import FormikTextField from '../input/FormikTextField';
-import NumberInput from '../input/NumberInput';
+import { alertError } from '@/lib/Utils';
+import FormikTextField from '@/components/input/FormikTextField';
+import NumberInput from '@/components/input/NumberInput';
 
 interface DifficultyVariantEditRowProps {
     slug: string;
