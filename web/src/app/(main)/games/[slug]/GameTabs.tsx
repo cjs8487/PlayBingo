@@ -73,14 +73,15 @@ export default function GameTabs({
             sx={{
                 display: 'flex',
                 maxWidth: '100%',
-                // width: 'fit-content',
                 overflowX: 'auto',
+                pt: 4,
                 scrollbarWidth: 0,
                 '::-webkit-scrollbar': {
                     display: 'none',
                 },
             }}
         >
+            <Box sx={{ width: 32, borderBottom: 2, borderColor: 'divider' }} />
             {tabs.map((page, index) => (
                 <Button
                     key={page}
@@ -90,11 +91,11 @@ export default function GameTabs({
                         p: 2,
                         borderRadius: 0,
                         border: 1,
-                        borderLeft: index === 0 ? 2 : 1,
+                        borderLeft: 1,
                         borderBottom: 2,
-                        borderTop: page === segment ? 4 : 0,
+                        borderTop: page === segment ? 4 : 2,
                         borderColor: 'divider',
-                        borderTopColor: 'white',
+                        borderTopColor: page === segment ? 'white' : 'divider',
                         borderBottomColor:
                             page === segment ? grey[900] : 'divider',
                         background: page === segment ? grey[900] : 'inherit',
