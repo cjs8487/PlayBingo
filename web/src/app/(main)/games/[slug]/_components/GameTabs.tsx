@@ -6,7 +6,7 @@ import { Game } from '@playbingo/types';
 import NextLink from 'next/link';
 import { useSelectedLayoutSegment } from 'next/navigation';
 import { useLayoutEffect, useState } from 'react';
-import { alertError } from '../../../../lib/Utils';
+import { alertError } from '../../../../../lib/Utils';
 
 interface Props {
     gameData: Game;

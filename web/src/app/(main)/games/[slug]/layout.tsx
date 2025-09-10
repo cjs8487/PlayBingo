@@ -4,8 +4,9 @@ import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import { cache, ReactNode } from 'react';
 import { gameCoverUrl, getFullUrl, userAvatarUrl } from '../../../../lib/Utils';
-import GameTabs from './GameTabs';
+import GameTabs from './_components/GameTabs';
 import { grey } from '@mui/material/colors';
+import { ResolvingMetadata, Metadata } from 'next';
 
 const getGame = cache(async (slug: string): Promise<Game | undefined> => {
     const res = await fetch(getFullUrl(`/api/games/${slug}`));
@@ -14,6 +15,38 @@ const getGame = cache(async (slug: string): Promise<Game | undefined> => {
     }
     return res.json();
 });
+
+export async function generateMetadata(
+    props: {
+        params: Promise<{ slug: string }>;
+    },
+    parent: ResolvingMetadata,
+) {
+    const { slug } = await props.params;
+    const game = await getGame(slug);
+
+    if (!game) {
+        return {};
+    }
+
+    const metadata: Metadata = {
+        title: game.name,
+        description: `Play ${game.name} bingo on PlayBingo.`,
+        openGraph: {
+            url: `https://playbingo.gg/games/${slug}`,
+            title: game.name,
+            description: `Play ${game.name} bingo on PlayBingo.`,
+        },
+    };
+
+    if (game.coverImage) {
+        metadata.openGraph!.images = [gameCoverUrl(game.coverImage)];
+    } else {
+        metadata.openGraph!.images = (await parent).openGraph?.images;
+    }
+
+    return metadata;
+}
 
 interface Props {
     params: Promise<{ slug: string }>;
