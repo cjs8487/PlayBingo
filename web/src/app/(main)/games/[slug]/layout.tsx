@@ -7,6 +7,8 @@ import { gameCoverUrl, getFullUrl, userAvatarUrl } from '../../../../lib/Utils';
 import GameTabs from './_components/GameTabs';
 import { grey } from '@mui/material/colors';
 import { ResolvingMetadata, Metadata } from 'next';
+import ReactMarkdown from 'react-markdown';
+import Link from 'next/link';
 
 const getGame = cache(async (slug: string): Promise<Game | undefined> => {
     const res = await fetch(getFullUrl(`/api/games/${slug}`));
@@ -200,6 +202,45 @@ export default async function GameLayout({ params, children }: Props) {
                         ))}
                     </Box>
                 )}
+                <Box
+                    sx={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: 1,
+                        alignSelf: 'flex-start',
+                        mt: 2,
+                    }}
+                >
+                    <Typography variant="h6">Links</Typography>
+                    {game.linksMd && (
+                        <ReactMarkdown
+                            components={{
+                                p({ children, ...props }) {
+                                    return (
+                                        <Typography
+                                            {...props}
+                                            sx={{
+                                                mb: 1,
+                                            }}
+                                        >
+                                            {children}
+                                        </Typography>
+                                    );
+                                },
+                                a({ children, ...props }) {
+                                    const { href, ...restProps } = props;
+                                    return (
+                                        <Link href={href ?? ''} {...restProps}>
+                                            {children}
+                                        </Link>
+                                    );
+                                },
+                            }}
+                        >
+                            {game.linksMd}
+                        </ReactMarkdown>
+                    )}
+                </Box>
             </Box>
             <GameTabs gameData={game} />
             <Box

@@ -18,7 +18,6 @@ export default function GameTabs({
         newGeneratorBeta,
         descriptionMd,
         setupMd,
-        linksMd,
         difficultyVariants,
         difficultyVariantsEnabled,
     },
@@ -45,12 +44,7 @@ export default function GameTabs({
     }, [slug]);
 
     const tabs: string[] = [];
-    if (
-        descriptionMd ||
-        setupMd ||
-        linksMd ||
-        (difficultyVariants?.length ?? 0) > 0
-    ) {
+    if (descriptionMd || setupMd || (difficultyVariants?.length ?? 0) > 0) {
         tabs.push('overview');
     }
     tabs.push('goals');
