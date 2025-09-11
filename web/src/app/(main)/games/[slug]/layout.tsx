@@ -1,14 +1,15 @@
 import { Avatar, Box, Typography } from '@mui/material';
+import { grey } from '@mui/material/colors';
 import { Game } from '@playbingo/types';
+import { Metadata, ResolvingMetadata } from 'next';
 import Image from 'next/image';
+import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { cache, ReactNode } from 'react';
+import { cache } from 'react';
+import ReactMarkdown from 'react-markdown';
 import { gameCoverUrl, getFullUrl, userAvatarUrl } from '../../../../lib/Utils';
 import GameTabs from './_components/GameTabs';
-import { grey } from '@mui/material/colors';
-import { ResolvingMetadata, Metadata } from 'next';
-import ReactMarkdown from 'react-markdown';
-import Link from 'next/link';
+import SidebarButtons from './_components/SidebarButtons';
 
 const getGame = cache(async (slug: string): Promise<Game | undefined> => {
     const res = await fetch(getFullUrl(`/api/games/${slug}`));
@@ -50,12 +51,10 @@ export async function generateMetadata(
     return metadata;
 }
 
-interface Props {
-    params: Promise<{ slug: string }>;
-    children: ReactNode;
-}
-
-export default async function GameLayout({ params, children }: Props) {
+export default async function GameLayout({
+    params,
+    children,
+}: LayoutProps<'/games/[slug]'>) {
     const { slug } = await params;
 
     const game = await getGame(slug);
@@ -240,6 +239,17 @@ export default async function GameLayout({ params, children }: Props) {
                             {game.linksMd}
                         </ReactMarkdown>
                     )}
+                </Box>
+                <Box sx={{ flexGrow: 1 }} />
+                <Box
+                    sx={{
+                        width: '100%',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: 1,
+                    }}
+                >
+                    <SidebarButtons slug={slug} />
                 </Box>
             </Box>
             <GameTabs gameData={game} />

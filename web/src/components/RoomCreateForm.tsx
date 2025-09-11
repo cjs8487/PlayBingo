@@ -145,7 +145,11 @@ function DifficultySelectField() {
     );
 }
 
-export default function RoomCreateForm() {
+interface FormProps {
+    game?: string;
+}
+
+export default function RoomCreateForm({ game }: FormProps) {
     const { data: games, isLoading } = useApi<Game[]>('/api/games');
     const router = useRouter();
 
@@ -162,7 +166,7 @@ export default function RoomCreateForm() {
             initialValues={{
                 name: '',
                 nickname: '',
-                game: null,
+                game,
                 password: '',
                 variant: '',
                 mode: 'LINES',
