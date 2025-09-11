@@ -12,8 +12,8 @@ import {
 } from '@mui/material';
 import { Form, Formik, useField } from 'formik';
 import { KeyedMutator } from 'swr';
-import { alertError } from '../../../lib/Utils';
-import FormikTextField from '../../input/FormikTextField';
+import { alertError } from '../../../../../../lib/Utils';
+import FormikTextField from '../../../../../../components/input/FormikTextField';
 
 const icon = <CheckBoxOutlineBlankIcon fontSize="small" />;
 const checkedIcon = <CheckBoxIcon fontSize="small" />;
@@ -181,6 +181,7 @@ export default function GoalEditor({
                             flexDirection: 'column',
                             width: '100%',
                             rowGap: 3,
+                            pt: 1,
                         }}
                     >
                         <FormikTextField

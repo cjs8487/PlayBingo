@@ -1,15 +1,33 @@
 import { Box, Card, CardContent, Typography } from '@mui/material';
 import { Game } from '@playbingo/types';
 import ReactMarkdown from 'react-markdown';
+import { getFullUrl } from '../../../../../lib/Utils';
+
+async function getGame(slug: string): Promise<Game | undefined> {
+    const res = await fetch(getFullUrl(`/api/games/${slug}`));
+    if (!res.ok) {
+        return undefined;
+    }
+    return res.json();
+}
 
 interface Props {
-    gameData: Game;
+    params: Promise<{ slug: string }>;
 }
-export default function Summary({ gameData }: Props) {
-    const hasDescription = !!gameData.descriptionMd;
-    const hasSetup = !!gameData.setupMd;
-    const hasLinks = !!gameData.linksMd;
-    const hasVariants = (gameData.difficultyVariants?.length ?? 0) > 0;
+
+export default async function Summary({ params }: Props) {
+    const { slug } = await params;
+
+    const game = await getGame(slug);
+
+    if (!game) {
+        return null;
+    }
+
+    const hasDescription = !!game.descriptionMd;
+    const hasSetup = !!game.setupMd;
+    const hasLinks = !!game.linksMd;
+    const hasVariants = (game.difficultyVariants?.length ?? 0) > 0;
 
     return (
         <Box
@@ -29,19 +47,19 @@ export default function Summary({ gameData }: Props) {
                 >
                     <CardContent>
                         <Typography variant="h5" sx={{ mb: 1 }}>
-                            {gameData.name}
+                            {game.name}
                         </Typography>
                         {hasDescription && (
                             <>
                                 <ReactMarkdown>
-                                    {gameData.descriptionMd}
+                                    {game.descriptionMd}
                                 </ReactMarkdown>
                             </>
                         )}
                         {hasVariants && (
                             <Box sx={{ mt: 2 }}>
                                 <Typography variant="h6">Variants</Typography>
-                                {gameData.difficultyVariants?.map((variant) => (
+                                {game.difficultyVariants?.map((variant) => (
                                     <Typography key={variant.id}>
                                         {variant.name}
                                     </Typography>
@@ -55,7 +73,7 @@ export default function Summary({ gameData }: Props) {
                 <Card sx={{ gridRow: '1/-1' }}>
                     <CardContent>
                         <Typography variant="h5">Links</Typography>
-                        <ReactMarkdown>{gameData.linksMd}</ReactMarkdown>
+                        <ReactMarkdown>{game.linksMd}</ReactMarkdown>
                     </CardContent>
                 </Card>
             )}
@@ -68,7 +86,7 @@ export default function Summary({ gameData }: Props) {
                 >
                     <CardContent>
                         <Typography variant="h5">Setup</Typography>
-                        <ReactMarkdown>{gameData.setupMd}</ReactMarkdown>
+                        <ReactMarkdown>{game.setupMd}</ReactMarkdown>
                     </CardContent>
                 </Card>
             )}

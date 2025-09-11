@@ -1,9 +1,9 @@
-import Add from '@mui/icons-material/Add';
-import Delete from '@mui/icons-material/Delete';
+'use client';
+import { Add, Delete } from '@mui/icons-material';
 import {
-    Box,
     Button,
     Card,
+    Box,
     CardActionArea,
     CardContent,
     CircularProgress,
@@ -19,8 +19,8 @@ import {
 } from '@playbingo/types';
 import { Form, Formik, useField } from 'formik';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { FormikSelectField } from '../../../../components/input/FormikSelectField';
-import { alertError, notifyMessage } from '../../../../lib/Utils';
+import { FormikSelectField } from '../../../../../../components/input/FormikSelectField';
+import { alertError, notifyMessage } from '../../../../../../lib/Utils';
 
 type GeneratorConfigSingle = string;
 type GeneratorConfigMultiple = string[];
@@ -52,6 +52,7 @@ function GenerationStepSingle({
             sx={{
                 mb: 1,
                 borderColor: error ? 'error.main' : 'divider',
+                background: 'unset',
             }}
         >
             <Typography
@@ -118,6 +119,7 @@ function GenerationStepMultiple({
             sx={{
                 mb: 1,
                 borderColor: error ? 'error.main' : 'divider',
+                background: 'unset',
             }}
         >
             <Typography
@@ -158,7 +160,11 @@ function GenerationStepMultiple({
                 {availableRules.length > 0 && (
                     <Card
                         variant="outlined"
-                        sx={{ borderStyle: 'dashed', mt: 2 }}
+                        sx={{
+                            borderStyle: 'dashed',
+                            mt: 2,
+                            background: 'unset',
+                        }}
                     >
                         <CardActionArea onClick={addNewValue}>
                             <CardContent sx={{ textAlign: 'center' }}>
@@ -177,7 +183,7 @@ interface Props {
     game: Game;
 }
 
-export default function GenerationPage({ game }: Props) {
+export default function GenerationForm({ game }: Props) {
     const [generatorOptions, setGeneratorOptions] =
         useState<GeneratorOptions>();
     const [failed, setFailed] = useState(false);
@@ -208,7 +214,6 @@ export default function GenerationPage({ game }: Props) {
     }
 
     const { steps } = generatorOptions;
-
     return (
         <Formik
             initialValues={game.generationSettings}

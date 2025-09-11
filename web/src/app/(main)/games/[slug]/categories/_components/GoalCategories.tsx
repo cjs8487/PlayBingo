@@ -1,3 +1,7 @@
+'use client';
+import FormikTextField from '@/components/input/FormikTextField';
+import NumberInput from '@/components/input/NumberInput';
+import { alertError } from '@/lib/Utils';
 import ArrowDownward from '@mui/icons-material/ArrowDownward';
 import ArrowUpward from '@mui/icons-material/ArrowUpward';
 import Check from '@mui/icons-material/Check';
@@ -17,14 +21,11 @@ import {
     Tooltip,
     Typography,
 } from '@mui/material';
-import { Game, GoalCategory } from '@playbingo/types';
+import { GoalCategory } from '@playbingo/types';
 import { Form, Formik } from 'formik';
 import { useState } from 'react';
 import { mutate } from 'swr';
-import { useApi } from '../../lib/Hooks';
-import { alertError } from '../../lib/Utils';
-import FormikTextField from '../input/FormikTextField';
-import NumberInput from '../input/NumberInput';
+import { deleteCategory } from '../../../../../../actions/Game';
 
 interface CategoryFormProps {
     cat: GoalCategory;
@@ -117,15 +118,9 @@ function CategoryForm({ cat, slug }: CategoryFormProps) {
                                 <IconButton
                                     edge="end"
                                     onClick={async () => {
-                                        const res = await fetch(
-                                            `/api/goals/categories/${cat.id}`,
-                                            {
-                                                method: 'DELETE',
-                                                headers: {
-                                                    'Content-Type':
-                                                        'application/json',
-                                                },
-                                            },
+                                        const res = await deleteCategory(
+                                            slug,
+                                            cat.id,
                                         );
 
                                         if (!res.ok) {
@@ -134,7 +129,6 @@ function CategoryForm({ cat, slug }: CategoryFormProps) {
                                             );
                                             return;
                                         }
-                                        mutate(`/api/games/${slug}/categories`);
                                     }}
                                 >
                                     <Delete />
@@ -159,29 +153,17 @@ const sortOptions = [
     { label: 'Maximum', value: SortOptions.MAXIMUM },
 ];
 interface GoalCategoriesProps {
-    gameData: Game;
+    slug: string;
+    categories: GoalCategory[];
 }
 
-export default function GoalCategories({ gameData }: GoalCategoriesProps) {
-    const {
-        data: categories,
-        isLoading,
-        error,
-    } = useApi<GoalCategory[]>(`/api/games/${gameData.slug}/categories`);
-
+export default function GoalCategories({
+    slug,
+    categories,
+}: GoalCategoriesProps) {
     const [sort, setSort] = useState<SortOptions>(SortOptions.NAME);
     const [reverse, setReverse] = useState(false);
     const [search, setSearch] = useState('');
-
-    if (!categories || isLoading) {
-        return null;
-    }
-
-    if (error) {
-        return (
-            <Typography>Failed to load goal categories - {error}</Typography>
-        );
-    }
 
     const shownCats = categories
         .filter((c) => {
@@ -208,7 +190,13 @@ export default function GoalCategories({ gameData }: GoalCategoriesProps) {
     }
 
     return (
-        <>
+        <Box
+            sx={{
+                display: 'grid',
+                gridTemplateRows: 'auto 1fr',
+                maxHeight: '100%',
+            }}
+        >
             <Box sx={{ display: 'flex', columnGap: 4 }}>
                 <TextField
                     type="text"
@@ -251,11 +239,11 @@ export default function GoalCategories({ gameData }: GoalCategoriesProps) {
                     </Tooltip>
                 </Box>
             </Box>
-            <List>
+            <List sx={{ maxHeight: '100%', overflowY: 'auto' }}>
                 {shownCats.map((cat) => (
-                    <CategoryForm key={cat.id} cat={cat} slug={gameData.slug} />
+                    <CategoryForm key={cat.id} cat={cat} slug={slug} />
                 ))}
             </List>
-        </>
+        </Box>
     );
 }

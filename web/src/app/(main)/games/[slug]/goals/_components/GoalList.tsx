@@ -15,7 +15,7 @@ import {
 import { Goal } from '@playbingo/types';
 import { forwardRef } from 'react';
 import { Virtuoso } from 'react-virtuoso';
-import { useGoalManagerContext } from '../../../context/GoalManagerContext';
+import { useGoalManagerContext } from '../../../../../../context/GoalManagerContext';
 
 const ListItemHiddenSecondary = styled(ListItem)(() => ({
     '.MuiListItemSecondaryAction-root': {
@@ -32,22 +32,10 @@ function GoalListItemSecondary({ goal }: { goal: Goal }) {
     return (
         <>
             {goal.difficulty && (
-                <>
-                    <Typography variant="body2" component="span">
-                        Difficulty:{' '}
-                    </Typography>
-                    {goal.difficulty}
-                </>
+                <Typography variant="body2" component="span">
+                    Difficulty: {goal.difficulty}
+                </Typography>
             )}
-            <Box
-                sx={{
-                    pt: 0.5,
-                }}
-            >
-                {goal.categories?.map((cat) => (
-                    <Chip key={cat} label={cat} size="small" sx={{ mr: 0.5 }} />
-                ))}
-            </Box>
         </>
     );
 }
@@ -97,7 +85,6 @@ export default function GoalList() {
                                     <IconButton
                                         aria-label="delete"
                                         onClick={(e) => {
-                                            console.log(props);
                                             deleteGoal(props.item.id);
                                             e.preventDefault();
                                             e.stopPropagation();
@@ -136,14 +123,26 @@ export default function GoalList() {
                         selected={selectedGoal === goal}
                         divider
                     >
-                        <ListItemText
-                            primary={goal.goal}
-                            secondary={
-                                showDetails && (
-                                    <GoalListItemSecondary goal={goal} />
-                                )
-                            }
-                        />
+                        <Box>
+                            <ListItemText
+                                primary={goal.goal}
+                                secondary={
+                                    showDetails && (
+                                        <GoalListItemSecondary goal={goal} />
+                                    )
+                                }
+                            />
+                            <Box>
+                                {goal.categories?.map((cat) => (
+                                    <Chip
+                                        key={cat}
+                                        label={cat}
+                                        size="small"
+                                        sx={{ mr: 0.5 }}
+                                    />
+                                ))}
+                            </Box>
+                        </Box>
                     </ListItemButton>
                 </>
             )}

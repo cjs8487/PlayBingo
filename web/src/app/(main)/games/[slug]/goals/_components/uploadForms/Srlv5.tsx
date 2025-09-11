@@ -1,8 +1,8 @@
 import { Box, Button } from '@mui/material';
 import { Form, Formik } from 'formik';
-import { parseSRLv5BingoList } from '../../../../lib/goals/SRLv5Parser';
-import { alertError } from '../../../../lib/Utils';
-import FormikTextField from '../../../input/FormikTextField';
+import { parseSRLv5BingoList } from '../../../../../../../lib/goals/SRLv5Parser';
+import { alertError } from '../../../../../../../lib/Utils';
+import FormikTextField from '../../../../../../../components/input/FormikTextField';
 import type { UploadFormProps } from '../GoalUpload';
 
 export function SRLv5UploadForm({ slug, close }: UploadFormProps) {
