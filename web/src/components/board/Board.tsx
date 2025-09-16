@@ -61,8 +61,10 @@ export default function Board() {
             <Box
                 sx={{
                     width: `${dimension}px`,
+                    minWidth: '400px',
                     maxWidth: '100%',
                     height: `${dimension}px`,
+                    minHeight: '400px',
                     maxHeight: '100%',
                     border: 1,
                     borderColor: 'divider',
