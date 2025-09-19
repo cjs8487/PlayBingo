@@ -1,5 +1,5 @@
-import Delete from '@mui/icons-material/Delete';
-import Info from '@mui/icons-material/Info';
+'use client';
+import { Delete, Info } from '@mui/icons-material';
 import {
     Box,
     Button,
@@ -20,14 +20,14 @@ import { useRouter } from 'next/navigation';
 import { useRef } from 'react';
 import { useAsync } from 'react-use';
 import { mutate } from 'swr';
-import { alertError, notifyMessage } from '../../lib/Utils';
-import Dialog, { DialogRef } from '../Dialog';
-import HoverIcon from '../HoverIcon';
-import FormikFileUpload from '../input/FileUpload';
-import FormikSwitch from '../input/FormikSwitch';
-import FormikTextField from '../input/FormikTextField';
-import { MarkdownField } from '../input/MarkdownField';
-import NumberInput from '../input/NumberInput';
+import Dialog, { DialogRef } from '../../../../../../components/Dialog';
+import HoverIcon from '../../../../../../components/HoverIcon';
+import FormikFileUpload from '../../../../../../components/input/FileUpload';
+import FormikSwitch from '../../../../../../components/input/FormikSwitch';
+import FormikTextField from '../../../../../../components/input/FormikTextField';
+import { MarkdownField } from '../../../../../../components/input/MarkdownField';
+import NumberInput from '../../../../../../components/input/NumberInput';
+import { alertError, notifyMessage } from '../../../../../../lib/Utils';
 
 async function validateRacetimeCategory(value: string) {
     if (value) {
@@ -477,22 +477,14 @@ interface GameSettingsProps {
     gameData: Game;
 }
 
-export default function GameSettingsPage({ gameData }: GameSettingsProps) {
+export default function GameSettings({ gameData }: GameSettingsProps) {
     const router = useRouter();
     const confirmDialogRef = useRef<DialogRef | null>(null);
 
     return (
-        <div>
+        <>
             <Box sx={{ display: 'flex' }}>
-                <Typography
-                    variant="h5"
-                    align="center"
-                    sx={{
-                        flexGrow: 1,
-                    }}
-                >
-                    Game Settings
-                </Typography>
+                <Box sx={{ flexGrow: 1 }} />
                 <Button
                     sx={{ float: 'right' }}
                     color="error"
@@ -538,6 +530,6 @@ export default function GameSettingsPage({ gameData }: GameSettingsProps) {
                     </Button>
                 </DialogActions>
             </Dialog>
-        </div>
+        </>
     );
 }

@@ -1,20 +1,19 @@
+'use client';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { Box, Button, IconButton, Typography } from '@mui/material';
 import { Game } from '@playbingo/types';
 import { useCallback, useState } from 'react';
 import { mutate } from 'swr';
-import { alertError } from '../../lib/Utils';
-import UserSearch from '../UserSearch';
+import { alertError } from '@/lib/Utils';
+import UserSearch from '@/components/UserSearch';
 
 interface PermissionsManagementProps {
-    slug: string;
     gameData: Game;
 }
 
 export default function PermissionsManagement({
-    slug,
-    gameData,
+    gameData: { slug, owners, moderators },
 }: PermissionsManagementProps) {
     const [searchOpenOwner, setSearchOpenOwner] = useState(false);
     const [searchOpenMod, setSearchOpenMod] = useState(false);
@@ -42,7 +41,7 @@ export default function PermissionsManagement({
                     appointing additional owners and moderators.
                 </Typography>
                 <Box>
-                    {gameData.owners?.map((owner) => (
+                    {owners?.map((owner) => (
                         <Box
                             key={owner.id}
                             sx={{
@@ -53,37 +52,36 @@ export default function PermissionsManagement({
                             <Typography variant="body1">
                                 {owner.username}
                             </Typography>
-                            {gameData.owners?.length &&
-                                gameData.owners.length > 1 && (
-                                    <IconButton
-                                        size="small"
-                                        onClick={async () => {
-                                            const res = await fetch(
-                                                `/api/games/${slug}/owners`,
-                                                {
-                                                    method: 'DELETE',
-                                                    headers: {
-                                                        'Content-Type':
-                                                            'application/json',
-                                                    },
-                                                    body: JSON.stringify({
-                                                        user: owner.id,
-                                                    }),
+                            {owners?.length && owners.length > 1 && (
+                                <IconButton
+                                    size="small"
+                                    onClick={async () => {
+                                        const res = await fetch(
+                                            `/api/games/${slug}/owners`,
+                                            {
+                                                method: 'DELETE',
+                                                headers: {
+                                                    'Content-Type':
+                                                        'application/json',
                                                 },
+                                                body: JSON.stringify({
+                                                    user: owner.id,
+                                                }),
+                                            },
+                                        );
+                                        if (!res.ok) {
+                                            const error = await res.text();
+                                            alertError(
+                                                `Unable to remove owner - ${error}`,
                                             );
-                                            if (!res.ok) {
-                                                const error = await res.text();
-                                                alertError(
-                                                    `Unable to remove owner - ${error}`,
-                                                );
-                                                return;
-                                            }
-                                            updateData();
-                                        }}
-                                    >
-                                        <DeleteIcon fontSize="small" />
-                                    </IconButton>
-                                )}
+                                            return;
+                                        }
+                                        updateData();
+                                    }}
+                                >
+                                    <DeleteIcon fontSize="small" />
+                                </IconButton>
+                            )}
                         </Box>
                     ))}
                 </Box>
@@ -125,7 +123,7 @@ export default function PermissionsManagement({
                     settings.
                 </Typography>
                 <div>
-                    {gameData.moderators?.map((mod) => (
+                    {moderators?.map((mod) => (
                         <Box
                             key={mod.id}
                             sx={{

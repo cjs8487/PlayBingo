@@ -1,7 +1,7 @@
 import { Box, Button } from '@mui/material';
 import { Form, Formik } from 'formik';
-import { alertError } from '../../../../lib/Utils';
-import FormikTextField from '../../../input/FormikTextField';
+import { alertError } from '../../../../../../../lib/Utils';
+import FormikTextField from '../../../../../../../components/input/FormikTextField';
 import type { UploadFormProps } from '../GoalUpload';
 
 export function ListUploadForm({ slug, close }: UploadFormProps) {

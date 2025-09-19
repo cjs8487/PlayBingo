@@ -1,3 +1,4 @@
+'use client';
 import { DeleteConfirmationDialogContent } from '@/components/input/DeleteConfirmationDialogContent';
 import { SettingsDialogContent } from '@/components/input/SettingsDialogContent';
 import { notifyMessage } from '@/lib/Utils';
@@ -5,8 +6,8 @@ import Settings from '@mui/icons-material/Settings';
 import UploadIcon from '@mui/icons-material/Upload';
 import { Box, Button, IconButton, Typography } from '@mui/material';
 import { ReactNode, useRef, useState } from 'react';
-import { useGoalManagerContext } from '../../../context/GoalManagerContext';
-import Dialog, { DialogRef } from '../../Dialog';
+import { useGoalManagerContext } from '../../../../../../context/GoalManagerContext';
+import Dialog, { DialogRef } from '../../../../../../components/Dialog';
 import GoalEditor from './GoalEditor';
 import GoalList from './GoalList';
 import GoalUpload from './GoalUpload';
@@ -70,49 +71,44 @@ export default function GoalManagement() {
             <Box
                 sx={{
                     display: 'grid',
-                    gridTemplateRows: '30px 80px 1fr',
+                    gridTemplateRows: '80px 1fr',
                     gridTemplateColumns: '1fr 2fr',
                     rowGap: 3,
                     columnGap: 5,
                     height: '100%',
                 }}
             >
-                <Box
-                    sx={{
-                        position: 'relative',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gridColumn: '1 / span 2',
-                    }}
-                >
-                    <Typography variant="h5" align="center">
-                        Goal Management
-                    </Typography>
-                    <Box sx={{ position: 'absolute', right: 0 }}>
-                        <Button
-                            onClick={() => setGoalUploadOpen(true)}
-                            startIcon={<UploadIcon />}
-                        >
-                            Upload Goals
-                        </Button>
-                        {canModerate && (
-                            <Button
-                                onClick={openDeleteConfirmationDialog}
-                                color="error"
-                                sx={{ maxWidth: '200px' }}
-                            >
-                                Delete All Goals
-                            </Button>
-                        )}
-                        <IconButton onClick={openSettingsDialog}>
-                            <Settings />
-                        </IconButton>
-                    </Box>
-                </Box>
-                <Box sx={{ gridColumn: '1 / span 2' }}>
-                    <Box sx={{ display: 'flex', columnGap: 4, width: '100%' }}>
+                <Box sx={{ gridColumn: '1 / -1' }}>
+                    <Box
+                        sx={{
+                            display: 'flex',
+                            columnGap: 4,
+                            width: '100%',
+                            alignItems: 'center',
+                        }}
+                    >
                         <Search />
+                        <Box>
+                            {canModerate && (
+                                <>
+                                    <Button
+                                        onClick={() => setGoalUploadOpen(true)}
+                                        startIcon={<UploadIcon />}
+                                    >
+                                        Upload
+                                    </Button>
+                                    <Button
+                                        onClick={openDeleteConfirmationDialog}
+                                        color="error"
+                                    >
+                                        Delete All
+                                    </Button>
+                                </>
+                            )}
+                            <IconButton onClick={openSettingsDialog}>
+                                <Settings />
+                            </IconButton>
+                        </Box>
                     </Box>
                     <Typography>
                         {goals.length} total goals, {shownGoals.length} shown

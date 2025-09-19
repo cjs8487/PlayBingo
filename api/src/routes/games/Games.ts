@@ -1,4 +1,4 @@
-import { Game } from '@playbingo/types';
+import { Game, Goal } from '@playbingo/types';
 import {
     GenerationBoardLayout,
     GenerationGlobalAdjustments,
@@ -8,6 +8,7 @@ import {
     GenerationListTransform,
 } from '@prisma/client';
 import { Router } from 'express';
+import BoardGenerator from '../../core/generation/BoardGenerator';
 import {
     addModerators,
     addOwners,
@@ -71,8 +72,18 @@ games.get('/:slug', async (req, res) => {
         name: game.name,
         slug: game.slug,
         coverImage: game.coverImage ?? undefined,
-        owners: game.owners,
-        moderators: game.moderators,
+        owners: game.owners.map((owner) => ({
+            id: owner.id,
+            username: owner.username,
+            staff: owner.staff,
+            avatar: owner.avatar ?? undefined,
+        })),
+        moderators: game.moderators.map((mod) => ({
+            id: mod.id,
+            username: mod.username,
+            staff: mod.staff,
+            avatar: mod.avatar ?? undefined,
+        })),
         enableSRLv5: game.enableSRLv5,
         racetimeBeta: game.racetimeBeta,
         racetimeCategory: game.racetimeCategory ?? undefined,
@@ -708,6 +719,47 @@ games.post('/:slug/generation', async (req, res) => {
         generationGlobalAdjustments: globalAdjustments,
     });
     res.status(200).send(result);
+});
+
+games.get('/:slug/sampleBoard', async (req, res) => {
+    const { slug } = req.params;
+
+    const gameData = await gameForSlug(slug);
+    if (!gameData) {
+        res.sendStatus(404);
+        return;
+    }
+    if (!gameData.newGeneratorBeta) {
+        res.status(400).send(
+            `${gameData.name} is not using the PlayBingo generator framework.`,
+        );
+        return;
+    }
+
+    const goals = await goalsForGame(slug);
+    const categories = await getCategories(slug);
+
+    const generator = new BoardGenerator(
+        goals,
+        categories,
+        gameData.generationListMode,
+        gameData.generationListTransform,
+        gameData.generationBoardLayout,
+        gameData.generationGoalSelection,
+        gameData.generationGoalRestrictions,
+        gameData.generationGlobalAdjustments,
+    );
+    generator.generateBoard();
+    res.status(200).send({
+        board: generator.board.map((goal) => ({
+            id: goal.id,
+            goal: goal.goal,
+            description: goal.description,
+            categories: goal.categories,
+            difficulty: goal.difficulty,
+        })),
+        seed: generator.seed,
+    });
 });
 
 export default games;
