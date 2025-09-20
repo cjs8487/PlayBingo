@@ -1,6 +1,9 @@
+import { Add, Delete } from '@mui/icons-material';
 import {
     Box,
     Button,
+    Card,
+    CardContent,
     Checkbox,
     FormControl,
     IconButton,
@@ -8,9 +11,9 @@ import {
     MenuItem,
     Select,
     TextField,
+    Typography,
 } from '@mui/material';
-import React, { useEffect, useMemo, useState } from 'react';
-import { Add, Delete } from '@mui/icons-material';
+import { useEffect, useMemo, useState } from 'react';
 
 export type JSONValue =
     | string
@@ -218,13 +221,7 @@ function OneOfAnyOfRenderer({
     };
 
     return (
-        <Box
-            sx={{
-                border: '1px solid #444',
-                borderRadius: 2,
-                padding: 2,
-            }}
-        >
+        <Box>
             <Box
                 sx={{
                     marginBottom: 2,
@@ -233,7 +230,7 @@ function OneOfAnyOfRenderer({
                     alignItems: 'center',
                 }}
             >
-                <FormControl>
+                <FormControl fullWidth>
                     <InputLabel>{schema.title ?? 'Variant'}</InputLabel>
                     <Select
                         label={schema.title ?? 'Variant'}
@@ -247,11 +244,6 @@ function OneOfAnyOfRenderer({
                         ))}
                     </Select>
                 </FormControl>
-                {discrKey && (
-                    <span style={{ fontSize: 12, opacity: 0.6 }}>
-                        {`discriminator: ${discrKey}`}
-                    </span>
-                )}
             </Box>
 
             <JsonSchemaRenderer
@@ -279,6 +271,7 @@ interface JsonSchemaRendererProps {
     labels?: Record<string, string>;
     /** Optional option label mapping for discriminator values (e.g., { "difficulty-filter": "Difficulty Filter" }) */
     optionLabels?: Record<string, string>;
+    depth?: number;
 }
 
 export function JsonSchemaRenderer({
@@ -323,39 +316,40 @@ export function JsonSchemaRenderer({
     if (schema.const !== undefined) {
         const constVal = schema.const;
         if (value !== constVal) onChange(constVal); // ensure it’s set
-        return (
-            <span
-                style={{
-                    padding: '2px 6px',
-                    border: '1px solid #555',
-                    borderRadius: 4,
-                    fontSize: 12,
-                    opacity: 0.8,
-                }}
-                title="fixed"
-            >
-                {String(constVal)}
-            </span>
-        );
+        return null;
     }
 
     /** ----- object ----- */
     if (schema.type === 'object' && schema.properties) {
         const keys = Object.keys(schema.properties);
         return (
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <Box
+                sx={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 2,
+                    width: '100%',
+                }}
+            >
                 {keys.map((key) => {
                     const propSchema = schema.properties![key];
                     const label = labels?.[key] ?? propSchema.title ?? key;
                     const v = ((value ?? {}) as Record<string, unknown>)[key];
 
+                    if (propSchema.const !== undefined) {
+                        return null;
+                    }
+
                     return (
-                        <Box key={key}>
-                            <label
-                                style={{ display: 'block', marginBottom: 4 }}
-                            >
+                        <Card
+                            key={key}
+                            variant="outlined"
+                            component="fieldset"
+                            sx={{ background: 'unset', width: '100%' }}
+                        >
+                            <Typography component="legend" sx={{ p: 1 }}>
                                 {label}
-                            </label>
+                            </Typography>
                             <JsonSchemaRenderer
                                 schema={propSchema}
                                 value={
@@ -369,7 +363,7 @@ export function JsonSchemaRenderer({
                                 labels={labels}
                                 optionLabels={optionLabels}
                             />
-                        </Box>
+                        </Card>
                     );
                 })}
             </Box>
@@ -380,7 +374,14 @@ export function JsonSchemaRenderer({
     if (schema.type === 'array' && schema.items) {
         const list: JSONValue[] = Array.isArray(value) ? value : [];
         return (
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+            <Box
+                sx={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 1,
+                    width: '100%',
+                }}
+            >
                 {list.map((item, idx) => (
                     <Box
                         key={idx}
@@ -388,19 +389,27 @@ export function JsonSchemaRenderer({
                             display: 'flex',
                             gap: 1,
                             alignItems: 'center',
+                            width: '100%',
                         }}
                     >
-                        <JsonSchemaRenderer
-                            schema={schema.items ?? {}}
-                            value={item}
-                            onChange={(val) => {
-                                const next = list.slice();
-                                next[idx] = val;
-                                onChange(next);
-                            }}
-                            labels={labels}
-                            optionLabels={optionLabels}
-                        />
+                        <Card
+                            variant="outlined"
+                            sx={{ background: 'unset', width: '100%' }}
+                        >
+                            <CardContent sx={{}}>
+                                <JsonSchemaRenderer
+                                    schema={schema.items ?? {}}
+                                    value={item}
+                                    onChange={(val) => {
+                                        const next = list.slice();
+                                        next[idx] = val;
+                                        onChange(next);
+                                    }}
+                                    labels={labels}
+                                    optionLabels={optionLabels}
+                                />
+                            </CardContent>
+                        </Card>
                         <IconButton
                             type="button"
                             color="error"
@@ -413,6 +422,7 @@ export function JsonSchemaRenderer({
                         </IconButton>
                     </Box>
                 ))}
+
                 <Button
                     type="button"
                     color="success"
@@ -423,6 +433,11 @@ export function JsonSchemaRenderer({
                         ] as unknown[])
                     }
                     startIcon={<Add />}
+                    sx={{
+                        border: 1,
+                        borderColor: 'divider',
+                        borderStyle: 'dashed',
+                    }}
                 >
                     Add
                 </Button>
@@ -437,6 +452,7 @@ export function JsonSchemaRenderer({
             <TextField
                 value={(value as string) ?? ''}
                 onChange={(e) => onChange(e.target.value)}
+                sx={{ width: '100%' }}
             />
         );
     }
@@ -452,6 +468,7 @@ export function JsonSchemaRenderer({
                             : Number(e.target.value),
                     )
                 }
+                sx={{ width: '100%' }}
             />
         );
     }

@@ -259,6 +259,7 @@ export default async function GameLayout({
                     pt: 2,
                     height: '100%',
                     maxHeight: '100%',
+                    maxWidth: '100%',
                     overflowY: 'auto',
                     background: grey[900],
                     borderLeft: 2,
