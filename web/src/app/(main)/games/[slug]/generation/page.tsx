@@ -1,15 +1,16 @@
-import { Game } from '@playbingo/types';
-import GenerationForm from './_components/GenerationForm';
+import { GoalCategory } from '@playbingo/types';
 import { getFullUrl } from '../../../../../lib/Utils';
+import GenerationForm from './_components/GenerationForm';
 
-async function getGame(slug: string): Promise<Game | undefined> {
-    const res = await fetch(getFullUrl(`/api/games/${slug}`));
+async function getCategories(
+    slug: string,
+): Promise<GoalCategory[] | undefined> {
+    const res = await fetch(getFullUrl(`/api/games/${slug}/categories`));
     if (!res.ok) {
         return undefined;
     }
     return res.json();
 }
-
 interface Props {
     params: Promise<{ slug: string }>;
 }
@@ -17,11 +18,11 @@ interface Props {
 export default async function GameGeneration({ params }: Props) {
     const { slug } = await params;
 
-    const game = await getGame(slug);
+    const categories = await getCategories(slug);
 
-    if (!game) {
+    if (!categories) {
         return null;
     }
 
-    return <GenerationForm game={game} />;
+    return <GenerationForm categories={categories} />;
 }

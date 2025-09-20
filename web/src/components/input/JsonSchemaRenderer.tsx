@@ -302,12 +302,19 @@ export function JsonSchemaRenderer({
             <Select
                 value={value ?? ''}
                 onChange={(e) => onChange(e.target.value)}
+                sx={{ width: '100%' }}
             >
-                {schema.enum.map((opt) => (
-                    <MenuItem key={String(opt)} value={String(opt)}>
-                        {String(opt)}
-                    </MenuItem>
-                ))}
+                {schema.enum.map((opt) => {
+                    const optVal = String(opt);
+                    const label = optionLabels
+                        ? optionLabels[optVal]
+                        : undefined;
+                    return (
+                        <MenuItem key={optVal} value={optVal}>
+                            {label ? label : optVal}
+                        </MenuItem>
+                    );
+                })}
             </Select>
         );
     }
