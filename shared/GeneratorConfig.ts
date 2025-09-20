@@ -9,23 +9,19 @@ export const makeGeneratorSchema = (categories: GoalCategory[]) => {
         return c.id;
     });
 
-    const GenerationListModeSchema = z.discriminatedUnion('mode', [
+    const GoalFilterSchema = z.discriminatedUnion('filter', [
         z.object({
-            mode: z.literal('all'), // default, keep all goals
-        }),
-        z.object({
-            mode: z.literal('difficulty-filter'),
+            mode: z.literal('difficulty'),
             min: z.number().int().min(1).optional(),
             max: z.number().int().min(1).optional(),
         }),
         z.object({
-            mode: z.literal('category-filter'),
-            include: z.array(z.enum(catIds)).optional(),
-            exclude: z.array(z.enum(catIds)).optional(),
+            mode: z.literal('category'),
+            categories: z.array(z.enum(catIds)),
         }),
     ]);
 
-    const GenerationListTransformSchema = z.enum(['none']);
+    const GoalTransformationSchema = z.enum(['none']);
 
     const GenerationBoardLayoutSchema = z.enum(['none', 'srlv5', 'isaac']);
 
@@ -34,11 +30,6 @@ export const makeGeneratorSchema = (categories: GoalCategory[]) => {
     const GenerationGoalRestrictionSchema = z.discriminatedUnion('type', [
         z.object({
             type: z.literal('line-type-exclusion'),
-        }),
-        z.object({
-            type: z.literal('category-cap'),
-            category: z.string(),
-            max: z.number().int().min(1),
         }),
     ]);
 
@@ -53,8 +44,8 @@ export const makeGeneratorSchema = (categories: GoalCategory[]) => {
 
     return {
         schema: z.object({
-            listMode: GenerationListModeSchema.default({ mode: 'all' }),
-            listTransform: GenerationListTransformSchema.default('none'),
+            goalFilters: z.array(GoalFilterSchema).default([]),
+            goalTransformation: GoalTransformationSchema.default('none'),
             boardLayout: GenerationBoardLayoutSchema.default('none'),
             goalSelection: GenerationGoalSelectionSchema.default('random'),
             restrictions: z.array(GenerationGoalRestrictionSchema).default([]),
