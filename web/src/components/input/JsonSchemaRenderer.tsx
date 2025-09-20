@@ -8,9 +8,11 @@ import {
     FormControl,
     IconButton,
     InputLabel,
+    ListItemText,
     MenuItem,
     Select,
     TextField,
+    Tooltip,
     Typography,
 } from '@mui/material';
 import { useEffect, useMemo, useState } from 'react';
@@ -28,6 +30,7 @@ export type JSONValue =
 export type JSONSchema = {
     type?: string | string[];
     enum?: JSONValue[];
+    enumMeta?: Record<string, { label: string; description?: string }>;
     const?: JSONValue;
     default?: JSONValue;
     properties?: Record<string, JSONSchema>;
@@ -118,12 +121,25 @@ function inferDiscriminatorKey(options: JSONSchema[]): string | null {
 }
 
 /** Read the discriminator value for a given option (const or single enum value) */
-function readDiscriminatorValue(opt: JSONSchema, key: string): string | null {
+function readDiscriminatorValue(
+    opt: JSONSchema,
+    key: string,
+): { dv: string | null; title?: string; description?: string } {
     const prop = opt.properties?.[key];
-    if (!prop) return null;
-    if (prop.const !== undefined) return String(prop.const);
-    if (prop.enum && prop.enum.length === 1) return String(prop.enum[0]);
-    return null;
+    if (!prop) return { dv: null };
+    if (prop.const !== undefined)
+        return {
+            dv: String(prop.const),
+            title: prop.title,
+            description: prop.description,
+        };
+    if (prop.enum && prop.enum.length === 1)
+        return {
+            dv: String(prop.enum[0]),
+            title: prop.title,
+            description: prop.description,
+        };
+    return { dv: null };
 }
 
 /** Find option index that matches current value via discriminator, else -1 */
@@ -137,7 +153,7 @@ function findActiveOptionIndex(
     if (v === undefined) return -1;
 
     for (let i = 0; i < options.length; i++) {
-        const dv = readDiscriminatorValue(options[i], discrKey);
+        const { dv } = readDiscriminatorValue(options[i], discrKey);
         if (dv !== null && dv === String(v)) return i;
     }
     return -1;
@@ -169,8 +185,6 @@ function OneOfAnyOfRenderer({
     schema,
     value,
     onChange,
-    labels,
-    optionLabels,
 }: JsonSchemaRendererProps) {
     const options = (schema.oneOf ?? schema.anyOf)!;
     const discrKey = useMemo(() => inferDiscriminatorKey(options), [options]);
@@ -200,13 +214,18 @@ function OneOfAnyOfRenderer({
     // Build selector options
     const selectorOptions = options.map((opt, i) => {
         let label = `Option ${i + 1}`;
+        let description: string | undefined = undefined;
         if (discrKey) {
-            const dv = readDiscriminatorValue(opt, discrKey);
-            if (dv) label = optionLabels?.[dv] ?? dv;
+            const { title, description: desc } = readDiscriminatorValue(
+                opt,
+                discrKey,
+            );
+            if (title) label = title;
+            description = desc;
         }
         // Fall back to title if present
         if (opt.title) label = opt.title;
-        return { value: String(i), label };
+        return { value: String(i), label, description };
     });
 
     // When switching branch
@@ -239,7 +258,13 @@ function OneOfAnyOfRenderer({
                     >
                         {selectorOptions.map((o) => (
                             <MenuItem key={o.value} value={o.value}>
-                                {o.label}
+                                {o.description ? (
+                                    <Tooltip title={o.description}>
+                                        <ListItemText>{o.label}</ListItemText>
+                                    </Tooltip>
+                                ) : (
+                                    o.label
+                                )}
                             </MenuItem>
                         ))}
                     </Select>
@@ -256,8 +281,6 @@ function OneOfAnyOfRenderer({
                 onChange={(v) =>
                     onChange(enforceDiscriminator(v, activeSchema, discrKey))
                 }
-                labels={labels}
-                optionLabels={optionLabels}
             />
         </Box>
     );
@@ -267,19 +290,12 @@ interface JsonSchemaRendererProps {
     schema: JSONSchema;
     value: JSONValue;
     onChange: (val: JSONValue) => void;
-    /** Optional labels for nicer UI (e.g., { listMode: "Goal List Mode" }) */
-    labels?: Record<string, string>;
-    /** Optional option label mapping for discriminator values (e.g., { "difficulty-filter": "Difficulty Filter" }) */
-    optionLabels?: Record<string, string>;
-    depth?: number;
 }
 
 export function JsonSchemaRenderer({
     schema,
     value,
     onChange,
-    labels,
-    optionLabels,
 }: JsonSchemaRendererProps) {
     if (!schema) return null;
 
@@ -290,8 +306,6 @@ export function JsonSchemaRenderer({
                 schema={schema}
                 value={value}
                 onChange={onChange}
-                labels={labels}
-                optionLabels={optionLabels}
             />
         );
     }
@@ -306,12 +320,25 @@ export function JsonSchemaRenderer({
             >
                 {schema.enum.map((opt) => {
                     const optVal = String(opt);
-                    const label = optionLabels
-                        ? optionLabels[optVal]
+                    const label = schema.enumMeta
+                        ? schema.enumMeta[optVal]?.label
+                        : optVal;
+                    const description = schema.enumMeta
+                        ? schema.enumMeta[optVal]?.description
                         : undefined;
                     return (
                         <MenuItem key={optVal} value={optVal}>
-                            {label ? label : optVal}
+                            {description ? (
+                                <Tooltip title={description}>
+                                    <ListItemText>
+                                        {label ? label : optVal}
+                                    </ListItemText>
+                                </Tooltip>
+                            ) : label ? (
+                                label
+                            ) : (
+                                optVal
+                            )}
                         </MenuItem>
                     );
                 })}
@@ -340,7 +367,7 @@ export function JsonSchemaRenderer({
             >
                 {keys.map((key) => {
                     const propSchema = schema.properties![key];
-                    const label = labels?.[key] ?? propSchema.title ?? key;
+                    const label = propSchema.title ?? key;
                     const v = ((value ?? {}) as Record<string, unknown>)[key];
 
                     if (propSchema.const !== undefined) {
@@ -357,19 +384,24 @@ export function JsonSchemaRenderer({
                             <Typography component="legend" sx={{ p: 1 }}>
                                 {label}
                             </Typography>
-                            <JsonSchemaRenderer
-                                schema={propSchema}
-                                value={
-                                    v === undefined
-                                        ? defaultForSchema(propSchema)
-                                        : v
-                                }
-                                onChange={(val) =>
-                                    onChange(setField(value, key, val))
-                                }
-                                labels={labels}
-                                optionLabels={optionLabels}
-                            />
+                            <CardContent sx={{ pt: 0 }}>
+                                {propSchema.description && (
+                                    <Typography variant="body2" sx={{ mb: 2 }}>
+                                        {propSchema.description}
+                                    </Typography>
+                                )}
+                                <JsonSchemaRenderer
+                                    schema={propSchema}
+                                    value={
+                                        v === undefined
+                                            ? defaultForSchema(propSchema)
+                                            : v
+                                    }
+                                    onChange={(val) =>
+                                        onChange(setField(value, key, val))
+                                    }
+                                />
+                            </CardContent>
                         </Card>
                     );
                 })}
@@ -403,7 +435,7 @@ export function JsonSchemaRenderer({
                             variant="outlined"
                             sx={{ background: 'unset', width: '100%' }}
                         >
-                            <CardContent sx={{}}>
+                            <CardContent>
                                 <JsonSchemaRenderer
                                     schema={schema.items ?? {}}
                                     value={item}
@@ -412,8 +444,6 @@ export function JsonSchemaRenderer({
                                         next[idx] = val;
                                         onChange(next);
                                     }}
-                                    labels={labels}
-                                    optionLabels={optionLabels}
                                 />
                             </CardContent>
                         </Card>

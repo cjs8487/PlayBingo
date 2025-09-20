@@ -15,8 +15,8 @@ interface Props {
 }
 
 export default function GenerationPage({ categories }: Props) {
-    const { schema, enumLabels } = makeGeneratorSchema(categories);
-    const schemaJson = z.toJSONSchema(schema);
+    const { schema, metadata } = makeGeneratorSchema(categories);
+    const schemaJson = z.toJSONSchema(schema, { metadata });
 
     const [config, setConfig] = useState<JSONValue>();
 
@@ -26,31 +26,6 @@ export default function GenerationPage({ categories }: Props) {
                 schema={schemaJson as JSONSchema}
                 value={config}
                 onChange={setConfig}
-                labels={{
-                    goalFilters: 'Goal Filters',
-                    goalTransformation: 'Goal Transformation',
-                    boardLayout: 'Board Layout',
-                    goalSelection: 'Goal Selection',
-                    restrictions: 'Restrictions',
-                    adjustments: 'Global Adjustments',
-                    categories: 'Categories',
-                    min: 'Minimum',
-                    max: 'Maximum',
-                }}
-                optionLabels={{
-                    'difficulty-filter': 'Difficulty Filter',
-                    'category-filter': 'Category Filter',
-                    'line-type-exclusion': 'Line Type Exclusion',
-                    synergize: 'Synergize',
-                    'board-type-max': 'Category Maximums',
-                    random: 'Random',
-                    difficulty: 'Difficulty',
-                    none: 'None',
-                    srlv5: 'SRLv5',
-                    isaac: 'Isaac',
-                    category: 'Category',
-                    ...enumLabels,
-                }}
             />
             <pre>{JSON.stringify(config, null, 2)}</pre>
             <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
