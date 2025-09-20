@@ -187,10 +187,12 @@ interface Props {
 const schemaJson = z.toJSONSchema(GeneratorConfigSchema);
 
 export default function GenerationPage({ game }: Props) {
-    const [config, setConfig] = useState<JSONValue>({});
+    const [config, setConfig] = useState<JSONValue>();
+
+    console.log(schemaJson);
 
     return (
-        <div>
+        <Box sx={{ width: '100%' }}>
             <JsonSchemaRenderer
                 schema={schemaJson as JSONSchema}
                 value={config}
@@ -221,7 +223,7 @@ export default function GenerationPage({ game }: Props) {
                     Save
                 </Button>
             </Box>
-        </div>
+        </Box>
     );
 
     return (
