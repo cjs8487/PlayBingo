@@ -27,20 +27,28 @@ export default function GenerationPage({ categories }: Props) {
                 value={config}
                 onChange={setConfig}
                 labels={{
-                    listMode: 'Goal List Mode',
+                    goalFilters: 'Goal Filters',
+                    goalTransformation: 'Goal Transformation',
                     boardLayout: 'Board Layout',
                     goalSelection: 'Goal Selection',
                     restrictions: 'Restrictions',
                     adjustments: 'Global Adjustments',
-                    include: 'Include Categories',
-                    exclude: 'Exclude Categories',
-                    min: 'Min Difficulty',
-                    max: 'Max Difficulty',
+                    categories: 'Categories',
+                    min: 'Minimum',
+                    max: 'Maximum',
                 }}
                 optionLabels={{
-                    all: 'All Goals',
                     'difficulty-filter': 'Difficulty Filter',
                     'category-filter': 'Category Filter',
+                    'line-type-exclusion': 'Line Type Exclusion',
+                    synergize: 'Synergize',
+                    'board-type-max': 'Category Maximums',
+                    random: 'Random',
+                    difficulty: 'Difficulty',
+                    none: 'None',
+                    srlv5: 'SRLv5',
+                    isaac: 'Isaac',
+                    category: 'Category',
                     ...enumLabels,
                 }}
             />
