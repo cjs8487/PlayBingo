@@ -12,7 +12,7 @@ export const makeGeneratorSchema = (categories: GoalCategory[]) => {
 
     const catIds = categories.map((c) => c.id);
 
-    const GoalFilterSchema = z.discriminatedUnion('filter', [
+    const GoalFilterSchema = z.discriminatedUnion('mode', [
         z
             .object({
                 mode: z.literal('difficulty').meta({
@@ -23,17 +23,17 @@ export const makeGeneratorSchema = (categories: GoalCategory[]) => {
                 min: z
                     .number()
                     .int()
-                    .min(1)
+                    .min(1, 'Minimum must be at least 1')
                     .optional()
                     .meta({ title: 'Minimum Difficulty' }),
                 max: z
                     .number()
                     .int()
-                    .min(1)
+                    .min(1, 'Maximum must be at least 1')
                     .optional()
                     .meta({ title: 'Maximum Difficulty' }),
             })
-            .refine(({ min, max }) => !min || !max || min < max, {
+            .refine(({ min, max }) => !min || !max || min <= max, {
                 error: 'Minimum must be less than maximum',
             }),
         z.object({
@@ -134,11 +134,6 @@ export const makeGeneratorSchema = (categories: GoalCategory[]) => {
                 goalFilters: z
                     .array(GoalFilterSchema)
                     .default([])
-                    .meta({
-                        title: 'Goal Filters',
-                        description:
-                            'Goal filters allow the generator remove goals the meet specific criteria from the generation pool before generation starts. By default, the generator will pull from all goals available to the game',
-                    })
                     .refine(
                         (arr) => {
                             return (
@@ -147,7 +142,12 @@ export const makeGeneratorSchema = (categories: GoalCategory[]) => {
                             );
                         },
                         { error: 'Duplicate filter types not allowed' },
-                    ),
+                    )
+                    .meta({
+                        title: 'Goal Filters',
+                        description:
+                            'Goal filters allow the generator remove goals the meet specific criteria from the generation pool before generation starts. By default, the generator will pull from all goals available to the game',
+                    }),
                 goalTransformation: GoalTransformationSchema.default(
                     'none',
                 ).meta({

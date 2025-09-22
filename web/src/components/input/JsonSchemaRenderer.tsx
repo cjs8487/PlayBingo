@@ -15,7 +15,68 @@ import {
     Tooltip,
     Typography,
 } from '@mui/material';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import z, { ZodType } from 'zod';
+
+type Errors = Record<string, string>;
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function useJSONForm<T extends ZodType<any, any>>(
+    schema: T,
+    initialValues: z.infer<T>,
+) {
+    const [values, setValues] = useState<JSONValue>(initialValues);
+    const [errors, setErrors] = useState<Errors>({});
+    const [isValid, setIsValid] = useState(true);
+
+    const doSetValues = useCallback(
+        (values: JSONValue) => {
+            setValues(values);
+            if (values) {
+                const result = schema.safeParse(values);
+                if (!result.success) {
+                    const newErrors: Errors = {};
+                    for (const issue of result.error.issues) {
+                        newErrors[issue.path.join('.')] = issue.message;
+                    }
+                    setErrors(newErrors);
+                    setIsValid(false);
+                } else {
+                    setErrors({});
+                    setIsValid(true);
+                }
+            }
+        },
+        [schema],
+    );
+
+    // Validate on submit
+    const handleSubmit = useCallback(
+        (onValid: (data: z.infer<T>) => void) => (e?: React.FormEvent) => {
+            e?.preventDefault();
+            const result = schema.safeParse(values);
+            if (result.success) {
+                setErrors({});
+                onValid(result.data);
+            } else {
+                const newErrors: Errors = {};
+                for (const issue of result.error.issues) {
+                    newErrors[issue.path.join('.')] = issue.message;
+                }
+                setErrors(newErrors);
+            }
+        },
+        [values, schema],
+    );
+
+    return {
+        values,
+        errors,
+        isValid,
+        setValues: doSetValues,
+        handleSubmit,
+    };
+}
 
 export type JSONValue =
     | string
@@ -166,7 +227,7 @@ function enforceDiscriminator(
     discrKey: string | null,
 ) {
     if (!discrKey) return obj;
-    const dv = readDiscriminatorValue(option, discrKey);
+    const { dv } = readDiscriminatorValue(option, discrKey);
     if (dv == null) return obj;
     return setField(obj ?? {}, discrKey, dv);
 }
@@ -185,6 +246,8 @@ function OneOfAnyOfRenderer({
     schema,
     value,
     onChange,
+    errors,
+    path,
 }: JsonSchemaRendererProps) {
     const options = (schema.oneOf ?? schema.anyOf)!;
     const discrKey = useMemo(() => inferDiscriminatorKey(options), [options]);
@@ -281,6 +344,8 @@ function OneOfAnyOfRenderer({
                 onChange={(v) =>
                     onChange(enforceDiscriminator(v, activeSchema, discrKey))
                 }
+                errors={errors}
+                path={path}
             />
         </Box>
     );
@@ -290,12 +355,16 @@ interface JsonSchemaRendererProps {
     schema: JSONSchema;
     value: JSONValue;
     onChange: (val: JSONValue) => void;
+    errors: Record<string, string>;
+    path: string;
 }
 
 export function JsonSchemaRenderer({
     schema,
     value,
     onChange,
+    errors,
+    path,
 }: JsonSchemaRendererProps) {
     if (!schema) return null;
 
@@ -306,6 +375,8 @@ export function JsonSchemaRenderer({
                 schema={schema}
                 value={value}
                 onChange={onChange}
+                errors={errors}
+                path={path}
             />
         );
     }
@@ -369,6 +440,8 @@ export function JsonSchemaRenderer({
                     const propSchema = schema.properties![key];
                     const label = propSchema.title ?? key;
                     const v = ((value ?? {}) as Record<string, unknown>)[key];
+                    const newPath = path ? `${path}.${key}` : key;
+                    const error = errors[newPath];
 
                     if (propSchema.const !== undefined) {
                         return null;
@@ -379,15 +452,32 @@ export function JsonSchemaRenderer({
                             key={key}
                             variant="outlined"
                             component="fieldset"
-                            sx={{ background: 'unset', width: '100%' }}
+                            sx={{
+                                background: 'unset',
+                                width: '100%',
+                                borderColor: error ? 'error.main' : 'divider',
+                            }}
                         >
-                            <Typography component="legend" sx={{ p: 1 }}>
+                            <Typography
+                                component="legend"
+                                sx={{ p: 1, color: error ? 'error.main' : '' }}
+                            >
                                 {label}
                             </Typography>
                             <CardContent sx={{ pt: 0 }}>
                                 {propSchema.description && (
                                     <Typography variant="body2" sx={{ mb: 2 }}>
                                         {propSchema.description}
+                                    </Typography>
+                                )}
+                                {error && (
+                                    <Typography
+                                        sx={{
+                                            color: error ? 'error.main' : '',
+                                            mb: 2,
+                                        }}
+                                    >
+                                        {error}
                                     </Typography>
                                 )}
                                 <JsonSchemaRenderer
@@ -400,6 +490,8 @@ export function JsonSchemaRenderer({
                                     onChange={(val) =>
                                         onChange(setField(value, key, val))
                                     }
+                                    errors={errors}
+                                    path={newPath}
                                 />
                             </CardContent>
                         </Card>
@@ -421,44 +513,65 @@ export function JsonSchemaRenderer({
                     width: '100%',
                 }}
             >
-                {list.map((item, idx) => (
-                    <Box
-                        key={idx}
-                        sx={{
-                            display: 'flex',
-                            gap: 1,
-                            alignItems: 'center',
-                            width: '100%',
-                        }}
-                    >
-                        <Card
-                            variant="outlined"
-                            sx={{ background: 'unset', width: '100%' }}
-                        >
-                            <CardContent>
-                                <JsonSchemaRenderer
-                                    schema={schema.items ?? {}}
-                                    value={item}
-                                    onChange={(val) => {
-                                        const next = list.slice();
-                                        next[idx] = val;
-                                        onChange(next);
-                                    }}
-                                />
-                            </CardContent>
-                        </Card>
-                        <IconButton
-                            type="button"
-                            color="error"
-                            onClick={() => {
-                                const next = list.filter((_, i) => i !== idx);
-                                onChange(next);
+                {list.map((item, idx) => {
+                    const idxPath = path ? `${path}.${idx}` : `${idx}`;
+                    const error = errors[idxPath];
+                    return (
+                        <Box
+                            key={idx}
+                            sx={{
+                                display: 'flex',
+                                gap: 1,
+                                alignItems: 'center',
+                                width: '100%',
                             }}
                         >
-                            <Delete />
-                        </IconButton>
-                    </Box>
-                ))}
+                            <Card
+                                variant="outlined"
+                                sx={{
+                                    background: 'unset',
+                                    width: '100%',
+                                    borderColor: error
+                                        ? 'error.main'
+                                        : 'divider',
+                                }}
+                            >
+                                <CardContent>
+                                    {error && (
+                                        <Typography
+                                            sx={{ color: 'error.main', mb: 2 }}
+                                        >
+                                            {error}
+                                        </Typography>
+                                    )}
+                                    <JsonSchemaRenderer
+                                        schema={schema.items ?? {}}
+                                        value={item}
+                                        onChange={(val) => {
+                                            const next = list.slice();
+                                            next[idx] = val;
+                                            onChange(next);
+                                        }}
+                                        errors={errors}
+                                        path={idxPath}
+                                    />
+                                </CardContent>
+                            </Card>
+                            <IconButton
+                                type="button"
+                                color="error"
+                                onClick={() => {
+                                    const next = list.filter(
+                                        (_, i) => i !== idx,
+                                    );
+                                    onChange(next);
+                                }}
+                            >
+                                <Delete />
+                            </IconButton>
+                        </Box>
+                    );
+                })}
 
                 <Button
                     type="button"
