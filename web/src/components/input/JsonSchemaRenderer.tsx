@@ -114,6 +114,14 @@ function defaultForSchema(schema: JSONSchema): JSONValue {
 
     if (schema.enum && schema.enum.length) return schema.enum[0];
 
+    if (schema.oneOf) {
+        return defaultForSchema(schema.oneOf[0]);
+    }
+
+    if (schema.anyOf) {
+        return defaultForSchema(schema.anyOf[0]);
+    }
+
     const t = Array.isArray(schema.type) ? schema.type[0] : schema.type;
 
     switch (t) {
