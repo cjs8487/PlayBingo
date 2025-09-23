@@ -45,6 +45,7 @@ import {
 } from '../../database/games/Goals';
 import { getUser, getUsersEligibleToModerateGame } from '../../database/Users';
 import { deleteFile, saveFile } from '../../media/MediaServer';
+import { logError } from '../../Logger';
 
 const games = Router();
 
@@ -640,16 +641,24 @@ games.get('/:slug/sampleBoard', async (req, res) => {
     const goals = await goalsForGame(slug);
     const categories = await getCategories(slug);
 
-    const generator = new BoardGenerator(
-        goals,
-        categories,
-        gameData.generationListMode,
-        gameData.generationListTransform,
-        gameData.generationBoardLayout,
-        gameData.generationGoalSelection,
-        gameData.generationGoalRestrictions,
-        gameData.generationGlobalAdjustments,
+    const { schema } = makeGeneratorSchema(
+        categories.map((cat) => ({
+            id: cat.id,
+            name: cat.name,
+            max: cat.max,
+            goalCount: cat._count.goals,
+        })),
     );
+    const result = schema.safeParse(gameData.generatorConfig);
+
+    if (!result.success) {
+        logError(
+            `Invalid generator config in database for ${gameData.name} (${gameData.slug})`,
+        );
+        throw new Error('Invalid generator config in database');
+    }
+
+    const generator = new BoardGenerator(goals, categories, result.data);
     generator.generateBoard();
     res.status(200).send({
         board: generator.board.map((goal) => ({

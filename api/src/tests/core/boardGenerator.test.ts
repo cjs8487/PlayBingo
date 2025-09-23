@@ -1,13 +1,4 @@
-import {
-    Category,
-    GenerationBoardLayout,
-    GenerationGlobalAdjustments,
-    GenerationGoalRestriction,
-    GenerationGoalSelection,
-    GenerationListMode,
-    GenerationListTransform,
-    Goal,
-} from '@prisma/client';
+import { Category } from '@prisma/client';
 import BoardGenerator from '../../core/generation/BoardGenerator';
 import { GeneratorGoal } from '../../core/generation/GeneratorCore';
 
@@ -32,16 +23,14 @@ const goals: GeneratorGoal[] = Array.from({ length: 100 }).map((_, i) => ({
 describe('BoardGenerator initialization', () => {
     it('Throws for no layout and difficulty selection', () => {
         expect(() => {
-            new BoardGenerator(
-                goals,
-                categories,
-                [],
-                GenerationListTransform.NONE,
-                GenerationBoardLayout.NONE,
-                GenerationGoalSelection.DIFFICULTY,
-                [],
-                [],
-            );
+            new BoardGenerator(goals, categories, {
+                goalFilters: [],
+                goalTransformation: 'none',
+                boardLayout: 'random',
+                goalSelection: 'difficulty',
+                restrictions: [],
+                adjustments: [],
+            });
         }).toThrow('Invalid configuration');
     });
 });
@@ -52,16 +41,14 @@ describe('Goal Transformation', () => {});
 
 describe('Board Layout', () => {
     describe('No Layout', () => {
-        const generator = new BoardGenerator(
-            goals,
-            categories,
-            [],
-            GenerationListTransform.NONE,
-            GenerationBoardLayout.NONE,
-            GenerationGoalSelection.RANDOM,
-            [],
-            [],
-        );
+        const generator = new BoardGenerator(goals, categories, {
+            goalFilters: [],
+            goalTransformation: 'none',
+            boardLayout: 'random',
+            goalSelection: 'random',
+            restrictions: [],
+            adjustments: [],
+        });
 
         it('Generates a zero-filled array', () => {
             generator.generateBoardLayout();
@@ -76,16 +63,14 @@ describe('Board Layout', () => {
     });
 
     describe('Magic Square', () => {
-        const generator = new BoardGenerator(
-            goals,
-            categories,
-            [],
-            GenerationListTransform.NONE,
-            GenerationBoardLayout.SRLv5,
-            GenerationGoalSelection.DIFFICULTY,
-            [],
-            [],
-        );
+        const generator = new BoardGenerator(goals, categories, {
+            goalFilters: [],
+            goalTransformation: 'none',
+            boardLayout: 'srlv5',
+            goalSelection: 'difficulty',
+            restrictions: [],
+            adjustments: [],
+        });
 
         it('Generates 1-25', () => {
             generator.reset();
@@ -149,16 +134,14 @@ describe('Board Layout', () => {
     });
 
     describe('Static Placement (Isaac)', () => {
-        const generator = new BoardGenerator(
-            goals,
-            categories,
-            [],
-            GenerationListTransform.NONE,
-            GenerationBoardLayout.ISAAC,
-            GenerationGoalSelection.DIFFICULTY,
-            [],
-            [],
-        );
+        const generator = new BoardGenerator(goals, categories, {
+            goalFilters: [],
+            goalTransformation: 'none',
+            boardLayout: 'isaac',
+            goalSelection: 'difficulty',
+            restrictions: [],
+            adjustments: [],
+        });
 
         const correctLayout = [
             [2, 3, 1, 1, 2],
@@ -184,16 +167,14 @@ describe('Board Layout', () => {
 
 describe('Goal Grouping', () => {
     describe('Random Placement', () => {
-        const generator = new BoardGenerator(
-            goals,
-            categories,
-            [],
-            GenerationListTransform.NONE,
-            GenerationBoardLayout.SRLv5,
-            GenerationGoalSelection.RANDOM,
-            [],
-            [],
-        );
+        const generator = new BoardGenerator(goals, categories, {
+            goalFilters: [],
+            goalTransformation: 'none',
+            boardLayout: 'srlv5',
+            goalSelection: 'random',
+            restrictions: [],
+            adjustments: [],
+        });
 
         it('Puts all goals into group 0', () => {
             generator.reset();
@@ -203,16 +184,14 @@ describe('Goal Grouping', () => {
     });
 
     describe('Difficulty Placement', () => {
-        const generator = new BoardGenerator(
-            goals,
-            categories,
-            [],
-            GenerationListTransform.NONE,
-            GenerationBoardLayout.SRLv5,
-            GenerationGoalSelection.DIFFICULTY,
-            [],
-            [],
-        );
+        const generator = new BoardGenerator(goals, categories, {
+            goalFilters: [],
+            goalTransformation: 'none',
+            boardLayout: 'srlv5',
+            goalSelection: 'difficulty',
+            restrictions: [],
+            adjustments: [],
+        });
 
         it('Correctly groups goals with difficulties', () => {
             generator.reset();
@@ -226,16 +205,14 @@ describe('Goal Grouping', () => {
 
 describe('Goal Restriction', () => {
     describe('Line Type Exclusion', () => {
-        const generator = new BoardGenerator(
-            goals,
-            categories,
-            [],
-            GenerationListTransform.NONE,
-            GenerationBoardLayout.SRLv5,
-            GenerationGoalSelection.DIFFICULTY,
-            [GenerationGoalRestriction.LINE_TYPE_EXCLUSION],
-            [],
-        );
+        const generator = new BoardGenerator(goals, categories, {
+            goalFilters: [],
+            goalTransformation: 'none',
+            boardLayout: 'srlv5',
+            goalSelection: 'difficulty',
+            restrictions: [{ type: 'line-type-exclusion' }],
+            adjustments: [],
+        });
 
         it('Prefers to place goals of differing types in the same row', () => {
             generator.reset();
@@ -270,16 +247,14 @@ describe('Goal Restriction', () => {
 
 describe('Global Adjustments', () => {
     describe('Synergize', () => {
-        const generator = new BoardGenerator(
-            goals,
-            categories,
-            [],
-            GenerationListTransform.NONE,
-            GenerationBoardLayout.SRLv5,
-            GenerationGoalSelection.DIFFICULTY,
-            [],
-            [GenerationGlobalAdjustments.SYNERGIZE],
-        );
+        const generator = new BoardGenerator(goals, categories, {
+            goalFilters: [],
+            goalTransformation: 'none',
+            boardLayout: 'srlv5',
+            goalSelection: 'difficulty',
+            restrictions: [],
+            adjustments: [{ type: 'synergize' }],
+        });
 
         it('Duplicates goals that share a category', () => {
             generator.reset();
@@ -336,16 +311,14 @@ describe('Global Adjustments', () => {
     });
 
     describe('Max Goals of Type in Board', () => {
-        const generator = new BoardGenerator(
-            goals,
-            categories,
-            [],
-            GenerationListTransform.NONE,
-            GenerationBoardLayout.SRLv5,
-            GenerationGoalSelection.DIFFICULTY,
-            [],
-            [GenerationGlobalAdjustments.BOARD_TYPE_MAX],
-        );
+        const generator = new BoardGenerator(goals, categories, {
+            goalFilters: [],
+            goalTransformation: 'none',
+            boardLayout: 'srlv5',
+            goalSelection: 'difficulty',
+            restrictions: [],
+            adjustments: [{ type: 'board-type-max' }],
+        });
 
         it('Adjusts the maximums in global state', () => {
             generator.reset();
@@ -407,16 +380,14 @@ describe('Global Adjustments', () => {
     });
 
     it('removes the placed goal from the goal list', () => {
-        const generator = new BoardGenerator(
-            goals,
-            categories,
-            [],
-            GenerationListTransform.NONE,
-            GenerationBoardLayout.NONE,
-            GenerationGoalSelection.RANDOM,
-            [],
-            [],
-        );
+        const generator = new BoardGenerator(goals, categories, {
+            goalFilters: [],
+            goalTransformation: 'none',
+            boardLayout: 'random',
+            goalSelection: 'random',
+            restrictions: [],
+            adjustments: [],
+        });
         generator.reset();
         generator.adjustGoalList(goals[0]);
         generator.groupedGoals.forEach((group) => {
@@ -426,16 +397,14 @@ describe('Global Adjustments', () => {
 });
 
 describe('Full Generation', () => {
-    const generator = new BoardGenerator(
-        goals,
-        categories,
-        [],
-        GenerationListTransform.NONE,
-        GenerationBoardLayout.NONE,
-        GenerationGoalSelection.RANDOM,
-        [],
-        [],
-    );
+    const generator = new BoardGenerator(goals, categories, {
+        goalFilters: [],
+        goalTransformation: 'none',
+        boardLayout: 'random',
+        goalSelection: 'random',
+        restrictions: [],
+        adjustments: [],
+    });
 
     it('Successfully generates a fully random board', () => {
         generator.reset();
@@ -444,16 +413,14 @@ describe('Full Generation', () => {
     });
 
     it('Successfully generates an SRLv5 style board', () => {
-        const generator = new BoardGenerator(
-            goals,
-            categories,
-            [],
-            GenerationListTransform.NONE,
-            GenerationBoardLayout.SRLv5,
-            GenerationGoalSelection.DIFFICULTY,
-            [GenerationGoalRestriction.LINE_TYPE_EXCLUSION],
-            [],
-        );
+        const generator = new BoardGenerator(goals, categories, {
+            goalFilters: [],
+            goalTransformation: 'none',
+            boardLayout: 'srlv5',
+            goalSelection: 'difficulty',
+            restrictions: [{ type: 'line-type-exclusion' }],
+            adjustments: [],
+        });
         generator.reset();
         expect(() => generator.generateBoard()).not.toThrow();
         expect(generator.board).toHaveLength(25);
@@ -470,16 +437,14 @@ describe('Full Generation', () => {
     });
 
     it('Generates the same board given the same seed (SRLv5)', () => {
-        const generator = new BoardGenerator(
-            goals,
-            categories,
-            [],
-            GenerationListTransform.NONE,
-            GenerationBoardLayout.SRLv5,
-            GenerationGoalSelection.DIFFICULTY,
-            [GenerationGoalRestriction.LINE_TYPE_EXCLUSION],
-            [],
-        );
+        const generator = new BoardGenerator(goals, categories, {
+            goalFilters: [],
+            goalTransformation: 'none',
+            boardLayout: 'srlv5',
+            goalSelection: 'difficulty',
+            restrictions: [{ type: 'line-type-exclusion' }],
+            adjustments: [],
+        });
         generator.reset(12345);
         generator.generateBoard();
         const board1 = generator.board;
@@ -490,16 +455,14 @@ describe('Full Generation', () => {
     });
 
     it('Generates a board with maximum restrictions', () => {
-        const generator = new BoardGenerator(
-            goals,
-            categories,
-            [],
-            GenerationListTransform.NONE,
-            GenerationBoardLayout.SRLv5,
-            GenerationGoalSelection.DIFFICULTY,
-            [GenerationGoalRestriction.LINE_TYPE_EXCLUSION],
-            [GenerationGlobalAdjustments.BOARD_TYPE_MAX],
-        );
+        const generator = new BoardGenerator(goals, categories, {
+            goalFilters: [],
+            goalTransformation: 'none',
+            boardLayout: 'srlv5',
+            goalSelection: 'difficulty',
+            restrictions: [{ type: 'line-type-exclusion' }],
+            adjustments: [{ type: 'board-type-max' }],
+        });
         generator.reset();
         expect(() => generator.generateBoard()).not.toThrow();
     });

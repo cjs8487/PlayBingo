@@ -1,14 +1,16 @@
-import { GenerationGoalSelection, Goal } from '@prisma/client';
+import { GeneratorConfig } from '@playbingo/shared';
 import BoardGenerator from './BoardGenerator';
 import { GeneratorGoal } from './GeneratorCore';
 
+type GoalSelectionMode = GeneratorConfig['goalSelection'];
+
 export type GoalGrouper = (generator: BoardGenerator) => void;
 
-export const createGoalGrouper = (strategy: GenerationGoalSelection) => {
-    switch (strategy) {
-        case 'DIFFICULTY':
+export const createGoalGrouper = (selectionMode: GoalSelectionMode) => {
+    switch (selectionMode) {
+        case 'difficulty':
             return difficulty;
-        case 'RANDOM':
+        case 'random':
             return random;
         default:
             throw Error('Unknown GenerationGoalSelection');

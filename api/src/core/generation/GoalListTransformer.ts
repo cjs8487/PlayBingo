@@ -1,11 +1,13 @@
-import { GenerationListTransform } from '@prisma/client';
+import { GeneratorConfig } from '@playbingo/shared';
 import BoardGenerator from './BoardGenerator';
+
+type GoalTransformer = GeneratorConfig['goalTransformation'];
 
 export type GoalListTransformer = (generator: BoardGenerator) => void;
 
-export const createTransformer = (strategy: GenerationListTransform) => {
+export const createTransformer = (strategy: GoalTransformer) => {
     switch (strategy) {
-        case 'NONE':
+        case 'none':
             return noTransform;
         default:
             throw Error('Unknown GenerationListTransformStrategy');

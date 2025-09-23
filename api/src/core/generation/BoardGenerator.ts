@@ -22,13 +22,14 @@ import {
     GoalPlacementRestriction,
 } from './GoalPlacementRestriction';
 import { GenerationFailedError } from './GenerationFailedError';
+import { GeneratorConfig } from '@playbingo/shared';
 
 /**
  *
  */
 export default class BoardGenerator {
     // generation strategies
-    goalListPruners: GoalListPruner[];
+    goalFilters: GoalListPruner[];
     goalListTransformer: GoalListTransformer;
     layoutGenerator: BoardLayoutGenerator;
     goalGrouper: GoalGrouper;
@@ -50,17 +51,12 @@ export default class BoardGenerator {
     constructor(
         goals: GeneratorGoal[],
         categories: Category[],
-        pruneStrategies: GenerationListMode[],
-        transformStrategy: GenerationListTransform,
-        layoutStrategy: GenerationBoardLayout,
-        selectionStrategy: GenerationGoalSelection,
-        placementStrategies: GenerationGoalRestriction[],
-        adjustmentStrategies: GenerationGlobalAdjustments[],
+        config: GeneratorConfig,
         seed?: number,
     ) {
         // input validation
-        if (layoutStrategy === GenerationBoardLayout.NONE) {
-            if (selectionStrategy !== GenerationGoalSelection.RANDOM) {
+        if (config.boardLayout === 'random') {
+            if (config.goalSelection !== 'random') {
                 // random generation is the only mode that works with no board
                 // layout precalcualtion
                 throw Error('Invalid configuration');
@@ -70,14 +66,14 @@ export default class BoardGenerator {
         this.allGoals = goals;
         this.goals = [...this.allGoals];
         this.categories = categories;
-        this.goalListPruners = pruneStrategies.map((s) => createPruner(s));
-        this.goalListTransformer = createTransformer(transformStrategy);
-        this.layoutGenerator = createLayoutGenerator(layoutStrategy);
-        this.goalGrouper = createGoalGrouper(selectionStrategy);
-        this.placementRestrictions = placementStrategies.map((s) =>
+        this.goalFilters = config.goalFilters.map((s) => createPruner(s));
+        this.goalListTransformer = createTransformer(config.goalTransformation);
+        this.layoutGenerator = createLayoutGenerator(config.boardLayout);
+        this.goalGrouper = createGoalGrouper(config.goalSelection);
+        this.placementRestrictions = config.restrictions.map((s) =>
             createPlacementRestriction(s),
         );
-        this.globalAdjustments = adjustmentStrategies.map((s) =>
+        this.globalAdjustments = config.adjustments.map((s) =>
             createGlobalAdjustment(s),
         );
 
@@ -127,7 +123,7 @@ export default class BoardGenerator {
     }
 
     pruneGoalList() {
-        this.goalListPruners.forEach((f) => f(this));
+        this.goalFilters.forEach((f) => f(this));
     }
 
     transformGoals() {

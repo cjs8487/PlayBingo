@@ -1,11 +1,10 @@
 import { randomInt } from 'crypto';
 import { Router } from 'express';
-import { logInfo, logWarn } from '../../Logger';
+import { logError, logInfo, logWarn } from '../../Logger';
 import { createRoomToken, verifyRoomToken } from '../../auth/RoomAuth';
 import Room, {
     BoardGenerationMode,
     BoardGenerationOptions,
-    GeneratorConfig,
 } from '../../core/Room';
 import { allRooms } from '../../core/RoomServer';
 import {
@@ -20,6 +19,8 @@ import { handleAction } from './actions/Actions';
 import { getGoalList } from '../../database/games/Goals';
 import { RoomData } from '@playbingo/types';
 import Player from '../../core/Player';
+import { GeneratorConfig, makeGeneratorSchema } from '@playbingo/shared';
+import { getCategories } from '../../database/games/GoalCategories';
 
 const MIN_ROOM_GOALS_REQUIRED = 25;
 const rooms = Router();
@@ -89,14 +90,22 @@ rooms.post('/', async (req, res) => {
 
     let generatorConfig: GeneratorConfig | undefined = undefined;
     if (gameData.newGeneratorBeta) {
-        generatorConfig = {
-            generationListMode: gameData.generationListMode,
-            generationListTransform: gameData.generationListTransform,
-            generationBoardLayout: gameData.generationBoardLayout,
-            generationGoalSelection: gameData.generationGoalSelection,
-            generationGoalRestrictions: gameData.generationGoalRestrictions,
-            generationGlobalAdjustments: gameData.generationGlobalAdjustments,
-        };
+        const { schema } = makeGeneratorSchema(
+            ((await getCategories(gameData.slug)) ?? []).map((cat) => ({
+                id: cat.id,
+                name: cat.name,
+                max: cat.max,
+                goalCount: cat._count.goals,
+            })),
+        );
+        const result = schema.safeParse(gameData.generatorConfig);
+        if (!result.success) {
+            logError(
+                `Invalid generator config in database for ${gameData.name} (${gameData.slug})`,
+            );
+            throw new Error('Invalid generator config in database');
+        }
+        generatorConfig = result.data;
     }
 
     const dbRoom = await createRoom(
@@ -137,7 +146,7 @@ rooms.post('/', async (req, res) => {
                 useDefault = false;
             } else {
                 logWarn(
-                    `Unable to generate using dificulty variants for ${slug}, falling back to default mode.`,
+                    `Unable to generate using difficulty variants for ${slug}, falling back to default mode.`,
                 );
             }
         } else {
