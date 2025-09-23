@@ -11,15 +11,7 @@ import {
     ServerMessage,
     UnmarkAction,
 } from '@playbingo/types';
-import {
-    BingoMode,
-    GenerationBoardLayout,
-    GenerationGlobalAdjustments,
-    GenerationGoalRestriction,
-    GenerationGoalSelection,
-    GenerationListMode,
-    GenerationListTransform,
-} from '@prisma/client';
+import { BingoMode } from '@prisma/client';
 import { WebSocket } from 'ws';
 import { roomCleanupInactive } from '../Environment';
 import { logError, logInfo, logWarn } from '../Logger';
@@ -59,6 +51,7 @@ import {
 import { generateFullRandom, generateRandomTyped } from './generation/Random';
 import { generateSRLv5 } from './generation/SRLv5';
 import RaceHandler, { RaceData } from './integration/races/RacetimeHandler';
+import { GeneratorConfig } from '@playbingo/shared';
 
 export enum BoardGenerationMode {
     RANDOM = 'Random',
@@ -88,15 +81,6 @@ export type BoardGenerationOptions =
     | BoardGenerationOptionsRandom
     | BoardGenerationOptionsSRLv5
     | BoardGenerationOptionsDifficulty;
-
-export interface GeneratorConfig {
-    generationListMode: GenerationListMode[];
-    generationListTransform: GenerationListTransform;
-    generationBoardLayout: GenerationBoardLayout;
-    generationGoalSelection: GenerationGoalSelection;
-    generationGoalRestrictions: GenerationGoalRestriction[];
-    generationGlobalAdjustments: GenerationGlobalAdjustments[];
-}
 
 /**
  * Represents a room in the PlayBingo service. A room is container for a single
@@ -218,12 +202,7 @@ export default class Room {
             const generator = new BoardGenerator(
                 goals,
                 categories,
-                this.generatorConfig.generationListMode,
-                this.generatorConfig.generationListTransform,
-                this.generatorConfig.generationBoardLayout,
-                this.generatorConfig.generationGoalSelection,
-                this.generatorConfig.generationGoalRestrictions,
-                this.generatorConfig.generationGlobalAdjustments,
+                this.generatorConfig,
             );
             generator.generateBoard();
             this.board = { board: listToBoard(generator.board) };
