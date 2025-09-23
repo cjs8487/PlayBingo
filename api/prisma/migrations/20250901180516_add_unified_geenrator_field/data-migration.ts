@@ -15,9 +15,9 @@ async function main() {
             await Promise.all(
                 games.map(async (game) => {
                     const generatorConfig: GeneratorConfig = {
-                        listMode: { mode: 'all' },
-                        listTransform: 'none',
-                        boardLayout: 'none',
+                        goalFilters: [],
+                        goalTransformation: 'none',
+                        boardLayout: 'random',
                         goalSelection: 'random',
                         restrictions: [],
                         adjustments: [],
