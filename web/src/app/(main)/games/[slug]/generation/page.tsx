@@ -24,5 +24,5 @@ export default async function GameGeneration({ params }: Props) {
         return null;
     }
 
-    return <GenerationForm categories={categories} />;
+    return <GenerationForm slug={slug} categories={categories} />;
 }

@@ -5,26 +5,48 @@ import {
     useJSONForm,
 } from '@/components/input/JsonSchemaRenderer';
 import { Box, Button, Tooltip, Typography } from '@mui/material';
-import { makeGeneratorSchema } from '@playbingo/shared/GeneratorConfig';
+import { makeGeneratorSchema } from '@playbingo/shared';
 import { GoalCategory } from '@playbingo/types';
+import { useCallback } from 'react';
 import * as z from 'zod';
+import { alertError, notifyMessage } from '../../../../../../lib/Utils';
 
 interface Props {
+    slug: string;
     categories: GoalCategory[];
 }
 
-export default function GenerationPage({ categories }: Props) {
+export default function GenerationPage({ slug, categories }: Props) {
     const { schema, metadata } = makeGeneratorSchema(categories);
     const schemaJson = z.toJSONSchema(schema, { metadata });
 
-    const { values, setValues, errors, isValid } = useJSONForm(schema, {
-        goalFilters: [],
-        goalTransformation: 'none',
-        boardLayout: 'random',
-        goalSelection: 'random',
-        restrictions: [],
-        adjustments: [],
-    });
+    const { values, setValues, errors, isValid, handleSubmit } = useJSONForm(
+        schema,
+        {
+            goalFilters: [],
+            goalTransformation: 'none',
+            boardLayout: 'random',
+            goalSelection: 'random',
+            restrictions: [],
+            adjustments: [],
+        },
+    );
+
+    const submitForm = useCallback(() => {
+        handleSubmit(async (config) => {
+            const res = await fetch(`/api/games/${slug}/generation`, {
+                method: 'POST',
+                headers: { Conten_type: 'application/json' },
+                body: JSON.stringify(config),
+            });
+
+            if (!res.ok) {
+                alertError(`Failed to save changes - ${await res.text()}`);
+            } else {
+                notifyMessage('Successfully updated generator configuration');
+            }
+        });
+    }, [handleSubmit, slug]);
 
     const topError = errors[''];
 
@@ -74,6 +96,7 @@ export default function GenerationPage({ categories }: Props) {
                             type="submit"
                             color="success"
                             disabled={!isValid}
+                            onClick={submitForm}
                         >
                             Save
                         </Button>
