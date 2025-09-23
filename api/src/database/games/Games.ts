@@ -9,6 +9,7 @@ import {
 } from '@prisma/client';
 import { logError } from '../../Logger';
 import { prisma } from '../Database';
+import { GeneratorConfig } from '@playbingo/shared/GeneratorConfig';
 
 export const allGames = async (user?: string) => {
     const games = await prisma.game.findMany({
@@ -329,35 +330,14 @@ export const getGameCover = async (slug: string) => {
     return (await prisma.game.findUnique({ where: { slug } }))?.coverImage;
 };
 
-interface GeneratorUpdateInput {
-    generationListMode: GenerationListMode[];
-    generationListTransform: GenerationListTransform;
-    generationBoardLayout: GenerationBoardLayout;
-    generationGoalSelection: GenerationGoalSelection;
-    generationGoalRestrictions: GenerationGoalRestriction[];
-    generationGlobalAdjustments: GenerationGlobalAdjustments[];
-}
-
 export const updateGeneratorConfig = (
     slug: string,
-    {
-        generationListMode,
-        generationListTransform,
-        generationBoardLayout,
-        generationGoalSelection,
-        generationGoalRestrictions,
-        generationGlobalAdjustments,
-    }: GeneratorUpdateInput,
+    generatorConfig: GeneratorConfig,
 ) => {
     return prisma.game.update({
         where: { slug },
         data: {
-            generationListMode,
-            generationListTransform,
-            generationBoardLayout,
-            generationGoalSelection,
-            generationGoalRestrictions,
-            generationGlobalAdjustments,
+            generatorConfig,
         },
     });
 };
