@@ -1,182 +1,81 @@
-/**
- * Validation utilities for Goal meta data.
- * 
- * This module provides comprehensive validation for goal metadata to prevent abuse
- * through oversized payloads, excessive property counts, and deep nesting attacks.
- * It enforces three key constraints:
- * - Maximum JSON string size (4096 characters)
- * - Maximum total properties across all nesting levels (20)
- * - Maximum nesting depth (5 levels)
- * 
- * The validation is designed to prevent common attack vectors while allowing
- * reasonable flexibility for legitimate goal metadata use cases.
- */
+import { Prisma } from '@prisma/client';
 
-/**
- * Maximum size for goal meta JSON in characters.
- * Prevents memory exhaustion and DoS attacks through oversized payloads.
- * 4096 characters is sufficient for reasonable metadata while preventing abuse.
- */
-const GOAL_META_MAX_SIZE = 4096;
+const MAX_BYTES = 4096; // measure bytes, not string length
 
-/**
- * Maximum total properties across all nesting levels in goal meta.
- * Prevents abuse through nested objects that bypass flat property limits.
- * 20 properties is reasonable for goal metadata while preventing spam/abuse.
- */
-const GOAL_META_MAX_TOTAL_PROPERTIES = 20;
-
-/**
- * Maximum nesting depth for goal meta objects.
- * Prevents deep recursion attacks and excessive nesting that could cause stack overflow.
- * 5 levels deep is sufficient for reasonable nested metadata structures.
- */
-const GOAL_META_MAX_DEPTH = 5;
-
-/**
- * Result of goal meta validation containing success status and optional error message.
- */
 export interface GoalMetaValidationResult {
   valid: boolean;
   error?: string;
 }
 
-/**
- * Analysis result of nested object structure containing property count and depth information.
- */
-export interface NestedPropertyCount {
-  totalProperties: number;
-  maxDepth: number;
-}
+const DANGEROUS_KEYS = new Set([
+  '__proto__',     // Direct prototype access
+  'prototype',     // Constructor prototype  
+  'constructor',   // Constructor function
+  'toString',      // Could override object stringification
+  'valueOf'        // Could override object value conversion
+]);
 
 /**
- * Recursively counts all properties in nested objects and arrays.
- * This function traverses the entire object structure to count properties at all nesting levels,
- * which is essential for preventing abuse through nested object structures.
- * 
- * @param obj - The object to analyze (can be any JSON-serializable value)
- * @param currentDepth - Current nesting depth (starts at 0 for root level)
- * @returns Object containing total property count and maximum depth reached
+ * Check for dangerous keys in the meta object.
+ * Simple recursive check - safe for 4KB payloads.
  */
-function countNestedProperties(obj: any, currentDepth: number = 0): NestedPropertyCount {
-  if (obj === null || obj === undefined || typeof obj !== 'object') {
-    return { totalProperties: 0, maxDepth: currentDepth };
+function checkDangerousKeys(meta: Prisma.JsonValue): string | null {
+  if (meta === null || meta === undefined || typeof meta !== 'object') {
+    return null;
   }
 
-  let totalProperties = 0;
-  let maxDepth = currentDepth;
-
-  if (Array.isArray(obj)) {
-    // For arrays, count each element
-    for (const item of obj) {
-      const itemCount = countNestedProperties(item, currentDepth + 1);
-      totalProperties += itemCount.totalProperties;
-      maxDepth = Math.max(maxDepth, itemCount.maxDepth);
+  if (Array.isArray(meta)) {
+    // Check array elements
+    for (const item of meta) {
+      const result = checkDangerousKeys(item);
+      if (result) return result;
     }
   } else {
-    // For objects, count each property
-    for (const [key, value] of Object.entries(obj)) {
-      totalProperties++; // Count the property itself
-      
-      // Recursively count nested properties
-      const nestedCount = countNestedProperties(value, currentDepth + 1);
-      totalProperties += nestedCount.totalProperties;
-      maxDepth = Math.max(maxDepth, nestedCount.maxDepth);
+    // Check object keys
+    for (const [key, value] of Object.entries(meta) as [string, Prisma.JsonValue][]) {
+      if (DANGEROUS_KEYS.has(key)) {
+        return `Goal meta contains forbidden key "${key}"`;
+      }
+      // Recursively check nested values
+      const result = checkDangerousKeys(value);
+      if (result) return result;
     }
   }
 
-  return { totalProperties, maxDepth };
+  return null;
 }
 
 /**
- * Validates goal meta data against size and structure constraints.
- * This function enforces three key security and performance limits:
- * 1. JSON string size limit to prevent memory exhaustion
- * 2. Total property count limit to prevent abuse through nested objects
- * 3. Maximum nesting depth to prevent recursion attacks
- * 
- * @param meta - The meta data to validate (can be any JSON-serializable value)
- * @returns Validation result with success status and optional error message
+ * Validate meta with all guards and early exits.
  */
-export function validateGoalMeta(meta: any): GoalMetaValidationResult {
+export function validateGoalMeta(meta: Prisma.JsonValue): GoalMetaValidationResult {
   // Allow null/undefined values
   if (meta === null || meta === undefined) {
     return { valid: true };
   }
 
   try {
-    // Convert to JSON string to check size
-    const metaString = JSON.stringify(meta); // also checks for invalid JSON
-    
-    if (metaString.length > GOAL_META_MAX_SIZE) {
+    // Convert to JSON and measure bytes (UTF-8)
+    const json = JSON.stringify(meta); // also ensures it's JSON-serializable
+    const bytes = Buffer.byteLength(json, 'utf8');
+
+    if (bytes > MAX_BYTES) {
       return {
         valid: false,
-        error: `Goal meta exceeds maximum size of ${GOAL_META_MAX_SIZE} characters (got ${metaString.length})`
+        error: `Goal meta exceeds maximum size of ${MAX_BYTES} bytes (got ${bytes})`,
       };
     }
 
-    // Count nested properties and depth
-    const { totalProperties, maxDepth } = countNestedProperties(meta);
-
-    // Check total property count
-    if (totalProperties > GOAL_META_MAX_TOTAL_PROPERTIES) {
-      return {
-        valid: false,
-        error: `Goal meta exceeds maximum total properties of ${GOAL_META_MAX_TOTAL_PROPERTIES} (got ${totalProperties})`
-      };
-    }
-
-    // Check maximum depth
-    if (maxDepth > GOAL_META_MAX_DEPTH) {
-      return {
-        valid: false,
-        error: `Goal meta exceeds maximum nesting depth of ${GOAL_META_MAX_DEPTH} (got ${maxDepth})`
-      };
+    const dangerousKeyError = checkDangerousKeys(meta);
+    if (dangerousKeyError) {
+      return { valid: false, error: dangerousKeyError };
     }
 
     return { valid: true };
   } catch (error) {
     return {
       valid: false,
-      error: `Invalid JSON data for goal meta: ${error instanceof Error ? error.message : 'Unknown error'}`
+      error: `Invalid JSON data for goal meta: ${error instanceof Error ? error.message : 'Unknown error'}`,
     };
   }
-}
-
-/**
- * Gets the maximum allowed size for goal meta data.
- * @returns Maximum size in characters (4096)
- */
-export function getGoalMetaMaxSize(): number {
-  return GOAL_META_MAX_SIZE;
-}
-
-/**
- * Gets the maximum allowed total properties for goal meta data.
- * @returns Maximum total properties across all nesting levels (20)
- */
-export function getGoalMetaMaxTotalProperties(): number {
-  return GOAL_META_MAX_TOTAL_PROPERTIES;
-}
-
-/**
- * Gets the maximum allowed nesting depth for goal meta data.
- * @returns Maximum nesting depth (5)
- */
-export function getGoalMetaMaxDepth(): number {
-  return GOAL_META_MAX_DEPTH;
-}
-
-/**
- * Analyzes goal meta data structure without performing validation.
- * Useful for debugging, logging, or understanding the structure of meta data.
- * 
- * @param meta - The meta data to analyze (can be any JSON-serializable value)
- * @returns Analysis result with property count and depth information
- */
-export function analyzeGoalMeta(meta: any): NestedPropertyCount {
-  if (meta === null || meta === undefined) {
-    return { totalProperties: 0, maxDepth: 0 };
-  }
-  return countNestedProperties(meta);
 }

@@ -13,7 +13,6 @@
         "meta": {
             "type": ["object", "null"],
             "description": "Optional metadata for goal auto-tracking and additional properties",
-            "maxProperties": 20,
             "additionalProperties": true
         }
     }
