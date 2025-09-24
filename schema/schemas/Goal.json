@@ -9,6 +9,11 @@
         "goal": {"type": "string"},
         "description": {"type": ["string", "null"]},
         "difficulty": {"type": ["number", "null"]},
-        "categories": {"type": "array", "items": {"type": "string"}}
+        "categories": {"type": "array", "items": {"type": "string"}},
+        "meta": {
+            "type": ["object", "null"],
+            "description": "Optional metadata for goal auto-tracking and additional properties",
+            "additionalProperties": true
+        }
     }
 }
