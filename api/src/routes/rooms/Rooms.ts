@@ -7,8 +7,6 @@ import Room, {
     BoardGenerationOptions,
     GeneratorConfig,
 } from '../../core/Room';
-import { Cell, RevealedBoard } from '@playbingo/types';
-import { shuffle } from '../../util/Array';
 import { allRooms } from '../../core/RoomServer';
 import {
     createRoom,
@@ -24,119 +22,6 @@ import { RoomData } from '@playbingo/types';
 import Player from '../../core/Player';
 
 const MIN_ROOM_GOALS_REQUIRED = 25;
-
-// Custom board validation function
-function validateCustomBoard(boardData: string, roomId: string): { valid: boolean; error?: string; board?: Cell[][] } {
-    try {
-        const parsed = JSON.parse(boardData);
-        
-        // Check if it's an array of arrays
-        if (!Array.isArray(parsed) || parsed.length !== 5) {
-            return { valid: false, error: 'Board must be a 5x5 grid (5 rows)' };
-        }
-        
-        // Check total size limit (prevent memory exhaustion)
-        if (JSON.stringify(parsed).length > 50000) { // 50KB limit
-            return { valid: false, error: 'Board data is too large (max 50KB)' };
-        }
-        
-        for (let i = 0; i < parsed.length; i++) {
-            if (!Array.isArray(parsed[i]) || parsed[i].length !== 5) {
-                return { valid: false, error: `Row ${i + 1} must have exactly 5 cells` };
-            }
-            
-            for (let j = 0; j < parsed[i].length; j++) {
-                const cell = parsed[i][j];
-                if (!cell || typeof cell !== 'object') {
-                    return { valid: false, error: `Cell at row ${i + 1}, col ${j + 1} must be an object` };
-                }
-                
-                if (!cell.goal || typeof cell.goal !== 'object') {
-                    return { valid: false, error: `Cell at row ${i + 1}, col ${j + 1} must have a goal object` };
-                }
-                
-                if (!cell.goal.goal || typeof cell.goal.goal !== 'string') {
-                    return { valid: false, error: `Cell at row ${i + 1}, col ${j + 1} goal must have a goal string` };
-                }
-                
-                // Sanitize goal text (remove HTML tags and limit length)
-                const sanitizedGoal = cell.goal.goal.replace(/<[^>]*>/g, '').trim();
-                if (sanitizedGoal.length === 0) {
-                    return { valid: false, error: `Cell at row ${i + 1}, col ${j + 1} goal cannot be empty` };
-                }
-                if (sanitizedGoal.length > 255) {
-                    return { valid: false, error: `Cell at row ${i + 1}, col ${j + 1} goal text is too long (max 255 characters)` };
-                }
-                
-                // Validate required fields are present (frontend should have normalized them)
-                if (!Array.isArray(cell.completedPlayers)) {
-                    return { valid: false, error: `Cell at row ${i + 1}, col ${j + 1} must have completedPlayers array` };
-                }
-                
-                if (!cell.goal.id || typeof cell.goal.id !== 'string') {
-                    return { valid: false, error: `Cell at row ${i + 1}, col ${j + 1} goal must have an id` };
-                }
-                
-                if (cell.goal.description === undefined) {
-                    return { valid: false, error: `Cell at row ${i + 1}, col ${j + 1} goal must have description (can be null)` };
-                }
-                
-                cell.goal.goal = sanitizedGoal;
-                
-                // Validate goal object has only allowed fields
-                const allowedGoalFields = ['id', 'goal', 'description', 'difficulty', 'categories'];
-                const goalFields = Object.keys(cell.goal);
-                const invalidGoalFields = goalFields.filter(field => !allowedGoalFields.includes(field));
-                if (invalidGoalFields.length > 0) {
-                    return { valid: false, error: `Cell at row ${i + 1}, col ${j + 1} goal object contains invalid fields: ${invalidGoalFields.join(', ')}` };
-                }
-
-                // Validate cell object has only allowed fields
-                const allowedCellFields = ['goal', 'completedPlayers'];
-                const cellFields = Object.keys(cell);
-                const invalidCellFields = cellFields.filter(field => !allowedCellFields.includes(field));
-                if (invalidCellFields.length > 0) {
-                    return { valid: false, error: `Cell at row ${i + 1}, col ${j + 1} contains invalid fields: ${invalidCellFields.join(', ')}` };
-                }
-
-                // Validate completedPlayers if present
-                if (cell.completedPlayers !== undefined && !Array.isArray(cell.completedPlayers)) {
-                    return { valid: false, error: `Cell at row ${i + 1}, col ${j + 1} completedPlayers must be an array` };
-                }
-
-                // Validate and sanitize description if present
-                if (cell.goal.description !== undefined && cell.goal.description !== null) {
-                    if (typeof cell.goal.description !== 'string') {
-                        return { valid: false, error: `Cell at row ${i + 1}, col ${j + 1} goal description must be a string` };
-                    }
-                    cell.goal.description = cell.goal.description.replace(/<[^>]*>/g, '').trim().substring(0, 500);
-                }
-
-                // Validate difficulty if present
-                if (cell.goal.difficulty !== undefined && cell.goal.difficulty !== null) {
-                    if (typeof cell.goal.difficulty !== 'number' || !Number.isInteger(cell.goal.difficulty) || cell.goal.difficulty < 0) {
-                        return { valid: false, error: `Cell at row ${i + 1}, col ${j + 1} goal difficulty must be a non-negative integer` };
-                    }
-                }
-
-                // Validate categories if present
-                if (cell.goal.categories !== undefined && cell.goal.categories !== null) {
-                    if (!Array.isArray(cell.goal.categories)) {
-                        return { valid: false, error: `Cell at row ${i + 1}, col ${j + 1} goal categories must be an array` };
-                    }
-                    const invalidCategories = cell.goal.categories.filter((cat: any) => typeof cat !== 'string');
-                    if (invalidCategories.length > 0) {
-                        return { valid: false, error: `Cell at row ${i + 1}, col ${j + 1} goal categories must contain only strings` };
-                    }
-                }
-            }
-        }
-        
-        return { valid: true, board: parsed as Cell[][] };
-    } catch (error) {
-        return { valid: false, error: 'Invalid JSON format' };
-    }
-}
 const rooms = Router();
 
 rooms.get('/', async (req, res) => {
@@ -172,8 +57,6 @@ rooms.post('/', async (req, res) => {
         hideCard,
         seed,
         spectator,
-        customBoard,
-        customBoardData,
     } = req.body;
 
     if (!name || !game || !nickname /*|| !variant || !mode*/) {
@@ -187,28 +70,14 @@ rooms.post('/', async (req, res) => {
         return;
     }
 
-    // Validate custom board if provided
-    let customBoardCells: Cell[][] | undefined = undefined;
-    if (customBoard && customBoardData) {
-        const validation = validateCustomBoard(customBoardData, 'temp-room-id');
-        if (!validation.valid) {
-            res.status(400).send(`Invalid custom board: ${validation.error}`);
-            return;
-        }
-        customBoardCells = validation.board;
-    }
+    // Might be better as a frontend check, but also way more imperformant
+    const goalsNumber = await goalCount(game);
 
-    // Skip goal count check for custom boards since they don't use game goals
-    if (!customBoard) {
-        // Might be better as a frontend check, but also way more imperformant
-        const goalsNumber = await goalCount(game);
-
-        if (goalsNumber < MIN_ROOM_GOALS_REQUIRED) {
-            res.status(400).send(
-                `Game has less than the minimum amount of goals required for room creation (${MIN_ROOM_GOALS_REQUIRED}).`,
-            );
-            return;
-        }
+    if (goalsNumber < MIN_ROOM_GOALS_REQUIRED) {
+        res.status(400).send(
+            `Game has less than the minimum amount of goals required for room creation (${MIN_ROOM_GOALS_REQUIRED}).`,
+        );
+        return;
     }
 
     const adj = randomWord(slugAdjectives);
@@ -283,37 +152,7 @@ rooms.post('/', async (req, res) => {
         }
     }
     options.seed = seed;
-    
-    // Use custom board if provided, otherwise generate normally
-    if (customBoard && customBoardCells) {
-        // Apply randomization to custom board if generation mode is RANDOM
-        if (generationMode === 'Random') {
-            // Flatten the 2D board to 1D array for shuffling
-            const flatBoard = customBoardCells.flat();
-            // Shuffle using the provided seed (or auto-generate if none provided)
-            shuffle(flatBoard, seed);
-            // Convert back to 2D board
-            const shuffledBoard: Cell[][] = [];
-            for (let i = 0; i < 5; i++) {
-                shuffledBoard[i] = flatBoard.slice(i * 5, (i + 1) * 5);
-            }
-            room.board = {
-                board: shuffledBoard,
-                hidden: false,
-            };
-            logInfo(`Room ${slug} created with randomized custom board (generation mode: ${generationMode}, seed: ${seed || 'auto-generated'})`);
-        } else {
-            // No randomization, use board as-is
-            room.board = {
-                board: customBoardCells,
-                hidden: false,
-            };
-            logInfo(`Room ${slug} created with custom board`);
-        }
-    } else {
-        await room.generateBoard(options);
-    }
-    
+    await room.generateBoard(options);
     allRooms.set(slug, room);
 
     const token = createRoomToken(
