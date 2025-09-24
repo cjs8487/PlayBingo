@@ -35,7 +35,84 @@ describe('BoardGenerator initialization', () => {
     });
 });
 
-describe('List Pruning', () => {});
+describe('Goal Filters', () => {
+    describe('Difficulty', () => {
+        it('Filters out all goals with difficulty less than minimum', () => {
+            const generator = new BoardGenerator(goals, categories, {
+                goalFilters: [{ mode: 'difficulty', min: 5 }],
+                goalTransformation: 'none',
+                boardLayout: 'random',
+                goalSelection: 'random',
+                restrictions: [],
+                adjustments: [],
+            });
+            generator.pruneGoalList();
+            expect(generator.goals.length).toBeGreaterThan(0);
+            generator.goals.forEach((g) =>
+                expect(g.difficulty).toBeGreaterThanOrEqual(5),
+            );
+        });
+
+        it('Filters out all goals with difficulty greater than maximum', () => {
+            const generator = new BoardGenerator(goals, categories, {
+                goalFilters: [{ mode: 'difficulty', max: 15 }],
+                goalTransformation: 'none',
+                boardLayout: 'random',
+                goalSelection: 'random',
+                restrictions: [],
+                adjustments: [],
+            });
+            generator.pruneGoalList();
+            expect(generator.goals.length).toBeGreaterThan(0);
+            generator.goals.forEach((g) =>
+                expect(g.difficulty).toBeLessThanOrEqual(15),
+            );
+        });
+
+        it('Filters out all goals with difficulty less than minimum and greater than maximum', () => {
+            const generator = new BoardGenerator(goals, categories, {
+                goalFilters: [{ mode: 'difficulty', min: 3, max: 17 }],
+                goalTransformation: 'none',
+                boardLayout: 'random',
+                goalSelection: 'random',
+                restrictions: [],
+                adjustments: [],
+            });
+            generator.pruneGoalList();
+            expect(generator.goals.length).toBeGreaterThan(0);
+            generator.goals.forEach((g) => {
+                expect(g.difficulty).toBeGreaterThanOrEqual(3);
+                expect(g.difficulty).toBeLessThanOrEqual(17);
+            });
+        });
+    });
+
+    describe('Categories', () => {
+        it('Filters out goals without at least one specified category', () => {
+            const generator = new BoardGenerator(goals, categories, {
+                goalFilters: [
+                    {
+                        mode: 'category',
+                        categories: ['Category 1', 'Category 4'],
+                    },
+                ],
+                goalTransformation: 'none',
+                boardLayout: 'random',
+                goalSelection: 'random',
+                restrictions: [],
+                adjustments: [],
+            });
+            generator.pruneGoalList();
+            expect(generator.goals.length).toBeGreaterThan(0);
+            generator.goals.forEach((g) => {
+                const hasCat =
+                    g.categories.includes('Category 1') ||
+                    g.categories.includes('Category 4');
+                expect(hasCat).toBeTruthy();
+            });
+        });
+    });
+});
 
 describe('Goal Transformation', () => {});
 
