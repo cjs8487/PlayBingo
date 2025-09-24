@@ -44,15 +44,16 @@ export default function GoalCodeDialog({
         return goals;
     }, [goals, shownGoals]);
 
-    // Convert goals to JSON format (without id and completedBy fields)
+    // Convert goals to JSON format (dynamically include all fields except excluded ones)
     const exportGoalsToJson = useCallback(() => {
         const ordered = getExportOrder();
-        const goalsForExport = ordered.map((goal) => ({
-            goal: goal.goal,
-            description: goal.description,
-            difficulty: goal.difficulty,
-            categories: goal.categories || [],
-        }));
+        const goalsForExport = ordered.map((goal) => {
+            // Exclude fields that shouldn't be in the export
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            const { id, completedBy, ...exportableGoal } =
+                goal as unknown as Record<string, unknown>;
+            return exportableGoal;
+        });
 
         return JSON.stringify(goalsForExport, null, 2);
     }, [getExportOrder]);
