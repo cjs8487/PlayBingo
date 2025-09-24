@@ -48,11 +48,21 @@ export default function GoalCodeDialog({
     const exportGoalsToJson = useCallback(() => {
         const ordered = getExportOrder();
         const goalsForExport = ordered.map((goal) => {
-            // Exclude fields that shouldn't be in the export
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            const { id, completedBy, ...exportableGoal } =
-                goal as unknown as Record<string, unknown>;
-            return exportableGoal;
+            // Exclude system fields that shouldn't be editable
+            const excludedFields = new Set([
+                'id',
+                'completedBy',
+                'createdAt',
+                'updatedAt',
+                'gameId',
+                'oldCategories',
+            ]);
+
+            return Object.fromEntries(
+                Object.entries(
+                    goal as unknown as Record<string, unknown>,
+                ).filter(([key]) => !excludedFields.has(key)),
+            );
         });
 
         return JSON.stringify(goalsForExport, null, 2);
