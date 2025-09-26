@@ -28,6 +28,7 @@ export interface Game {
   descriptionMd?: string;
   setupMd?: string;
   linksMd?: string;
+  variants?: Variant[];
 }
 export interface User {
   id: string;
@@ -49,4 +50,12 @@ export interface GeneratorSettings {
   goalSelection: string;
   cellRestrictions: string[];
   globalAdjustments: string[];
+}
+export interface Variant {
+  id: string;
+  name: string;
+  description?: string;
+  generationSettings: {
+    [k: string]: unknown;
+  };
 }

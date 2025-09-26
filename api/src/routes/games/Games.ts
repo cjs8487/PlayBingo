@@ -99,7 +99,10 @@ games.get('/:slug', async (req, res) => {
         descriptionMd: game.descriptionMd ?? undefined,
         setupMd: game.setupMd ?? undefined,
         linksMd: game.linksMd ?? undefined,
+        isMod: await isModerator(slug, req.session.user ?? ''),
     };
+    console.log(req.session.user);
+    console.log(result);
     res.status(200).json(result);
 });
 
