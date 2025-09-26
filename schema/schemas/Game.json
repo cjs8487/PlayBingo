@@ -87,6 +87,12 @@
         },
         "linksMd": {
             "type": "string"
+        },
+        "variants": {
+            "type": "array",
+            "items": {
+                "$ref": "./Variant.json"
+            }
         }
     },
     "$defs": {

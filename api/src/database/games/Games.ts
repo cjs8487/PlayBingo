@@ -95,9 +95,6 @@ export const createGame = async (
 
 export const deleteGame = (slug: string) => {
     return prisma.$transaction([
-        prisma.goalVariant.deleteMany({
-            where: { variant: { game: { slug } } },
-        }),
         prisma.variant.deleteMany({ where: { game: { slug } } }),
         prisma.goal.deleteMany({ where: { game: { slug } } }),
         prisma.difficultyVariant.deleteMany({ where: { game: { slug } } }),
