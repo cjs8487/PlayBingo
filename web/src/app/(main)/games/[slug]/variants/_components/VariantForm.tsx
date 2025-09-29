@@ -1,11 +1,17 @@
 'use client';
-import { Box, Button, Typography } from '@mui/material';
+import {
+    Box,
+    Button,
+    DialogActions,
+    DialogContent,
+    DialogTitle,
+    TextField,
+    Typography,
+} from '@mui/material';
 import { makeGeneratorSchema } from '@playbingo/shared';
 import { GoalCategory } from '@playbingo/types';
-import { Form, Formik } from 'formik';
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import z from 'zod';
-import FormikTextField from '../../../../../../components/input/FormikTextField';
 import {
     JSONSchema,
     JsonSchemaRenderer,
@@ -22,6 +28,10 @@ export default function VariantForm({ slug, categories }: Props) {
     const { schema, metadata } = makeGeneratorSchema(categories);
     const schemaJson = z.toJSONSchema(schema, { metadata });
 
+    const [name, setName] = useState('');
+    const [description, setDescription] = useState('');
+    const [nameError, setNameError] = useState<string | null>(null);
+
     const { values, setValues, errors, isValid, handleSubmit } = useJSONForm(
         schema,
         {
@@ -36,40 +46,68 @@ export default function VariantForm({ slug, categories }: Props) {
 
     const submitForm = useCallback(() => {
         handleSubmit(async (config) => {
-            const res = await fetch(`/api/games/${slug}/generation`, {
-                method: 'POST',
-                headers: { Conten_type: 'application/json' },
-                body: JSON.stringify(config),
-            });
-
-            if (!res.ok) {
-                alertError(`Failed to save changes - ${await res.text()}`);
-            } else {
-                notifyMessage('Successfully updated generator configuration');
+            if (name.trim().length === 0) {
+                setNameError('Name is required');
+                return;
             }
+
+            const res = await fetch(`/api/games/${slug}/variants`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    name: name.trim(),
+                    description: description.trim(),
+                    config,
+                }),
+            });
+            if (!res.ok) {
+                alertError('Unable to create variant.');
+                return;
+            }
+            notifyMessage('Variant created.');
+            // Close the dialog
+            window.location.reload();
         });
-    }, [handleSubmit, slug]);
+    }, [handleSubmit, slug, name, description]);
 
     const topError = errors[''];
 
     return (
         <>
-            <Formik initialValues={{}} onSubmit={() => {}}>
+            <DialogTitle>Add New Variant</DialogTitle>
+            <DialogContent>
                 <Box
-                    component={Form}
                     sx={{
                         display: 'flex',
                         flexDirection: 'column',
                         gap: 2,
                         mb: 4,
+                        mt: 1,
                     }}
                 >
-                    <FormikTextField name="name" label="Variant Name" />
-                    <FormikTextField
-                        name="description"
+                    <TextField
+                        label="Variant Name"
+                        value={name}
+                        onChange={(e) => {
+                            setName(e.target.value);
+                            if (e.target.value.trim().length === 0) {
+                                setNameError('Name is required');
+                            } else {
+                                setNameError(null);
+                            }
+                        }}
+                        error={!!nameError}
+                        helperText={nameError}
+                        required
+                    />
+                    <TextField
                         label="Description"
                         multiline
                         rows={4}
+                        value={description}
+                        onChange={(e) => setDescription(e.target.value)}
                     />
                     {topError && (
                         <Typography sx={{ color: 'error.main', mb: 2 }}>
@@ -84,11 +122,19 @@ export default function VariantForm({ slug, categories }: Props) {
                         path=""
                     />
                 </Box>
-            </Formik>
-            <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+            </DialogContent>
+            <DialogActions
+                sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}
+            >
                 <Button color="error">Cancel</Button>
-                <Button color="success">Save</Button>
-            </Box>
+                <Button
+                    color="success"
+                    onClick={submitForm}
+                    disabled={!isValid}
+                >
+                    Save
+                </Button>
+            </DialogActions>
         </>
     );
 }

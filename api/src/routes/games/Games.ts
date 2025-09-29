@@ -46,6 +46,7 @@ import {
 import { getUser, getUsersEligibleToModerateGame } from '../../database/Users';
 import { deleteFile, saveFile } from '../../media/MediaServer';
 import { logError } from '../../Logger';
+import variants from './Variants';
 
 const games = Router();
 
@@ -101,8 +102,35 @@ games.get('/:slug', async (req, res) => {
         linksMd: game.linksMd ?? undefined,
         isMod: await isModerator(slug, req.session.user ?? ''),
     };
-    console.log(req.session.user);
-    console.log(result);
+    if (game.newGeneratorBeta) {
+        const categories = await getCategories(slug);
+        const generatorSchema = makeGeneratorSchema(
+            categories.map((cat) => ({
+                id: cat.id,
+                name: cat.name,
+                max: cat.max,
+                goalCount: cat._count.goals,
+            })),
+        );
+        result.variants = [];
+        game.variants.forEach((variant) => {
+            const parseResult = generatorSchema.schema.safeParse(
+                variant.generatorConfig,
+            );
+            if (!parseResult.success) {
+                logError(
+                    `Invalid generator config in database for ${game.name} (${game.slug}) variant ${variant.name}`,
+                );
+            } else {
+                result.variants?.push({
+                    id: variant.id,
+                    name: variant.name,
+                    description: variant.description ?? undefined,
+                    generatorConfig: parseResult.data,
+                });
+            }
+        });
+    }
     res.status(200).json(result);
 });
 
@@ -674,5 +702,7 @@ games.get('/:slug/sampleBoard', async (req, res) => {
         seed: generator.seed,
     });
 });
+
+games.use(variants);
 
 export default games;

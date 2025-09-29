@@ -53,9 +53,7 @@ export function useJSONForm<T extends ZodType<any, any>>(
     // Validate on submit
     const handleSubmit = useCallback(
         (onValid: (data: z.infer<T>) => void) => {
-            console.log('handle submit');
             const result = schema.safeParse(values);
-            console.log(result);
             if (result.success) {
                 setErrors({});
                 onValid(result.data);
