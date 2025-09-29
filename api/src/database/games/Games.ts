@@ -53,6 +53,7 @@ export const gameForSlug = (slug: string) => {
             difficultyVariants: {
                 select: { id: true, name: true, goalAmounts: true },
             },
+            variants: true,
         },
     });
 };

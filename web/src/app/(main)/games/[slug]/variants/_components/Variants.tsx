@@ -1,14 +1,7 @@
 'use client';
-import {
-    Button,
-    Dialog,
-    DialogContent,
-    List,
-    ListItem,
-    Typography,
-} from '@mui/material';
+import { Button, Dialog, Box, List, ListItem, Typography } from '@mui/material';
 import { GoalCategory, Variant } from '@playbingo/types';
-import { useState } from 'react';
+import { Fragment, useState } from 'react';
 import VariantForm from './VariantForm';
 
 interface Props {
@@ -28,8 +21,21 @@ export default function Variants({
 
     return (
         <>
-            <List>
-                <ListItem sx={{ display: 'flex', gap: 4 }}>
+            <List
+                sx={{
+                    display: 'grid',
+                    gridTemplateColumns: 'auto 1fr',
+                    gridAutoFlow: 'row',
+                    gap: 2,
+                }}
+            >
+                <ListItem
+                    sx={{
+                        display: 'grid',
+                        gridTemplateColumns: 'subgrid',
+                        gridColumn: '1 / -1',
+                    }}
+                >
                     <Typography>Normal</Typography>
                     <Typography>
                         The base form of the game. Typically this includes most,
@@ -38,15 +44,26 @@ export default function Variants({
                     </Typography>
                 </ListItem>
                 {variants.map((variant) => (
-                    <ListItem key={variant.id}>{variant.name}</ListItem>
+                    <ListItem
+                        key={variant.id}
+                        sx={{
+                            display: 'grid',
+                            gridTemplateColumns: 'subgrid',
+                            gridColumn: '1 / -1',
+                        }}
+                    >
+                        <Typography>{variant.name}</Typography>
+                        <Typography>{variant.description}</Typography>
+                    </ListItem>
                 ))}
                 {moderator && (
-                    <ListItem
+                    <Box
+                        sx={{ gridColumn: '1 / -1' }}
                         component={Button}
                         onClick={() => setShowModal(true)}
                     >
                         Add New Variant
-                    </ListItem>
+                    </Box>
                 )}
             </List>
             <Dialog
@@ -54,9 +71,7 @@ export default function Variants({
                 onClose={() => setShowModal(false)}
                 title="Variants"
             >
-                <DialogContent>
-                    <VariantForm slug={slug} categories={categories} />
-                </DialogContent>
+                <VariantForm slug={slug} categories={categories} />
             </Dialog>
         </>
     );
