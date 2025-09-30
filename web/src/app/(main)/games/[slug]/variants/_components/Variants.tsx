@@ -1,8 +1,19 @@
 'use client';
-import { Button, Dialog, Box, List, ListItem, Typography } from '@mui/material';
+import { Delete, Settings } from '@mui/icons-material';
+import {
+    Box,
+    Button,
+    Dialog,
+    IconButton,
+    List,
+    ListItem,
+    Typography,
+} from '@mui/material';
 import { GoalCategory, Variant } from '@playbingo/types';
-import { Fragment, useState } from 'react';
+import { useState } from 'react';
 import VariantForm from './VariantForm';
+import { alertError, notifyMessage } from '../../../../../../lib/Utils';
+import { useConfirm } from 'material-ui-confirm';
 
 interface Props {
     variants: Variant[];
@@ -18,13 +29,15 @@ export default function Variants({
     categories,
 }: Props) {
     const [showModal, setShowModal] = useState(false);
+    const [editVariant, setEditVariant] = useState<Variant | undefined>();
+    const confirm = useConfirm();
 
     return (
         <>
             <List
                 sx={{
                     display: 'grid',
-                    gridTemplateColumns: 'auto 1fr',
+                    gridTemplateColumns: 'auto 1fr auto auto',
                     gridAutoFlow: 'row',
                     gap: 2,
                 }}
@@ -54,13 +67,58 @@ export default function Variants({
                     >
                         <Typography>{variant.name}</Typography>
                         <Typography>{variant.description}</Typography>
+                        <IconButton
+                            onClick={() => {
+                                setShowModal(true);
+                                setEditVariant(variant);
+                            }}
+                        >
+                            <Settings />
+                        </IconButton>
+                        {moderator && (
+                            <IconButton
+                                color="error"
+                                onClick={async () => {
+                                    const { confirmed } = await confirm({
+                                        title: `Delete ${variant.name}`,
+                                        confirmationText: 'Delete',
+                                        confirmationButtonProps: {
+                                            color: 'error',
+                                        },
+                                        cancellationText: 'Cancel',
+                                        description: `Are you sure you want to delete the variant "${variant.name}"? This action cannot be undone.`,
+                                    });
+
+                                    if (!confirmed) {
+                                        return;
+                                    }
+
+                                    const res = await fetch(
+                                        `/api/games/${slug}/variants/${variant.id}`,
+                                        {
+                                            method: 'DELETE',
+                                        },
+                                    );
+                                    if (!res.ok) {
+                                        alertError('Unable to delete variant.');
+                                        return;
+                                    }
+                                    notifyMessage('Variant deleted.');
+                                }}
+                            >
+                                <Delete />
+                            </IconButton>
+                        )}
                     </ListItem>
                 ))}
                 {moderator && (
                     <Box
                         sx={{ gridColumn: '1 / -1' }}
                         component={Button}
-                        onClick={() => setShowModal(true)}
+                        onClick={() => {
+                            setEditVariant(undefined);
+                            setShowModal(true);
+                        }}
                     >
                         Add New Variant
                     </Box>
@@ -71,7 +129,15 @@ export default function Variants({
                 onClose={() => setShowModal(false)}
                 title="Variants"
             >
-                <VariantForm slug={slug} categories={categories} />
+                {editVariant ? (
+                    <VariantForm
+                        slug={slug}
+                        categories={categories}
+                        editVariant={editVariant}
+                    />
+                ) : (
+                    <VariantForm slug={slug} categories={categories} isNew />
+                )}
             </Dialog>
         </>
     );

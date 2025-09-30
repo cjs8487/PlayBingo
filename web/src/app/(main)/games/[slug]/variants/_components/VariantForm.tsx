@@ -9,7 +9,7 @@ import {
     Typography,
 } from '@mui/material';
 import { makeGeneratorSchema } from '@playbingo/shared';
-import { GoalCategory } from '@playbingo/types';
+import { GoalCategory, Variant } from '@playbingo/types';
 import { useCallback, useState } from 'react';
 import z from 'zod';
 import {
@@ -19,22 +19,41 @@ import {
 } from '../../../../../../components/input/JsonSchemaRenderer';
 import { alertError, notifyMessage } from '../../../../../../lib/Utils';
 
-interface Props {
+interface BaseProps {
     slug: string;
     categories: GoalCategory[];
 }
 
-export default function VariantForm({ slug, categories }: Props) {
+interface EditProps {
+    isNew?: false;
+    editVariant: Variant;
+}
+
+interface NewProps {
+    isNew: true;
+    editVariant?: never;
+}
+
+type Props = BaseProps & (EditProps | NewProps);
+
+export default function VariantForm({
+    slug,
+    categories,
+    isNew,
+    editVariant,
+}: Props) {
     const { schema, metadata } = makeGeneratorSchema(categories);
     const schemaJson = z.toJSONSchema(schema, { metadata });
 
-    const [name, setName] = useState('');
-    const [description, setDescription] = useState('');
+    const [name, setName] = useState(editVariant?.name ?? '');
+    const [description, setDescription] = useState(
+        editVariant?.description ?? '',
+    );
     const [nameError, setNameError] = useState<string | null>(null);
 
     const { values, setValues, errors, isValid, handleSubmit } = useJSONForm(
         schema,
-        {
+        schema.safeParse(editVariant?.generatorConfig).data ?? {
             goalFilters: [],
             goalTransformation: 'none',
             boardLayout: 'random',
@@ -51,26 +70,44 @@ export default function VariantForm({ slug, categories }: Props) {
                 return;
             }
 
-            const res = await fetch(`/api/games/${slug}/variants`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    name: name.trim(),
-                    description: description.trim(),
-                    config,
-                }),
-            });
+            let res: Response | undefined = undefined;
+            if (isNew) {
+                res = await fetch(`/api/games/${slug}/variants`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        name: name.trim(),
+                        description: description.trim(),
+                        config,
+                    }),
+                });
+            } else {
+                res = await fetch(
+                    `/api/games/${slug}/variants/${editVariant.id}`,
+                    {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            name: name.trim(),
+                            description: description.trim(),
+                            config,
+                        }),
+                    },
+                );
+            }
             if (!res.ok) {
                 alertError('Unable to create variant.');
                 return;
             }
-            notifyMessage('Variant created.');
+            notifyMessage('Variant saved.');
             // Close the dialog
             window.location.reload();
         });
-    }, [handleSubmit, slug, name, description]);
+    }, [handleSubmit, slug, name, description, isNew, editVariant]);
 
     const topError = errors[''];
 

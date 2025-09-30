@@ -31,6 +31,7 @@
         "formik": "^2.4.5",
         "luxon": "^3.6.1",
         "marked": "^16.0.0",
+        "material-ui-confirm": "^4.0.0",
         "mdi-material-ui": "^7.9.4",
         "next": "^15.5.3",
         "react": "^19.1.1",
