@@ -18,10 +18,15 @@ import {
     useJSONForm,
 } from '../../../../../../components/input/JsonSchemaRenderer';
 import { alertError, notifyMessage } from '../../../../../../lib/Utils';
+import {
+    createVariant,
+    updateVariant,
+} from '../../../../../../actions/Variants';
 
 interface BaseProps {
     slug: string;
     categories: GoalCategory[];
+    closeModal: () => void;
 }
 
 interface EditProps {
@@ -39,6 +44,7 @@ type Props = BaseProps & (EditProps | NewProps);
 export default function VariantForm({
     slug,
     categories,
+    closeModal,
     isNew,
     editVariant,
 }: Props) {
@@ -70,33 +76,21 @@ export default function VariantForm({
                 return;
             }
 
-            let res: Response | undefined = undefined;
+            let res = undefined;
             if (isNew) {
-                res = await fetch(`/api/games/${slug}/variants`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        name: name.trim(),
-                        description: description.trim(),
-                        config,
-                    }),
-                });
+                res = await createVariant(
+                    slug,
+                    name.trim(),
+                    description.trim(),
+                    config,
+                );
             } else {
-                res = await fetch(
-                    `/api/games/${slug}/variants/${editVariant.id}`,
-                    {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            name: name.trim(),
-                            description: description.trim(),
-                            config,
-                        }),
-                    },
+                res = await updateVariant(
+                    slug,
+                    editVariant.id,
+                    name.trim(),
+                    description.trim(),
+                    config,
                 );
             }
             if (!res.ok) {
@@ -104,10 +98,9 @@ export default function VariantForm({
                 return;
             }
             notifyMessage('Variant saved.');
-            // Close the dialog
-            window.location.reload();
+            closeModal();
         });
-    }, [handleSubmit, slug, name, description, isNew, editVariant]);
+    }, [handleSubmit, slug, name, description, isNew, editVariant, closeModal]);
 
     const topError = errors[''];
 
@@ -163,7 +156,9 @@ export default function VariantForm({
             <DialogActions
                 sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}
             >
-                <Button color="error">Cancel</Button>
+                <Button color="error" onClick={() => closeModal()}>
+                    Cancel
+                </Button>
                 <Button
                     color="success"
                     onClick={submitForm}
