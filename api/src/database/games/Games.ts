@@ -9,7 +9,7 @@ import {
 } from '@prisma/client';
 import { logError } from '../../Logger';
 import { prisma } from '../Database';
-import { GeneratorConfig } from '@playbingo/shared/GeneratorConfig';
+import { GeneratorSettings } from '@playbingo/shared/GeneratorSettings';
 
 export const allGames = async (user?: string) => {
     const games = await prisma.game.findMany({
@@ -328,14 +328,14 @@ export const getGameCover = async (slug: string) => {
     return (await prisma.game.findUnique({ where: { slug } }))?.coverImage;
 };
 
-export const updateGeneratorConfig = (
+export const updateGeneratorSettings = (
     slug: string,
-    generatorConfig: GeneratorConfig,
+    generatorSettings: GeneratorSettings,
 ) => {
     return prisma.game.update({
         where: { slug },
         data: {
-            generatorConfig,
+            generatorSettings,
         },
     });
 };

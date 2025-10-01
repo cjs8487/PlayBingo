@@ -35,12 +35,12 @@ model Category {
 }
 
 model Variant {
-  id              String @id @unique @default(cuid())
-  name            String
-  description     String
-  game            Game   @relation(fields: [gameId], references: [id])
-  generatorConfig Json?
-  gameId          String
+  id                String @id @unique @default(cuid())
+  name              String
+  description       String
+  game              Game   @relation(fields: [gameId], references: [id])
+  generatorSettings Json?
+  gameId            String
 }
 
 model Game {
@@ -72,7 +72,7 @@ model Game {
   generationGoalSelection     GenerationGoalSelection       @default(RANDOM)
   generationGoalRestrictions  GenerationGoalRestriction[]   @default([])
   generationGlobalAdjustments GenerationGlobalAdjustments[] @default([])
-  generatorConfig             Json                          @default("{}")
+  generatorSettings           Json                          @default("{}")
   newGeneratorBeta            Boolean                       @default(true)
   descriptionMd               String?
   setupMd                     String?

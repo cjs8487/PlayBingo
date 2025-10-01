@@ -111,7 +111,7 @@ variants
             const updatedVariant = await updateVariant(id, {
                 name,
                 description: description || '',
-                generatorConfig: result.data,
+                generatorSettings: result.data,
             });
 
             res.status(200).json(updatedVariant);

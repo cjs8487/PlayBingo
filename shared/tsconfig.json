@@ -15,5 +15,5 @@
     "ts-node": {
         "esm": true
     },
-    "include": ["GeneratorConfig.ts", "index.ts"],
+    "include": ["GeneratorSettings.ts", "index.ts"],
 }

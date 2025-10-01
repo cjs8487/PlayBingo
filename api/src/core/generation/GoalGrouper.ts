@@ -1,8 +1,8 @@
-import { GeneratorConfig } from '@playbingo/shared';
+import { GeneratorSettings } from '@playbingo/shared';
 import BoardGenerator from './BoardGenerator';
 import { GeneratorGoal } from './GeneratorCore';
 
-type GoalSelectionMode = GeneratorConfig['goalSelection'];
+type GoalSelectionMode = GeneratorSettings['goalSelection'];
 
 export type GoalGrouper = (generator: BoardGenerator) => void;
 

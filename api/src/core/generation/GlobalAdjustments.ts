@@ -1,8 +1,8 @@
-import { GeneratorConfig } from '@playbingo/shared';
+import { GeneratorSettings } from '@playbingo/shared';
 import BoardGenerator from './BoardGenerator';
 import { GeneratorGoal } from './GeneratorCore';
 
-type Adjustment = GeneratorConfig['adjustments'][number];
+type Adjustment = GeneratorSettings['adjustments'][number];
 
 export type GlobalAdjustment = (
     generator: BoardGenerator,

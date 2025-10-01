@@ -51,7 +51,7 @@ import {
 import { generateFullRandom, generateRandomTyped } from './generation/Random';
 import { generateSRLv5 } from './generation/SRLv5';
 import RaceHandler, { RaceData } from './integration/races/RacetimeHandler';
-import { GeneratorConfig } from '@playbingo/shared';
+import { GeneratorSettings } from '@playbingo/shared';
 
 export enum BoardGenerationMode {
     RANDOM = 'Random',
@@ -105,7 +105,7 @@ export default class Room {
     victoryMasks: bigint[];
     completed: boolean;
 
-    generatorConfig?: GeneratorConfig;
+    generatorSettings?: GeneratorSettings;
     newGenerator: boolean;
 
     racetimeEligible: boolean;
@@ -130,7 +130,7 @@ export default class Room {
         lineCount: number,
         racetimeEligible: boolean,
         racetimeUrl?: string,
-        generatorConfig?: GeneratorConfig,
+        generatorSettings?: GeneratorSettings,
     ) {
         this.name = name;
         this.game = game;
@@ -171,8 +171,8 @@ export default class Room {
         this.hideCard = hideCard;
         this.completed = false;
 
-        this.generatorConfig = generatorConfig;
-        this.newGenerator = !!generatorConfig;
+        this.generatorSettings = generatorSettings;
+        this.newGenerator = !!generatorSettings;
 
         this.lastMessage = Date.now();
         this.inactivityWarningTimeout = setTimeout(
@@ -198,11 +198,11 @@ export default class Room {
         // game is enabled and configured for the new generator system
         // difficulty variants are mutually exclusive with th new generator
         // system currently, so if difficulty is selected go back to the old one
-        if (this.generatorConfig && mode !== BoardGenerationMode.DIFFICULTY) {
+        if (this.generatorSettings && mode !== BoardGenerationMode.DIFFICULTY) {
             const generator = new BoardGenerator(
                 goals,
                 categories,
-                this.generatorConfig,
+                this.generatorSettings,
             );
             generator.generateBoard();
             this.board = { board: listToBoard(generator.board) };

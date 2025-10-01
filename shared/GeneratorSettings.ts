@@ -202,6 +202,6 @@ export const makeGeneratorSchema = (categories: GoalCategory[]) => {
     };
 };
 
-export type GeneratorConfig = z.infer<
+export type GeneratorSettings = z.infer<
     ReturnType<typeof makeGeneratorSchema>['schema']
 >;

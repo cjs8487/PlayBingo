@@ -1,8 +1,8 @@
 import { Goal } from '@playbingo/types';
 import BoardGenerator from './BoardGenerator';
-import { GeneratorConfig } from '@playbingo/shared';
+import { GeneratorSettings } from '@playbingo/shared';
 
-type GoalFilter = GeneratorConfig['goalFilters'][number];
+type GoalFilter = GeneratorSettings['goalFilters'][number];
 
 export type GoalListPruner = (generator: BoardGenerator) => void;
 

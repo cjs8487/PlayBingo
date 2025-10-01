@@ -1,7 +1,7 @@
-import { GeneratorConfig } from '@playbingo/shared';
+import { GeneratorSettings } from '@playbingo/shared';
 import BoardGenerator from './BoardGenerator';
 
-type GoalTransformer = GeneratorConfig['goalTransformation'];
+type GoalTransformer = GeneratorSettings['goalTransformation'];
 
 export type GoalListTransformer = (generator: BoardGenerator) => void;
 
