@@ -15,7 +15,7 @@ async function getGame(slug: string): Promise<Game | undefined> {
 async function getCategories(
     slug: string,
 ): Promise<GoalCategory[] | undefined> {
-    const res = await fetch(getFullUrl(`/api/games/${slug}/categories`));
+    const res = await serverGet(getFullUrl(`/api/games/${slug}/categories`));
     if (!res.ok) {
         return undefined;
     }
