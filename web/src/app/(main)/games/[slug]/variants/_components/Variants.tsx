@@ -14,6 +14,7 @@ import { useState } from 'react';
 import VariantForm from './VariantForm';
 import { alertError, notifyMessage } from '../../../../../../lib/Utils';
 import { useConfirm } from 'material-ui-confirm';
+import { deleteVariant } from '../../../../../../actions/Variants';
 
 interface Props {
     variants: Variant[];
@@ -31,6 +32,11 @@ export default function Variants({
     const [showModal, setShowModal] = useState(false);
     const [editVariant, setEditVariant] = useState<Variant | undefined>();
     const confirm = useConfirm();
+
+    const closeModal = () => {
+        setShowModal(false);
+        setEditVariant(undefined);
+    };
 
     return (
         <>
@@ -93,11 +99,9 @@ export default function Variants({
                                         return;
                                     }
 
-                                    const res = await fetch(
-                                        `/api/games/${slug}/variants/${variant.id}`,
-                                        {
-                                            method: 'DELETE',
-                                        },
+                                    const res = await deleteVariant(
+                                        slug,
+                                        variant.id,
                                     );
                                     if (!res.ok) {
                                         alertError('Unable to delete variant.');
@@ -134,9 +138,15 @@ export default function Variants({
                         slug={slug}
                         categories={categories}
                         editVariant={editVariant}
+                        closeModal={closeModal}
                     />
                 ) : (
-                    <VariantForm slug={slug} categories={categories} isNew />
+                    <VariantForm
+                        slug={slug}
+                        categories={categories}
+                        closeModal={closeModal}
+                        isNew
+                    />
                 )}
             </Dialog>
         </>
