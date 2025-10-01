@@ -19,7 +19,7 @@ import { handleAction } from './actions/Actions';
 import { getGoalList } from '../../database/games/Goals';
 import { RoomData } from '@playbingo/types';
 import Player from '../../core/Player';
-import { GeneratorConfig, makeGeneratorSchema } from '@playbingo/shared';
+import { GeneratorSettings, makeGeneratorSchema } from '@playbingo/shared';
 import { getCategories } from '../../database/games/GoalCategories';
 
 const MIN_ROOM_GOALS_REQUIRED = 25;
@@ -88,7 +88,7 @@ rooms.post('/', async (req, res) => {
     const num = randomInt(1000, 10000);
     const slug = `${adj}-${noun}-${num}`;
 
-    let generatorConfig: GeneratorConfig | undefined = undefined;
+    let generatorSettings: GeneratorSettings | undefined = undefined;
     if (gameData.newGeneratorBeta) {
         const { schema } = makeGeneratorSchema(
             ((await getCategories(gameData.slug)) ?? []).map((cat) => ({
@@ -98,14 +98,14 @@ rooms.post('/', async (req, res) => {
                 goalCount: cat._count.goals,
             })),
         );
-        const result = schema.safeParse(gameData.generatorConfig);
+        const result = schema.safeParse(gameData.generatorSettings);
         if (!result.success) {
             logError(
                 `Invalid generator config in database for ${gameData.name} (${gameData.slug})`,
             );
             throw new Error('Invalid generator config in database');
         }
-        generatorConfig = result.data;
+        generatorSettings = result.data;
     }
 
     const dbRoom = await createRoom(
@@ -132,7 +132,7 @@ rooms.post('/', async (req, res) => {
             !!gameData.racetimeCategory &&
             !!gameData.racetimeGoal,
         '',
-        generatorConfig,
+        generatorSettings,
     );
     const options: BoardGenerationOptions = {
         mode: BoardGenerationMode.RANDOM,

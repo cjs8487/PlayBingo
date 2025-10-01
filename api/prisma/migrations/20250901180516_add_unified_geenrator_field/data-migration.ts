@@ -4,7 +4,7 @@ import {
     GenerationGoalSelection,
     PrismaClient,
 } from '@prisma/client';
-import { GeneratorConfig } from '@playbingo/shared/GeneratorConfig';
+import { GeneratorSettings } from '@playbingo/shared';
 
 const prisma = new PrismaClient();
 
@@ -14,7 +14,7 @@ async function main() {
             const games = await tx.game.findMany({});
             await Promise.all(
                 games.map(async (game) => {
-                    const generatorConfig: GeneratorConfig = {
+                    const generatorSettings: GeneratorSettings = {
                         goalFilters: [],
                         goalTransformation: 'none',
                         boardLayout: 'random',
@@ -25,10 +25,10 @@ async function main() {
 
                     switch (game.generationBoardLayout) {
                         case 'SRLv5':
-                            generatorConfig.boardLayout = 'srlv5';
+                            generatorSettings.boardLayout = 'srlv5';
                             break;
                         case 'ISAAC':
-                            generatorConfig.boardLayout = 'isaac';
+                            generatorSettings.boardLayout = 'isaac';
                             break;
                     }
 
@@ -36,7 +36,7 @@ async function main() {
                         game.generationGoalSelection ===
                         GenerationGoalSelection.DIFFICULTY
                     ) {
-                        generatorConfig.goalSelection = 'difficulty';
+                        generatorSettings.goalSelection = 'difficulty';
                     }
 
                     if (
@@ -44,7 +44,7 @@ async function main() {
                             GenerationGoalRestriction.LINE_TYPE_EXCLUSION,
                         )
                     ) {
-                        generatorConfig.restrictions.push({
+                        generatorSettings.restrictions.push({
                             type: 'line-type-exclusion',
                         });
                     }
@@ -54,21 +54,23 @@ async function main() {
                             GenerationGlobalAdjustments.SYNERGIZE,
                         )
                     ) {
-                        generatorConfig.adjustments.push({ type: 'synergize' });
+                        generatorSettings.adjustments.push({
+                            type: 'synergize',
+                        });
                     }
                     if (
                         game.generationGlobalAdjustments.includes(
                             GenerationGlobalAdjustments.BOARD_TYPE_MAX,
                         )
                     ) {
-                        generatorConfig.adjustments.push({
+                        generatorSettings.adjustments.push({
                             type: 'board-type-max',
                         });
                     }
 
                     await tx.game.update({
                         data: {
-                            generatorConfig,
+                            generatorSettings,
                         },
                         where: { id: game.id },
                     });

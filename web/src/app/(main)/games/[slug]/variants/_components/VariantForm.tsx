@@ -59,7 +59,7 @@ export default function VariantForm({
 
     const { values, setValues, errors, isValid, handleSubmit } = useJSONForm(
         schema,
-        schema.safeParse(editVariant?.generatorConfig).data ?? {
+        schema.safeParse(editVariant?.generatorSettings).data ?? {
             goalFilters: [],
             goalTransformation: 'none',
             boardLayout: 'random',

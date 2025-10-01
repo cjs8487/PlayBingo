@@ -1,7 +1,7 @@
-import { GeneratorConfig } from '@playbingo/shared';
+import { GeneratorSettings } from '@playbingo/shared';
 import BoardGenerator from './BoardGenerator';
 
-type BoardLayoutMode = GeneratorConfig['boardLayout'];
+type BoardLayoutMode = GeneratorSettings['boardLayout'];
 
 export type BoardLayoutGenerator = (generator: BoardGenerator) => void;
 

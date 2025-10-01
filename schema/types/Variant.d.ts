@@ -9,7 +9,7 @@ export interface Variant {
   id: string;
   name: string;
   description?: string;
-  generatorConfig?: {
+  generatorSettings?: {
     [k: string]: unknown;
   };
 }

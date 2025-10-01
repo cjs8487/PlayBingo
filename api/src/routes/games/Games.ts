@@ -24,7 +24,7 @@ import {
     updateDifficultyVariantsEnabled,
     updateGameCover,
     updateGameName,
-    updateGeneratorConfig,
+    updateGeneratorSettings,
     updateLinks,
     updateRacetimeCategory,
     updateRacetimeGoal,
@@ -89,14 +89,6 @@ games.get('/:slug', async (req, res) => {
         slugWords: game.slugWords,
         useTypedRandom: game.useTypedRandom,
         newGeneratorBeta: game.newGeneratorBeta,
-        generationSettings: {
-            pruners: game.generationListMode,
-            transformer: game.generationListTransform,
-            layout: game.generationBoardLayout,
-            goalSelection: game.generationGoalSelection,
-            cellRestrictions: game.generationGoalRestrictions,
-            globalAdjustments: game.generationGlobalAdjustments,
-        },
         descriptionMd: game.descriptionMd ?? undefined,
         setupMd: game.setupMd ?? undefined,
         linksMd: game.linksMd ?? undefined,
@@ -112,10 +104,21 @@ games.get('/:slug', async (req, res) => {
                 goalCount: cat._count.goals,
             })),
         );
+        const gameParseResult = generatorSchema.schema.safeParse(
+            game.generatorSettings,
+        );
+        if (!gameParseResult.success) {
+            logError(
+                `Invalid generator config in database for ${game.name} (${game.slug})`,
+            );
+            res.status(500).send('Invalid game level generator configuration');
+            return;
+        }
+        result.generationSettings = gameParseResult.data;
         result.variants = [];
         game.variants.forEach((variant) => {
             const parseResult = generatorSchema.schema.safeParse(
-                variant.generatorConfig,
+                variant.generatorSettings,
             );
             if (!parseResult.success) {
                 logError(
@@ -126,7 +129,7 @@ games.get('/:slug', async (req, res) => {
                     id: variant.id,
                     name: variant.name,
                     description: variant.description ?? undefined,
-                    generatorConfig: parseResult.data,
+                    generatorSettings: parseResult.data,
                 });
             }
         });
@@ -650,7 +653,7 @@ games.post('/:slug/generation', async (req, res) => {
         return;
     }
 
-    const result = await updateGeneratorConfig(slug, parseResult.data);
+    const result = await updateGeneratorSettings(slug, parseResult.data);
     res.status(200).send(result);
 });
 
@@ -680,7 +683,7 @@ games.get('/:slug/sampleBoard', async (req, res) => {
             goalCount: cat._count.goals,
         })),
     );
-    const result = schema.safeParse(gameData.generatorConfig);
+    const result = schema.safeParse(gameData.generatorSettings);
 
     if (!result.success) {
         logError(

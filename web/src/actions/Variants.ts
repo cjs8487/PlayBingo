@@ -2,13 +2,13 @@
 
 import { revalidatePath } from 'next/cache';
 import { serverFetch } from '../app/ServerUtils';
-import { GeneratorConfig } from '@playbingo/shared';
+import { GeneratorSettings } from '@playbingo/shared';
 
 export async function createVariant(
     slug: string,
     name: string,
     description: string,
-    config: GeneratorConfig,
+    config: GeneratorSettings,
 ) {
     const res = await serverFetch(`/api/games/${slug}/variants`, {
         method: 'POST',
@@ -31,7 +31,7 @@ export async function updateVariant(
     id: string,
     name: string,
     description: string,
-    config: GeneratorConfig,
+    config: GeneratorSettings,
 ) {
     const res = await serverFetch(`/api/games/${slug}/variants/${id}`, {
         method: 'POST',

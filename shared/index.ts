@@ -1,1 +1,1 @@
-export * from './GeneratorConfig';
+export * from './GeneratorSettings';

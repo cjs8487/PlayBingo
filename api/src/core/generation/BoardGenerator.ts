@@ -22,7 +22,7 @@ import {
     GoalPlacementRestriction,
 } from './GoalPlacementRestriction';
 import { GenerationFailedError } from './GenerationFailedError';
-import { GeneratorConfig } from '@playbingo/shared';
+import { GeneratorSettings } from '@playbingo/shared';
 
 /**
  *
@@ -51,7 +51,7 @@ export default class BoardGenerator {
     constructor(
         goals: GeneratorGoal[],
         categories: Category[],
-        config: GeneratorConfig,
+        config: GeneratorSettings,
         seed?: number,
     ) {
         // input validation

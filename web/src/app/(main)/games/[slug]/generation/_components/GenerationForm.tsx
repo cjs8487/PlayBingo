@@ -5,7 +5,7 @@ import {
     useJSONForm,
 } from '@/components/input/JsonSchemaRenderer';
 import { Box, Button, Tooltip, Typography } from '@mui/material';
-import { makeGeneratorSchema } from '@playbingo/shared';
+import { GeneratorSettings, makeGeneratorSchema } from '@playbingo/shared';
 import { GoalCategory } from '@playbingo/types';
 import { useCallback } from 'react';
 import * as z from 'zod';
@@ -14,15 +14,20 @@ import { alertError, notifyMessage } from '../../../../../../lib/Utils';
 interface Props {
     slug: string;
     categories: GoalCategory[];
+    initialValues?: GeneratorSettings;
 }
 
-export default function GenerationPage({ slug, categories }: Props) {
+export default function GenerationPage({
+    slug,
+    categories,
+    initialValues,
+}: Props) {
     const { schema, metadata } = makeGeneratorSchema(categories);
     const schemaJson = z.toJSONSchema(schema, { metadata });
 
     const { values, setValues, errors, isValid, handleSubmit } = useJSONForm(
         schema,
-        {
+        initialValues ?? {
             goalFilters: [],
             goalTransformation: 'none',
             boardLayout: 'random',
@@ -36,7 +41,7 @@ export default function GenerationPage({ slug, categories }: Props) {
         handleSubmit(async (config) => {
             const res = await fetch(`/api/games/${slug}/generation`, {
                 method: 'POST',
-                headers: { Conten_type: 'application/json' },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(config),
             });
 
