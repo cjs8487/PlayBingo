@@ -37,3 +37,9 @@ export const deleteVariant = (id: string) => {
         where: { id },
     });
 };
+
+export const getVariant = (id: string) => {
+    return prisma.variant.findUnique({
+        where: { id },
+    });
+};
