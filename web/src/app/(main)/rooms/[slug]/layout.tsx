@@ -1,12 +1,12 @@
-import { ReactNode } from 'react';
 import { RoomContextProvider } from '@/context/RoomContext';
-import { serverFetch } from '../../../ServerUtils';
-import { notFound, redirect } from 'next/navigation';
-import { alertError } from '../../../../lib/Utils';
 import { RoomData } from '@playbingo/types';
+import { notFound, redirect } from 'next/navigation';
+import { ReactNode } from 'react';
+import { alertError } from '../../../../lib/Utils';
+import { serverGet } from '../../../ServerUtils';
 
 async function getRoom(slug: string): Promise<RoomData> {
-    const res = await serverFetch(`/api/rooms/${slug}`);
+    const res = await serverGet(`/api/rooms/${slug}`);
     if (!res.ok) {
         if (res.status === 404) {
             notFound();

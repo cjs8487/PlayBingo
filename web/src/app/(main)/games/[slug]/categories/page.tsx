@@ -1,12 +1,12 @@
 import { GoalCategory } from '@playbingo/types';
 import { getFullUrl } from '../../../../../lib/Utils';
-import { serverFetch } from '../../../../ServerUtils';
+import { serverGet } from '../../../../ServerUtils';
 import GoalCategories from './_components/GoalCategories';
 
 async function getCategories(
     slug: string,
 ): Promise<GoalCategory[] | undefined> {
-    const res = await serverFetch(getFullUrl(`/api/games/${slug}/categories`));
+    const res = await serverGet(getFullUrl(`/api/games/${slug}/categories`));
     if (!res.ok) {
         return undefined;
     }
