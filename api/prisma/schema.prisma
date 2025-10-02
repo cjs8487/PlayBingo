@@ -41,6 +41,7 @@ model Variant {
   game              Game   @relation(fields: [gameId], references: [id])
   generatorSettings Json?
   gameId            String
+  Room              Room[]
 }
 
 model Game {
@@ -135,6 +136,8 @@ model Room {
   bingoMode    BingoMode    @default(LINES)
   lineCount    Int          @default(1)
   players      Player[]
+  variant      Variant?     @relation(fields: [variantId], references: [id])
+  variantId    String?
 }
 
 model Player {

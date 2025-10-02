@@ -40,7 +40,11 @@ import {
 import { getCategories } from '../database/games/GoalCategories';
 import { goalsForGame } from '../database/games/Goals';
 import { shuffle } from '../util/Array';
-import { computeLineMasks, listToBoard } from '../util/RoomUtils';
+import {
+    computeLineMasks,
+    getModeString,
+    listToBoard,
+} from '../util/RoomUtils';
 import Player from './Player';
 import { allRooms } from './RoomServer';
 import BoardGenerator from './generation/BoardGenerator';
@@ -99,6 +103,7 @@ export default class Room {
     hideCard: boolean;
     bingoMode: BingoMode;
     lineCount: number;
+    variantName: string;
 
     lastGenerationMode: BoardGenerationOptions;
 
@@ -129,6 +134,7 @@ export default class Room {
         bingoMode: BingoMode,
         lineCount: number,
         racetimeEligible: boolean,
+        variantName: string,
         racetimeUrl?: string,
         generatorSettings?: GeneratorSettings,
     ) {
@@ -141,6 +147,7 @@ export default class Room {
         this.id = id;
         this.bingoMode = bingoMode;
         this.lineCount = lineCount;
+        this.variantName = variantName;
 
         this.lastGenerationMode = { mode: BoardGenerationMode.RANDOM };
 
@@ -376,6 +383,8 @@ export default class Room {
                     ended: this.raceHandler.data?.ended_at ?? undefined,
                     status: this.raceHandler.data?.status.verbose_value,
                 },
+                mode: getModeString(this.bingoMode, this.lineCount),
+                variant: this.variantName,
             },
             players: this.getPlayers(),
         };
@@ -566,6 +575,8 @@ export default class Room {
                     url,
                 },
                 newGenerator: this.newGenerator,
+                mode: getModeString(this.bingoMode, this.lineCount),
+                variant: this.variantName,
             },
         });
         this.sendChat(`Racetime.gg room created ${url}`);
@@ -586,6 +597,8 @@ export default class Room {
                     url: undefined,
                 },
                 newGenerator: this.newGenerator,
+                mode: getModeString(this.bingoMode, this.lineCount),
+                variant: this.variantName,
             },
         });
     }
