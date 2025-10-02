@@ -12,7 +12,11 @@ import {
     getFullRoomList,
     getRoomFromSlug,
 } from '../../database/Rooms';
-import { gameForSlug, goalCount } from '../../database/games/Games';
+import {
+    gameForSlug,
+    getDifficultyVariant,
+    goalCount,
+} from '../../database/games/Games';
 import { chunk } from '../../util/Array';
 import { randomWord, slugAdjectives, slugNouns } from '../../util/Words';
 import { handleAction } from './actions/Actions';
@@ -21,6 +25,7 @@ import { RoomData } from '@playbingo/types';
 import Player from '../../core/Player';
 import { GeneratorSettings, makeGeneratorSchema } from '@playbingo/shared';
 import { getCategories } from '../../database/games/GoalCategories';
+import { getVariant } from '../../database/games/Variants';
 
 const MIN_ROOM_GOALS_REQUIRED = 25;
 const rooms = Router();
@@ -51,10 +56,10 @@ rooms.post('/', async (req, res) => {
         game,
         nickname,
         password,
-        /*variant,*/ mode,
+        variant,
+        mode,
         lineCount,
         generationMode,
-        difficulty,
         hideCard,
         seed,
         spectator,
@@ -89,6 +94,7 @@ rooms.post('/', async (req, res) => {
     const slug = `${adj}-${noun}-${num}`;
 
     let generatorSettings: GeneratorSettings | undefined = undefined;
+    let isDifficultyVariant = false;
     if (gameData.newGeneratorBeta) {
         const { schema } = makeGeneratorSchema(
             ((await getCategories(gameData.slug)) ?? []).map((cat) => ({
@@ -98,14 +104,47 @@ rooms.post('/', async (req, res) => {
                 goalCount: cat._count.goals,
             })),
         );
-        const result = schema.safeParse(gameData.generatorSettings);
-        if (!result.success) {
-            logError(
-                `Invalid generator config in database for ${gameData.name} (${gameData.slug})`,
-            );
-            throw new Error('Invalid generator config in database');
+        let result = undefined;
+        if (variant) {
+            let variantData;
+
+            variantData = await getDifficultyVariant(variant);
+            if (variantData) {
+                if (variantData.gameId !== gameData.id) {
+                    res.status(400).send('Invalid variant selected.');
+                    return;
+                }
+                generatorSettings = undefined;
+                isDifficultyVariant = true;
+            } else {
+                variantData = await getVariant(variant);
+                if (!variantData || variantData.gameId !== gameData.id) {
+                    res.status(400).send('Invalid variant selected.');
+                    return;
+                }
+                result = schema.safeParse(variantData.generatorSettings);
+            }
+        } else {
+            result = schema.safeParse(gameData.generatorSettings);
         }
-        generatorSettings = result.data;
+        if (result) {
+            if (!result.success) {
+                logError(
+                    `Invalid generator config in database for ${gameData.name} (${gameData.slug} ${variant ? variant : ''})`,
+                );
+                res.status(500).send('Invalid generator configuration.');
+                return;
+            }
+            generatorSettings = result.data;
+        }
+    } else if (variant) {
+        // difficulty variant on a game not enabled for new generator
+        const difficultyVariant = await getDifficultyVariant(variant);
+        if (!difficultyVariant || difficultyVariant.gameId !== gameData.id) {
+            res.status(400).send('Invalid variant selected.');
+        }
+        generatorSettings = undefined;
+        isDifficultyVariant = true;
     }
 
     const dbRoom = await createRoom(
@@ -138,19 +177,20 @@ rooms.post('/', async (req, res) => {
         mode: BoardGenerationMode.RANDOM,
     } as BoardGenerationOptions; // necessary cast to avoid auto-narrowing
     let useDefault = true;
-    if (generationMode) {
-        options.mode = generationMode as BoardGenerationMode;
+    if (isDifficultyVariant) {
+        if (isDifficultyVariant) {
+            options.mode = BoardGenerationMode.DIFFICULTY;
+        }
+        //needed to force narrowing
         if (options.mode === BoardGenerationMode.DIFFICULTY) {
-            if (difficulty) {
-                options.difficulty = difficulty;
+            if (variant) {
+                options.difficulty = variant;
                 useDefault = false;
             } else {
                 logWarn(
                     `Unable to generate using difficulty variants for ${slug}, falling back to default mode.`,
                 );
             }
-        } else {
-            useDefault = false;
         }
     }
     if (useDefault) {
@@ -160,6 +200,7 @@ rooms.post('/', async (req, res) => {
             options.mode = BoardGenerationMode.RANDOM;
         }
     }
+
     options.seed = seed;
     await room.generateBoard(options);
     allRooms.set(slug, room);
