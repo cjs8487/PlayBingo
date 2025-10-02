@@ -247,6 +247,41 @@ async function getOrLoadRoom(slug: string): Promise<Room | null> {
         variantName = 'Normal';
     }
 
+    let generatorSettings: GeneratorSettings | undefined = undefined;
+    if (dbRoom.game?.newGeneratorBeta) {
+        const categories = await getCategories(dbRoom.game?.slug ?? '');
+        const { schema } = makeGeneratorSchema(
+            (categories ?? []).map((cat) => ({
+                id: cat.id,
+                name: cat.name,
+                max: cat.max,
+                goalCount: cat._count.goals,
+            })),
+        );
+
+        if (variant && 'generatorSettings' in variant) {
+            const result = schema.safeParse(
+                variant.generatorSettings ?? dbRoom.game.generatorSettings,
+            );
+            if (!result.success) {
+                logError(
+                    `Invalid generator config in database for ${dbRoom.game.name} (${dbRoom.game.slug} ${variant ? variant : ''})`,
+                );
+                return null;
+            }
+            generatorSettings = result.data;
+        } else {
+            const result = schema.safeParse(dbRoom.game.generatorSettings);
+            if (!result.success) {
+                logError(
+                    `Invalid generator config in database for ${dbRoom.game.name} (${dbRoom.game.slug})`,
+                );
+                return null;
+            }
+            generatorSettings = result.data;
+        }
+    }
+
     const newRoom = new Room(
         dbRoom.name,
         dbRoom.game?.name ?? 'Deleted Game',
@@ -263,6 +298,7 @@ async function getOrLoadRoom(slug: string): Promise<Room | null> {
             !!dbRoom.racetimeRoom,
         variantName,
         dbRoom.racetimeRoom ?? '',
+        generatorSettings,
     );
 
     newRoom.board = {
