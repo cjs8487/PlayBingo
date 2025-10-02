@@ -26,6 +26,7 @@ import Player from '../../core/Player';
 import { GeneratorSettings, makeGeneratorSchema } from '@playbingo/shared';
 import { getCategories } from '../../database/games/GoalCategories';
 import { getVariant } from '../../database/games/Variants';
+import { DifficultyVariant, Variant } from '@prisma/client';
 
 const MIN_ROOM_GOALS_REQUIRED = 25;
 const rooms = Router();
@@ -95,6 +96,7 @@ rooms.post('/', async (req, res) => {
 
     let generatorSettings: GeneratorSettings | undefined = undefined;
     let isDifficultyVariant = false;
+    let variantName = '';
     if (gameData.newGeneratorBeta) {
         const { schema } = makeGeneratorSchema(
             ((await getCategories(gameData.slug)) ?? []).map((cat) => ({
@@ -116,6 +118,7 @@ rooms.post('/', async (req, res) => {
                 }
                 generatorSettings = undefined;
                 isDifficultyVariant = true;
+                variantName = variantData.name;
             } else {
                 variantData = await getVariant(variant);
                 if (!variantData || variantData.gameId !== gameData.id) {
@@ -123,9 +126,11 @@ rooms.post('/', async (req, res) => {
                     return;
                 }
                 result = schema.safeParse(variantData.generatorSettings);
+                variantName = variantData.name;
             }
         } else {
             result = schema.safeParse(gameData.generatorSettings);
+            variantName = 'Normal';
         }
         if (result) {
             if (!result.success) {
@@ -170,6 +175,7 @@ rooms.post('/', async (req, res) => {
         gameData.racetimeBeta &&
             !!gameData.racetimeCategory &&
             !!gameData.racetimeGoal,
+        variantName,
         '',
         generatorSettings,
     );
@@ -225,6 +231,22 @@ async function getOrLoadRoom(slug: string): Promise<Room | null> {
     const dbRoom = await getRoomFromSlug(slug);
     if (!dbRoom) return null;
 
+    let variant: Variant | DifficultyVariant | null = null;
+    let variantName = '';
+    if (dbRoom.variantId) {
+        variant = await getVariant(dbRoom.variantId);
+        if (!variant) {
+            variant = await getDifficultyVariant(dbRoom.variantId);
+        }
+        if (variant) {
+            variantName = variant.name;
+        } else {
+            variantName = 'Unknown Variant';
+        }
+    } else {
+        variantName = 'Normal';
+    }
+
     const newRoom = new Room(
         dbRoom.name,
         dbRoom.game?.name ?? 'Deleted Game',
@@ -239,6 +261,7 @@ async function getOrLoadRoom(slug: string): Promise<Room | null> {
             !!dbRoom.game.racetimeCategory &&
             !!dbRoom.game.racetimeGoal) ||
             !!dbRoom.racetimeRoom,
+        variantName,
         dbRoom.racetimeRoom ?? '',
     );
 
@@ -360,6 +383,8 @@ rooms.get('/:slug', async (req, res) => {
             ended: room.raceHandler.data?.ended_at ?? undefined,
             status: room.raceHandler.data?.status.verbose_value,
         },
+        mode: room.bingoMode,
+        variant: room.variantName,
     };
 
     const userKey = req.session.user ?? req.session.id;
