@@ -1,8 +1,8 @@
 import { Box, Link, Typography } from '@mui/material';
 import NextLink from 'next/link';
 import { disconnectRacetime } from '../../../actions/Connection';
+import { serverGet } from '../../ServerUtils';
 import DisconnectButton from './DisconnectButton';
-import { serverFetch } from '../../ServerUtils';
 
 interface RacetimeConnectionStatus {
     hasRacetimeConnection: boolean;
@@ -12,7 +12,7 @@ interface RacetimeConnectionStatus {
 async function checkRacetimeStatus(): Promise<
     RacetimeConnectionStatus | false
 > {
-    const res = await serverFetch('/api/connection/racetime');
+    const res = await serverGet('/api/connection/racetime');
     if (!res.ok) {
         return false;
     }
