@@ -161,6 +161,7 @@ rooms.post('/', async (req, res) => {
         hideCard,
         mode,
         lineCount,
+        variant,
     );
     const room = new Room(
         name,
