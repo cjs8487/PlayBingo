@@ -1,4 +1,4 @@
-import { Game, Goal } from '@playbingo/types';
+import { Game } from '@playbingo/types';
 import {
     GenerationBoardLayout,
     GenerationGlobalAdjustments,
@@ -52,8 +52,11 @@ import {
 } from '../../database/games/Goals';
 import { getUser, getUsersEligibleToModerateGame } from '../../database/Users';
 import { deleteFile, saveFile } from '../../media/MediaServer';
+import { translationsRouter } from './translations/Translations';
 
 const games = Router();
+
+games.use(translationsRouter);
 
 games.get('/', async (req, res) => {
     const result = await allGames(req.session.user);
@@ -85,6 +88,7 @@ games.get('/:slug', async (req, res) => {
             avatar: mod.avatar ?? undefined,
         })),
         enableSRLv5: game.enableSRLv5,
+        translations: game.translations,
         racetimeBeta: game.racetimeBeta,
         racetimeCategory: game.racetimeCategory ?? undefined,
         racetimeGoal: game.racetimeGoal ?? undefined,

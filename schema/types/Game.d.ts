@@ -15,6 +15,7 @@ export interface Game {
   favorited?: boolean;
   isMod?: boolean;
   enableSRLv5?: boolean;
+  translations?: string[];
   racetimeBeta?: boolean;
   racetimeCategory?: string;
   racetimeGoal?: string;

@@ -15,7 +15,7 @@ export interface Goal {
   /**
    * Translation texts for this goal in json object
    */
-  translations?: {
+  translations: {
     [k: string]: string;
   };
   difficulty?: number | null;

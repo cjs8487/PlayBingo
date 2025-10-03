@@ -26,6 +26,7 @@ const goals: GeneratorGoal[] = Array.from({ length: 100 }).map((_, i) => ({
         categories[i % categories.length].name,
         categories[(i + 1) % categories.length].name,
     ],
+    translations: {German: `Ziel ${i + 1}`},
     difficulty: (i % 25) + 1,
 }));
 

@@ -11,6 +11,7 @@ const createBoard = (): Cell[][] =>
             id: `${i}`,
             goal: `Goal ${i + 1}`,
             categories: [],
+            translations: {German: `Ziel ${i + 1}`},
             difficulty: 0,
             description: '',
         })),

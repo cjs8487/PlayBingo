@@ -77,6 +77,7 @@ async function main() {
             slug: 'nodiff',
             enableSRLv5: false,
             racetimeBeta: false,
+            translations: ['German'],
             owners: { connect: [{ id: staff.id }, { id: owner.id }] },
             moderators: { connect: [{ id: mod.id }] },
             usersFavorited: {

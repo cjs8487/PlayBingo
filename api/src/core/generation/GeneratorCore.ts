@@ -2,6 +2,7 @@ export interface GeneratorGoal {
     id: string;
     goal: string;
     description: string | null;
+    translations: {[k: string]: string};
     categories: string[];
     difficulty: number | null;
 }

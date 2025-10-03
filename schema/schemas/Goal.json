@@ -2,7 +2,7 @@
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "type": "object",
     "additionalProperties": false,
-    "required": ["id", "goal", "description"],
+    "required": ["id", "goal", "description", "translations"],
     "description": "A single objective for a bingo game.",
     "properties": {
         "id": {"type": "string"},
