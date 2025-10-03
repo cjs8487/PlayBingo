@@ -25,6 +25,12 @@ export interface Goal {
   id: string;
   goal: string;
   description: string | null;
+  /**
+   * Translation texts for this goal in json object
+   */
+  translations?: {
+    [k: string]: string;
+  };
   difficulty?: number | null;
   categories?: string[];
 }

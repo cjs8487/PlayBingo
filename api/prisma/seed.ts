@@ -101,6 +101,7 @@ async function main() {
                     gameId: game1.id,
                     goal: `Goal ${i + 1}`,
                     description: `Description for Goal ${i + 1}`,
+                    translations: {German: `Ziel ${i + 1}`},
                     categories: {
                         connect: {
                             gameId_name: {
@@ -141,6 +142,7 @@ async function main() {
                     gameId: game2.id,
                     goal: `Goal ${i + 1}`,
                     description: `Description for Goal ${i + 1}`,
+                    translations: {German: `Ziel ${i + 1}`},
                     categories: {
                         connect: {
                             gameId_name: {
@@ -179,6 +181,7 @@ async function main() {
                     gameId: game3.id,
                     goal: `Goal ${i + 1}`,
                     description: `Description for Goal ${i + 1}`,
+                    translations: {German: `Ziel ${i + 1}`},
                     categories: {
                         connect: {
                             gameId_name: {
@@ -216,6 +219,7 @@ async function main() {
                     gameId: game4.id,
                     goal: `Goal ${i + 1}`,
                     description: `Description for Goal ${i + 1}`,
+                    translations: {German: `Ziel ${i + 1}`},
                     categories: {
                         connect: {
                             gameId_name: {
@@ -254,6 +258,7 @@ async function main() {
                     gameId: game5.id,
                     goal: `Goal ${i + 1}`,
                     description: `Description for Goal ${i + 1}`,
+                    translations: {German: `Ziel ${i + 1}`},
                     categories: {
                         connect: {
                             gameId_name: {
@@ -285,6 +290,7 @@ async function main() {
             gameId: id,
             goal: 'Collect 100 Coins',
             description: 'Gather 100 coins from various levels.',
+            translations: {German: `Sammle 100 Münzen`},
             categories: {
                 connect: ['Collecting'].map((cat) => ({
                     gameId_name: {
@@ -299,6 +305,7 @@ async function main() {
             gameId: id,
             goal: 'Defeat the Fire Dragon',
             description: 'Slay the Fire Dragon in the Volcano Dungeon.',
+            translations: {German: `Töte den Feuerdrachen`},
             categories: {
                 connect: ['Combat', 'Boss Battle'].map((cat) => ({
                     gameId_name: {
@@ -312,6 +319,7 @@ async function main() {
         {
             gameId: id,
             goal: 'Find 3 Hidden Keys',
+            translations: {German: `Finde 3 versteckte Schluessel`},
             description: 'Locate 3 keys hidden throughout the forest.',
             categories: {
                 connect: ['Exploration', 'Puzzle'].map((cat) => ({
@@ -327,6 +335,7 @@ async function main() {
             gameId: id,
             goal: 'Solve the Ancient Temple Puzzle',
             description: 'Unlock the secret chamber in the temple.',
+            translations: {German: `Loese das Puzzle im antiken Tempel`},
             categories: {
                 connect: ['Puzzle'].map((cat) => ({
                     gameId_name: {
@@ -341,6 +350,7 @@ async function main() {
             gameId: id,
             goal: 'Craft a Health Potion',
             description: 'Use herbs and water to craft a basic health potion.',
+            translations: {German: `Crafte einen Heilungstrank`},
             categories: {
                 connect: ['Resource Management'].map((cat) => ({
                     gameId_name: {
@@ -355,6 +365,7 @@ async function main() {
             gameId: id,
             goal: 'Complete the Speedrun Trial',
             description: 'Finish the speedrun course in under 3 minutes.',
+            translations: {German: `Schliesse die Speedrun Pruefung ab`},
             categories: {
                 connect: ['Time Challenge'].map((cat) => ({
                     gameId_name: {
@@ -369,6 +380,7 @@ async function main() {
             gameId: id,
             goal: 'Pickpocket a Guard',
             description: 'Steal a gold coin from a guard without being caught.',
+            translations: {German: `Stehle von einer Wache`},
             categories: {
                 connect: ['Stealth'].map((cat) => ({
                     gameId_name: {
@@ -383,6 +395,7 @@ async function main() {
             gameId: id,
             goal: 'Reach Level 10',
             description: 'Gain experience and reach level 10.',
+            translations: {German: `Erreiche Level 10`},
             categories: {
                 connect: ['Story Progression'].map((cat) => ({
                     gameId_name: {
@@ -397,6 +410,7 @@ async function main() {
             gameId: id,
             goal: 'Defeat 50 Enemies',
             description: 'Eliminate 50 enemies to prove your strength.',
+            translations: {German: `Besiege 50 Gegner`},
             categories: {
                 connect: ['Combat'].map((cat) => ({
                     gameId_name: {
@@ -411,6 +425,7 @@ async function main() {
             gameId: id,
             goal: 'Cross the Lava Pit',
             description: 'Use platforms to cross the lava pit safely.',
+            translations: {German: `Ueberquere die Lava Schlucht`},
             categories: {
                 connect: ['Movement', 'Puzzle'].map((cat) => ({
                     gameId_name: {
@@ -425,6 +440,7 @@ async function main() {
             gameId: id,
             goal: 'Rescue the Lost Villager',
             description: 'Find and rescue a villager trapped in the cave.',
+            translations: {German: `Rette den verlorenen Dorfbewohner`},
             categories: {
                 connect: ['Exploration', 'Story Progression'].map((cat) => ({
                     gameId_name: {
@@ -439,6 +455,7 @@ async function main() {
             gameId: id,
             goal: 'Gather 10 Rare Herbs',
             description: 'Collect rare herbs from the mountain region.',
+            translations: {German: `Sammle 10 seltene Kraeuter`},
             categories: {
                 connect: ['Collecting', 'Resource Management'].map((cat) => ({
                     gameId_name: {
@@ -453,6 +470,7 @@ async function main() {
             gameId: id,
             goal: 'Defeat the Ice Golem',
             description: 'Defeat the Ice Golem in the Frozen Cavern.',
+            translations: {German: `Besiege den Eis Golem`},
             categories: {
                 connect: ['Combat', 'Boss Battle'].map((cat) => ({
                     gameId_name: {
@@ -467,6 +485,7 @@ async function main() {
             gameId: id,
             goal: 'Escape the Dungeon Maze',
             description: 'Navigate and escape the maze in the dungeon.',
+            translations: {German: `Fliehe aus dem Labyrinth`},
             categories: {
                 connect: ['Puzzle', 'Exploration'].map((cat) => ({
                     gameId_name: {
@@ -481,6 +500,7 @@ async function main() {
             gameId: id,
             goal: 'Solve the Color Matching Puzzle',
             description: 'Match colors correctly to unlock the gate.',
+            translations: {German: 'Loese das Farb Puzzle'},
             categories: {
                 connect: ['Puzzle'].map((cat) => ({
                     gameId_name: {
@@ -495,6 +515,7 @@ async function main() {
             gameId: id,
             goal: 'Survive the Night in the Forest',
             description: 'Survive until morning without getting caught.',
+            translations: {German: 'Ueberlebe die Nacht im Wald'},
             categories: {
                 connect: ['Stealth', 'Time Challenge'].map((cat) => ({
                     gameId_name: {
@@ -509,6 +530,7 @@ async function main() {
             gameId: id,
             goal: 'Gather 20 Crystals',
             description: 'Mine 20 crystals from the underground cave.',
+            translations: {German: 'Sammle 20 Kristalle'},
             categories: {
                 connect: ['Collecting'].map((cat) => ({
                     gameId_name: {
@@ -537,6 +559,7 @@ async function main() {
             gameId: id,
             goal: 'Repair the Broken Bridge',
             description: 'Find materials and repair the bridge.',
+            translations: {German: 'Repariere die kaputte Bruecke'},
             categories: {
                 connect: ['Resource Management', 'Exploration'].map((cat) => ({
                     gameId_name: {
@@ -551,6 +574,7 @@ async function main() {
             gameId: id,
             goal: 'Climb the Tower of Trials',
             description: 'Reach the top of the Tower of Trials.',
+            translations: {German: 'Erklimme den Turm der Pruefungen'},
             categories: {
                 connect: ['Movement', 'Story Progression'].map((cat) => ({
                     gameId_name: {
@@ -565,6 +589,7 @@ async function main() {
             gameId: id,
             goal: 'Find the Golden Sword',
             description: 'Retrieve the legendary Golden Sword.',
+            translations: {German: 'Finde das goldene Schwert'},
             categories: {
                 connect: ['Exploration'].map((cat) => ({
                     gameId_name: {
@@ -579,6 +604,7 @@ async function main() {
             gameId: id,
             goal: 'Complete the Puzzle Gauntlet',
             description: 'Solve a series of puzzles back-to-back.',
+            translations: {German: 'Schliesse den Puzzle Wettbewerb ab'},
             categories: {
                 connect: ['Puzzle'].map((cat) => ({
                     gameId_name: {
@@ -593,6 +619,7 @@ async function main() {
             gameId: id,
             goal: 'Steal a Rare Artifact',
             description: 'Steal an artifact from the museum undetected.',
+            translations: {German: 'Stehle ein seltenes Artefakt'},
             categories: {
                 connect: ['Stealth', 'Resource Management'].map((cat) => ({
                     gameId_name: {
@@ -607,6 +634,7 @@ async function main() {
             gameId: id,
             goal: 'Defeat the Dark Lord',
             description: 'Defeat the final boss and save the kingdom.',
+            translations: {German: 'Toete den dunken Lord'},
             categories: {
                 connect: ['Combat', 'Boss Battle'].map((cat) => ({
                     gameId_name: {
@@ -621,6 +649,7 @@ async function main() {
             gameId: id,
             goal: 'Find and Open 10 Treasure Chests',
             description: 'Locate and open 10 treasure chests.',
+            translations: {German: 'Finde und oeffne 10 Schatztruhen'},
             categories: {
                 connect: ['Collecting'].map((cat) => ({
                     gameId_name: {
@@ -635,6 +664,7 @@ async function main() {
             gameId: id,
             goal: 'Survive the Arena for 5 Rounds',
             description: 'Defeat all enemies across 5 rounds in the arena.',
+            translations: {German: 'Ueberlebe die Arena fuer 5 Runden'},
             categories: {
                 connect: ['Combat', 'Time Challenge'].map((cat) => ({
                     gameId_name: {
@@ -651,6 +681,7 @@ async function main() {
             description: `Complete side quest number ${
                 i + 27
             } for extra rewards.`,
+            translations: {German: `Nebenquest ${i + 27}`},
             categories: {
                 connect: {
                     gameId_name: {

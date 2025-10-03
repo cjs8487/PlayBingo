@@ -13,6 +13,7 @@ datasource db {
 model Goal {
   id            String        @id @unique @default(cuid())
   goal          String
+  translations  Json?
   description   String?
   oldCategories String[]
   categories    Category[]    @relation("GoalCategories")

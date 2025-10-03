@@ -8,7 +8,12 @@
         "id": {"type": "string"},
         "goal": {"type": "string"},
         "description": {"type": ["string", "null"]},
-        "difficulty": {"type": ["number", "null"]},
+        "translations": {
+          "type": "object",
+          "additionalProperties": {"type": "string"},
+          "description": "Translation texts for this goal in json object"
+        },
+      "difficulty": {"type": ["number", "null"]},
         "categories": {"type": "array", "items": {"type": "string"}}
     }
 }
