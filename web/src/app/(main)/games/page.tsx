@@ -64,9 +64,9 @@ export default function Games(): React.ReactNode {
     }
 
     const gamesBase: { [k in GamesKeys]: Game[] } = {
-        [allKey]: [],
         [favoritesKey]: [],
         [modKey]: [],
+        [allKey]: [],
     };
 
     const filteredList = searchString
@@ -118,7 +118,6 @@ export default function Games(): React.ReactNode {
                     display: 'flex',
                     alignItems: 'center',
                     gap: 2,
-                    mb: 4,
                     py: 1,
                     borderBottom: 2,
                     borderColor: 'divider',
