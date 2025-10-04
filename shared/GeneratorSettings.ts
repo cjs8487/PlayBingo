@@ -60,46 +60,50 @@ export const makeGeneratorSchema = (categories: GoalCategory[]) => {
         }),
     ]);
 
-    const GoalTransformationSchema = z.enum(['none']);
+    const GoalTransformationSchema = z.discriminatedUnion('mode', [
+        z.object({ mode: z.literal('none') }),
+    ]);
 
-    const GenerationBoardLayoutSchema = z
-        .enum(['random', 'srlv5', 'isaac'])
-        .meta({
-            enumMeta: {
-                random: {
-                    label: 'Random',
-                    description:
-                        'Generates a board layout that has no restrictions on what goals can be placed in any given cell',
-                },
-                srlv5: {
-                    label: 'SRLv5',
-                    description:
-                        'Generates a board using difficulties 1-25 to balance each line. Each difficulty appears on the board exactly once amd the sum of the difficulties in each line sums to the same value. Goals with an invalid difficulty will be ignored.',
-                },
-                isaac: {
-                    label: 'Static (Isaac)',
-                    description:
-                        'Generates a board with a static layout using difficulties 1-4. The center cell of the board is always 4, and all sum of difficulties in lines including the center cell is 10. All other lines have a difficulty sum of 9. Goals with an invalid difficulty will be ignored.',
-                },
-            },
-        });
+    const GenerationBoardLayoutSchema = z.discriminatedUnion('mode', [
+        z.object({
+            mode: z.literal('random').meta({
+                title: 'Random',
+                description:
+                    'Generates a board layout that has no restrictions on what goals can be placed in any given cell',
+            }),
+        }),
+        z.object({
+            mode: z.literal('srlv5').meta({
+                title: 'SRLv5',
+                description:
+                    'Generates a board using difficulties 1-25 to balance each line. Each difficulty appears on the board exactly once amd the sum of the difficulties in each line sums to the same value. Goals with an invalid difficulty will be ignored.',
+            }),
+        }),
+        z.object({
+            mode: z.literal('isaac').meta({
+                title: 'Static (Isaac)',
+                description:
+                    'Generates a board with a static layout using difficulties 1-4. The center cell of the board is always 4, and all sum of difficulties in lines including the center cell is 10. All other lines have a difficulty sum of 9. Goals with an invalid difficulty will be ignored.',
+            }),
+        }),
+    ]);
 
-    const GenerationGoalSelectionSchema = z
-        .enum(['random', 'difficulty'])
-        .meta({
-            enumMeta: {
-                random: {
-                    label: 'Random',
-                    description:
-                        'Selects goals completely at random. This is the only selection mode compatible with a random board layout. This selection mode is not compatible with any layout that requires goal difficulties.',
-                },
-                difficulty: {
-                    label: 'Difficulty',
-                    description:
-                        'Selects goals based on their difficulty, placing them only in cells with a matching value from layout generation. Incompatible with random board layouts.',
-                },
-            },
-        });
+    const GenerationGoalSelectionSchema = z.discriminatedUnion('mode', [
+        z.object({
+            mode: z.literal('random').meta({
+                title: 'Random',
+                description:
+                    'Selects goals completely at random. This is the only selection mode compatible with a random board layout. This selection mode is not compatible with any layout that requires goal difficulties.',
+            }),
+        }),
+        z.object({
+            mode: z.literal('difficulty').meta({
+                title: 'Difficulty',
+                description:
+                    'Selects goals based on their difficulty, placing them only in cells with a matching value from layout generation. Incompatible with random board layouts.',
+            }),
+        }),
+    ]);
 
     const GenerationGoalRestrictionSchema = z.discriminatedUnion('type', [
         z.object({
@@ -148,23 +152,24 @@ export const makeGeneratorSchema = (categories: GoalCategory[]) => {
                         description:
                             'Goal filters allow the generator remove goals the meet specific criteria from the generation pool before generation starts. By default, the generator will pull from all goals available to the game',
                     }),
-                goalTransformation: GoalTransformationSchema.default(
-                    'none',
-                ).meta({
-                    title: 'Goal Transformation',
-                    description:
-                        'Alters the data for each goal before generation. Currently, no options are available for this generation step and the generator will use the base values for all goals.',
-                }),
-                boardLayout: GenerationBoardLayoutSchema.default('random').meta(
-                    {
-                        title: 'Board Layout',
+                goalTransformation: z
+                    .array(GoalTransformationSchema)
+                    .default([])
+                    .meta({
+                        title: 'Goal Transformation',
                         description:
-                            'Determines how goals are laid out on the bingo board, and how goals can be chosen in the next step of generation.',
-                    },
-                ),
-                goalSelection: GenerationGoalSelectionSchema.default(
-                    'random',
-                ).meta({
+                            'Alters the data for each goal before generation. Currently, no options are available for this generation step and the generator will use the base values for all goals.',
+                    }),
+                boardLayout: GenerationBoardLayoutSchema.default({
+                    mode: 'random',
+                }).meta({
+                    title: 'Board Layout',
+                    description:
+                        'Determines how goals are laid out on the bingo board, and how goals can be chosen in the next step of generation.',
+                }),
+                goalSelection: GenerationGoalSelectionSchema.default({
+                    mode: 'random',
+                }).meta({
                     title: 'Goal Selection',
                     description:
                         'Determines how goals are selected from the pool of possible goals to be placed on the board. Selection mode determines how board layout is interpreted by the generator.',
@@ -188,10 +193,10 @@ export const makeGeneratorSchema = (categories: GoalCategory[]) => {
             })
             .refine(
                 ({ boardLayout, goalSelection }) => {
-                    if (boardLayout === 'random') {
-                        return goalSelection === 'random';
+                    if (boardLayout.mode === 'random') {
+                        return goalSelection.mode === 'random';
                     } else {
-                        return goalSelection !== 'random';
+                        return goalSelection.mode !== 'random';
                     }
                 },
                 {

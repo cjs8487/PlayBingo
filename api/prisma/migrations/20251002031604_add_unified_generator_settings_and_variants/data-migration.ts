@@ -16,19 +16,19 @@ async function main() {
                 games.map(async (game) => {
                     const generatorSettings: GeneratorSettings = {
                         goalFilters: [],
-                        goalTransformation: 'none',
-                        boardLayout: 'random',
-                        goalSelection: 'random',
+                        goalTransformation: [],
+                        boardLayout: { mode: 'random' },
+                        goalSelection: { mode: 'random' },
                         restrictions: [],
                         adjustments: [],
                     };
 
                     switch (game.generationBoardLayout) {
                         case 'SRLv5':
-                            generatorSettings.boardLayout = 'srlv5';
+                            generatorSettings.boardLayout.mode = 'srlv5';
                             break;
                         case 'ISAAC':
-                            generatorSettings.boardLayout = 'isaac';
+                            generatorSettings.boardLayout.mode = 'isaac';
                             break;
                     }
 
@@ -36,7 +36,7 @@ async function main() {
                         game.generationGoalSelection ===
                         GenerationGoalSelection.DIFFICULTY
                     ) {
-                        generatorSettings.goalSelection = 'difficulty';
+                        generatorSettings.goalSelection.mode = 'difficulty';
                     }
 
                     if (

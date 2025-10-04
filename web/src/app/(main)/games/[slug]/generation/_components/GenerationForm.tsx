@@ -29,9 +29,9 @@ export default function GenerationPage({
         schema,
         initialValues ?? {
             goalFilters: [],
-            goalTransformation: 'none',
-            boardLayout: 'random',
-            goalSelection: 'random',
+            goalTransformation: [],
+            boardLayout: { mode: 'random' },
+            goalSelection: { mode: 'random' },
             restrictions: [],
             adjustments: [],
         },

@@ -2,12 +2,12 @@ import { GeneratorSettings } from '@playbingo/shared';
 import BoardGenerator from './BoardGenerator';
 import { GeneratorGoal } from './GeneratorCore';
 
-type GoalSelectionMode = GeneratorSettings['goalSelection'];
+type GoalSelection = GeneratorSettings['goalSelection'];
 
 export type GoalGrouper = (generator: BoardGenerator) => void;
 
-export const createGoalGrouper = (selectionMode: GoalSelectionMode) => {
-    switch (selectionMode) {
+export const createGoalGrouper = (selectionMode: GoalSelection) => {
+    switch (selectionMode.mode) {
         case 'difficulty':
             return difficulty;
         case 'random':
