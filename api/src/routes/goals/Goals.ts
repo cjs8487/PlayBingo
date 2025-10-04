@@ -4,6 +4,7 @@ import { deleteGoal, editGoal, gameForGoal } from '../../database/games/Goals';
 import upload from './Upload';
 import goalCategories from './GoalCategories';
 import { Prisma } from '@prisma/client';
+import { validateGoalMeta } from '../../util/GoalValidation';
 
 const goals = Router();
 
@@ -31,16 +32,26 @@ goals.post('/:id', async (req, res) => {
     }
 
     const { id } = req.params;
-    const { goal, description, categories, difficulty } = req.body;
+    const { goal, description, categories, difficulty, meta } = req.body;
 
-    if (!goal && description === undefined && !categories && !difficulty) {
+    if (!goal && description === undefined && !categories && !difficulty && meta === undefined) {
         res.status(400).send('No changes submitted');
         return;
+    }
+
+    // Validate meta data if provided
+    if (meta !== undefined) {
+        const metaValidation = validateGoalMeta(meta);
+        if (!metaValidation.valid) {
+            res.status(400).json({ error: metaValidation.error });
+            return;
+        }
     }
 
     const input: Prisma.GoalUpdateInput = {
         goal,
         description,
+        meta,
     };
 
     if (difficulty === 0) {
