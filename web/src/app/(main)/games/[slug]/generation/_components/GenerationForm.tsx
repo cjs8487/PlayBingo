@@ -69,7 +69,6 @@ export default function GenerationPage({
                 errors={errors}
                 path=""
             />
-            <pre>{JSON.stringify(values, null, 2)}</pre>
             <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
                 <Button color="error" onClick={() => setValues({})}>
                     Cancel
