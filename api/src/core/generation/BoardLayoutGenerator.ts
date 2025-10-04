@@ -1,12 +1,12 @@
 import { GeneratorSettings } from '@playbingo/shared';
 import BoardGenerator from './BoardGenerator';
 
-type BoardLayoutMode = GeneratorSettings['boardLayout'];
+type BoardLayout = GeneratorSettings['boardLayout'];
 
 export type BoardLayoutGenerator = (generator: BoardGenerator) => void;
 
-export const createLayoutGenerator = (strategy: BoardLayoutMode) => {
-    switch (strategy) {
+export const createLayoutGenerator = (strategy: BoardLayout) => {
+    switch (strategy.mode) {
         case 'random':
             return noLayout;
         case 'srlv5':

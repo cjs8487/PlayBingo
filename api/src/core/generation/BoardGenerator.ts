@@ -30,7 +30,7 @@ import { GeneratorSettings } from '@playbingo/shared';
 export default class BoardGenerator {
     // generation strategies
     goalFilters: GoalListPruner[];
-    goalListTransformer: GoalListTransformer;
+    goalTransformers: GoalListTransformer[];
     layoutGenerator: BoardLayoutGenerator;
     goalGrouper: GoalGrouper;
     placementRestrictions: GoalPlacementRestriction[];
@@ -55,10 +55,10 @@ export default class BoardGenerator {
         seed?: number,
     ) {
         // input validation
-        if (config.boardLayout === 'random') {
-            if (config.goalSelection !== 'random') {
+        if (config.boardLayout.mode === 'random') {
+            if (config.goalSelection.mode !== 'random') {
                 // random generation is the only mode that works with no board
-                // layout precalcualtion
+                // layout precalculation
                 throw Error('Invalid configuration');
             }
         }
@@ -67,7 +67,9 @@ export default class BoardGenerator {
         this.goals = [...this.allGoals];
         this.categories = categories;
         this.goalFilters = config.goalFilters.map((s) => createPruner(s));
-        this.goalListTransformer = createTransformer(config.goalTransformation);
+        this.goalTransformers = config.goalTransformation.map((t) =>
+            createTransformer(t),
+        );
         this.layoutGenerator = createLayoutGenerator(config.boardLayout);
         this.goalGrouper = createGoalGrouper(config.goalSelection);
         this.placementRestrictions = config.restrictions.map((s) =>
@@ -127,7 +129,7 @@ export default class BoardGenerator {
     }
 
     transformGoals() {
-        this.goalListTransformer(this);
+        this.goalTransformers.forEach((t) => t(this));
     }
 
     generateBoardLayout() {

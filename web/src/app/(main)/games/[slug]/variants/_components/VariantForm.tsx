@@ -61,9 +61,9 @@ export default function VariantForm({
         schema,
         schema.safeParse(editVariant?.generatorSettings).data ?? {
             goalFilters: [],
-            goalTransformation: 'none',
-            boardLayout: 'random',
-            goalSelection: 'random',
+            goalTransformation: [],
+            boardLayout: { mode: 'random' },
+            goalSelection: { mode: 'random' },
             restrictions: [],
             adjustments: [],
         },

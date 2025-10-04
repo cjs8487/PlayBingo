@@ -25,9 +25,9 @@ describe('BoardGenerator initialization', () => {
         expect(() => {
             new BoardGenerator(goals, categories, {
                 goalFilters: [],
-                goalTransformation: 'none',
-                boardLayout: 'random',
-                goalSelection: 'difficulty',
+                goalTransformation: [],
+                boardLayout: { mode: 'random' },
+                goalSelection: { mode: 'difficulty' },
                 restrictions: [],
                 adjustments: [],
             });
@@ -40,9 +40,9 @@ describe('Goal Filters', () => {
         it('Filters out all goals with difficulty less than minimum', () => {
             const generator = new BoardGenerator(goals, categories, {
                 goalFilters: [{ mode: 'difficulty', min: 5 }],
-                goalTransformation: 'none',
-                boardLayout: 'random',
-                goalSelection: 'random',
+                goalTransformation: [],
+                boardLayout: { mode: 'random' },
+                goalSelection: { mode: 'random' },
                 restrictions: [],
                 adjustments: [],
             });
@@ -56,9 +56,9 @@ describe('Goal Filters', () => {
         it('Filters out all goals with difficulty greater than maximum', () => {
             const generator = new BoardGenerator(goals, categories, {
                 goalFilters: [{ mode: 'difficulty', max: 15 }],
-                goalTransformation: 'none',
-                boardLayout: 'random',
-                goalSelection: 'random',
+                goalTransformation: [],
+                boardLayout: { mode: 'random' },
+                goalSelection: { mode: 'random' },
                 restrictions: [],
                 adjustments: [],
             });
@@ -72,9 +72,9 @@ describe('Goal Filters', () => {
         it('Filters out all goals with difficulty less than minimum and greater than maximum', () => {
             const generator = new BoardGenerator(goals, categories, {
                 goalFilters: [{ mode: 'difficulty', min: 3, max: 17 }],
-                goalTransformation: 'none',
-                boardLayout: 'random',
-                goalSelection: 'random',
+                goalTransformation: [],
+                boardLayout: { mode: 'random' },
+                goalSelection: { mode: 'random' },
                 restrictions: [],
                 adjustments: [],
             });
@@ -96,9 +96,9 @@ describe('Goal Filters', () => {
                         categories: ['Category 1', 'Category 4'],
                     },
                 ],
-                goalTransformation: 'none',
-                boardLayout: 'random',
-                goalSelection: 'random',
+                goalTransformation: [],
+                boardLayout: { mode: 'random' },
+                goalSelection: { mode: 'random' },
                 restrictions: [],
                 adjustments: [],
             });
@@ -120,9 +120,9 @@ describe('Board Layout', () => {
     describe('No Layout', () => {
         const generator = new BoardGenerator(goals, categories, {
             goalFilters: [],
-            goalTransformation: 'none',
-            boardLayout: 'random',
-            goalSelection: 'random',
+            goalTransformation: [],
+            boardLayout: { mode: 'random' },
+            goalSelection: { mode: 'random' },
             restrictions: [],
             adjustments: [],
         });
@@ -142,9 +142,9 @@ describe('Board Layout', () => {
     describe('Magic Square', () => {
         const generator = new BoardGenerator(goals, categories, {
             goalFilters: [],
-            goalTransformation: 'none',
-            boardLayout: 'srlv5',
-            goalSelection: 'difficulty',
+            goalTransformation: [],
+            boardLayout: { mode: 'srlv5' },
+            goalSelection: { mode: 'difficulty' },
             restrictions: [],
             adjustments: [],
         });
@@ -213,9 +213,9 @@ describe('Board Layout', () => {
     describe('Static Placement (Isaac)', () => {
         const generator = new BoardGenerator(goals, categories, {
             goalFilters: [],
-            goalTransformation: 'none',
-            boardLayout: 'isaac',
-            goalSelection: 'difficulty',
+            goalTransformation: [],
+            boardLayout: { mode: 'isaac' },
+            goalSelection: { mode: 'difficulty' },
             restrictions: [],
             adjustments: [],
         });
@@ -246,9 +246,9 @@ describe('Goal Grouping', () => {
     describe('Random Placement', () => {
         const generator = new BoardGenerator(goals, categories, {
             goalFilters: [],
-            goalTransformation: 'none',
-            boardLayout: 'srlv5',
-            goalSelection: 'random',
+            goalTransformation: [],
+            boardLayout: { mode: 'srlv5' },
+            goalSelection: { mode: 'random' },
             restrictions: [],
             adjustments: [],
         });
@@ -263,9 +263,9 @@ describe('Goal Grouping', () => {
     describe('Difficulty Placement', () => {
         const generator = new BoardGenerator(goals, categories, {
             goalFilters: [],
-            goalTransformation: 'none',
-            boardLayout: 'srlv5',
-            goalSelection: 'difficulty',
+            goalTransformation: [],
+            boardLayout: { mode: 'srlv5' },
+            goalSelection: { mode: 'difficulty' },
             restrictions: [],
             adjustments: [],
         });
@@ -284,9 +284,9 @@ describe('Goal Restriction', () => {
     describe('Line Type Exclusion', () => {
         const generator = new BoardGenerator(goals, categories, {
             goalFilters: [],
-            goalTransformation: 'none',
-            boardLayout: 'srlv5',
-            goalSelection: 'difficulty',
+            goalTransformation: [],
+            boardLayout: { mode: 'srlv5' },
+            goalSelection: { mode: 'difficulty' },
             restrictions: [{ type: 'line-type-exclusion' }],
             adjustments: [],
         });
@@ -326,9 +326,9 @@ describe('Global Adjustments', () => {
     describe('Synergize', () => {
         const generator = new BoardGenerator(goals, categories, {
             goalFilters: [],
-            goalTransformation: 'none',
-            boardLayout: 'srlv5',
-            goalSelection: 'difficulty',
+            goalTransformation: [],
+            boardLayout: { mode: 'srlv5' },
+            goalSelection: { mode: 'difficulty' },
             restrictions: [],
             adjustments: [{ type: 'synergize' }],
         });
@@ -390,9 +390,9 @@ describe('Global Adjustments', () => {
     describe('Max Goals of Type in Board', () => {
         const generator = new BoardGenerator(goals, categories, {
             goalFilters: [],
-            goalTransformation: 'none',
-            boardLayout: 'srlv5',
-            goalSelection: 'difficulty',
+            goalTransformation: [],
+            boardLayout: { mode: 'srlv5' },
+            goalSelection: { mode: 'difficulty' },
             restrictions: [],
             adjustments: [{ type: 'board-type-max' }],
         });
@@ -459,9 +459,9 @@ describe('Global Adjustments', () => {
     it('removes the placed goal from the goal list', () => {
         const generator = new BoardGenerator(goals, categories, {
             goalFilters: [],
-            goalTransformation: 'none',
-            boardLayout: 'random',
-            goalSelection: 'random',
+            goalTransformation: [],
+            boardLayout: { mode: 'random' },
+            goalSelection: { mode: 'random' },
             restrictions: [],
             adjustments: [],
         });
@@ -476,9 +476,9 @@ describe('Global Adjustments', () => {
 describe('Full Generation', () => {
     const generator = new BoardGenerator(goals, categories, {
         goalFilters: [],
-        goalTransformation: 'none',
-        boardLayout: 'random',
-        goalSelection: 'random',
+        goalTransformation: [],
+        boardLayout: { mode: 'random' },
+        goalSelection: { mode: 'random' },
         restrictions: [],
         adjustments: [],
     });
@@ -492,9 +492,9 @@ describe('Full Generation', () => {
     it('Successfully generates an SRLv5 style board', () => {
         const generator = new BoardGenerator(goals, categories, {
             goalFilters: [],
-            goalTransformation: 'none',
-            boardLayout: 'srlv5',
-            goalSelection: 'difficulty',
+            goalTransformation: [],
+            boardLayout: { mode: 'srlv5' },
+            goalSelection: { mode: 'difficulty' },
             restrictions: [{ type: 'line-type-exclusion' }],
             adjustments: [],
         });
@@ -516,9 +516,9 @@ describe('Full Generation', () => {
     it('Generates the same board given the same seed (SRLv5)', () => {
         const generator = new BoardGenerator(goals, categories, {
             goalFilters: [],
-            goalTransformation: 'none',
-            boardLayout: 'srlv5',
-            goalSelection: 'difficulty',
+            goalTransformation: [],
+            boardLayout: { mode: 'srlv5' },
+            goalSelection: { mode: 'difficulty' },
             restrictions: [{ type: 'line-type-exclusion' }],
             adjustments: [],
         });
@@ -534,9 +534,9 @@ describe('Full Generation', () => {
     it('Generates a board with maximum restrictions', () => {
         const generator = new BoardGenerator(goals, categories, {
             goalFilters: [],
-            goalTransformation: 'none',
-            boardLayout: 'srlv5',
-            goalSelection: 'difficulty',
+            goalTransformation: [],
+            boardLayout: { mode: 'srlv5' },
+            goalSelection: { mode: 'difficulty' },
             restrictions: [{ type: 'line-type-exclusion' }],
             adjustments: [{ type: 'board-type-max' }],
         });
