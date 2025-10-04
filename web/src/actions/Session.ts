@@ -1,5 +1,6 @@
 'use server';
 
+import { revalidatePath } from 'next/cache';
 import { serverFetch } from '../app/ServerUtils';
 
 export async function login(username: string, password: string) {
@@ -10,6 +11,8 @@ export async function login(username: string, password: string) {
         body: JSON.stringify({ username, password }),
     });
 
+    revalidatePath('/', 'layout');
+
     return {
         ok: res.ok,
         status: res.status,
@@ -18,6 +21,8 @@ export async function login(username: string, password: string) {
 
 export async function logout() {
     const res = await serverFetch('api/logout', { method: 'POST' });
+
+    revalidatePath('/', 'layout');
 
     return {
         ok: res.ok,
