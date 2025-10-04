@@ -4,6 +4,7 @@ import {
     Cell,
     ChatMessage,
     Player,
+    RoomAction,
     RoomData,
     ServerMessage,
 } from '@playbingo/types';
@@ -79,6 +80,7 @@ interface RoomContext {
     revealCard: () => void;
     toggleGoalDetails: () => void;
     toggleCounters: () => void;
+    changeAuth: (spectate: boolean) => void;
 }
 
 export const RoomContext = createContext<RoomContext>({
@@ -110,6 +112,7 @@ export const RoomContext = createContext<RoomContext>({
     revealCard() {},
     toggleGoalDetails() {},
     toggleCounters() {},
+    changeAuth() {},
 });
 
 interface RoomContextProps {
@@ -275,6 +278,8 @@ export function RoomContextProvider({
                             });
                         }
                         break;
+                    case 'reauthenticate':
+                        setAuthToken(payload.authToken);
                 }
             },
             onClose() {
@@ -482,6 +487,16 @@ export function RoomContextProvider({
             return !curr;
         });
     }, []);
+    const changeAuth = useCallback(
+        (spectate: boolean) => {
+            sendJsonMessage({
+                action: 'changeAuth',
+                authToken,
+                payload: { spectate },
+            } as RoomAction);
+        },
+        [sendJsonMessage, authToken],
+    );
 
     return (
         <RoomContext.Provider
@@ -514,6 +529,7 @@ export function RoomContextProvider({
                 revealCard,
                 toggleGoalDetails,
                 toggleCounters,
+                changeAuth,
             }}
         >
             {children}

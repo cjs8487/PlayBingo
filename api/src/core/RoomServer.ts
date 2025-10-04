@@ -1,6 +1,10 @@
 import { RoomAction } from '@playbingo/types';
 import { WebSocketServer } from 'ws';
-import { hasPermission, verifyRoomToken } from '../auth/RoomAuth';
+import {
+    createRoomToken,
+    hasPermission,
+    verifyRoomToken,
+} from '../auth/RoomAuth';
 import { roomCleanupInterval } from '../Environment';
 import { logInfo, logWarn } from '../Logger';
 import Room from './Room';
@@ -122,6 +126,32 @@ roomWebSocketServer.on('connection', (ws, req) => {
                 const board = room.handleRevealCard(payload);
                 if (board) {
                     ws.send(JSON.stringify({ action: 'syncBoard', board }));
+                }
+                break;
+            case 'changeAuth':
+                const newToken = createRoomToken(
+                    room,
+                    {
+                        isSpectating: action.payload.spectate,
+                        isMonitor: payload.isMonitor,
+                    },
+                    payload.playerId.split(':')[1],
+                    payload.userId,
+                );
+                const player = room.players.get(payload.playerId);
+                if (player) {
+                    player.spectator = action.payload.spectate;
+                    player.sendMessage({
+                        action: 'reauthenticate',
+                        authToken: newToken,
+                    });
+                    if (player.spectator) {
+                        player.markedGoals = 0n;
+                        player.goalCount = 0;
+                        room.sendChat(`${player.nickname} is now spectating`);
+                    } else {
+                        room.sendChat(`${player.nickname} is now playing`);
+                    }
                 }
                 break;
         }

@@ -148,6 +148,19 @@
             "properties": {
                 "action": "forbidden"
             }
+        },
+        {
+            "required": [
+                "action",
+                "authToken"
+            ],
+            "additionalProperties": false,
+            "properties": {
+                "action": "reauthenticate",
+                "authToken": {
+                    "type": "string"
+                }
+            }
         }
     ]
 }

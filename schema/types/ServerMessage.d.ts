@@ -47,6 +47,10 @@ export type ServerMessage = (
   | {
       action: "forbidden";
     }
+  | {
+      action: "reauthenticate";
+      authToken: string;
+    }
 ) & {
   players?: Player[];
   connectedPlayer?: Player;
