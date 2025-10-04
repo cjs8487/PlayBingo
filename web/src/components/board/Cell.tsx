@@ -36,6 +36,9 @@ export default function BoardCell({
         if (!connectedPlayer) {
             return;
         }
+        if (connectedPlayer.spectator) {
+            return;
+        }
         if (completedPlayers.includes(connectedPlayer.id)) {
             unmarkGoal(row, col);
         } else {
