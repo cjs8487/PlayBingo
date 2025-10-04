@@ -155,6 +155,15 @@ export const makeGeneratorSchema = (categories: GoalCategory[]) => {
                 goalTransformation: z
                     .array(GoalTransformationSchema)
                     .default([])
+                    .refine(
+                        (arr) => {
+                            return (
+                                new Set(arr.map((transform) => transform.mode))
+                                    .size === arr.length
+                            );
+                        },
+                        { error: 'Duplicate transformations not allowed' },
+                    )
                     .meta({
                         title: 'Goal Transformation',
                         description:
@@ -177,6 +186,16 @@ export const makeGeneratorSchema = (categories: GoalCategory[]) => {
                 restrictions: z
                     .array(GenerationGoalRestrictionSchema)
                     .default([])
+                    .refine(
+                        (arr) => {
+                            return (
+                                new Set(
+                                    arr.map((restriction) => restriction.type),
+                                ).size === arr.length
+                            );
+                        },
+                        { error: 'Duplicate restrictions not allowed' },
+                    )
                     .meta({
                         title: 'Cell Restrictions',
                         description:
@@ -185,6 +204,16 @@ export const makeGeneratorSchema = (categories: GoalCategory[]) => {
                 adjustments: z
                     .array(GenerationGlobalAdjustmentsSchema)
                     .default([])
+                    .refine(
+                        (arr) => {
+                            return (
+                                new Set(
+                                    arr.map((adjustment) => adjustment.type),
+                                ).size === arr.length
+                            );
+                        },
+                        { error: 'Duplicate adjustments not allowed' },
+                    )
                     .meta({
                         title: 'Global Adjustments',
                         description:
