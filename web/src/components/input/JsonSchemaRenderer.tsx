@@ -248,6 +248,15 @@ function mergeDefaultsForOption(value: JSONValue, option: JSONSchema) {
     return value ?? def;
 }
 
+function childSchemaNeedsContainer(schema: JSONSchema) {
+    return (
+        schema.oneOf ||
+        schema.anyOf ||
+        schema.type === 'object' ||
+        schema.type === 'array'
+    );
+}
+
 /** ---------- Renderer ---------- */
 function OneOfAnyOfRenderer({
     schema,
@@ -454,55 +463,72 @@ export function JsonSchemaRenderer({
                         return null;
                     }
 
-                    return (
-                        <Card
-                            key={key}
-                            variant="outlined"
-                            component="fieldset"
-                            sx={{
-                                background: 'unset',
-                                width: '100%',
-                                borderColor: error ? 'error.main' : 'divider',
-                            }}
-                        >
-                            <Typography
-                                component="legend"
-                                sx={{ p: 1, color: error ? 'error.main' : '' }}
-                            >
-                                {label}
-                            </Typography>
-                            <CardContent sx={{ pt: 0 }}>
-                                {propSchema.description && (
-                                    <Typography variant="body2" sx={{ mb: 2 }}>
-                                        {propSchema.description}
-                                    </Typography>
-                                )}
-                                {error && (
-                                    <Typography
-                                        sx={{
-                                            color: error ? 'error.main' : '',
-                                            mb: 2,
-                                        }}
-                                    >
-                                        {error}
-                                    </Typography>
-                                )}
-                                <JsonSchemaRenderer
-                                    schema={propSchema}
-                                    value={
-                                        v === undefined
-                                            ? defaultForSchema(propSchema)
-                                            : v
-                                    }
-                                    onChange={(val) =>
-                                        onChange(setField(value, key, val))
-                                    }
-                                    errors={errors}
-                                    path={newPath}
-                                />
-                            </CardContent>
-                        </Card>
+                    const content = (
+                        <JsonSchemaRenderer
+                            schema={propSchema}
+                            value={
+                                v === undefined
+                                    ? defaultForSchema(propSchema)
+                                    : v
+                            }
+                            onChange={(val) =>
+                                onChange(setField(value, key, val))
+                            }
+                            errors={errors}
+                            path={newPath}
+                        />
                     );
+
+                    if (childSchemaNeedsContainer(propSchema)) {
+                        return (
+                            <Card
+                                key={key}
+                                variant="outlined"
+                                component="fieldset"
+                                sx={{
+                                    background: 'unset',
+                                    width: '100%',
+                                    borderColor: error
+                                        ? 'error.main'
+                                        : 'divider',
+                                }}
+                            >
+                                <Typography
+                                    component="legend"
+                                    sx={{
+                                        p: 1,
+                                        color: error ? 'error.main' : '',
+                                    }}
+                                >
+                                    {label}
+                                </Typography>
+                                <CardContent sx={{ pt: 0 }}>
+                                    {propSchema.description && (
+                                        <Typography
+                                            variant="body2"
+                                            sx={{ mb: 2 }}
+                                        >
+                                            {propSchema.description}
+                                        </Typography>
+                                    )}
+                                    {error && (
+                                        <Typography
+                                            sx={{
+                                                color: error
+                                                    ? 'error.main'
+                                                    : '',
+                                                mb: 2,
+                                            }}
+                                        >
+                                            {error}
+                                        </Typography>
+                                    )}
+                                    {content}
+                                </CardContent>
+                            </Card>
+                        );
+                    }
+                    return <Box key={key}>{content}</Box>;
                 })}
             </Box>
         );
@@ -523,6 +549,20 @@ export function JsonSchemaRenderer({
                 {list.map((item, idx) => {
                     const idxPath = path ? `${path}.${idx}` : `${idx}`;
                     const error = errors[idxPath];
+
+                    const content = (
+                        <JsonSchemaRenderer
+                            schema={schema.items ?? {}}
+                            value={item}
+                            onChange={(val) => {
+                                const next = list.slice();
+                                next[idx] = val;
+                                onChange(next);
+                            }}
+                            errors={errors}
+                            path={idxPath}
+                        />
+                    );
                     return (
                         <Box
                             key={idx}
@@ -533,37 +573,34 @@ export function JsonSchemaRenderer({
                                 width: '100%',
                             }}
                         >
-                            <Card
-                                variant="outlined"
-                                sx={{
-                                    background: 'unset',
-                                    width: '100%',
-                                    borderColor: error
-                                        ? 'error.main'
-                                        : 'divider',
-                                }}
-                            >
-                                <CardContent>
-                                    {error && (
-                                        <Typography
-                                            sx={{ color: 'error.main', mb: 2 }}
-                                        >
-                                            {error}
-                                        </Typography>
-                                    )}
-                                    <JsonSchemaRenderer
-                                        schema={schema.items ?? {}}
-                                        value={item}
-                                        onChange={(val) => {
-                                            const next = list.slice();
-                                            next[idx] = val;
-                                            onChange(next);
-                                        }}
-                                        errors={errors}
-                                        path={idxPath}
-                                    />
-                                </CardContent>
-                            </Card>
+                            {childSchemaNeedsContainer(schema.items!) ? (
+                                <Card
+                                    variant="outlined"
+                                    sx={{
+                                        background: 'unset',
+                                        width: '100%',
+                                        borderColor: error
+                                            ? 'error.main'
+                                            : 'divider',
+                                    }}
+                                >
+                                    <CardContent>
+                                        {error && (
+                                            <Typography
+                                                sx={{
+                                                    color: 'error.main',
+                                                    mb: 2,
+                                                }}
+                                            >
+                                                {error}
+                                            </Typography>
+                                        )}
+                                        {content}
+                                    </CardContent>
+                                </Card>
+                            ) : (
+                                content
+                            )}
                             <IconButton
                                 type="button"
                                 color="error"
@@ -607,8 +644,11 @@ export function JsonSchemaRenderer({
     if (t === 'string') {
         return (
             <TextField
+                label={schema.title}
                 value={(value as string) ?? ''}
                 onChange={(e) => onChange(e.target.value)}
+                error={!!errors[path]}
+                helperText={errors[path]}
                 sx={{ width: '100%' }}
             />
         );
@@ -617,7 +657,10 @@ export function JsonSchemaRenderer({
         return (
             <TextField
                 type="number"
+                label={schema.title}
                 value={(value as number) ?? ''}
+                error={!!errors[path]}
+                helperText={errors[path]}
                 onChange={(e) =>
                     onChange(
                         e.target.value === ''
