@@ -14,6 +14,7 @@ const createBoard = (): Cell[][] =>
             difficulty: 0,
             description: '',
         })),
+        5,
     );
 
 const boardToBitset = (board: Cell[][], color: string) => {

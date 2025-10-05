@@ -255,7 +255,14 @@ export default class Room {
                 this.generatorSettings,
             );
             generator.generateBoard();
-            this.board = listToBoard(generator.board);
+            if (this.generatorSettings.boardLayout.mode === 'custom') {
+                this.board = listToBoard(
+                    generator.board,
+                    this.generatorSettings.boardLayout.layout[0].length,
+                );
+            } else {
+                this.board = listToBoard(generator.board, 5);
+            }
         } else {
             const globalState: GlobalGenerationState = {
                 useCategoryMaxes: categories.some((cat) => cat.max > 0),
@@ -343,7 +350,7 @@ export default class Room {
                 this.logError(`Failed to generate board ${e}`);
                 return;
             }
-            this.board = listToBoard(goalList);
+            this.board = listToBoard(goalList, 5);
         }
 
         this.sendSyncBoard();

@@ -40,6 +40,8 @@ export default class BoardGenerator {
     // global state
     categoryMaxes: { [k: string]: number } = {};
 
+    customBoardLayout?: number[];
+
     constructor(
         goals: GeneratorGoal[],
         categories: Category[],
@@ -66,6 +68,11 @@ export default class BoardGenerator {
         categories.forEach((cat) => {
             this.categoryMaxes[cat.name] = cat.max <= 0 ? -1 : cat.max;
         });
+
+        this.customBoardLayout =
+            config.boardLayout.mode === 'custom'
+                ? config.boardLayout.layout.flat()
+                : undefined;
     }
 
     async reset(seed?: number) {
@@ -99,7 +106,9 @@ export default class BoardGenerator {
         });
 
         // goal placement
-        for (let i = 0; i < 25; i++) {
+        console.log(this.placementRestrictions);
+        for (let i = 0; i < this.layout.length; i++) {
+            console.log(i);
             const goals = this.validGoalsForCell(i);
             const goal = goals.pop();
             if (!goal) {
@@ -138,6 +147,8 @@ export default class BoardGenerator {
                 cell,
             );
         }
+        console.log(this.groupedGoals);
+        console.log(this.layout[cell], this.groupedGoals[this.layout[cell]]);
         let goals = [...this.groupedGoals[this.layout[cell]]];
         this.placementRestrictions.forEach(
             (f) => (goals = f(this, cell, goals)),

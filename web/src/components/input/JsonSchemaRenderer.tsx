@@ -103,6 +103,7 @@ export type JSONSchema = {
     description?: string;
     minimum?: number;
     maximum?: number;
+    displayDetails?: { row?: boolean };
 };
 
 /** ---------- Utilities ---------- */
@@ -548,7 +549,9 @@ export function JsonSchemaRenderer({
             <Box
                 sx={{
                     display: 'flex',
-                    flexDirection: 'column',
+                    flexDirection: schema.displayDetails?.row
+                        ? 'row'
+                        : 'column',
                     gap: 1,
                     width: '100%',
                 }}
@@ -655,7 +658,7 @@ export function JsonSchemaRenderer({
                 value={(value as string) ?? ''}
                 onChange={(e) => onChange(e.target.value)}
                 error={!!errors[path]}
-                helperText={errors[path]}
+                helperText={errors[path] ?? ' '}
                 sx={{ width: '100%' }}
             />
         );

@@ -13,6 +13,8 @@ export const createLayoutGenerator = (strategy: BoardLayout) => {
             return magicSquare;
         case 'isaac':
             return staticDifficulty;
+        case 'custom':
+            return custom;
         default:
             throw Error('Unknown GenerationListMode strategy');
     }
@@ -78,4 +80,11 @@ const staticDifficulty: BoardLayoutGenerator = (generator) => {
         [2, 1, 2, 1, 3],
         [1, 2, 1, 3, 2],
     ].flat();
+};
+
+const custom: BoardLayoutGenerator = (generator) => {
+    if (!generator.customBoardLayout) {
+        throw new Error('Custom board layout not provided');
+    }
+    generator.layout = generator.customBoardLayout;
 };

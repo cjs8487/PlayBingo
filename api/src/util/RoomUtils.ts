@@ -3,14 +3,17 @@ import { GeneratorGoal } from '../core/generation/GeneratorCore';
 import { chunk } from './Array';
 import { BingoMode } from '@prisma/client';
 
-export const listToBoard = (list: GeneratorGoal[]): RevealedCell[][] => {
+export const listToBoard = (
+    list: GeneratorGoal[],
+    length: number,
+): RevealedCell[][] => {
     return chunk(
         list.map((g) => ({
             goal: g,
             completedPlayers: [],
             revealed: true,
         })),
-        5,
+        length,
     );
 };
 

@@ -4,6 +4,9 @@ import * as z from 'zod';
 declare module 'zod' {
     interface GlobalMeta {
         enumMeta?: Record<string, { label: string; description?: string }>;
+        displayDetails?: {
+            row?: boolean;
+        };
     }
 }
 
@@ -88,6 +91,27 @@ export const makeGeneratorSchema = (categories: GoalCategory[]) => {
                 description:
                     'Generates a board with a static layout using difficulties 1-4. The center cell of the board is always 4, and all sum of difficulties in lines including the center cell is 10. All other lines have a difficulty sum of 9. Goals with an invalid difficulty will be ignored.',
             }),
+        }),
+        z.object({
+            mode: z.literal('custom').meta({
+                title: 'Custom',
+                description:
+                    'Generates a board with a custom layout. Custom layouts have no restriction on the size of the board, but must be able fill every cell with at least one goal from the pool, based on the selected goal selection mode. Goals with an invalid value based on the selection criteria will be ignored.',
+            }),
+            layout: z
+                .array(
+                    z
+                        .array(
+                            z.number().int().min(1, 'Value must be at least 1'),
+                        )
+                        .meta({ displayDetails: { row: true } }),
+                )
+                .min(1, 'Layout must have at least one row')
+                .refine(
+                    (arr) => arr.every((row) => row.length === arr[0].length),
+                    { error: 'All rows must be the same length' },
+                )
+                .meta({ title: 'Layout' }),
         }),
     ]);
 
