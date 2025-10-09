@@ -1,4 +1,4 @@
-import { makeGeneratorSchema } from '@playbingo/shared';
+import { GeneratorSettings, makeGeneratorSchema } from '@playbingo/shared';
 import { Game } from '@playbingo/types';
 import { Router } from 'express';
 import BoardGenerator from '../../core/generation/BoardGenerator';
@@ -104,34 +104,19 @@ games.get('/:slug', async (req, res) => {
                 goalCount: cat._count.goals,
             })),
         );
-        const gameParseResult = generatorSchema.schema.safeParse(
-            game.generatorSettings,
-        );
-        if (!gameParseResult.success) {
-            logError(
-                `Invalid generator config in database for ${game.name} (${game.slug})`,
-            );
-            res.status(500).send('Invalid game level generator configuration');
-            return;
-        }
-        result.generationSettings = gameParseResult.data;
+        result.generationSettings = game.generatorSettings as Record<
+            string,
+            string
+        >;
         result.variants = [];
         game.variants.forEach((variant) => {
-            const parseResult = generatorSchema.schema.safeParse(
-                variant.generatorSettings,
-            );
-            if (!parseResult.success) {
-                logError(
-                    `Invalid generator config in database for ${game.name} (${game.slug}) variant ${variant.name}`,
-                );
-            } else {
-                result.variants?.push({
-                    id: variant.id,
-                    name: variant.name,
-                    description: variant.description ?? undefined,
-                    generatorSettings: parseResult.data,
-                });
-            }
+            result.variants?.push({
+                id: variant.id,
+                name: variant.name,
+                description: variant.description ?? undefined,
+                generatorSettings: (variant.generatorSettings ??
+                    game.generatorSettings) as Record<string, string>,
+            });
         });
     }
     res.status(200).json(result);
@@ -675,24 +660,11 @@ games.get('/:slug/sampleBoard', async (req, res) => {
     const goals = await goalsForGame(slug);
     const categories = await getCategories(slug);
 
-    const { schema } = makeGeneratorSchema(
-        categories.map((cat) => ({
-            id: cat.id,
-            name: cat.name,
-            max: cat.max,
-            goalCount: cat._count.goals,
-        })),
+    const generator = new BoardGenerator(
+        goals,
+        categories,
+        gameData.generatorSettings as GeneratorSettings,
     );
-    const result = schema.safeParse(gameData.generatorSettings);
-
-    if (!result.success) {
-        logError(
-            `Invalid generator config in database for ${gameData.name} (${gameData.slug})`,
-        );
-        throw new Error('Invalid generator config in database');
-    }
-
-    const generator = new BoardGenerator(goals, categories, result.data);
     generator.generateBoard();
     res.status(200).send({
         board: generator.board.map((goal) => ({
