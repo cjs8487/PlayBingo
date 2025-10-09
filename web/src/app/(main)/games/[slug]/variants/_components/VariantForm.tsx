@@ -63,7 +63,6 @@ export default function VariantForm({
             goalFilters: [],
             goalTransformation: [],
             boardLayout: { mode: 'random' },
-            goalSelection: { mode: 'random' },
             restrictions: [],
             adjustments: [],
         },

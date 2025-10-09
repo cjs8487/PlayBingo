@@ -1,17 +1,11 @@
-import {
-    Category,
-    GenerationBoardLayout,
-    GenerationGlobalAdjustments,
-    GenerationGoalRestriction,
-    GenerationGoalSelection,
-    GenerationListMode,
-    GenerationListTransform,
-} from '@prisma/client';
+import { GeneratorSettings } from '@playbingo/shared';
+import { Category } from '@prisma/client';
 import { shuffle } from '../../util/Array';
 import {
     BoardLayoutGenerator,
     createLayoutGenerator,
 } from './BoardLayoutGenerator';
+import { GenerationFailedError } from './GenerationFailedError';
 import { GeneratorGoal } from './GeneratorCore';
 import { createGlobalAdjustment, GlobalAdjustment } from './GlobalAdjustments';
 import { createGoalGrouper, GoalGrouper } from './GoalGrouper';
@@ -21,8 +15,6 @@ import {
     createPlacementRestriction,
     GoalPlacementRestriction,
 } from './GoalPlacementRestriction';
-import { GenerationFailedError } from './GenerationFailedError';
-import { GeneratorSettings } from '@playbingo/shared';
 
 /**
  *
@@ -54,15 +46,6 @@ export default class BoardGenerator {
         config: GeneratorSettings,
         seed?: number,
     ) {
-        // input validation
-        if (config.boardLayout.mode === 'random') {
-            if (config.goalSelection.mode !== 'random') {
-                // random generation is the only mode that works with no board
-                // layout precalculation
-                throw Error('Invalid configuration');
-            }
-        }
-
         this.allGoals = goals;
         this.goals = [...this.allGoals];
         this.categories = categories;
@@ -71,7 +54,7 @@ export default class BoardGenerator {
             createTransformer(t),
         );
         this.layoutGenerator = createLayoutGenerator(config.boardLayout);
-        this.goalGrouper = createGoalGrouper(config.goalSelection);
+        this.goalGrouper = createGoalGrouper(config.boardLayout);
         this.placementRestrictions = config.restrictions.map((s) =>
             createPlacementRestriction(s),
         );

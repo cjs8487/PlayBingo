@@ -20,21 +20,6 @@ const goals: GeneratorGoal[] = Array.from({ length: 100 }).map((_, i) => ({
     difficulty: (i % 25) + 1,
 }));
 
-describe('BoardGenerator initialization', () => {
-    it('Throws for no layout and difficulty selection', () => {
-        expect(() => {
-            new BoardGenerator(goals, categories, {
-                goalFilters: [],
-                goalTransformation: [],
-                boardLayout: { mode: 'random' },
-                goalSelection: { mode: 'difficulty' },
-                restrictions: [],
-                adjustments: [],
-            });
-        }).toThrow('Invalid configuration');
-    });
-});
-
 describe('Goal Filters', () => {
     describe('Difficulty', () => {
         it('Filters out all goals with difficulty less than minimum', () => {
@@ -42,7 +27,6 @@ describe('Goal Filters', () => {
                 goalFilters: [{ mode: 'difficulty', min: 5 }],
                 goalTransformation: [],
                 boardLayout: { mode: 'random' },
-                goalSelection: { mode: 'random' },
                 restrictions: [],
                 adjustments: [],
             });
@@ -58,7 +42,6 @@ describe('Goal Filters', () => {
                 goalFilters: [{ mode: 'difficulty', max: 15 }],
                 goalTransformation: [],
                 boardLayout: { mode: 'random' },
-                goalSelection: { mode: 'random' },
                 restrictions: [],
                 adjustments: [],
             });
@@ -74,7 +57,6 @@ describe('Goal Filters', () => {
                 goalFilters: [{ mode: 'difficulty', min: 3, max: 17 }],
                 goalTransformation: [],
                 boardLayout: { mode: 'random' },
-                goalSelection: { mode: 'random' },
                 restrictions: [],
                 adjustments: [],
             });
@@ -98,7 +80,6 @@ describe('Goal Filters', () => {
                 ],
                 goalTransformation: [],
                 boardLayout: { mode: 'random' },
-                goalSelection: { mode: 'random' },
                 restrictions: [],
                 adjustments: [],
             });
@@ -122,7 +103,6 @@ describe('Board Layout', () => {
             goalFilters: [],
             goalTransformation: [],
             boardLayout: { mode: 'random' },
-            goalSelection: { mode: 'random' },
             restrictions: [],
             adjustments: [],
         });
@@ -144,7 +124,6 @@ describe('Board Layout', () => {
             goalFilters: [],
             goalTransformation: [],
             boardLayout: { mode: 'srlv5' },
-            goalSelection: { mode: 'difficulty' },
             restrictions: [],
             adjustments: [],
         });
@@ -215,7 +194,6 @@ describe('Board Layout', () => {
             goalFilters: [],
             goalTransformation: [],
             boardLayout: { mode: 'isaac' },
-            goalSelection: { mode: 'difficulty' },
             restrictions: [],
             adjustments: [],
         });
@@ -247,8 +225,7 @@ describe('Goal Grouping', () => {
         const generator = new BoardGenerator(goals, categories, {
             goalFilters: [],
             goalTransformation: [],
-            boardLayout: { mode: 'srlv5' },
-            goalSelection: { mode: 'random' },
+            boardLayout: { mode: 'random' },
             restrictions: [],
             adjustments: [],
         });
@@ -265,7 +242,6 @@ describe('Goal Grouping', () => {
             goalFilters: [],
             goalTransformation: [],
             boardLayout: { mode: 'srlv5' },
-            goalSelection: { mode: 'difficulty' },
             restrictions: [],
             adjustments: [],
         });
@@ -286,7 +262,6 @@ describe('Goal Restriction', () => {
             goalFilters: [],
             goalTransformation: [],
             boardLayout: { mode: 'srlv5' },
-            goalSelection: { mode: 'difficulty' },
             restrictions: [{ type: 'line-type-exclusion' }],
             adjustments: [],
         });
@@ -328,7 +303,6 @@ describe('Global Adjustments', () => {
             goalFilters: [],
             goalTransformation: [],
             boardLayout: { mode: 'srlv5' },
-            goalSelection: { mode: 'difficulty' },
             restrictions: [],
             adjustments: [{ type: 'synergize' }],
         });
@@ -392,7 +366,6 @@ describe('Global Adjustments', () => {
             goalFilters: [],
             goalTransformation: [],
             boardLayout: { mode: 'srlv5' },
-            goalSelection: { mode: 'difficulty' },
             restrictions: [],
             adjustments: [{ type: 'board-type-max' }],
         });
@@ -461,7 +434,6 @@ describe('Global Adjustments', () => {
             goalFilters: [],
             goalTransformation: [],
             boardLayout: { mode: 'random' },
-            goalSelection: { mode: 'random' },
             restrictions: [],
             adjustments: [],
         });
@@ -478,7 +450,6 @@ describe('Full Generation', () => {
         goalFilters: [],
         goalTransformation: [],
         boardLayout: { mode: 'random' },
-        goalSelection: { mode: 'random' },
         restrictions: [],
         adjustments: [],
     });
@@ -494,7 +465,6 @@ describe('Full Generation', () => {
             goalFilters: [],
             goalTransformation: [],
             boardLayout: { mode: 'srlv5' },
-            goalSelection: { mode: 'difficulty' },
             restrictions: [{ type: 'line-type-exclusion' }],
             adjustments: [],
         });
@@ -518,7 +488,6 @@ describe('Full Generation', () => {
             goalFilters: [],
             goalTransformation: [],
             boardLayout: { mode: 'srlv5' },
-            goalSelection: { mode: 'difficulty' },
             restrictions: [{ type: 'line-type-exclusion' }],
             adjustments: [],
         });
@@ -536,7 +505,6 @@ describe('Full Generation', () => {
             goalFilters: [],
             goalTransformation: [],
             boardLayout: { mode: 'srlv5' },
-            goalSelection: { mode: 'difficulty' },
             restrictions: [{ type: 'line-type-exclusion' }],
             adjustments: [{ type: 'board-type-max' }],
         });
