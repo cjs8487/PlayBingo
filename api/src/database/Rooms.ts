@@ -13,6 +13,7 @@ export const createRoom = (
     hideCard: boolean,
     bingoMode: BingoMode,
     lineCount: number = 1,
+    variant?: string,
 ) => {
     return prisma.room.create({
         data: {
@@ -24,6 +25,7 @@ export const createRoom = (
             hideCard,
             bingoMode,
             lineCount,
+            variant: variant ? { connect: { id: variant } } : undefined,
         },
     });
 };

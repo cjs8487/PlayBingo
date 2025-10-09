@@ -6,7 +6,9 @@
         "dev": "next dev",
         "build": "next build",
         "start": "next start",
-        "lint": "next lint"
+        "lint": "next lint",
+        "ts": "tsc --noEmit --incremental",
+        "ts:watch": "npm run ts -- --watch"
     },
     "dependencies": {
         "@emotion/cache": "^11.11.0",
@@ -20,11 +22,13 @@
         "@mui/lab": "^7.0.0-beta.11",
         "@mui/material": "^7.0.0",
         "@mui/material-nextjs": "^7.0.0",
+        "@playbingo/shared": "file:../shared",
         "@uiw/react-md-editor": "^4.0.7",
         "dompurify": "^3.2.6",
         "formik": "^2.4.5",
         "luxon": "^3.6.1",
         "marked": "^16.0.0",
+        "material-ui-confirm": "^4.0.0",
         "mdi-material-ui": "^7.9.4",
         "next": "^15.5.3",
         "react": "^19.1.1",
@@ -42,7 +46,8 @@
         "sanitize-html": "^2.17.0",
         "set-cookie-parser": "^2.7.0",
         "swr": "^2.3.0",
-        "yup": "^1.6.1"
+        "yup": "^1.6.1",
+        "zod": "^4.1.5"
     },
     "devDependencies": {
         "@eslint/eslintrc": "^3.3.1",

@@ -20,6 +20,7 @@ const createRoom = () =>
         BingoMode.LINES,
         1,
         false,
+        'Normal',
     );
 
 describe('canClose()', () => {
