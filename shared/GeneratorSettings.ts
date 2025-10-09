@@ -88,23 +88,6 @@ export const makeGeneratorSchema = (categories: GoalCategory[]) => {
         }),
     ]);
 
-    const GenerationGoalSelectionSchema = z.discriminatedUnion('mode', [
-        z.object({
-            mode: z.literal('random').meta({
-                title: 'Random',
-                description:
-                    'Selects goals completely at random. This is the only selection mode compatible with a random board layout. This selection mode is not compatible with any layout that requires goal difficulties.',
-            }),
-        }),
-        z.object({
-            mode: z.literal('difficulty').meta({
-                title: 'Difficulty',
-                description:
-                    'Selects goals based on their difficulty, placing them only in cells with a matching value from layout generation. Incompatible with random board layouts.',
-            }),
-        }),
-    ]);
-
     const GenerationGoalRestrictionSchema = z.discriminatedUnion('type', [
         z.object({
             type: z.literal('line-type-exclusion').meta({
@@ -133,105 +116,83 @@ export const makeGeneratorSchema = (categories: GoalCategory[]) => {
     ]);
 
     return {
-        schema: z
-            .object({
-                goalFilters: z
-                    .array(GoalFilterSchema)
-                    .default([])
-                    .refine(
-                        (arr) => {
-                            return (
-                                new Set(arr.map((filter) => filter.mode))
-                                    .size === arr.length
-                            );
-                        },
-                        { error: 'Duplicate filter types not allowed' },
-                    )
-                    .meta({
-                        title: 'Goal Filters',
-                        description:
-                            'Goal filters allow the generator remove goals the meet specific criteria from the generation pool before generation starts. By default, the generator will pull from all goals available to the game',
-                    }),
-                goalTransformation: z
-                    .array(GoalTransformationSchema)
-                    .default([])
-                    .refine(
-                        (arr) => {
-                            return (
-                                new Set(arr.map((transform) => transform.mode))
-                                    .size === arr.length
-                            );
-                        },
-                        { error: 'Duplicate transformations not allowed' },
-                    )
-                    .meta({
-                        title: 'Goal Transformation',
-                        description:
-                            'Alters the data for each goal before generation. Currently, no options are available for this generation step and the generator will use the base values for all goals.',
-                    }),
-                boardLayout: GenerationBoardLayoutSchema.default({
-                    mode: 'random',
-                }).meta({
-                    title: 'Board Layout',
+        schema: z.object({
+            goalFilters: z
+                .array(GoalFilterSchema)
+                .default([])
+                .refine(
+                    (arr) => {
+                        return (
+                            new Set(arr.map((filter) => filter.mode)).size ===
+                            arr.length
+                        );
+                    },
+                    { error: 'Duplicate filter types not allowed' },
+                )
+                .meta({
+                    title: 'Goal Filters',
                     description:
-                        'Determines how goals are laid out on the bingo board, and how goals can be chosen in the next step of generation.',
+                        'Goal filters allow the generator remove goals the meet specific criteria from the generation pool before generation starts. By default, the generator will pull from all goals available to the game',
                 }),
-                goalSelection: GenerationGoalSelectionSchema.default({
-                    mode: 'random',
-                }).meta({
-                    title: 'Goal Selection',
+            goalTransformation: z
+                .array(GoalTransformationSchema)
+                .default([])
+                .refine(
+                    (arr) => {
+                        return (
+                            new Set(arr.map((transform) => transform.mode))
+                                .size === arr.length
+                        );
+                    },
+                    { error: 'Duplicate transformations not allowed' },
+                )
+                .meta({
+                    title: 'Goal Transformation',
                     description:
-                        'Determines how goals are selected from the pool of possible goals to be placed on the board. Selection mode determines how board layout is interpreted by the generator.',
+                        'Alters the data for each goal before generation. Currently, no options are available for this generation step and the generator will use the base values for all goals.',
                 }),
-                restrictions: z
-                    .array(GenerationGoalRestrictionSchema)
-                    .default([])
-                    .refine(
-                        (arr) => {
-                            return (
-                                new Set(
-                                    arr.map((restriction) => restriction.type),
-                                ).size === arr.length
-                            );
-                        },
-                        { error: 'Duplicate restrictions not allowed' },
-                    )
-                    .meta({
-                        title: 'Cell Restrictions',
-                        description:
-                            'Applies additional restrictions on cells, which prevents the placement of otherwise valid goals in the cell.',
-                    }),
-                adjustments: z
-                    .array(GenerationGlobalAdjustmentsSchema)
-                    .default([])
-                    .refine(
-                        (arr) => {
-                            return (
-                                new Set(
-                                    arr.map((adjustment) => adjustment.type),
-                                ).size === arr.length
-                            );
-                        },
-                        { error: 'Duplicate adjustments not allowed' },
-                    )
-                    .meta({
-                        title: 'Global Adjustments',
-                        description:
-                            'Applies modifications after a goal is selected and placed in the board, which may affect the placement of future goals.',
-                    }),
-            })
-            .refine(
-                ({ boardLayout, goalSelection }) => {
-                    if (boardLayout.mode === 'random') {
-                        return goalSelection.mode === 'random';
-                    } else {
-                        return goalSelection.mode !== 'random';
-                    }
-                },
-                {
-                    error: 'Invalid combination of board layout and goal selection',
-                },
-            ),
+            boardLayout: GenerationBoardLayoutSchema.default({
+                mode: 'random',
+            }).meta({
+                title: 'Board Layout',
+                description:
+                    'Determines how goals are laid out on the bingo board and how they are placed..',
+            }),
+            restrictions: z
+                .array(GenerationGoalRestrictionSchema)
+                .default([])
+                .refine(
+                    (arr) => {
+                        return (
+                            new Set(arr.map((restriction) => restriction.type))
+                                .size === arr.length
+                        );
+                    },
+                    { error: 'Duplicate restrictions not allowed' },
+                )
+                .meta({
+                    title: 'Cell Restrictions',
+                    description:
+                        'Applies additional restrictions on cells, which prevents the placement of otherwise valid goals in the cell.',
+                }),
+            adjustments: z
+                .array(GenerationGlobalAdjustmentsSchema)
+                .default([])
+                .refine(
+                    (arr) => {
+                        return (
+                            new Set(arr.map((adjustment) => adjustment.type))
+                                .size === arr.length
+                        );
+                    },
+                    { error: 'Duplicate adjustments not allowed' },
+                )
+                .meta({
+                    title: 'Global Adjustments',
+                    description:
+                        'Applies modifications after a goal is selected and placed in the board, which may affect the placement of future goals.',
+                }),
+        }),
         metadata: z.globalRegistry,
     };
 };

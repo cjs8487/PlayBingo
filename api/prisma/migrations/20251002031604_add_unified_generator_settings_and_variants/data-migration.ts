@@ -18,7 +18,6 @@ async function main() {
                         goalFilters: [],
                         goalTransformation: [],
                         boardLayout: { mode: 'random' },
-                        goalSelection: { mode: 'random' },
                         restrictions: [],
                         adjustments: [],
                     };
@@ -30,13 +29,6 @@ async function main() {
                         case 'ISAAC':
                             generatorSettings.boardLayout.mode = 'isaac';
                             break;
-                    }
-
-                    if (
-                        game.generationGoalSelection ===
-                        GenerationGoalSelection.DIFFICULTY
-                    ) {
-                        generatorSettings.goalSelection.mode = 'difficulty';
                     }
 
                     if (
