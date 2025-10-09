@@ -9,16 +9,13 @@ export default function Board() {
 
     const ref = useRef<HTMLDivElement>(null);
 
-    const [dimension, setDimension] = useState(0);
+    const [containerWidth, setContainerWidth] = useState(0);
+    const [containerHeight, setContainerHeight] = useState(0);
 
     const { width, height } = useWindowSize();
     useLayoutEffect(() => {
-        setDimension(
-            Math.min(
-                ref.current?.clientWidth ?? 0,
-                ref.current?.clientHeight ?? 0,
-            ),
-        );
+        setContainerWidth(ref.current?.clientWidth ?? 0);
+        setContainerHeight(ref.current?.clientHeight ?? 0);
     }, [width, height]);
 
     if (board.hidden) {
@@ -26,9 +23,9 @@ export default function Board() {
             <Box
                 ref={ref}
                 sx={{
-                    width: `${dimension}px`,
+                    width: `${containerWidth}px`,
                     maxWidth: '100%',
-                    height: `${dimension}px`,
+                    height: `${containerHeight}px`,
                     maxHeight: '100%',
                     border: 1,
                     borderColor: 'divider',
@@ -47,6 +44,14 @@ export default function Board() {
         );
     }
 
+    if (!board.board || !board.board[0]) {
+        return null;
+    }
+
+    const rows = board.board.length;
+    const cols = board.board[0].length;
+    const cellSize = Math.min(containerWidth / cols, containerHeight / rows);
+
     return (
         <Box
             ref={ref}
@@ -60,17 +65,17 @@ export default function Board() {
         >
             <Box
                 sx={{
-                    width: `${dimension}px`,
+                    width: `${cellSize * cols}px`,
                     minWidth: '400px',
                     maxWidth: '100%',
-                    height: `${dimension}px`,
+                    height: `${cellSize * rows}px`,
                     minHeight: '400px',
                     maxHeight: '100%',
                     border: 1,
                     borderColor: 'divider',
                     display: 'grid',
-                    gridTemplateRows: `repeat(${board.board?.length}, 1fr)`,
-                    gridTemplateColumns: `repeat(${board.board[0]?.length}, 1fr)`,
+                    gridTemplateRows: `repeat(${rows}, 1fr)`,
+                    gridTemplateColumns: `repeat(${cols}, 1fr)`,
                     alignItems: 'center',
                     justifyContent: 'center',
                     textAlign: 'center',
