@@ -1,5 +1,5 @@
 import { GeneratorSettings } from '@playbingo/shared';
-import BoardGenerator from './BoardGenerator';
+import BoardGenerator, { LayoutCell } from './BoardGenerator';
 
 type BoardLayout = GeneratorSettings['boardLayout'];
 
@@ -21,7 +21,7 @@ export const createLayoutGenerator = (strategy: BoardLayout) => {
 };
 
 const noLayout: BoardLayoutGenerator = (generator) => {
-    generator.layout = new Array(25).fill(0);
+    generator.layout = new Array(25).fill({ selectionCriteria: 'random' });
 };
 
 const magicSquareValue = (i: number, seed: number) => {
@@ -68,17 +68,27 @@ const magicSquareValue = (i: number, seed: number) => {
 
 const magicSquare: BoardLayoutGenerator = (generator) => {
     for (let i = 0; i < 25; i++) {
-        generator.layout[i] = magicSquareValue(i + 1, generator.seed);
+        generator.layout[i] = {
+            selectionCriteria: 'difficulty',
+            difficulty: magicSquareValue(i + 1, generator.seed),
+        };
     }
 };
 
 const staticDifficulty: BoardLayoutGenerator = (generator) => {
+    const one: LayoutCell = { selectionCriteria: 'difficulty', difficulty: 1 };
+    const two: LayoutCell = { selectionCriteria: 'difficulty', difficulty: 2 };
+    const three: LayoutCell = {
+        selectionCriteria: 'difficulty',
+        difficulty: 3,
+    };
+    const four: LayoutCell = { selectionCriteria: 'difficulty', difficulty: 4 };
     generator.layout = [
-        [2, 3, 1, 1, 2],
-        [3, 1, 2, 2, 1],
-        [1, 2, 4, 2, 1],
-        [2, 1, 2, 1, 3],
-        [1, 2, 1, 3, 2],
+        [two, three, one, one, two],
+        [three, one, two, two, one],
+        [one, two, four, two, one],
+        [two, one, two, one, three],
+        [one, two, one, three, two],
     ].flat();
 };
 

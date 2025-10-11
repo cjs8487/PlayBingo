@@ -1,5 +1,7 @@
 import { Category } from '@prisma/client';
-import BoardGenerator from '../../core/generation/BoardGenerator';
+import BoardGenerator, {
+    LayoutCell,
+} from '../../core/generation/BoardGenerator';
 import { GeneratorGoal } from '../../core/generation/GeneratorCore';
 
 const categories: Category[] = Array.from({ length: 7 }).map((_, i) => ({
@@ -107,14 +109,14 @@ describe('Board Layout', () => {
             adjustments: [],
         });
 
-        it('Generates a zero-filled array', () => {
+        it('Generates an full board of randomized selections', () => {
             generator.generateBoardLayout();
             const layout = generator.layout;
             expect(layout).toHaveLength(25);
-            expect(layout).toContain(0);
+            expect(layout).toContainEqual({ selectionCriteria: 'random' });
             expect(layout).not.toContain(1);
             layout.forEach((v) => {
-                expect(v).toBe(0);
+                expect(v.selectionCriteria).toBe('random');
             });
         });
     });
@@ -131,7 +133,9 @@ describe('Board Layout', () => {
         it('Generates 1-25', () => {
             generator.reset();
             generator.generateBoardLayout();
-            const layout = generator.layout;
+            const layout = generator.layout.map((cell) =>
+                cell.selectionCriteria === 'difficulty' ? cell.difficulty : 0,
+            );
             expect(layout).toHaveLength(25);
             for (let i = 1; i <= 25; i++) {
                 expect(layout).toContain(i);
@@ -145,35 +149,74 @@ describe('Board Layout', () => {
             const n = 5;
             const magicNum = n * ((n ** 2 + 1) / 2);
 
+            for (let i = 0; i < layout.length; i++) {
+                if (layout[i].selectionCriteria !== 'difficulty') {
+                    return;
+                }
+            }
+
             //rows
             for (let i = 0; i < n; i++) {
-                const base = n * i;
-                expect(
-                    layout[base] +
-                        layout[base + 1] +
-                        layout[base + 2] +
-                        layout[base + 3] +
-                        layout[base + 4],
-                ).toBe(magicNum);
+                let sum = 0;
+                for (let j = 0; j < n; j++) {
+                    const idx = i * n + j;
+                    expect(layout[idx].selectionCriteria).toBe('difficulty');
+                    if (layout[idx].selectionCriteria !== 'difficulty') {
+                        return;
+                    }
+                    sum += layout[idx].difficulty;
+                }
+                expect(sum).toBe(magicNum);
             }
 
             // columns
             for (let i = 0; i < n; i++) {
-                expect(
-                    layout[i] +
-                        layout[i + n] +
-                        layout[i + 2 * n] +
-                        layout[i + 3 * n] +
-                        layout[i + 4 * n],
-                ).toBe(magicNum);
+                let sum = 0;
+                for (let j = 0; j < n; j++) {
+                    const idx = i + j * n;
+                    expect(layout[idx].selectionCriteria).toBe('difficulty');
+                    if (layout[idx].selectionCriteria !== 'difficulty') {
+                        return;
+                    }
+                    sum += layout[idx].difficulty;
+                }
+                expect(sum).toBe(magicNum);
             }
 
             // diagonals
             expect(
-                layout[0] + layout[6] + layout[12] + layout[18] + layout[24],
+                (layout[0].selectionCriteria === 'difficulty'
+                    ? layout[0].difficulty
+                    : 0) +
+                    (layout[6].selectionCriteria === 'difficulty'
+                        ? layout[6].difficulty
+                        : 0) +
+                    (layout[12].selectionCriteria === 'difficulty'
+                        ? layout[12].difficulty
+                        : 0) +
+                    (layout[18].selectionCriteria === 'difficulty'
+                        ? layout[18].difficulty
+                        : 0) +
+                    (layout[24].selectionCriteria === 'difficulty'
+                        ? layout[24].difficulty
+                        : 0),
             ).toBe(magicNum);
             expect(
-                layout[4] + layout[8] + layout[12] + layout[16] + layout[20],
+                (layout[4].selectionCriteria === 'difficulty'
+                    ? layout[4].difficulty
+                    : 0) +
+                    (layout[8].selectionCriteria === 'difficulty'
+                        ? layout[8].difficulty
+                        : 0) +
+                    (layout[12].selectionCriteria === 'difficulty'
+                        ? layout[12].difficulty
+                        : 0) +
+                    (layout[16].selectionCriteria === 'difficulty'
+                        ? layout[16].difficulty
+                        : 0) +
+                    (layout[20].selectionCriteria === 'difficulty'
+                        ? layout[20].difficulty
+                        : 0),
             ).toBe(magicNum);
         });
 
@@ -185,7 +228,14 @@ describe('Board Layout', () => {
                 19, 12, 1, 10, 23, 6, 25, 18, 14, 2, 13, 4, 7, 21, 20, 22, 16,
                 15, 3, 9, 5, 8, 24, 17, 11,
             ];
-            expect(layout).toEqual(expected);
+            for (let i = 0; i < expected.length; i++) {
+                const cell = layout[i];
+                expect(cell.selectionCriteria === 'difficulty');
+                if (cell.selectionCriteria !== 'difficulty') {
+                    return;
+                }
+                expect(cell.difficulty).toEqual(expected[i]);
+            }
         });
     });
 
@@ -198,12 +248,28 @@ describe('Board Layout', () => {
             adjustments: [],
         });
 
+        const one: LayoutCell = {
+            selectionCriteria: 'difficulty',
+            difficulty: 1,
+        };
+        const two: LayoutCell = {
+            selectionCriteria: 'difficulty',
+            difficulty: 2,
+        };
+        const three: LayoutCell = {
+            selectionCriteria: 'difficulty',
+            difficulty: 3,
+        };
+        const four: LayoutCell = {
+            selectionCriteria: 'difficulty',
+            difficulty: 4,
+        };
         const correctLayout = [
-            [2, 3, 1, 1, 2],
-            [3, 1, 2, 2, 1],
-            [1, 2, 4, 2, 1],
-            [2, 1, 2, 1, 3],
-            [1, 2, 1, 3, 2],
+            [two, three, one, one, two],
+            [three, one, two, two, one],
+            [one, two, four, two, one],
+            [two, one, two, one, three],
+            [one, two, one, three, two],
         ].flat();
 
         it('Generates the correct layout', () => {
@@ -220,38 +286,68 @@ describe('Board Layout', () => {
     });
 });
 
-describe('Goal Grouping', () => {
-    describe('Random Placement', () => {
-        const generator = new BoardGenerator(goals, categories, {
-            goalFilters: [],
-            goalTransformation: [],
-            boardLayout: { mode: 'random' },
-            restrictions: [],
-            adjustments: [],
-        });
+describe('Goal Selection', () => {
+    const generator = new BoardGenerator(goals, categories, {
+        goalFilters: [],
+        goalTransformation: [],
+        boardLayout: { mode: 'srlv5' },
+        restrictions: [{ type: 'line-type-exclusion' }],
+        adjustments: [],
+    });
 
-        it('Puts all goals into group 0', () => {
-            generator.reset();
-            generator.groupGoals();
-            expect(generator.groupedGoals[0]).toEqual(generator.goals);
+    it('Selects correctly based on category', () => {
+        generator.reset();
+        generator.layout = [{ selectionCriteria: 'category', category: '0' }];
+        const goals = generator.validGoalsForCell(0);
+        goals.forEach((goal) => {
+            expect(goal.categories).toContain('Category 1');
         });
     });
 
-    describe('Difficulty Placement', () => {
-        const generator = new BoardGenerator(goals, categories, {
-            goalFilters: [],
-            goalTransformation: [],
-            boardLayout: { mode: 'srlv5' },
-            restrictions: [],
-            adjustments: [],
+    it('Selects correctly based on difficulty', () => {
+        generator.reset();
+        generator.layout = [
+            { selectionCriteria: 'difficulty', difficulty: 12 },
+            { selectionCriteria: 'difficulty', difficulty: 21 },
+            { selectionCriteria: 'difficulty', difficulty: 7 },
+        ];
+        let goals = generator.validGoalsForCell(0);
+        goals.forEach((goal) => {
+            expect(goal.difficulty).toBe(12);
         });
+        goals = generator.validGoalsForCell(1);
+        goals.forEach((goal) => {
+            expect(goal.difficulty).toBe(21);
+        });
+        goals = generator.validGoalsForCell(2);
+        goals.forEach((goal) => {
+            expect(goal.difficulty).toBe(7);
+        });
+    });
 
-        it('Correctly groups goals with difficulties', () => {
-            generator.reset();
-            generator.groupGoals();
-            for (let i = 1; i <= 25; i++) {
-                expect(generator.groupedGoals).toHaveProperty(`${i}`);
-            }
+    it('Selects correctly based on mixed layout criteria', () => {
+        generator.reset();
+        generator.layout = [
+            { selectionCriteria: 'category', category: '2' },
+            { selectionCriteria: 'difficulty', difficulty: 21 },
+            { selectionCriteria: 'difficulty', difficulty: 7 },
+            { selectionCriteria: 'category', category: '5' },
+        ];
+        let goals = generator.validGoalsForCell(0);
+        goals.forEach((goal) => {
+            expect(goal.categories).toContain('Category 3');
+        });
+        goals = generator.validGoalsForCell(1);
+        goals.forEach((goal) => {
+            expect(goal.difficulty).toBe(21);
+        });
+        goals = generator.validGoalsForCell(2);
+        goals.forEach((goal) => {
+            expect(goal.difficulty).toBe(7);
+        });
+        goals = generator.validGoalsForCell(3);
+        goals.forEach((goal) => {
+            expect(goal.categories).toContain('Category 6');
         });
     });
 });
@@ -269,9 +365,7 @@ describe('Goal Restriction', () => {
         it('Prefers to place goals of differing types in the same row', () => {
             generator.reset();
             generator.generateBoardLayout();
-            generator.groupGoals();
             let goals = generator.validGoalsForCell(0);
-            expect(goals).toEqual(generator.groupedGoals[generator.layout[0]]);
             const g = goals.pop();
             if (!g) {
                 return fail();
@@ -309,55 +403,46 @@ describe('Global Adjustments', () => {
 
         it('Duplicates goals that share a category', () => {
             generator.reset();
-            generator.groupedGoals = [[goals[1]]];
             generator.adjustGoalList(goals[0]);
-            expect(generator.groupedGoals[0]).toHaveLength(2);
+            expect(generator.goalCopies[goals[1].id]).toBe(2);
         });
 
         it('Duplicates multiple goals in group', () => {
             generator.reset();
-            generator.groupedGoals = [
-                [goals[1], goals[8]],
-                [goals[2]],
-                [goals[15], goals[22], goals[29]],
-            ];
             generator.adjustGoalList(goals[0]);
-            expect(generator.groupedGoals[0]).toHaveLength(4);
-            expect(generator.groupedGoals[2]).toHaveLength(6);
+            expect(generator.goalCopies[goals[1].id]).toBe(2);
+            expect(generator.goalCopies[goals[8].id]).toBe(2);
+            expect(generator.goalCopies[goals[15].id]).toBe(2);
+            expect(generator.goalCopies[goals[22].id]).toBe(2);
+            expect(generator.goalCopies[goals[29].id]).toBe(2);
         });
 
         it('Duplicates a goal with multiple shared categories multiple times', () => {
             generator.reset();
-            generator.groupedGoals = [[goals[7]], [goals[14], goals[21]]];
             generator.adjustGoalList(goals[0]);
-            expect(generator.groupedGoals[0]).toHaveLength(3);
-            expect(generator.groupedGoals[1]).toHaveLength(6);
-        });
-
-        it('Duplicates a mixed group correctly', () => {
-            generator.reset();
-            generator.groupedGoals = [
-                [goals[1], goals[7]],
-                [goals[14], goals[15], goals[21]],
-            ];
-            generator.adjustGoalList(goals[0]);
-            expect(generator.groupedGoals[0]).toHaveLength(5);
-            expect(generator.groupedGoals[1]).toHaveLength(8);
+            expect(generator.goalCopies[goals[7].id]).toBe(3);
+            expect(generator.goalCopies[goals[14].id]).toBe(3);
+            expect(generator.goalCopies[goals[21].id]).toBe(3);
         });
 
         it('Does not duplicate goals that share no categories', () => {
             generator.reset();
-            generator.groupedGoals = [
-                [goals[2]],
-                [goals[1], goals[3]],
-                [goals[4], goals[7]],
-                [goals[5], goals[14], goals[8], goals[11]],
-            ];
             generator.adjustGoalList(goals[0]);
-            expect(generator.groupedGoals[0]).toHaveLength(1);
-            expect(generator.groupedGoals[1]).toHaveLength(3);
-            expect(generator.groupedGoals[2]).toHaveLength(4);
-            expect(generator.groupedGoals[3]).toHaveLength(7);
+            expect(generator.goalCopies[goals[2].id]).toBe(1);
+            expect(generator.goalCopies[goals[1].id]).toBe(2);
+            expect(generator.goalCopies[goals[3].id]).toBe(1);
+            expect(generator.goalCopies[goals[4].id]).toBe(1);
+            expect(generator.goalCopies[goals[7].id]).toBe(3);
+            expect(generator.goalCopies[goals[5].id]).toBe(1);
+            expect(generator.goalCopies[goals[14].id]).toBe(3);
+            expect(generator.goalCopies[goals[8].id]).toBe(2);
+            expect(generator.goalCopies[goals[11].id]).toBe(1);
+        });
+
+        it('Does not re-add the original goal to the list', () => {
+            generator.reset();
+            generator.adjustGoalList(goals[0]);
+            expect(generator.goalCopies[goals[0].id]).toBe(0);
         });
     });
 
@@ -372,7 +457,6 @@ describe('Global Adjustments', () => {
 
         it('Adjusts the maximums in global state', () => {
             generator.reset();
-            generator.groupedGoals = [[goals[1]]];
             const cat = categories[1].name;
             generator.categoryMaxes[cat] = 1;
             generator.adjustGoalList(goals[0]);
@@ -381,55 +465,30 @@ describe('Global Adjustments', () => {
 
         it('Removes all goals with a category after reaching 0', () => {
             generator.reset();
-            generator.groupedGoals = [[goals[1]], [goals[7], goals[8]]];
             const cat = categories[1].name;
             generator.categoryMaxes[cat] = 1;
             generator.adjustGoalList(goals[0]);
-            expect(generator.groupedGoals[0]).toHaveLength(0);
-            expect(generator.groupedGoals[1]).toHaveLength(0);
+            expect(generator.goalCopies[goals[0].id]).toBe(0);
+            expect(generator.goalCopies[goals[1].id]).toBe(0);
         });
 
         it('Does not remove goals with no matching category', () => {
             generator.reset();
-            generator.groupedGoals = [[goals[11], goals[19]]];
             const cat = categories[1].name;
             generator.categoryMaxes[cat] = 1;
             generator.adjustGoalList(goals[0]);
-            expect(generator.groupedGoals[0]).toHaveLength(2);
-            expect(generator.groupedGoals[0][0]).toStrictEqual(goals[11]);
-            expect(generator.groupedGoals[0][1]).toStrictEqual(goals[19]);
+            expect(generator.goalCopies[goals[11].id]).toBe(1);
+            expect(generator.goalCopies[goals[19].id]).toBe(1);
         });
 
-        it('Correctly handles a group containing both batching and non-matching categories', () => {
+        it('Does not re-add the original goal to the list', () => {
             generator.reset();
-            generator.groupedGoals = [[goals[7], goals[11], goals[8]]];
-            const cat = categories[1].name;
-            generator.categoryMaxes[cat] = 1;
             generator.adjustGoalList(goals[0]);
-            expect(generator.groupedGoals[0]).toHaveLength(1);
-            expect(generator.groupedGoals[0][0]).toStrictEqual(goals[11]);
-        });
-
-        it('Does not change the order of goals in the groups', () => {
-            generator.reset();
-            generator.groupedGoals = [
-                [goals[19], goals[12]],
-                [goals[1], goals[13], goals[7], goals[4], goals[20]],
-            ];
-            const cat = categories[1].name;
-            generator.categoryMaxes[cat] = 1;
-            generator.adjustGoalList(goals[0]);
-            expect(generator.groupedGoals[0]).toHaveLength(2);
-            expect(generator.groupedGoals[0][0]).toStrictEqual(goals[19]);
-            expect(generator.groupedGoals[0][1]).toStrictEqual(goals[12]);
-            expect(generator.groupedGoals[1]).toHaveLength(3);
-            expect(generator.groupedGoals[1][0]).toStrictEqual(goals[13]);
-            expect(generator.groupedGoals[1][1]).toStrictEqual(goals[4]);
-            expect(generator.groupedGoals[1][2]).toStrictEqual(goals[20]);
+            expect(generator.goalCopies[goals[0].id]).toBe(0);
         });
     });
 
-    it('removes the placed goal from the goal list', () => {
+    it('Removes the placed goal from the goal list', () => {
         const generator = new BoardGenerator(goals, categories, {
             goalFilters: [],
             goalTransformation: [],
@@ -439,9 +498,7 @@ describe('Global Adjustments', () => {
         });
         generator.reset();
         generator.adjustGoalList(goals[0]);
-        generator.groupedGoals.forEach((group) => {
-            expect(group).not.toContain(goals[0]);
-        });
+        expect(generator.goalCopies[goals[0].id]).toBe(0);
     });
 });
 

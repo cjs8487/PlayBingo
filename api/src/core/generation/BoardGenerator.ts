@@ -1,6 +1,5 @@
 import { GeneratorSettings } from '@playbingo/shared';
 import { Category } from '@prisma/client';
-import { shuffle } from '../../util/Array';
 import {
     BoardLayoutGenerator,
     createLayoutGenerator,
@@ -8,7 +7,6 @@ import {
 import { GenerationFailedError } from './GenerationFailedError';
 import { GeneratorGoal } from './GeneratorCore';
 import { createGlobalAdjustment, GlobalAdjustment } from './GlobalAdjustments';
-import { createGoalGrouper, GoalGrouper } from './GoalGrouper';
 import { createPruner, GoalListPruner } from './GoalListPruner';
 import { createTransformer, GoalListTransformer } from './GoalListTransformer';
 import {
@@ -16,6 +14,10 @@ import {
     GoalPlacementRestriction,
 } from './GoalPlacementRestriction';
 
+export type LayoutCell = Extract<
+    GeneratorSettings['boardLayout'],
+    { mode: 'custom' }
+>['layout'][number][number];
 /**
  *
  */
@@ -24,7 +26,6 @@ export default class BoardGenerator {
     goalFilters: GoalListPruner[];
     goalTransformers: GoalListTransformer[];
     layoutGenerator: BoardLayoutGenerator;
-    goalGrouper: GoalGrouper;
     placementRestrictions: GoalPlacementRestriction[];
     globalAdjustments: GlobalAdjustment[];
 
@@ -33,14 +34,19 @@ export default class BoardGenerator {
     allGoals: GeneratorGoal[] = [];
     categories: Category[];
     goals: GeneratorGoal[] = [];
-    groupedGoals: GeneratorGoal[][] = [];
-    layout: number[] = [];
+    layout: LayoutCell[] = [];
     board: GeneratorGoal[] = [];
 
     // global state
     categoryMaxes: { [k: string]: number } = {};
 
-    customBoardLayout?: number[];
+    customBoardLayout?: LayoutCell[];
+
+    goalsByDifficulty: { [d: number]: GeneratorGoal[] } = {};
+    goalsByCategory: { [c: string]: GeneratorGoal[] } = {};
+    goalCopies: { [k: string]: number } = {};
+    categoriesByName: { [k: string]: Category } = {};
+    categoriesById: { [k: string]: Category } = {};
 
     constructor(
         goals: GeneratorGoal[],
@@ -56,7 +62,6 @@ export default class BoardGenerator {
             createTransformer(t),
         );
         this.layoutGenerator = createLayoutGenerator(config.boardLayout);
-        this.goalGrouper = createGoalGrouper(config.boardLayout);
         this.placementRestrictions = config.restrictions.map((s) =>
             createPlacementRestriction(s),
         );
@@ -67,6 +72,8 @@ export default class BoardGenerator {
         this.seed = seed ?? Math.ceil(999999 * Math.random());
         categories.forEach((cat) => {
             this.categoryMaxes[cat.name] = cat.max <= 0 ? -1 : cat.max;
+            this.categoriesByName[cat.name] = cat;
+            this.categoriesById[cat.id] = cat;
         });
 
         this.customBoardLayout =
@@ -78,10 +85,28 @@ export default class BoardGenerator {
     async reset(seed?: number) {
         this.seed = seed ?? Math.ceil(999999 * Math.random());
         this.goals = [...this.allGoals];
-        this.groupedGoals = [];
         this.layout = [];
         this.board = [];
         this.categoryMaxes = {};
+        this.goalsByDifficulty = {};
+        this.goalsByCategory = {};
+        this.goalCopies = {};
+
+        this.goals.forEach((goal) => {
+            if (goal.difficulty) {
+                const prev = this.goalsByDifficulty[goal.difficulty] ?? [];
+                this.goalsByDifficulty[goal.difficulty] = [...prev, goal];
+            }
+            goal.categories.forEach((cat) => {
+                const prev =
+                    this.goalsByCategory[this.categoriesByName[cat].id] ?? [];
+                this.goalsByCategory[this.categoriesByName[cat].id] = [
+                    ...prev,
+                    goal,
+                ];
+            });
+            this.goalCopies[goal.id] = 1;
+        });
     }
 
     generateBoard() {
@@ -100,15 +125,9 @@ export default class BoardGenerator {
         this.generateBoardLayout();
 
         // preprocessing
-        this.groupGoals();
-        this.groupedGoals.forEach((group) => {
-            shuffle(group, this.seed);
-        });
 
         // goal placement
-        console.log(this.placementRestrictions);
         for (let i = 0; i < this.layout.length; i++) {
-            console.log(i);
             const goals = this.validGoalsForCell(i);
             const goal = goals.pop();
             if (!goal) {
@@ -135,33 +154,31 @@ export default class BoardGenerator {
         this.layoutGenerator(this);
     }
 
-    groupGoals() {
-        this.goalGrouper(this);
-    }
-
     validGoalsForCell(cell: number) {
-        if (!this.groupedGoals[this.layout[cell]]) {
-            throw new GenerationFailedError(
-                `No goals meeting the layout criteria found. Criteria value: ${this.layout[cell]}`,
-                this,
-                cell,
-            );
+        let goals: GeneratorGoal[];
+        switch (this.layout[cell].selectionCriteria) {
+            case 'difficulty':
+                goals = this.goalsByDifficulty[this.layout[cell].difficulty];
+                break;
+            case 'category':
+                goals = this.goalsByCategory[this.layout[cell].category];
+                break;
+            case 'random':
+                goals = this.goals;
+                break;
         }
-        console.log(this.groupedGoals);
-        console.log(this.layout[cell], this.groupedGoals[this.layout[cell]]);
-        let goals = [...this.groupedGoals[this.layout[cell]]];
         this.placementRestrictions.forEach(
             (f) => (goals = f(this, cell, goals)),
         );
-        return goals;
+        const finalList: GeneratorGoal[] = [];
+        goals.forEach((goal) => {
+            finalList.push(...Array(this.goalCopies[goal.id]).fill(goal));
+        });
+        return finalList;
     }
 
     adjustGoalList(lastPlaced: GeneratorGoal) {
-        this.groupedGoals.forEach((group, index) => {
-            this.groupedGoals[index] = group.filter(
-                (g) => g.goal !== lastPlaced.goal,
-            );
-        });
+        this.goalCopies[lastPlaced.id] = 0;
         this.globalAdjustments.forEach((f) => f(this, lastPlaced));
     }
 }
