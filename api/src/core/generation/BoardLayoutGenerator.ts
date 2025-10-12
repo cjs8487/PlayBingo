@@ -21,7 +21,9 @@ export const createLayoutGenerator = (strategy: BoardLayout) => {
 };
 
 const noLayout: BoardLayoutGenerator = (generator) => {
-    generator.layout = new Array(25).fill({ selectionCriteria: 'random' });
+    generator.layout = new Array(5).fill(
+        Array(5).fill({ selectionCriteria: 'random' }),
+    );
 };
 
 const magicSquareValue = (i: number, seed: number) => {
@@ -67,11 +69,14 @@ const magicSquareValue = (i: number, seed: number) => {
 };
 
 const magicSquare: BoardLayoutGenerator = (generator) => {
-    for (let i = 0; i < 25; i++) {
-        generator.layout[i] = {
-            selectionCriteria: 'difficulty',
-            difficulty: magicSquareValue(i + 1, generator.seed),
-        };
+    for (let r = 0; r < 5; r++) {
+        generator.layout[r] = [];
+        for (let c = 0; c < 5; c++) {
+            generator.layout[r][c] = {
+                selectionCriteria: 'difficulty',
+                difficulty: magicSquareValue(r * 5 + c + 1, generator.seed),
+            };
+        }
     }
 };
 
@@ -89,7 +94,7 @@ const staticDifficulty: BoardLayoutGenerator = (generator) => {
         [one, two, four, two, one],
         [two, one, two, one, three],
         [one, two, one, three, two],
-    ].flat();
+    ];
 };
 
 const custom: BoardLayoutGenerator = (generator) => {

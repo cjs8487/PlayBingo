@@ -255,14 +255,13 @@ export default class Room {
                 this.generatorSettings,
             );
             generator.generateBoard();
-            if (this.generatorSettings.boardLayout.mode === 'custom') {
-                this.board = listToBoard(
-                    generator.board,
-                    this.generatorSettings.boardLayout.layout[0].length,
-                );
-            } else {
-                this.board = listToBoard(generator.board, 5);
-            }
+            this.board = generator.board.map((row) =>
+                row.map((goal) => ({
+                    goal: goal,
+                    completedPlayers: [],
+                    revealed: true,
+                })),
+            );
         } else {
             const globalState: GlobalGenerationState = {
                 useCategoryMaxes: categories.some((cat) => cat.max > 0),

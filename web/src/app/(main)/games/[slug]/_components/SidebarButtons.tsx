@@ -26,7 +26,7 @@ export default function SidebarButtons({ slug, variants }: Props) {
     const [showDialog, setShowDialog] = useState(false);
     const [showSampleBoard, setShowSampleBoard] = useState(false);
     const [dialogContent, setDialogContent] = useState<ReactNode>(null);
-    const [sampleBoard, setSampleBoard] = useState<Goal[]>([]);
+    const [sampleBoard, setSampleBoard] = useState<Goal[][]>([]);
     const [sampleSeed, setSampleSeed] = useState('');
     const [sampleVariant, setSampleVariant] = useState<string | undefined>('');
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -49,7 +49,7 @@ export default function SidebarButtons({ slug, variants }: Props) {
                 board,
                 seed,
                 variant,
-            }: { board: Goal[]; seed: string; variant: string | undefined } =
+            }: { board: Goal[][]; seed: string; variant: string | undefined } =
                 await res.json();
             setSampleBoard(board);
             setSampleSeed(seed);
@@ -172,54 +172,56 @@ export default function SidebarButtons({ slug, variants }: Props) {
                                     aspectRatio: '1 / 1',
                                 }}
                             >
-                                {sampleBoard.map((goal) => (
-                                    <Tooltip
-                                        key={goal.id}
-                                        title={
-                                            <>
-                                                <Box sx={{ pb: 1.5 }}>
-                                                    {goal.description}
-                                                </Box>
-                                                {goal.difficulty && (
-                                                    <Box>
-                                                        Difficulty:{' '}
-                                                        {goal.difficulty}
+                                {sampleBoard.map((row) =>
+                                    row.map((goal) => (
+                                        <Tooltip
+                                            key={goal.id}
+                                            title={
+                                                <>
+                                                    <Box sx={{ pb: 1.5 }}>
+                                                        {goal.description}
                                                     </Box>
-                                                )}
-                                                {goal.categories &&
-                                                    goal.categories.length >
-                                                        0 && (
+                                                    {goal.difficulty && (
                                                         <Box>
-                                                            Categories:{' '}
-                                                            {goal.categories.join(
-                                                                ', ',
-                                                            )}
+                                                            Difficulty:{' '}
+                                                            {goal.difficulty}
                                                         </Box>
                                                     )}
-                                            </>
-                                        }
-                                    >
-                                        <Box
-                                            sx={{
-                                                border: 1,
-                                                borderColor: 'divider',
-                                                aspectRatio: '1 / 1',
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'center',
-                                                width: '100%',
-                                                height: '100%',
-                                            }}
+                                                    {goal.categories &&
+                                                        goal.categories.length >
+                                                            0 && (
+                                                            <Box>
+                                                                Categories:{' '}
+                                                                {goal.categories.join(
+                                                                    ', ',
+                                                                )}
+                                                            </Box>
+                                                        )}
+                                                </>
+                                            }
                                         >
-                                            <TextFit
-                                                text={goal.goal}
+                                            <Box
                                                 sx={{
-                                                    textAlign: 'center',
+                                                    border: 1,
+                                                    borderColor: 'divider',
+                                                    aspectRatio: '1 / 1',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                    width: '100%',
+                                                    height: '100%',
                                                 }}
-                                            />
-                                        </Box>
-                                    </Tooltip>
-                                ))}
+                                            >
+                                                <TextFit
+                                                    text={goal.goal}
+                                                    sx={{
+                                                        textAlign: 'center',
+                                                    }}
+                                                />
+                                            </Box>
+                                        </Tooltip>
+                                    )),
+                                )}
                             </Box>
                         </DialogContent>
                     </>

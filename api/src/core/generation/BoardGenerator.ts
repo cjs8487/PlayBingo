@@ -34,13 +34,13 @@ export default class BoardGenerator {
     allGoals: GeneratorGoal[] = [];
     categories: Category[];
     goals: GeneratorGoal[] = [];
-    layout: LayoutCell[] = [];
-    board: GeneratorGoal[] = [];
+    layout: LayoutCell[][] = [];
+    board: GeneratorGoal[][] = [];
 
     // global state
     categoryMaxes: { [k: string]: number } = {};
 
-    customBoardLayout?: LayoutCell[];
+    customBoardLayout?: LayoutCell[][];
 
     goalsByDifficulty: { [d: number]: GeneratorGoal[] } = {};
     goalsByCategory: { [c: string]: GeneratorGoal[] } = {};
@@ -76,9 +76,25 @@ export default class BoardGenerator {
             this.categoriesById[cat.id] = cat;
         });
 
+        this.goals.forEach((goal) => {
+            if (goal.difficulty) {
+                const prev = this.goalsByDifficulty[goal.difficulty] ?? [];
+                this.goalsByDifficulty[goal.difficulty] = [...prev, goal];
+            }
+            goal.categories.forEach((cat) => {
+                const prev =
+                    this.goalsByCategory[this.categoriesByName[cat].id] ?? [];
+                this.goalsByCategory[this.categoriesByName[cat].id] = [
+                    ...prev,
+                    goal,
+                ];
+            });
+            this.goalCopies[goal.id] = 1;
+        });
+
         this.customBoardLayout =
             config.boardLayout.mode === 'custom'
-                ? config.boardLayout.layout.flat()
+                ? config.boardLayout.layout
                 : undefined;
     }
 
@@ -127,19 +143,25 @@ export default class BoardGenerator {
         // preprocessing
 
         // goal placement
-        for (let i = 0; i < this.layout.length; i++) {
-            const goals = this.validGoalsForCell(i);
-            const goal = goals.pop();
-            if (!goal) {
-                throw new GenerationFailedError(
-                    'No valid goals left to be placed in the current cell',
-                    this,
-                    i,
-                );
-            }
-            this.board[i] = goal;
-            this.adjustGoalList(goal);
-        }
+        this.layout.forEach((row, rowIndex) => {
+            this.board[rowIndex] = [];
+            row.forEach((_, colIndex) => {
+                const goals = this.validGoalsForCell(rowIndex, colIndex);
+                console.log(goals);
+                const goal = goals.pop();
+                if (!goal) {
+                    throw new GenerationFailedError(
+                        'No valid goals left to be placed in the current cell',
+                        this,
+                        rowIndex,
+                        colIndex,
+                        this.layout[rowIndex][colIndex],
+                    );
+                }
+                this.board[rowIndex][colIndex] = goal;
+                this.adjustGoalList(goal);
+            });
+        });
     }
 
     pruneGoalList() {
@@ -154,26 +176,27 @@ export default class BoardGenerator {
         this.layoutGenerator(this);
     }
 
-    validGoalsForCell(cell: number) {
+    validGoalsForCell(row: number, col: number) {
         let goals: GeneratorGoal[];
-        switch (this.layout[cell].selectionCriteria) {
+        switch (this.layout[row][col].selectionCriteria) {
             case 'difficulty':
-                goals = this.goalsByDifficulty[this.layout[cell].difficulty];
+                goals =
+                    this.goalsByDifficulty[this.layout[row][col].difficulty];
                 break;
             case 'category':
-                goals = this.goalsByCategory[this.layout[cell].category];
+                goals = this.goalsByCategory[this.layout[row][col].category];
                 break;
             case 'random':
                 goals = this.goals;
                 break;
         }
-        this.placementRestrictions.forEach(
-            (f) => (goals = f(this, cell, goals)),
-        );
-        const finalList: GeneratorGoal[] = [];
+        let finalList: GeneratorGoal[] = [];
         goals.forEach((goal) => {
             finalList.push(...Array(this.goalCopies[goal.id]).fill(goal));
         });
+        this.placementRestrictions.forEach(
+            (f) => (finalList = f(this, row, col, finalList)),
+        );
         return finalList;
     }
 
