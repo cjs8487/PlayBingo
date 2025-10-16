@@ -10,11 +10,11 @@ import {
     Typography,
 } from '@mui/material';
 import { GoalCategory, Variant } from '@playbingo/types';
-import { useState } from 'react';
-import VariantForm from './VariantForm';
-import { alertError, notifyMessage } from '../../../../../../lib/Utils';
 import { useConfirm } from 'material-ui-confirm';
-import { deleteVariant } from '../../../../../../actions/Variants';
+import { useState } from 'react';
+import { deleteVariant } from '@/actions/Variants';
+import { alertError, notifyMessage } from '@/lib/Utils';
+import VariantForm from './VariantForm';
 
 interface Props {
     variants: Variant[];
