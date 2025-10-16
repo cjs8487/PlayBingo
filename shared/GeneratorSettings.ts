@@ -35,6 +35,9 @@ export const makeGeneratorSchema = (categories: GoalCategory[]) => {
             })
             .refine(({ min, max }) => !min || !max || min <= max, {
                 error: 'Minimum must be less than maximum',
+            })
+            .refine(({ min, max }) => min || max, {
+                error: 'At least one of minimum or maximum must be set',
             }),
         z.object({
             mode: z.literal('category').meta({

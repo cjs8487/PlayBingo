@@ -17,6 +17,7 @@ import {
 } from '@mui/material';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import z, { ZodType } from 'zod';
+import NumberField from '../NumberField';
 
 type Errors = Record<string, string>;
 
@@ -100,6 +101,8 @@ export type JSONSchema = {
     anyOf?: JSONSchema[];
     title?: string;
     description?: string;
+    minimum?: number;
+    maximum?: number;
 };
 
 /** ---------- Utilities ---------- */
@@ -655,21 +658,18 @@ export function JsonSchemaRenderer({
     }
     if (t === 'number' || t === 'integer') {
         return (
-            <TextField
-                type="number"
-                label={schema.title}
-                value={(value as number) ?? ''}
-                error={!!errors[path]}
-                helperText={errors[path]}
-                onChange={(e) =>
-                    onChange(
-                        e.target.value === ''
-                            ? undefined
-                            : Number(e.target.value),
-                    )
-                }
-                sx={{ width: '100%' }}
-            />
+            <>
+                <NumberField
+                    label={schema.title}
+                    value={(value as number) ?? ''}
+                    error={!!errors[path]}
+                    helperText={errors[path]}
+                    onChange={(val) => onChange(val ?? undefined)}
+                    sx={{ width: '100%' }}
+                    min={schema.minimum}
+                    max={schema.maximum}
+                />
+            </>
         );
     }
     if (t === 'boolean') {
