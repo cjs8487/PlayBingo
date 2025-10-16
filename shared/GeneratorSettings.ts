@@ -61,7 +61,7 @@ export const makeGeneratorSchema = (categories: GoalCategory[]) => {
     ]);
 
     const GoalTransformationSchema = z.discriminatedUnion('mode', [
-        z.object({ mode: z.literal('none') }),
+        z.object({ mode: z.literal('none') }).meta({ title: 'None' }),
     ]);
 
     const GenerationBoardLayoutSchema = z.discriminatedUnion('mode', [
