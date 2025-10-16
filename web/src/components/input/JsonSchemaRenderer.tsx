@@ -15,7 +15,13 @@ import {
     Tooltip,
     Typography,
 } from '@mui/material';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import React, {
+    ReactNode,
+    useCallback,
+    useEffect,
+    useMemo,
+    useState,
+} from 'react';
 import z, { ZodType } from 'zod';
 import NumberField from '../NumberField';
 
@@ -272,6 +278,7 @@ function OneOfAnyOfRenderer({
     onChange,
     errors,
     path,
+    components,
 }: JsonSchemaRendererProps) {
     const options = (schema.oneOf ?? schema.anyOf)!;
     const discrKey = useMemo(() => inferDiscriminatorKey(options), [options]);
@@ -370,17 +377,19 @@ function OneOfAnyOfRenderer({
                 }
                 errors={errors}
                 path={path}
+                components={components}
             />
         </Box>
     );
 }
 
-interface JsonSchemaRendererProps {
+export interface JsonSchemaRendererProps {
     schema: JSONSchema;
     value: JSONValue;
     onChange: (val: JSONValue) => void;
     errors: Record<string, string>;
     path: string;
+    components: Record<string, (props: JsonSchemaRendererProps) => ReactNode>;
 }
 
 export function JsonSchemaRenderer({
@@ -389,8 +398,20 @@ export function JsonSchemaRenderer({
     onChange,
     errors,
     path,
+    components,
 }: JsonSchemaRendererProps) {
     if (!schema) return null;
+
+    if (components[path]) {
+        return components[path]({
+            schema,
+            value,
+            onChange,
+            errors,
+            path,
+            components,
+        });
+    }
 
     /** ----- oneOf / anyOf ----- */
     if (schema.oneOf || schema.anyOf) {
@@ -401,6 +422,7 @@ export function JsonSchemaRenderer({
                 onChange={onChange}
                 errors={errors}
                 path={path}
+                components={components}
             />
         );
     }
@@ -484,6 +506,7 @@ export function JsonSchemaRenderer({
                             }
                             errors={errors}
                             path={newPath}
+                            components={components}
                         />
                     );
 
@@ -571,6 +594,7 @@ export function JsonSchemaRenderer({
                             }}
                             errors={errors}
                             path={idxPath}
+                            components={components}
                         />
                     );
                     return (
