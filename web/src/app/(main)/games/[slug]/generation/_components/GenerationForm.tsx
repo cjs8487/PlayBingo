@@ -17,7 +17,7 @@ interface Props {
     initialValues?: GeneratorSettings;
 }
 
-export default function GenerationPage({
+export default function GenerationForm({
     slug,
     categories,
     initialValues,
@@ -31,7 +31,6 @@ export default function GenerationPage({
             goalFilters: [],
             goalTransformation: [],
             boardLayout: { mode: 'random' },
-            goalSelection: { mode: 'random' },
             restrictions: [],
             adjustments: [],
         },

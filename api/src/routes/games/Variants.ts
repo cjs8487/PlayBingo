@@ -8,6 +8,7 @@ import {
     updateVariant,
 } from '../../database/games/Variants';
 import { Prisma } from '@prisma/client';
+import { logError } from '../../Logger';
 
 const variants = Router();
 
@@ -20,7 +21,6 @@ variants.post('/:slug/variants', async (req, res) => {
         return;
     }
     const isMod = await isModerator(slug, req.session.user);
-    console.log(slug);
     if (!isMod) {
         res.status(403).json({ error: 'Forbidden' });
         return;
@@ -63,7 +63,7 @@ variants.post('/:slug/variants', async (req, res) => {
         res.status(201).json(newVariant);
         return;
     } catch (error) {
-        console.error('Error creating variant:', error);
+        logError(`Error creating variant: ${error}`);
         res.status(500).json({ error: 'Internal server error' });
         return;
     }
@@ -117,7 +117,7 @@ variants
             res.status(200).json(updatedVariant);
             return;
         } catch (error) {
-            console.error('Error updating variant:', error);
+            logError(`Error updating variant: ${error}`);
             res.status(500).json({ error: 'Internal server error' });
             return;
         }
@@ -146,7 +146,7 @@ variants
                     return;
                 }
             }
-            console.error('Error deleting variant:', error);
+            logError(`Error deleting variant: ${error}`);
             res.status(500).json({ error: 'Internal server error' });
             return;
         }
