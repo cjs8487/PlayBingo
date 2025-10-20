@@ -1,11 +1,12 @@
 import { Box, Button, Typography } from '@mui/material';
-import { useState } from 'react';
+import { useCallback } from 'react';
 import { alertError, notifyMessage } from '../../../../../../../lib/Utils';
-import JsonEditor from '../JsonEditor';
+import JsonEditor from '@/components/JsonEditor';
+import { useJsonEditor } from '@/hooks/useJsonEditor';
 import type { UploadFormProps } from '../GoalUpload';
 
 export function ListUploadForm({ slug, close }: UploadFormProps) {
-    const [jsonValue, setJsonValue] = useState(`[
+    const initialValue = `[
   "Goal text",
   "Another goal text",
   {
@@ -14,53 +15,14 @@ export function ListUploadForm({ slug, close }: UploadFormProps) {
     "categories": ["Short", "Item"],
     "difficulty": 1
   }
-]`);
-    const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState<{
-        line?: number;
-        column?: number;
-        message?: string;
-    } | null>(null);
+]`;
 
-    const handleJsonChange = (value: string) => {
-        setJsonValue(value);
-        setError(null);
-
-        // Validate JSON syntax
-        try {
-            JSON.parse(value);
-        } catch (err) {
-            if (err instanceof SyntaxError) {
-                // Extract line and column from error message
-                const match = err.message.match(/position (\d+)/);
-                if (match) {
-                    const pos = parseInt(match[1]);
-                    const lines = value.substring(0, pos).split('\n');
-                    setError({
-                        line: lines.length,
-                        column: lines[lines.length - 1].length + 1,
-                        message: err.message,
-                    });
-                } else {
-                    setError({
-                        message: err.message,
-                    });
-                }
-            }
-        }
-    };
-
-    const handleSubmit = async () => {
-        if (error) {
-            notifyMessage('Please fix JSON syntax errors before uploading');
-            return;
-        }
-
-        setIsLoading(true);
-        try {
+    // Handle save logic
+    const handleSave = useCallback(
+        async (parsedGoals: unknown) => {
             let parsedList;
             try {
-                parsedList = parseList(jsonValue);
+                parsedList = parseList(JSON.stringify(parsedGoals));
             } catch {
                 alertError('Unable to parse file contents');
                 return;
@@ -86,13 +48,27 @@ export function ListUploadForm({ slug, close }: UploadFormProps) {
 
             notifyMessage('Goals uploaded successfully!');
             close();
-        } catch (err) {
-            alertError(
-                `Error uploading goals: ${err instanceof Error ? err.message : 'Unknown error'}`,
-            );
-        } finally {
-            setIsLoading(false);
+        },
+        [slug, close],
+    );
+
+    const {
+        value: jsonValue,
+        error,
+        isLoading,
+        handleChange: handleJsonChange,
+        handleSave: handleSaveWrapper,
+    } = useJsonEditor({
+        initialValue,
+        onSave: handleSave,
+    });
+
+    const handleSubmit = async () => {
+        if (error) {
+            notifyMessage('Please fix JSON syntax errors before uploading');
+            return;
         }
+        await handleSaveWrapper();
     };
 
     return (

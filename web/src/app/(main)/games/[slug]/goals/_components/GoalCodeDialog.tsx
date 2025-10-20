@@ -12,7 +12,10 @@ import FullscreenIcon from '@mui/icons-material/Fullscreen';
 import FullscreenExitIcon from '@mui/icons-material/FullscreenExit';
 import { useState, useEffect, useCallback } from 'react';
 import { useGoalManagerContext } from '../../../../../../context/GoalManagerContext';
-import JsonEditor from './JsonEditor';
+import JsonEditor from '@/components/JsonEditor';
+import { useJsonEditor } from '@/hooks/useJsonEditor';
+import type { Goal as SchemaGoal } from '@playbingo/types';
+import ReplaceConfirmationDialog from './ReplaceConfirmationDialog';
 import { notifyMessage } from '../../../../../../lib/Utils';
 
 interface GoalCodeDialogProps {
@@ -27,14 +30,8 @@ export default function GoalCodeDialog({
     slug,
 }: GoalCodeDialogProps) {
     const { goals, shownGoals, mutateGoals } = useGoalManagerContext();
-    const [jsonValue, setJsonValue] = useState('');
-    const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState<{
-        line?: number;
-        column?: number;
-        message?: string;
-    } | null>(null);
     const [isFullscreen, setIsFullscreen] = useState(false);
+    const [showConfirmation, setShowConfirmation] = useState(false);
 
     // Determine the order to use: match UI ordering when it represents the full list
     const getExportOrder = useCallback(() => {
@@ -47,86 +44,47 @@ export default function GoalCodeDialog({
     // Convert goals to JSON format (dynamically include all fields except excluded ones)
     const exportGoalsToJson = useCallback(() => {
         const ordered = getExportOrder();
-        const goalsForExport = ordered.map((goal) => {
-            // Exclude system fields that shouldn't be editable
-            const excludedFields = new Set([
-                'id',
-                'completedBy',
-                'createdAt',
-                'updatedAt',
-                'gameId',
-                'oldCategories',
-            ]);
+        const allowedKeys: Array<keyof SchemaGoal> = [
+            'goal',
+            'description',
+            'categories',
+            'difficulty',
+        ];
 
-            return Object.fromEntries(
-                Object.entries(
-                    goal as unknown as Record<string, unknown>,
-                ).filter(([key]) => !excludedFields.has(key)),
-            );
+        const goalsForExport = ordered.map((g) => {
+            const goal = g as unknown as Partial<SchemaGoal> &
+                Record<string, unknown>;
+            const picked: Record<string, unknown> = {};
+            for (const key of allowedKeys) {
+                const value = goal[key as string as keyof typeof goal];
+                if (value !== undefined) {
+                    picked[key as string] = value as unknown;
+                }
+            }
+            return picked;
         });
 
         return JSON.stringify(goalsForExport, null, 2);
     }, [getExportOrder]);
 
-    // Update JSON value when goals change or dialog opens
-    useEffect(() => {
-        if (isOpen) {
-            setJsonValue(exportGoalsToJson());
-            setError(null);
-        }
-    }, [isOpen, exportGoalsToJson]);
-
-    const handleJsonChange = (value: string) => {
-        setJsonValue(value);
-        setError(null);
-
-        // Validate JSON syntax
-        try {
-            JSON.parse(value);
-        } catch (err) {
-            if (err instanceof SyntaxError) {
-                // Extract line and column from error message
-                const match = err.message.match(/position (\d+)/);
-                if (match) {
-                    const pos = parseInt(match[1]);
-                    const lines = value.substring(0, pos).split('\n');
-                    setError({
-                        line: lines.length,
-                        column: lines[lines.length - 1].length + 1,
-                        message: err.message,
-                    });
-                } else {
-                    setError({
-                        message: err.message,
-                    });
-                }
-            }
-        }
-    };
-
-    const handleSave = async () => {
-        if (error) {
-            notifyMessage('Please fix JSON syntax errors before saving');
-            return;
+    // Custom validation for goals
+    const validateGoals = useCallback((parsedGoals: unknown) => {
+        if (!Array.isArray(parsedGoals)) {
+            return 'Goals must be an array';
         }
 
-        setIsLoading(true);
-        try {
-            const parsedGoals = JSON.parse(jsonValue);
-
-            // Validate that it's an array
-            if (!Array.isArray(parsedGoals)) {
-                throw new Error('Goals must be an array');
+        for (const goal of parsedGoals) {
+            if (!goal.goal) {
+                return 'Each goal must have a goal field';
             }
+        }
 
-            // Validate each goal has required fields
-            for (const goal of parsedGoals) {
-                if (!goal.goal) {
-                    throw new Error('Each goal must have a goal field');
-                }
-            }
+        return null;
+    }, []);
 
-            // Replace all goals in a single API call (IDs will be regenerated)
+    // Handle save logic
+    const handleSave = useCallback(
+        async (parsedGoals: unknown) => {
             const response = await fetch('/api/goals/upload/replace', {
                 method: 'POST',
                 headers: {
@@ -147,18 +105,70 @@ export default function GoalCodeDialog({
             mutateGoals();
             notifyMessage('Goals updated successfully!');
             close();
+        },
+        [slug, mutateGoals, close],
+    );
+
+    const {
+        value: jsonValue,
+        error,
+        isLoading,
+        handleChange: handleJsonChange,
+        setValue: setJsonValue,
+    } = useJsonEditor({
+        initialValue: exportGoalsToJson(),
+        onSave: handleSave,
+        validate: validateGoals,
+    });
+
+    // Update JSON value when goals change or dialog opens
+    useEffect(() => {
+        if (isOpen) {
+            setJsonValue(exportGoalsToJson());
+        }
+    }, [isOpen, exportGoalsToJson, setJsonValue]);
+
+    const handleSaveClick = async () => {
+        if (error) {
+            notifyMessage('Please fix JSON syntax errors before saving');
+            return;
+        }
+        setShowConfirmation(true);
+    };
+
+    const handleConfirmReplace = async () => {
+        try {
+            const parsedGoals = JSON.parse(jsonValue);
+            const response = await fetch('/api/goals/upload/replace', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    slug: slug,
+                    goals: parsedGoals,
+                }),
+            });
+
+            if (!response.ok) {
+                const error = await response.text();
+                throw new Error(`Failed to update goals: ${error}`);
+            }
+
+            // Refresh the goals list
+            mutateGoals();
+            notifyMessage('Goals updated successfully!');
+            setShowConfirmation(false);
+            close();
         } catch (err) {
             notifyMessage(
                 `Error saving goals: ${err instanceof Error ? err.message : 'Unknown error'}`,
             );
-        } finally {
-            setIsLoading(false);
         }
     };
 
     const handleCancel = () => {
         setJsonValue(exportGoalsToJson());
-        setError(null);
         setIsFullscreen(false);
         close();
     };
@@ -216,18 +226,29 @@ export default function GoalCodeDialog({
                         justifyContent: 'flex-end',
                     }}
                 >
-                    <Button onClick={handleCancel} disabled={isLoading}>
+                    <Button
+                        onClick={handleCancel}
+                        disabled={isLoading}
+                        color="error"
+                    >
                         Cancel
                     </Button>
                     <Button
-                        onClick={handleSave}
+                        onClick={handleSaveClick}
                         variant="contained"
+                        color="success"
                         disabled={isLoading || !!error}
                     >
                         {isLoading ? 'Saving...' : 'Save Changes'}
                     </Button>
                 </Box>
             </DialogContent>
+            <ReplaceConfirmationDialog
+                isOpen={showConfirmation}
+                onClose={() => setShowConfirmation(false)}
+                onConfirm={handleConfirmReplace}
+                isLoading={isLoading}
+            />
         </Dialog>
     );
 }

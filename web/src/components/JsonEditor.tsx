@@ -3,8 +3,8 @@ import CodeMirror from '@uiw/react-codemirror';
 import { json } from '@codemirror/lang-json';
 import { createTheme } from '@uiw/codemirror-themes';
 import { tags as t } from '@lezer/highlight';
-import { linter } from '@codemirror/lint';
-import { Box, BoxProps } from '@mui/material';
+import { linter, type Diagnostic } from '@codemirror/lint';
+import { Box, BoxProps, Alert } from '@mui/material';
 import { useMemo } from 'react';
 
 interface JsonEditorProps extends Omit<BoxProps, 'onChange'> {
@@ -28,7 +28,7 @@ export default function JsonEditor({
     placeholder,
     readOnly = false,
     height = 300,
-    theme = 'light',
+    theme = 'dark',
     ...boxProps
 }: JsonEditorProps) {
     const darkTheme = useMemo(() => {
@@ -68,7 +68,7 @@ export default function JsonEditor({
 
     const jsonLinter = useMemo(() => {
         return linter((view) => {
-            const diagnostics = [];
+            const diagnostics: Diagnostic[] = [];
             try {
                 JSON.parse(view.state.doc.toString());
             } catch (error) {
@@ -77,13 +77,12 @@ export default function JsonEditor({
                     const match = error.message.match(/position (\d+)/);
                     if (match) {
                         const pos = parseInt(match[1]);
-                        const line = view.state.doc.lineAt(pos);
+                        // Cast severity to the expected union type and omit non-standard props
                         diagnostics.push({
                             from: pos,
                             to: pos,
                             severity: 'error',
                             message: error.message,
-                            line: line.number,
                         });
                     } else {
                         // Fallback: highlight the entire document
@@ -101,8 +100,9 @@ export default function JsonEditor({
     }, []);
 
     const extensions = useMemo(() => {
-        return [json(), darkTheme, jsonLinter];
-    }, [darkTheme, jsonLinter]);
+        const base = [json(), jsonLinter];
+        return theme === 'dark' ? [...base, darkTheme] : base;
+    }, [darkTheme, jsonLinter, theme]);
 
     const handleChange = (value: string) => {
         onChange(value);
@@ -116,7 +116,8 @@ export default function JsonEditor({
                     height: height,
                     border: '1px solid',
                     borderColor: error ? 'error.main' : 'divider',
-                    borderRadius: 1,
+                    borderRadius: 2,
+                    overflow: 'hidden',
                     '&:hover': {
                         borderColor: error ? 'error.main' : 'primary.main',
                     },
@@ -136,11 +137,25 @@ export default function JsonEditor({
                 ...boxProps.sx,
             }}
         >
+            {error && (
+                <Alert severity="error" sx={{ mb: 1 }}>
+                    {error.line && error.column ? (
+                        <>
+                            <Box component="span" sx={{ fontWeight: 'bold' }}>
+                                Line {error.line}, Column {error.column}:&nbsp;
+                            </Box>
+                            {error.message}
+                        </>
+                    ) : (
+                        error.message
+                    )}
+                </Alert>
+            )}
             <CodeMirror
                 value={value}
                 onChange={handleChange}
                 extensions={extensions}
-                theme={darkTheme}
+                theme={theme === 'dark' ? darkTheme : undefined}
                 placeholder={placeholder}
                 readOnly={readOnly}
                 basicSetup={{
@@ -155,25 +170,6 @@ export default function JsonEditor({
                     highlightSelectionMatches: false,
                 }}
             />
-            {error && (
-                <Box
-                    sx={{
-                        mt: 1,
-                        p: 1,
-                        backgroundColor: 'error.light',
-                        color: 'error.contrastText',
-                        borderRadius: 1,
-                        fontSize: '0.875rem',
-                    }}
-                >
-                    {error.line && error.column && (
-                        <Box component="span" sx={{ fontWeight: 'bold' }}>
-                            Line {error.line}, Column {error.column}:{' '}
-                        </Box>
-                    )}
-                    {error.message}
-                </Box>
-            )}
         </Box>
     );
 }

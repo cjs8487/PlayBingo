@@ -5,8 +5,10 @@ import {
     isModerator,
     updateSRLv5Enabled,
 } from '../../database/games/Games';
-import { createGoals, GoalInput, deleteAllGoalsForGame } from '../../database/games/Goals';
+import { getUser } from '../../database/Users';
+import { createGoals, GoalInput, replaceAllGoalsForGame } from '../../database/games/Goals';
 import { Prisma } from '@prisma/client';
+import { requiresApiToken } from '../middleware';
 
 const upload = Router();
 
@@ -95,7 +97,18 @@ upload.post('/replace', async (req, res) => {
         res.sendStatus(401);
         return;
     }
-    if (!isModerator(slug, req.session.user)) {
+
+    // Check if user is staff, owner, or moderator
+    const user = await getUser(req.session.user);
+    if (!user) {
+        res.sendStatus(403);
+        return;
+    }
+
+    const isGameOwner = await isOwner(slug, req.session.user);
+    const isGameModerator = await isModerator(slug, req.session.user);
+    
+    if (!user.staff && !isGameOwner && !isGameModerator) {
         res.sendStatus(403);
         return;
     }
@@ -115,13 +128,14 @@ upload.post('/replace', async (req, res) => {
     }
 
     try {
-        // Remove all existing goals for this game, then recreate provided list
-        // Note: This assigns new IDs to all goals
-        await deleteAllGoalsForGame(slug);
-        await createGoals(slug, goals);
+        const success = await replaceAllGoalsForGame(slug, goals);
+        if (!success) {
+            res.status(404).send('Game not found');
+            return;
+        }
         res.sendStatus(200);
     } catch (e) {
-        res.status(400).send('Failed to replace goals');
+        res.status(500).send('Failed to replace goals');
     }
 });
 
