@@ -1,4 +1,4 @@
-import { serverFetch } from '../../../ServerUtils';
+import { serverGet } from '../../../ServerUtils';
 import TokenTable from './TokenTable';
 
 export interface ApiToken {
@@ -10,7 +10,7 @@ export interface ApiToken {
 }
 
 async function getTokens(): Promise<ApiToken[]> {
-    const res = await serverFetch('/api/tokens');
+    const res = await serverGet('/api/tokens');
     if (!res.ok) {
         return [];
     }

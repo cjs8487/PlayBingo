@@ -1,12 +1,5 @@
-import { Game, Goal } from '@playbingo/types';
-import {
-    GenerationBoardLayout,
-    GenerationGlobalAdjustments,
-    GenerationGoalRestriction,
-    GenerationGoalSelection,
-    GenerationListMode,
-    GenerationListTransform,
-} from '@prisma/client';
+import { GeneratorSettings, makeGeneratorSchema } from '@playbingo/shared';
+import { Game } from '@playbingo/types';
 import { Router } from 'express';
 import BoardGenerator from '../../core/generation/BoardGenerator';
 import {
@@ -31,7 +24,7 @@ import {
     updateDifficultyVariantsEnabled,
     updateGameCover,
     updateGameName,
-    updateGeneratorConfig,
+    updateGeneratorSettings,
     updateLinks,
     updateRacetimeCategory,
     updateRacetimeGoal,
@@ -52,6 +45,8 @@ import {
 } from '../../database/games/Goals';
 import { getUser, getUsersEligibleToModerateGame } from '../../database/Users';
 import { deleteFile, saveFile } from '../../media/MediaServer';
+import { logError } from '../../Logger';
+import variants from './Variants';
 
 const games = Router();
 
@@ -94,18 +89,24 @@ games.get('/:slug', async (req, res) => {
         slugWords: game.slugWords,
         useTypedRandom: game.useTypedRandom,
         newGeneratorBeta: game.newGeneratorBeta,
-        generationSettings: {
-            pruners: game.generationListMode,
-            transformer: game.generationListTransform,
-            layout: game.generationBoardLayout,
-            goalSelection: game.generationGoalSelection,
-            cellRestrictions: game.generationGoalRestrictions,
-            globalAdjustments: game.generationGlobalAdjustments,
-        },
         descriptionMd: game.descriptionMd ?? undefined,
         setupMd: game.setupMd ?? undefined,
         linksMd: game.linksMd ?? undefined,
+        isMod: await isModerator(slug, req.session.user ?? ''),
     };
+    if (game.newGeneratorBeta) {
+        result.generationSettings = game.generatorSettings;
+        result.variants = [];
+        game.variants.forEach((variant) => {
+            result.variants?.push({
+                id: variant.id,
+                name: variant.name,
+                description: variant.description ?? undefined,
+                generatorSettings:
+                    variant.generatorSettings ?? game.generatorSettings,
+            });
+        });
+    }
     res.status(200).json(result);
 });
 
@@ -608,116 +609,24 @@ games.post('/:slug/generation', async (req, res) => {
         return;
     }
 
-    const {
-        pruners,
-        transformer,
-        layout,
-        goalSelection,
-        cellRestrictions,
-        globalAdjustments,
-    } = req.body;
+    const categories = await getCategories(slug);
+    const { schema } = makeGeneratorSchema(
+        categories.map((cat) => ({
+            id: cat.id,
+            name: cat.name,
+            max: cat.max,
+            goalCount: cat._count.goals,
+        })) ?? [],
+    );
 
-    // required field validation
-    if (!layout || !goalSelection) {
-        res.status(400).send('Missing required elements');
+    const parseResult = schema.safeParse(req.body);
+
+    if (!parseResult.success) {
+        res.status(400).json(parseResult.error);
         return;
     }
 
-    // valid values for layout and goalSelection
-    if (!Object.values(GenerationBoardLayout).includes(layout)) {
-        res.status(400).send('Unrecognized value for layout');
-        return;
-    }
-    if (!Object.values(GenerationGoalSelection).includes(goalSelection)) {
-        res.status(400).send('Unrecognized value for goalSelection');
-        return;
-    }
-
-    // validate layout and selection combination
-    if (
-        layout === GenerationBoardLayout.NONE &&
-        goalSelection !== GenerationGoalSelection.RANDOM
-    ) {
-        res.status(400).send('Invalid layout and goalSelection combination');
-        return;
-    } else if (
-        (layout === GenerationBoardLayout.ISAAC ||
-            layout === GenerationBoardLayout.SRLv5) &&
-        goalSelection !== GenerationGoalSelection.DIFFICULTY
-    ) {
-        res.status(400).send('Invalid layout and goalSelection combination');
-        return;
-    }
-
-    // validate optional fields
-    if (pruners) {
-        if (!Array.isArray(pruners)) {
-            res.status(400).send('pruners must be an array');
-            return;
-        }
-        let valid = true;
-        pruners.forEach((p) => {
-            if (!Object.values(GenerationListMode).includes(p)) {
-                valid = false;
-            }
-        });
-
-        if (!valid) {
-            res.status(400).send('Unrecognized value in pruner list');
-            return;
-        }
-    }
-
-    if (transformer) {
-        if (!Object.values(GenerationListTransform).includes(transformer)) {
-            res.status(400).send('Unrecognized value for transformer');
-        }
-    }
-
-    if (cellRestrictions) {
-        if (!Array.isArray(cellRestrictions)) {
-            res.status(400).send('cellRestrictions must be an array');
-            return;
-        }
-        let valid = true;
-        cellRestrictions.forEach((r) => {
-            if (!Object.values(GenerationGoalRestriction).includes(r)) {
-                valid = false;
-            }
-        });
-
-        if (!valid) {
-            res.status(400).send('Unrecognized value in cellRestriction list');
-            return;
-        }
-    }
-
-    if (globalAdjustments) {
-        if (!Array.isArray(globalAdjustments)) {
-            res.status(400).send('globalAdjustments must be an array');
-            return;
-        }
-        let valid = true;
-        globalAdjustments.forEach((a) => {
-            if (!Object.values(GenerationGlobalAdjustments).includes(a)) {
-                valid = false;
-            }
-        });
-
-        if (!valid) {
-            res.status(400).send('Unrecognized value in globalAdjustment list');
-            return;
-        }
-    }
-
-    const result = await updateGeneratorConfig(slug, {
-        generationListMode: pruners,
-        generationListTransform: transformer,
-        generationBoardLayout: layout,
-        generationGoalSelection: goalSelection,
-        generationGoalRestrictions: cellRestrictions,
-        generationGlobalAdjustments: globalAdjustments,
-    });
+    const result = await updateGeneratorSettings(slug, parseResult.data);
     res.status(200).send(result);
 });
 
@@ -742,12 +651,7 @@ games.get('/:slug/sampleBoard', async (req, res) => {
     const generator = new BoardGenerator(
         goals,
         categories,
-        gameData.generationListMode,
-        gameData.generationListTransform,
-        gameData.generationBoardLayout,
-        gameData.generationGoalSelection,
-        gameData.generationGoalRestrictions,
-        gameData.generationGlobalAdjustments,
+        gameData.generatorSettings as GeneratorSettings,
     );
     generator.generateBoard();
     res.status(200).send({
@@ -761,5 +665,7 @@ games.get('/:slug/sampleBoard', async (req, res) => {
         seed: generator.seed,
     });
 });
+
+games.use(variants);
 
 export default games;

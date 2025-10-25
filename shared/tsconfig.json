@@ -15,6 +15,5 @@
     "ts-node": {
         "esm": true
     },
-    "include": ["src/**/*.ts", "src/**/*.d.ts", "src/main.ts", "prisma/seed.ts", "prisma/migrations/**/data-migration.ts"],
-    "exclude": ["src/coverage/**/*"]
+    "include": ["GeneratorSettings.ts", "index.ts"],
 }
