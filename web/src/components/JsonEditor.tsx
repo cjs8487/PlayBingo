@@ -116,7 +116,7 @@ export default function JsonEditor({
                     height: height,
                     border: '1px solid',
                     borderColor: error ? 'error.main' : 'divider',
-                    borderRadius: 2,
+                    borderRadius: 1,
                     overflow: 'hidden',
                     '&:hover': {
                         borderColor: error ? 'error.main' : 'primary.main',
