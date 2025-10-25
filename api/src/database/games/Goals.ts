@@ -154,30 +154,32 @@ export const replaceAllGoalsForGame = async (
     await prisma.$transaction(async (tx) => {
         await tx.goal.deleteMany({ where: { game: { slug } } });
 
-        for (const g of goals) {
-            await tx.goal.create({
-                data: {
-                    goal: g.goal,
-                    description: g.description,
-                    categories: {
-                        connectOrCreate: g.categories?.map((cat) => ({
-                            create: {
-                                name: cat,
-                                game: { connect: { slug } },
-                            },
-                            where: {
-                                gameId_name: {
-                                    gameId,
+        await Promise.all(
+            goals.map((g) =>
+                tx.goal.create({
+                    data: {
+                        goal: g.goal,
+                        description: g.description,
+                        categories: {
+                            connectOrCreate: g.categories?.map((cat) => ({
+                                create: {
                                     name: cat,
+                                    game: { connect: { slug } },
                                 },
-                            },
-                        })),
+                                where: {
+                                    gameId_name: {
+                                        gameId,
+                                        name: cat,
+                                    },
+                                },
+                            })),
+                        },
+                        difficulty: g.difficulty ?? undefined,
+                        game: { connect: { id: gameId } },
                     },
-                    difficulty: g.difficulty ?? undefined,
-                    game: { connect: { id: gameId } },
-                },
-            });
-        }
+                })
+            )
+        );
     });
 
     return true;
