@@ -7,6 +7,7 @@ import {
     Box,
     Typography,
     IconButton,
+    CircularProgress,
 } from '@mui/material';
 import FullscreenIcon from '@mui/icons-material/Fullscreen';
 import FullscreenExitIcon from '@mui/icons-material/FullscreenExit';
@@ -123,10 +124,10 @@ export default function GoalCodeDialog({
 
     // Update JSON value when goals change or dialog opens
     useEffect(() => {
-        if (isOpen) {
+        if (isOpen && goals && goals.length > 0) {
             setJsonValue(exportGoalsToJson());
         }
-    }, [isOpen, exportGoalsToJson, setJsonValue]);
+    }, [isOpen, goals, exportGoalsToJson, setJsonValue]);
 
     const handleSaveClick = async () => {
         if (error) {
@@ -210,13 +211,21 @@ export default function GoalCodeDialog({
                     </Typography>
                 </Box>
 
-                <JsonEditor
-                    value={jsonValue}
-                    onChange={handleJsonChange}
-                    error={error}
-                    height={isFullscreen ? 'calc(100vh - 200px)' : 400}
-                    placeholder="Enter goals in JSON format..."
-                />
+                {!goals || goals.length === 0 ? (
+                    <Box
+                        sx={{ display: 'flex', justifyContent: 'center', p: 4 }}
+                    >
+                        <CircularProgress />
+                    </Box>
+                ) : (
+                    <JsonEditor
+                        value={jsonValue}
+                        onChange={handleJsonChange}
+                        error={error}
+                        height={isFullscreen ? 'calc(100vh - 200px)' : 400}
+                        placeholder="Enter goals in JSON format..."
+                    />
+                )}
 
                 <Box
                     sx={{
