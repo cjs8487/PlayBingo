@@ -32,8 +32,8 @@ export const usernameUsed = async (username: string) => {
 export const registerUser = async (
     email: string,
     username: string,
-    password: Buffer,
-    salt: Buffer,
+    password: Uint8Array<ArrayBuffer>,
+    salt: Uint8Array<ArrayBuffer>,
 ) => {
     try {
         const user = await prisma.user.create({
@@ -147,8 +147,8 @@ export const completePasswordReset = (token: string) => {
 
 export const changePassword = (
     user: string,
-    password: Buffer,
-    salt: Buffer,
+    password: Uint8Array<ArrayBuffer>,
+    salt: Uint8Array<ArrayBuffer>,
 ) => {
     return prisma.user.update({
         where: { id: user },

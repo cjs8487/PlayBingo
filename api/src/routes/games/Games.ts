@@ -95,27 +95,15 @@ games.get('/:slug', async (req, res) => {
         isMod: await isModerator(slug, req.session.user ?? ''),
     };
     if (game.newGeneratorBeta) {
-        const categories = await getCategories(slug);
-        const generatorSchema = makeGeneratorSchema(
-            categories.map((cat) => ({
-                id: cat.id,
-                name: cat.name,
-                max: cat.max,
-                goalCount: cat._count.goals,
-            })),
-        );
-        result.generationSettings = game.generatorSettings as Record<
-            string,
-            string
-        >;
+        result.generationSettings = game.generatorSettings;
         result.variants = [];
         game.variants.forEach((variant) => {
             result.variants?.push({
                 id: variant.id,
                 name: variant.name,
                 description: variant.description ?? undefined,
-                generatorSettings: (variant.generatorSettings ??
-                    game.generatorSettings) as Record<string, string>,
+                generatorSettings:
+                    variant.generatorSettings ?? game.generatorSettings,
             });
         });
     }
