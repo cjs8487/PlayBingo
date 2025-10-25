@@ -250,36 +250,14 @@ async function getOrLoadRoom(slug: string): Promise<Room | null> {
 
     let generatorSettings: GeneratorSettings | undefined = undefined;
     if (dbRoom.game?.newGeneratorBeta) {
-        const categories = await getCategories(dbRoom.game?.slug ?? '');
-        const { schema } = makeGeneratorSchema(
-            (categories ?? []).map((cat) => ({
-                id: cat.id,
-                name: cat.name,
-                max: cat.max,
-                goalCount: cat._count.goals,
-            })),
-        );
-
-        if (variant && 'generatorSettings' in variant) {
-            const result = schema.safeParse(
-                variant.generatorSettings ?? dbRoom.game.generatorSettings,
-            );
-            if (!result.success) {
-                logError(
-                    `Invalid generator config in database for ${dbRoom.game.name} (${dbRoom.game.slug} ${variant ? variant : ''})`,
-                );
-                return null;
-            }
-            generatorSettings = result.data;
+        if (
+            variant &&
+            'generatorSettings' in variant &&
+            variant.generatorSettings
+        ) {
+            generatorSettings = variant.generatorSettings;
         } else {
-            const result = schema.safeParse(dbRoom.game.generatorSettings);
-            if (!result.success) {
-                logError(
-                    `Invalid generator config in database for ${dbRoom.game.name} (${dbRoom.game.slug})`,
-                );
-                return null;
-            }
-            generatorSettings = result.data;
+            generatorSettings = dbRoom.game.generatorSettings;
         }
     }
 
