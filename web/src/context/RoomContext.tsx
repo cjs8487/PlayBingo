@@ -131,7 +131,9 @@ export function RoomContextProvider({
     const [roomData, setRoomData] = useState<RoomData>(serverRoomData);
 
     const [authToken, setAuthToken] = useState<string>(
-        serverRoomData.token ?? '',
+        serverRoomData.token ??
+            localStorage.getItem(`authToken-${roomData.slug}`) ??
+            '',
     );
     const [nickname, setNickname] = useState(
         localStorage.getItem('PlayBingo.temp.nickname') ??
