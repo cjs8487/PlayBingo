@@ -131,8 +131,8 @@ export function RoomContextProvider({
     const [roomData, setRoomData] = useState<RoomData>(serverRoomData);
 
     const [authToken, setAuthToken] = useState<string>(
-        serverRoomData.token ??
-            localStorage.getItem(`authToken-${roomData.slug}`) ??
+        localStorage.getItem(`authToken-${roomData.slug}`) ??
+            serverRoomData.token ??
             '',
     );
     const [nickname, setNickname] = useState(
@@ -194,6 +194,7 @@ export function RoomContextProvider({
             setMessages(chatHistory);
             setConnectionStatus(ConnectionStatus.CONNECTED);
             setRoomData(roomData);
+            localStorage.removeItem(`authToken-${roomData.slug}`);
         },
         [],
     );
