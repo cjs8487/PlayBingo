@@ -3,9 +3,27 @@
     "type": "object",
     "additionalProperties": false,
     "required": ["goal", "description", "completedPlayers"],
-    "description": "An incoming websocket message from the server telling the client of a change in room state or instructing it to take an action",
-    "properties": {
-        "goal": {"$ref": "./Goal.json"},
-        "completedPlayers": {"type": "array", "items": {"type": "string"}}
+    "anyOf": [
+        {"$ref": "#/$defs/RevealedCell"},
+        {"$ref": "#/$defs/HiddenCell"}
+    ],
+    "$defs": {
+        "RevealedCell": {
+            "additionalProperties": false,
+            "required": ["revealed", "goal", "completedPlayers"],
+            "properties": {
+                "goal": {"$ref": "./Goal.json"},
+                "completedPlayers": {"type": "array", "items": {"type": "string"}},
+                "revealed": { "enum": [ true ]}
+            }
+        },
+        "HiddenCell": {
+            "additionalProperties": false,
+            "required": ["revealed", "completedPlayers"],
+            "properties": {
+                "revealed": { "enum": [ false ]},
+                "completedPlayers": {"type": "array", "items": {"type": "string"}}
+            }
+        }
     }
 }

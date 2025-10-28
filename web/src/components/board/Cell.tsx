@@ -3,7 +3,11 @@ import Add from '@mui/icons-material/Add';
 import Remove from '@mui/icons-material/Remove';
 import Star from '@mui/icons-material/Star';
 import { Box, IconButton, Tooltip, Typography } from '@mui/material';
-import { Cell } from '@playbingo/types';
+import {
+    Cell,
+    RevealedCell as CellRevealed,
+    HiddenCell as CellHidden,
+} from '@playbingo/types';
 import { useCallback, useContext, useState } from 'react';
 import { RoomContext } from '../../context/RoomContext';
 import TextFit from '../TextFit';
@@ -14,11 +18,109 @@ interface CellProps {
     col: number;
 }
 
-export default function BoardCell({
+export default function BoardCell({ cell, row, col }: CellProps) {
+    if (cell.revealed) {
+        return <RevealedCell cell={cell} row={row} col={col} />;
+    }
+    return <HiddenCell cell={cell} row={row} col={col} />;
+}
+
+interface HiddenCellProps {
+    cell: CellHidden;
+    row: number;
+    col: number;
+}
+
+function HiddenCell({ cell: { completedPlayers }, row, col }: HiddenCellProps) {
+    const { starredGoals, colorMap } = useContext(RoomContext);
+
+    // calculations
+    const colorPortion = 360 / completedPlayers.length;
+    const isStarred = starredGoals.includes(row * 5 + col);
+    const colors = completedPlayers
+        .map((player) => colorMap[player])
+        .filter((c) => !!c);
+
+    return (
+        <Box
+            sx={{
+                position: 'relative',
+                aspectRatio: '1 / 1',
+                flexGrow: 1,
+                cursor: 'pointer',
+                overflow: 'hidden',
+                border: 1,
+                borderColor: 'divider',
+                transition: 'all',
+                transitionDuration: 300,
+                background: (theme) => theme.palette.background.default,
+                ':hover': {
+                    zIndex: 10,
+                    scale: '110%',
+                },
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: '100%',
+                height: '100%',
+            }}
+        >
+            <Box
+                sx={{
+                    // position: 'absolute',
+                    zIndex: 10,
+                    display: 'flex',
+                    height: '100%',
+                    width: '100%',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    p: 1,
+                }}
+            >
+                <TextFit
+                    text="Hidden Goal"
+                    sx={{
+                        p: 1,
+                        filter: 'drop-shadow(2px 2px 2px rgba(0,0,0,0))',
+                    }}
+                />
+            </Box>
+            {colors.map((color, index) => (
+                <Box
+                    key={color}
+                    sx={{
+                        position: 'absolute',
+                        width: '100%',
+                        height: '100%',
+                    }}
+                    style={{
+                        backgroundImage: `conic-gradient(from ${
+                            colorPortion * index
+                        }deg, ${color} 0deg, ${color} ${colorPortion}deg, rgba(0,0,0,0) ${colorPortion}deg)`,
+                    }}
+                />
+            ))}
+            {isStarred && (
+                <Box sx={{ position: 'absolute', right: 0 }}>
+                    <Star />
+                </Box>
+            )}
+        </Box>
+    );
+}
+
+interface RevealedCellProps {
+    cell: CellRevealed;
+    row: number;
+    col: number;
+}
+
+function RevealedCell({
     cell: { goal, completedPlayers },
     row,
     col,
-}: CellProps) {
+}: RevealedCellProps) {
     // context
     const {
         markGoal,

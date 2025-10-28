@@ -77,12 +77,16 @@ export default function Board() {
                 }}
             >
                 {board.board.map((row, rowIndex) =>
-                    row.map((goal, colIndex) => (
+                    row.map((cell, colIndex) => (
                         <Cell
-                            key={goal.goal.id}
+                            key={
+                                cell.revealed
+                                    ? cell.goal.id
+                                    : 'hidden-' + rowIndex + '-' + colIndex
+                            }
                             row={rowIndex}
                             col={colIndex}
-                            cell={goal}
+                            cell={cell}
                         />
                     )),
                 )}

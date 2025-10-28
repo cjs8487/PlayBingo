@@ -7,7 +7,7 @@ import {
     MarkAction,
     NewCardAction,
     Player as PlayerData,
-    RevealedBoard,
+    RevealedCell,
     ServerMessage,
     UnmarkAction,
 } from '@playbingo/types';
@@ -97,13 +97,14 @@ export default class Room {
     gameSlug: string;
     password: string;
     slug: string;
-    board: RevealedBoard;
+    board: RevealedCell[][];
     chatHistory: ChatMessage[];
     id: string;
     hideCard: boolean;
     bingoMode: BingoMode;
     lineCount: number;
     variantName: string;
+    exploration: boolean = true;
 
     lastGenerationMode: BoardGenerationOptions;
 
@@ -154,10 +155,7 @@ export default class Room {
         this.racetimeEligible = !!racetimeEligible;
         this.raceHandler = new RaceHandler(this);
 
-        this.board = {
-            board: [],
-            hidden: false,
-        };
+        this.board = [];
 
         if (racetimeUrl) {
             this.raceHandler.connect(racetimeUrl);
@@ -212,7 +210,7 @@ export default class Room {
                 this.generatorSettings,
             );
             generator.generateBoard();
-            this.board = { board: listToBoard(generator.board) };
+            this.board = listToBoard(generator.board);
         } else {
             const globalState: GlobalGenerationState = {
                 useCategoryMaxes: categories.some((cat) => cat.max > 0),
@@ -300,13 +298,13 @@ export default class Room {
                 this.logError(`Failed to generate board ${e}`);
                 return;
             }
-            this.board = { board: listToBoard(goalList) };
+            this.board = listToBoard(goalList);
         }
 
         this.sendSyncBoard();
         setRoomBoard(
             this.id,
-            this.board.board.flat().map((cell) => cell.goal.id),
+            this.board.flat().map((cell) => cell.goal.id),
         );
     }
 
@@ -366,7 +364,14 @@ export default class Room {
         createUpdatePlayer(this.id, player).then();
         return {
             action: 'connected',
-            board: this.hideCard ? { hidden: true } : this.board,
+            board: this.hideCard
+                ? { hidden: true }
+                : {
+                      hidden: false,
+                      board: this.exploration
+                          ? player.obfuscateBoard()
+                          : this.board,
+                  },
             chatHistory: this.chatHistory,
             connectedPlayer: player.toClientData(),
             roomData: {
@@ -449,26 +454,25 @@ export default class Room {
         }
         const { row, col } = action.payload;
         if (row === undefined || col === undefined) return;
-        const index = row * 5 + col;
-        if (player.hasMarked(index)) return;
+        if (player.hasMarked(row, col)) return;
 
         if (
             this.bingoMode === BingoMode.LOCKOUT &&
-            this.board.board[row][col].completedPlayers.length > 0
+            this.board[row][col].completedPlayers.length > 0
         )
             return;
-        this.board.board[row][col].completedPlayers.push(player.id);
-        this.board.board[row][col].completedPlayers.sort((a, b) =>
+        this.board[row][col].completedPlayers.push(player.id);
+        this.board[row][col].completedPlayers.sort((a, b) =>
             a.localeCompare(b),
         );
-        player.mark(index);
+        player.mark(row, col);
         this.sendCellUpdate(row, col);
         this.sendChat([
             {
                 contents: player.nickname,
                 color: player.color,
             },
-            ` marked ${this.board.board[row][col].goal.goal} (${row},${col})`,
+            ` marked ${this.board[row][col].goal.goal} (${row},${col})`,
         ]);
         addMarkAction(this.id, player.id, row, col).then();
         this.checkWinConditions();
@@ -484,16 +488,15 @@ export default class Room {
         }
         const { row: unRow, col: unCol } = action.payload;
         if (unRow === undefined || unCol === undefined) return;
-        const index = unRow * 5 + unCol;
-        if (!player.hasMarked(index)) return;
-        this.board.board[unRow][unCol].completedPlayers = this.board.board[
-            unRow
-        ][unCol].completedPlayers.filter((playerId) => playerId !== player.id);
-        player.unmark(index);
+        if (!player.hasMarked(unRow, unCol)) return;
+        this.board[unRow][unCol].completedPlayers = this.board[unRow][
+            unCol
+        ].completedPlayers.filter((playerId) => playerId !== player.id);
+        player.unmark(unRow, unCol);
         this.sendCellUpdate(unRow, unCol);
         this.sendChat([
             { contents: player.nickname, color: player.color },
-            ` unmarked ${this.board.board[unRow][unCol].goal.goal} (${unRow},${unCol})`,
+            ` unmarked ${this.board[unRow][unCol].goal.goal} (${unRow},${unCol})`,
         ]);
         addUnmarkAction(this.id, player.id, unRow, unCol).then();
         this.checkWinConditions();
@@ -615,7 +618,7 @@ export default class Room {
             },
             ' has revealed the card.',
         ]);
-        return this.board;
+        return { hidden: false, board: this.board };
     }
     //#endregion
 
@@ -643,14 +646,16 @@ export default class Room {
             action: 'cellUpdate',
             row,
             col,
-            cell: this.board.board[row][col],
+            cell: this.board[row][col],
         });
     }
 
     sendSyncBoard() {
         this.sendServerMessage({
             action: 'syncBoard',
-            board: this.hideCard ? { hidden: true } : this.board,
+            board: this.hideCard
+                ? { hidden: true }
+                : { hidden: false, board: this.board },
         });
     }
 

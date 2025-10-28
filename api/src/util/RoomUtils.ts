@@ -1,13 +1,14 @@
-import { Cell } from '@playbingo/types';
+import { RevealedCell } from '@playbingo/types';
 import { GeneratorGoal } from '../core/generation/GeneratorCore';
 import { chunk } from './Array';
 import { BingoMode } from '@prisma/client';
 
-export const listToBoard = (list: GeneratorGoal[]): Cell[][] => {
+export const listToBoard = (list: GeneratorGoal[]): RevealedCell[][] => {
     return chunk(
         list.map((g) => ({
             goal: g,
             completedPlayers: [],
+            revealed: true,
         })),
         5,
     );
@@ -83,4 +84,20 @@ export const getModeString = (mode: BingoMode, lineCount: number): string => {
         default:
             return 'Unknown Mode';
     }
+};
+
+export const rowColToBitIndex = (
+    row: number,
+    col: number,
+    cols: number,
+): number => {
+    return row * cols + col;
+};
+
+export const rowColToMask = (
+    row: number,
+    col: number,
+    cols: number,
+): bigint => {
+    return 1n << BigInt(rowColToBitIndex(row, col, cols));
 };

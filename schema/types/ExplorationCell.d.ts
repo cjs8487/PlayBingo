@@ -5,14 +5,12 @@
  * and run json-schema-to-typescript to regenerate this file.
  */
 
-export type Board = RevealedBoard | HiddenBoard;
-export type Cell = RevealedCell | HiddenCell;
+/**
+ * An incoming websocket message from the server telling the client of a change in room state or instructing it to take an action
+ */
+export type ExplorationCell = ExplorationRevealedCell | ExplorationHiddenCell;
 
-export interface RevealedBoard {
-  board: Cell[][];
-  hidden?: false;
-}
-export interface RevealedCell {
+export interface ExplorationRevealedCell {
   goal: Goal;
   completedPlayers: string[];
   revealed: true;
@@ -27,10 +25,7 @@ export interface Goal {
   difficulty?: number | null;
   categories?: string[];
 }
-export interface HiddenCell {
+export interface ExplorationHiddenCell {
   revealed: false;
   completedPlayers: string[];
-}
-export interface HiddenBoard {
-  hidden: true;
 }
