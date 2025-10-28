@@ -47,17 +47,12 @@ function HiddenCell({ cell: { completedPlayers }, row, col }: HiddenCellProps) {
                 position: 'relative',
                 aspectRatio: '1 / 1',
                 flexGrow: 1,
-                cursor: 'pointer',
+                cursor: 'default',
                 overflow: 'hidden',
                 border: 1,
                 borderColor: 'divider',
-                transition: 'all',
-                transitionDuration: 300,
+                transition: 'all 0.3s ease',
                 background: (theme) => theme.palette.background.default,
-                ':hover': {
-                    zIndex: 10,
-                    scale: '110%',
-                },
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
@@ -68,27 +63,31 @@ function HiddenCell({ cell: { completedPlayers }, row, col }: HiddenCellProps) {
         >
             <Box
                 sx={{
-                    // position: 'absolute',
-                    zIndex: 10,
-                    display: 'flex',
-                    height: '100%',
-                    width: '100%',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    p: 1,
+                    position: 'absolute',
+                    inset: 0,
+                    background: `linear-gradient(145deg, rgba(30,30,40,0.85) 0%, rgba(15,15,25,0.9) 60%, rgba(10,10,20,0.95) 100%), radial-gradient(circle at 40% 30%, rgba(100,120,255,0.08) 0%, rgba(0,0,0,0) 80%)`,
+                    mixBlendMode: 'lighten',
+                    backdropFilter: 'blur(6px) brightness(0.8)',
+                    WebkitBackdropFilter: 'blur(6px) brightness(0.8)',
+                    animation: 'fogMove 12s ease-in-out infinite',
+                    '&::after': {
+                        content: "''",
+                        position: 'absolute',
+                        inset: 0,
+                        background:
+                            'radial-gradient(ellipse at center, rgba(255,255,255,0.05) 0%, rgba(0,0,0,0.6) 100%)',
+                        pointerEvents: 'none',
+                    },
+                    '@keyframes fogMove': {
+                        '0%': { transform: 'translate(0, 0)' },
+                        '50%': { transform: 'translate(-10px, 8px)' },
+                        '100%': { transform: 'translate(0, 0)' },
+                    },
                 }}
-            >
-                <TextFit
-                    text="Hidden Goal"
-                    sx={{
-                        p: 1,
-                        filter: 'drop-shadow(2px 2px 2px rgba(0,0,0,0))',
-                    }}
-                />
-            </Box>
+            />
             {colors.map((color, index) => (
                 <Box
-                    key={color}
+                    key={`${color}-${index}`}
                     sx={{
                         position: 'absolute',
                         width: '100%',
@@ -102,8 +101,10 @@ function HiddenCell({ cell: { completedPlayers }, row, col }: HiddenCellProps) {
                 />
             ))}
             {isStarred && (
-                <Box sx={{ position: 'absolute', right: 0 }}>
-                    <Star />
+                <Box
+                    sx={{ position: 'absolute', right: 2, top: 2, zIndex: 11 }}
+                >
+                    <Star fontSize="small" />
                 </Box>
             )}
         </Box>
