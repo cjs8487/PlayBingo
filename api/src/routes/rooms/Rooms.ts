@@ -192,15 +192,14 @@ async function getOrLoadRoom(slug: string): Promise<Room | null> {
         dbRoom.racetimeRoom ?? '',
     );
 
-    newRoom.board = {
-        board: chunk(
-            (await getGoalList(dbRoom.board)).map((goal) => ({
-                goal: goal,
-                completedPlayers: [],
-            })),
-            5,
-        ),
-    };
+    newRoom.board = chunk(
+        (await getGoalList(dbRoom.board)).map((goal) => ({
+            goal: goal,
+            completedPlayers: [],
+            revealed: true,
+        })),
+        5,
+    );
 
     dbRoom.players.forEach((dbPlayer) => {
         const player = new Player(
@@ -228,7 +227,6 @@ async function getOrLoadRoom(slug: string): Promise<Room | null> {
         } = action.payload as any;
 
         const player = newRoom.players.get(playerId)!;
-        const index = row * 5 + col;
 
         switch (action.action) {
             case 'JOIN':
@@ -241,32 +239,29 @@ async function getOrLoadRoom(slug: string): Promise<Room | null> {
                 newRoom.sendChat([{ contents: nickname, color }, ' has left.']);
                 break;
             case 'MARK':
-                if (!player.hasMarked(index)) {
-                    newRoom.board.board[row][col].completedPlayers.push(
-                        playerId,
+                if (!player.hasMarked(row, col)) {
+                    newRoom.board[row][col].completedPlayers.push(playerId);
+                    newRoom.board[row][col].completedPlayers.sort((a, b) =>
+                        a.localeCompare(b),
                     );
-                    newRoom.board.board[row][col].completedPlayers.sort(
-                        (a, b) => a.localeCompare(b),
-                    );
-                    player.mark(index);
+                    player.mark(row, col);
                     newRoom.sendCellUpdate(row, col);
                     newRoom.sendChat([
                         { contents: player.nickname, color: player.color },
-                        ` marked ${newRoom.board.board[row][col].goal.goal} (${row},${col})`,
+                        ` marked ${newRoom.board[row][col].goal.goal} (${row},${col})`,
                     ]);
                 }
                 break;
             case 'UNMARK':
-                if (player.hasMarked(index)) {
-                    newRoom.board.board[row][col].completedPlayers =
-                        newRoom.board.board[row][col].completedPlayers.filter(
-                            (p) => p !== playerId,
-                        );
-                    player.unmark(index);
+                if (player.hasMarked(row, col)) {
+                    newRoom.board[row][col].completedPlayers = newRoom.board[
+                        row
+                    ][col].completedPlayers.filter((p) => p !== playerId);
+                    player.unmark(row, col);
                     newRoom.sendCellUpdate(row, col);
                     newRoom.sendChat([
                         { contents: player.nickname, color: player.color },
-                        ` unmarked ${newRoom.board.board[row][col].goal.goal} (${row},${col})`,
+                        ` unmarked ${newRoom.board[row][col].goal.goal} (${row},${col})`,
                     ]);
                 }
                 break;

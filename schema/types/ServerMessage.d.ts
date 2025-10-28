@@ -62,14 +62,13 @@ export type ChatMessage = (
       color: string;
     }
 )[];
+export type Cell = RevealedCell | HiddenCell;
 export type Board = RevealedBoard | HiddenBoard;
 
-/**
- * An incoming websocket message from the server telling the client of a change in room state or instructing it to take an action
- */
-export interface Cell {
+export interface RevealedCell {
   goal: Goal;
   completedPlayers: string[];
+  revealed: true;
 }
 /**
  * A single objective for a bingo game.
@@ -80,6 +79,10 @@ export interface Goal {
   description: string | null;
   difficulty?: number | null;
   categories?: string[];
+}
+export interface HiddenCell {
+  revealed: false;
+  completedPlayers: string[];
 }
 export interface RevealedBoard {
   board: Cell[][];

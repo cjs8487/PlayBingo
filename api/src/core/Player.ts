@@ -1,10 +1,15 @@
-import { Player as PlayerClientData, ServerMessage } from '@playbingo/types';
+import {
+    HiddenCell,
+    Player as PlayerClientData,
+    RevealedCell,
+    ServerMessage,
+} from '@playbingo/types';
 import { OPEN, WebSocket } from 'ws';
 import { RoomTokenPayload } from '../auth/RoomAuth';
 import { getAccessToken } from '../lib/RacetimeConnector';
 import RaceHandler from './integration/races/RaceHandler';
 import Room from './Room';
-import { prisma } from '../database/Database';
+import { rowColToBitIndex, rowColToMask } from '../util/RoomUtils';
 
 /**
  * Represents a player connected to a room. While largely just a data class, this
@@ -44,6 +49,9 @@ export default class Player {
     /** Whether or not the player has completed the goal of the room */
     goalComplete: boolean;
     linesComplete: number;
+    /** Bitset of goals that are revealed for the player in exploration based
+     * modes */
+    exploredGoals: bigint;
 
     /** Open connections for the player, mapped by the id in the auth token that
      * is authorized for the connection */
@@ -62,7 +70,7 @@ export default class Player {
         userId?: string,
     ) {
         this.room = room;
-        (this.id = id), (this.nickname = nickname);
+        ((this.id = id), (this.nickname = nickname));
         this.color = color;
         this.spectator = spectator;
         this.monitor = monitor;
@@ -72,11 +80,14 @@ export default class Player {
         this.goalCount = 0;
         this.goalComplete = false;
         this.linesComplete = 0;
+        this.exploredGoals = 0n;
 
         this.connections = new Map<string, WebSocket>();
 
         this.raceHandler = room.raceHandler;
         this.raceId = '';
+
+        this.revealCell(0, 0);
     }
 
     doesTokenMatch(token: RoomTokenPayload) {
@@ -159,6 +170,36 @@ export default class Player {
     }
 
     sendMessage(message: ServerMessage) {
+        if (message.action === 'cellUpdate' && this.room.exploration) {
+            if (!message.cell.revealed) {
+                // currently should never happen, indicates that the room itself
+                // handled obfuscation of the cell rather than the player
+                //
+                // this is technically an illegal state as of now, but rather
+                // than throw an error and potentially kill the connection, just
+                // ignore the message
+                return;
+            }
+            message.cell = this.hasRevealed(message.row, message.col)
+                ? ({
+                      revealed: true,
+                      goal: message.cell.goal,
+                      completedPlayers: message.cell.completedPlayers,
+                  } as RevealedCell)
+                : ({
+                      revealed: false,
+                      completedPlayers: message.cell.completedPlayers,
+                  } as HiddenCell);
+        } else if (message.action === 'syncBoard' && this.room.exploration) {
+            if (!message.board.hidden) {
+                message.board.board = this.obfuscateBoard();
+            }
+        } else if (message.action === 'connected') {
+            if (!message.board.hidden) {
+                message.board.board = this.obfuscateBoard();
+            }
+        }
+
         this.connections.forEach((socket) => {
             if (socket.readyState === OPEN) {
                 socket.send(
@@ -176,25 +217,101 @@ export default class Player {
     }
 
     //#region Goal Tracking
-    mark(cellIndex: number) {
-        const mask = 1n << BigInt(cellIndex);
+    mark(row: number, col: number) {
+        const mask = rowColToMask(row, col, 5);
         if ((this.markedGoals & mask) === 0n) {
             this.markedGoals |= mask;
             this.goalCount++;
+            if (this.room.exploration) {
+                if (row > 0) {
+                    this.revealCell(row - 1, col);
+                }
+                if (row < 4) {
+                    this.revealCell(row + 1, col);
+                }
+                if (col > 0) {
+                    this.revealCell(row, col - 1);
+                }
+                if (col < 4) {
+                    this.revealCell(row, col + 1);
+                }
+            }
         }
     }
 
-    unmark(cellIndex: number) {
-        const mask = 1n << BigInt(cellIndex);
+    unmark(row: number, col: number) {
+        const mask = rowColToMask(row, col, 5);
         if ((this.markedGoals & mask) !== 0n) {
             this.markedGoals &= ~mask;
             this.goalCount--;
+            if (this.room.exploration) {
+                if (row > 0) {
+                    this.hideCell(row - 1, col);
+                }
+                if (row < 4) {
+                    this.hideCell(row + 1, col);
+                }
+                if (col > 0) {
+                    this.hideCell(row, col - 1);
+                }
+                if (col < 4) {
+                    this.hideCell(row, col + 1);
+                }
+            }
         }
     }
 
-    hasMarked(cellIndex: number): boolean {
-        const mask = 1n << BigInt(cellIndex);
+    hasMarked(row: number, col: number): boolean {
+        const mask = rowColToMask(row, col, 5);
         return (this.markedGoals & mask) !== 0n;
+    }
+
+    revealCell(row: number, col: number) {
+        const mask = rowColToMask(row, col, 5);
+        if (!this.hasRevealed(row, col)) {
+            this.exploredGoals |= mask;
+            this.sendMessage({
+                action: 'cellUpdate',
+                row,
+                col,
+                cell: this.room.board[row][col],
+            });
+        }
+    }
+
+    hideCell(row: number, col: number) {
+        const mask = rowColToMask(row, col, 5);
+        if (this.hasRevealed(row, col)) {
+            this.exploredGoals &= ~mask;
+            this.sendMessage({
+                action: 'cellUpdate',
+                row,
+                col,
+                cell: this.room.board[row][col],
+            });
+        }
+    }
+
+    hasRevealed(row: number, col: number): boolean {
+        const mask = rowColToMask(row, col, 5);
+        return (this.exploredGoals & mask) !== 0n;
+    }
+
+    obfuscateBoard() {
+        return this.room.board.map((row, rowIndex) =>
+            row.map((cell, colIndex) =>
+                this.hasRevealed(rowIndex, colIndex)
+                    ? ({
+                          revealed: true,
+                          goal: cell.goal,
+                          completedPlayers: cell.completedPlayers,
+                      } as RevealedCell)
+                    : ({
+                          revealed: false,
+                          completedPlayers: cell.completedPlayers,
+                      } as HiddenCell),
+            ),
+        );
     }
 
     /**
