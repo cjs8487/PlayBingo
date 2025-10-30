@@ -101,3 +101,35 @@ export const rowColToMask = (
 ): bigint => {
     return 1n << BigInt(rowColToBitIndex(row, col, cols));
 };
+
+export function computeRevealedMask(
+    markedMask: bigint,
+    width: number,
+    height: number,
+): bigint {
+    const total = BigInt(width * height);
+    const allMask = (1n << total) - 1n;
+
+    // Mask for leftmost column bits
+    let leftMask = 0n;
+    for (let r = 0; r < height; r++) {
+        leftMask |= 1n << BigInt(r * width);
+    }
+
+    // Mask for rightmost column bits
+    let rightMask = 0n;
+    for (let r = 0; r < height; r++) {
+        rightMask |= 1n << BigInt(r * width + (width - 1));
+    }
+
+    // Shift up/down by width rows
+    const up = (markedMask >> BigInt(width)) & allMask;
+    const down = (markedMask << BigInt(width)) & allMask;
+
+    // Shift left/right by 1 column, masking to avoid wrapping
+    const left = (markedMask >> 1n) & ~rightMask & allMask;
+    const right = (markedMask << 1n) & ~leftMask & allMask;
+
+    // Combine all directions + self
+    return (markedMask | up | down | left | right) & allMask;
+}
