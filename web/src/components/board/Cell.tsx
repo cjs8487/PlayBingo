@@ -60,7 +60,7 @@ export default function BoardCell({
         colorMap,
     } = useRoomContext();
 
-    const [wasRevealed, setWasRevealed] = useState(revealed);
+    const [wasRevealed, setWasRevealed] = useState(false);
     const [animating, setAnimating] = useState(false);
 
     const toggleSpace = useCallback(() => {
@@ -89,14 +89,13 @@ export default function BoardCell({
     ]);
 
     useEffect(() => {
-        console.log(revealed, wasRevealed);
         if (revealed && !wasRevealed) {
             setWasRevealed(true);
             setAnimating(true);
             const timer = setTimeout(() => {
                 setAnimating(false);
                 if (onReveal) onReveal();
-            }, 10000);
+            }, 1000);
             return () => {
                 clearTimeout(timer);
             };
@@ -160,7 +159,7 @@ export default function BoardCell({
                     transition: 'all 0.3s ease',
                     background: (theme) => theme.palette.background.default,
                     ':hover': {
-                        zIndex: 10,
+                        zIndex: 100,
                         scale: revealed ? '110%' : '100%',
                     },
                     display: 'flex',
@@ -181,7 +180,7 @@ export default function BoardCell({
             >
                 <Box
                     sx={{
-                        zIndex: 100,
+                        zIndex: 2,
                         display: 'flex',
                         height: '100%',
                         width: '100%',
@@ -213,7 +212,7 @@ export default function BoardCell({
                         }}
                     />
                 ))}
-                {showCounters && (
+                {revealed && showCounters && (
                     <Box
                         sx={{
                             bottom: 0,
@@ -266,7 +265,7 @@ export default function BoardCell({
                     <Box
                         sx={{
                             ...fogSx,
-                            animation: 'fogReveal 2s ease-in forwards',
+                            animation: 'fogReveal 1s ease-in forwards',
                         }}
                     />
                 )}
