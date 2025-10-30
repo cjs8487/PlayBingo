@@ -1,128 +1,54 @@
 'use client';
-import Add from '@mui/icons-material/Add';
-import Remove from '@mui/icons-material/Remove';
-import Star from '@mui/icons-material/Star';
-import { Box, IconButton, Tooltip, Typography } from '@mui/material';
-import {
-    Cell,
-    RevealedCell as CellRevealed,
-    HiddenCell as CellHidden,
-} from '@playbingo/types';
-import { useCallback, useContext, useState } from 'react';
-import { RoomContext } from '../../context/RoomContext';
+import { Box, IconButton, SxProps, Tooltip, Typography } from '@mui/material';
+import { useCallback, useEffect, useState } from 'react';
 import TextFit from '../TextFit';
+import Star from '@mui/icons-material/Star';
+import { useRoomContext } from '../../context/RoomContext';
+import { Add, Remove } from '@mui/icons-material';
 
-interface CellProps {
-    cell: Cell;
+const fogSx: SxProps = {
+    position: 'absolute',
+    inset: 0,
+    zIndex: 90,
+    background: `
+linear-gradient(125deg, rgba(0,0,0,0) 0%, rgba(161, 151, 151, 0.69) 10%, rgba(15, 15, 15, 0.57) 60%, rgba(93, 87, 87, 0.47) 90%, rgba(10,10,20,0.95) 100%),
+radial-gradient(circle at 40% 30%, rgba(147, 137, 137, 0.13) 0%, rgba(0,0,0,0) 95%)
+`,
+    mixBlendMode: 'lighten',
+    backdropFilter: 'blur(6px) brightness(0.8)',
+    WebkitBackdropFilter: 'blur(6px) brightness(0.8)',
+    '::after': {
+        content: "''",
+        position: 'absolute',
+        inset: 0,
+        background:
+            'radial-gradient(ellipse at center, rgba(105, 105, 105, 0.15) 0%, rgba(0,0,0,0.6) 100%)',
+        pointerEvents: 'none',
+    },
+};
+interface BoardCellProps {
+    goal?: string;
+    description?: string | null;
+    difficulty?: number;
+    categories?: string[];
+    completedPlayers: string[];
+    revealed?: boolean;
+    onReveal?: () => void;
     row: number;
     col: number;
 }
 
-export default function BoardCell({ cell, row, col }: CellProps) {
-    if (cell.revealed) {
-        return <RevealedCell cell={cell} row={row} col={col} />;
-    }
-    return <HiddenCell cell={cell} row={row} col={col} />;
-}
-
-interface HiddenCellProps {
-    cell: CellHidden;
-    row: number;
-    col: number;
-}
-
-function HiddenCell({ cell: { completedPlayers }, row, col }: HiddenCellProps) {
-    const { starredGoals, colorMap } = useContext(RoomContext);
-
-    // calculations
-    const colorPortion = 360 / completedPlayers.length;
-    const isStarred = starredGoals.includes(row * 5 + col);
-    const colors = completedPlayers
-        .map((player) => colorMap[player])
-        .filter((c) => !!c);
-
-    return (
-        <Box
-            sx={{
-                position: 'relative',
-                aspectRatio: '1 / 1',
-                flexGrow: 1,
-                cursor: 'default',
-                overflow: 'hidden',
-                border: 1,
-                borderColor: 'divider',
-                transition: 'all 0.3s ease',
-                background: (theme) => theme.palette.background.default,
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                width: '100%',
-                height: '100%',
-            }}
-        >
-            <Box
-                sx={{
-                    position: 'absolute',
-                    inset: 0,
-                    background: `linear-gradient(145deg, rgba(30,30,40,0.85) 0%, rgba(15,15,25,0.9) 60%, rgba(10,10,20,0.95) 100%), radial-gradient(circle at 40% 30%, rgba(100,120,255,0.08) 0%, rgba(0,0,0,0) 80%)`,
-                    mixBlendMode: 'lighten',
-                    backdropFilter: 'blur(6px) brightness(0.8)',
-                    WebkitBackdropFilter: 'blur(6px) brightness(0.8)',
-                    animation: 'fogMove 12s ease-in-out infinite',
-                    '&::after': {
-                        content: "''",
-                        position: 'absolute',
-                        inset: 0,
-                        background:
-                            'radial-gradient(ellipse at center, rgba(255,255,255,0.05) 0%, rgba(0,0,0,0.6) 100%)',
-                        pointerEvents: 'none',
-                    },
-                    '@keyframes fogMove': {
-                        '0%': { transform: 'translate(0, 0)' },
-                        '50%': { transform: 'translate(-10px, 8px)' },
-                        '100%': { transform: 'translate(0, 0)' },
-                    },
-                }}
-            />
-            {colors.map((color, index) => (
-                <Box
-                    key={`${color}-${index}`}
-                    sx={{
-                        position: 'absolute',
-                        width: '100%',
-                        height: '100%',
-                    }}
-                    style={{
-                        backgroundImage: `conic-gradient(from ${
-                            colorPortion * index
-                        }deg, ${color} 0deg, ${color} ${colorPortion}deg, rgba(0,0,0,0) ${colorPortion}deg)`,
-                    }}
-                />
-            ))}
-            {isStarred && (
-                <Box
-                    sx={{ position: 'absolute', right: 2, top: 2, zIndex: 11 }}
-                >
-                    <Star fontSize="small" />
-                </Box>
-            )}
-        </Box>
-    );
-}
-
-interface RevealedCellProps {
-    cell: CellRevealed;
-    row: number;
-    col: number;
-}
-
-function RevealedCell({
-    cell: { goal, completedPlayers },
+export default function BoardCell({
+    goal = '',
+    description,
+    difficulty,
+    categories,
+    completedPlayers,
+    revealed = false,
+    onReveal,
     row,
     col,
-}: RevealedCellProps) {
-    // context
+}: BoardCellProps) {
     const {
         markGoal,
         unmarkGoal,
@@ -132,9 +58,11 @@ function RevealedCell({
         showCounters,
         connectedPlayer,
         colorMap,
-    } = useContext(RoomContext);
+    } = useRoomContext();
 
-    // callbacks
+    const [wasRevealed, setWasRevealed] = useState(revealed);
+    const [animating, setAnimating] = useState(false);
+
     const toggleSpace = useCallback(() => {
         if (!connectedPlayer) {
             return;
@@ -142,12 +70,38 @@ function RevealedCell({
         if (connectedPlayer.spectator) {
             return;
         }
+        if (!revealed) {
+            return;
+        }
         if (completedPlayers.includes(connectedPlayer.id)) {
             unmarkGoal(row, col);
         } else {
             markGoal(row, col);
         }
-    }, [row, col, markGoal, unmarkGoal, connectedPlayer, completedPlayers]);
+    }, [
+        connectedPlayer,
+        revealed,
+        completedPlayers,
+        unmarkGoal,
+        row,
+        col,
+        markGoal,
+    ]);
+
+    useEffect(() => {
+        console.log(revealed, wasRevealed);
+        if (revealed && !wasRevealed) {
+            setWasRevealed(true);
+            setAnimating(true);
+            const timer = setTimeout(() => {
+                setAnimating(false);
+                if (onReveal) onReveal();
+            }, 10000);
+            return () => {
+                clearTimeout(timer);
+            };
+        }
+    }, [revealed, wasRevealed, onReveal]);
 
     // calculations
     const colorPortion = 360 / completedPlayers.length;
@@ -169,16 +123,14 @@ function RevealedCell({
             title={
                 showGoalDetails ? (
                     <>
-                        <Box sx={{ pb: 1.5 }}>{goal.description}</Box>
-                        {goal.difficulty && (
-                            <Box>Difficulty: {goal.difficulty}</Box>
-                        )}
-                        {goal.categories && (
-                            <Box>Categories: {goal.categories.join(', ')}</Box>
+                        <Box sx={{ pb: 1.5 }}>{description}</Box>
+                        {difficulty && <Box>Difficulty: {difficulty}</Box>}
+                        {categories && (
+                            <Box>Categories: {categories.join(', ')}</Box>
                         )}
                     </>
                 ) : (
-                    goal.description
+                    description
                 )
             }
             arrow
@@ -201,16 +153,15 @@ function RevealedCell({
                     position: 'relative',
                     aspectRatio: '1 / 1',
                     flexGrow: 1,
-                    cursor: 'pointer',
+                    cursor: revealed ? 'pointer' : 'default',
                     overflow: 'hidden',
                     border: 1,
                     borderColor: 'divider',
-                    transition: 'all',
-                    transitionDuration: 300,
+                    transition: 'all 0.3s ease',
                     background: (theme) => theme.palette.background.default,
                     ':hover': {
                         zIndex: 10,
-                        scale: '110%',
+                        scale: revealed ? '110%' : '100%',
                     },
                     display: 'flex',
                     flexDirection: 'column',
@@ -230,8 +181,7 @@ function RevealedCell({
             >
                 <Box
                     sx={{
-                        // position: 'absolute',
-                        zIndex: 10,
+                        zIndex: 100,
                         display: 'flex',
                         height: '100%',
                         width: '100%',
@@ -241,7 +191,7 @@ function RevealedCell({
                     }}
                 >
                     <TextFit
-                        text={goal.goal}
+                        text={goal}
                         sx={{
                             p: 1,
                             filter: 'drop-shadow(2px 2px 2px rgba(0,0,0,0))',
@@ -250,7 +200,7 @@ function RevealedCell({
                 </Box>
                 {colors.map((color, index) => (
                     <Box
-                        key={color}
+                        key={`${color}-${index}`}
                         sx={{
                             position: 'absolute',
                             width: '100%',
@@ -310,6 +260,15 @@ function RevealedCell({
                     <Box sx={{ position: 'absolute', right: 0 }}>
                         <Star />
                     </Box>
+                )}
+                {!revealed && <Box sx={fogSx} />}
+                {animating && (
+                    <Box
+                        sx={{
+                            ...fogSx,
+                            animation: 'fogReveal 2s ease-in forwards',
+                        }}
+                    />
                 )}
             </Box>
         </Tooltip>
