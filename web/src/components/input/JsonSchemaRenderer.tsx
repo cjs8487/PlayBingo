@@ -126,12 +126,16 @@ function defaultForSchema(schema: JSONSchema): JSONValue {
 
     const t = Array.isArray(schema.type) ? schema.type[0] : schema.type;
 
+    if (schema.required && (t === 'number ' || t === 'integer')) {
+        return 0;
+    }
+
     switch (t) {
         case 'string':
             return '';
         case 'number':
         case 'integer':
-            return 0;
+            return undefined;
         case 'boolean':
             return false;
         case 'array':
