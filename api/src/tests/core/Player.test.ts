@@ -8,6 +8,10 @@ const createPlayer = () =>
     new Player(room, 'test', 'Test Player', 'blue', false, false);
 
 describe('Goal Tracking', () => {
+    beforeEach(() => {
+        room.exploration = false;
+    });
+
     it('Correctly marks unmarked cells', () => {
         const player = createPlayer();
         player.mark(0, 0);
@@ -101,6 +105,11 @@ describe('Goal Tracking', () => {
 });
 
 describe('Exploration', () => {
+    beforeEach(() => {
+        room.exploration = true;
+        room.alwaysRevealedMask = 1n;
+    });
+
     it('Correctly reveals cells when marking with exploration enabled', () => {
         const player = createPlayer();
         player.room.exploration = true;

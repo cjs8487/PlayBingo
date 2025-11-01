@@ -48,7 +48,7 @@ import {
 import { getCategories } from '../database/games/GoalCategories';
 import { goalsForGame } from '../database/games/Goals';
 import { shuffle } from '../util/Array';
-import { computeLineMasks, listToBoard } from '../util/RoomUtils';
+import { computeLineMasks, listToBoard, rowColToMask } from '../util/RoomUtils';
 import Player from './Player';
 import { allRooms } from './RoomServer';
 import BoardGenerator from './generation/BoardGenerator';
@@ -115,7 +115,8 @@ export default class Room {
     hideCard: boolean;
     bingoMode: BingoMode;
     lineCount: number;
-    exploration: boolean = true;
+    exploration: boolean = false;
+    alwaysRevealedMask: bigint = 0n;
 
     lastGenerationMode: BoardGenerationOptions;
 
@@ -146,6 +147,7 @@ export default class Room {
         bingoMode: BingoMode,
         lineCount: number,
         racetimeEligible: boolean,
+        explorationStart?: string,
         racetimeUrl?: string,
         generatorConfig?: GeneratorConfig,
     ) {
@@ -195,6 +197,32 @@ export default class Room {
         );
 
         this.players = new Map<string, Player>();
+
+        if (explorationStart) {
+            this.exploration = true;
+            switch (explorationStart) {
+                case 'TL':
+                    this.alwaysRevealedMask |= rowColToMask(0, 0, 5);
+                    break;
+                case 'TR':
+                    this.alwaysRevealedMask |= rowColToMask(0, 4, 5);
+                    break;
+                case 'BL':
+                    this.alwaysRevealedMask |= rowColToMask(4, 0, 5);
+                    break;
+                case 'BR':
+                    this.alwaysRevealedMask |= rowColToMask(4, 4, 5);
+                    break;
+                case 'CENTER':
+                    this.alwaysRevealedMask |= rowColToMask(2, 2, 5);
+                    break;
+                default:
+                    this.logWarn(
+                        'Unknown starting square for exploration. Exploration was not enabled for this room.',
+                    );
+                    this.exploration = false;
+            }
+        }
     }
 
     async generateBoard(options: BoardGenerationOptions) {
@@ -626,7 +654,10 @@ export default class Room {
             },
             ' has revealed the card.',
         ]);
-        return { hidden: false, board: this.board };
+        player.sendMessage({
+            action: 'syncBoard',
+            board: { hidden: false, board: this.board },
+        });
     }
     //#endregion
 

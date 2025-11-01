@@ -24,6 +24,7 @@ interface FormikSelectProps {
     options: SelectOption[];
     placeholder?: string;
     sx?: SxProps;
+    disabled?: boolean;
 }
 
 export function FormikSelectField({
@@ -32,6 +33,7 @@ export function FormikSelectField({
     label,
     options,
     sx,
+    disabled,
 }: FormikSelectProps) {
     const [field, meta, helpers] = useField<string | null>(name);
 
@@ -52,6 +54,7 @@ export function FormikSelectField({
                 }}
                 onBlur={field.onBlur}
                 error={meta.touched && !!meta.error}
+                disabled={disabled}
             >
                 {options.map((option) => (
                     <MenuItem key={option.value} value={option.value}>
@@ -77,6 +80,7 @@ export function FormikSelectFieldAutocomplete({
     name,
     label,
     options,
+    disabled,
 }: FormikSelectProps) {
     const [field, meta, helpers] = useField<string | null>(name);
 
@@ -106,6 +110,7 @@ export function FormikSelectFieldAutocomplete({
                     helperText={meta.touched && meta.error}
                 />
             )}
+            disabled={disabled}
         />
     );
 }

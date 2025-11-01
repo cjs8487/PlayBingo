@@ -132,20 +132,22 @@ model Connection {
 }
 
 model Room {
-  id           String       @id @unique @default(cuid())
-  slug         String       @unique
-  name         String
-  private      Boolean
-  password     String?
-  history      RoomAction[]
-  game         Game?        @relation(fields: [gameId], references: [id])
-  gameId       String?
-  board        String[]
-  racetimeRoom String?
-  hideCard     Boolean      @default(false)
-  bingoMode    BingoMode    @default(LINES)
-  lineCount    Int          @default(1)
-  players      Player[]
+  id               String       @id @unique @default(cuid())
+  slug             String       @unique
+  name             String
+  private          Boolean
+  password         String?
+  history          RoomAction[]
+  game             Game?        @relation(fields: [gameId], references: [id])
+  gameId           String?
+  board            String[]
+  racetimeRoom     String?
+  hideCard         Boolean      @default(false)
+  bingoMode        BingoMode    @default(LINES)
+  lineCount        Int          @default(1)
+  players          Player[]
+  exploration      Boolean      @default(false)
+  explorationStart String?
 }
 
 model Player {
