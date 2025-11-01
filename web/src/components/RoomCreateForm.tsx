@@ -124,6 +124,8 @@ export default function RoomCreateForm({ game }: FormProps) {
                 lineCount: 1,
                 seed: undefined,
                 hideCard: false,
+                exploration: false,
+                explorationStart: 'TL',
             }}
             validationSchema={roomValidationSchema}
             onSubmit={async (values) => {
@@ -148,7 +150,7 @@ export default function RoomCreateForm({ game }: FormProps) {
                 router.push(`/rooms/${slug}`);
             }}
         >
-            {({ values: { mode } }) => (
+            {({ values: { mode, exploration } }) => (
                 <Form>
                     <Box
                         sx={{
@@ -213,6 +215,32 @@ export default function RoomCreateForm({ game }: FormProps) {
                             id="spectator"
                             label="Join as spectator?"
                         />
+                        <Box sx={{ display: 'flex' }}>
+                            <FormikSwitch
+                                name="exploration"
+                                id="exploration"
+                                label="Exploration"
+                            />
+                            <FormikSelectField
+                                id="room-mode-select"
+                                name="explorationStart"
+                                label="Starting Square"
+                                disabled={!exploration}
+                                options={[
+                                    { value: 'TL', label: 'Top Left' },
+                                    { value: 'TR', label: 'Top Right' },
+                                    { value: 'BL', label: 'Bottom Left' },
+                                    { value: 'BR', label: 'Bottom Right' },
+                                    {
+                                        value: 'CENTER',
+                                        label: 'Center',
+                                        tooltip:
+                                            'The center square of the board starts revealed. If the board has an even width or height, two squares will be revealed in that direction.',
+                                    },
+                                ]}
+                                sx={{ flexGrow: 1 }}
+                            ></FormikSelectField>
+                        </Box>
                         <Accordion>
                             <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                                 Advanced Generation Options

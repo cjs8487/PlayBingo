@@ -251,10 +251,14 @@ export default class Player {
     }
 
     getRevealedMask(): bigint {
-        return computeRevealedMask(this.markedGoals, 5, 5) | 1n;
+        return (
+            computeRevealedMask(this.markedGoals, 5, 5) |
+            this.room.alwaysRevealedMask
+        );
     }
 
     obfuscateBoard() {
+        this.exploredGoals = this.getRevealedMask();
         return this.room.board.map((row, rowIndex) =>
             row.map((cell, colIndex) =>
                 this.hasRevealed(rowIndex, colIndex)

@@ -44,6 +44,7 @@ import {
     computeLineMasks,
     getModeString,
     listToBoard,
+    rowColToMask,
 } from '../util/RoomUtils';
 import Player from './Player';
 import { allRooms } from './RoomServer';
@@ -104,7 +105,8 @@ export default class Room {
     bingoMode: BingoMode;
     lineCount: number;
     variantName: string;
-    exploration: boolean = true;
+    exploration: boolean = false;
+    alwaysRevealedMask: bigint = 0n;
 
     lastGenerationMode: BoardGenerationOptions;
 
@@ -136,6 +138,7 @@ export default class Room {
         lineCount: number,
         racetimeEligible: boolean,
         variantName: string,
+        explorationStart?: string,
         racetimeUrl?: string,
         generatorSettings?: GeneratorSettings,
     ) {
@@ -186,6 +189,32 @@ export default class Room {
         );
 
         this.players = new Map<string, Player>();
+
+        if (explorationStart) {
+            this.exploration = true;
+            switch (explorationStart) {
+                case 'TL':
+                    this.alwaysRevealedMask |= rowColToMask(0, 0, 5);
+                    break;
+                case 'TR':
+                    this.alwaysRevealedMask |= rowColToMask(0, 4, 5);
+                    break;
+                case 'BL':
+                    this.alwaysRevealedMask |= rowColToMask(4, 0, 5);
+                    break;
+                case 'BR':
+                    this.alwaysRevealedMask |= rowColToMask(4, 4, 5);
+                    break;
+                case 'CENTER':
+                    this.alwaysRevealedMask |= rowColToMask(2, 2, 5);
+                    break;
+                default:
+                    this.logWarn(
+                        'Unknown starting square for exploration. Exploration was not enabled for this room.',
+                    );
+                    this.exploration = false;
+            }
+        }
     }
 
     async generateBoard(options: BoardGenerationOptions) {
@@ -618,7 +647,10 @@ export default class Room {
             },
             ' has revealed the card.',
         ]);
-        return { hidden: false, board: this.board };
+        player.sendMessage({
+            action: 'syncBoard',
+            board: { hidden: false, board: this.board },
+        });
     }
     //#endregion
 

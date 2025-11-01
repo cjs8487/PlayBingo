@@ -64,6 +64,8 @@ rooms.post('/', async (req, res) => {
         hideCard,
         seed,
         spectator,
+        exploration,
+        explorationStart,
     } = req.body;
 
     if (!name || !game || !nickname /*|| !variant || !mode*/) {
@@ -162,6 +164,7 @@ rooms.post('/', async (req, res) => {
         mode,
         lineCount,
         variant,
+        exploration ? explorationStart : undefined,
     );
     const room = new Room(
         name,
@@ -177,6 +180,7 @@ rooms.post('/', async (req, res) => {
             !!gameData.racetimeCategory &&
             !!gameData.racetimeGoal,
         variantName,
+        exploration ? explorationStart : undefined,
         '',
         generatorSettings,
     );
@@ -276,6 +280,7 @@ async function getOrLoadRoom(slug: string): Promise<Room | null> {
             !!dbRoom.game.racetimeGoal) ||
             !!dbRoom.racetimeRoom,
         variantName,
+        dbRoom.explorationStart ?? undefined,
         dbRoom.racetimeRoom ?? '',
         generatorSettings,
     );
