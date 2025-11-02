@@ -1,15 +1,15 @@
 'use client';
 import {
+    createContext,
     Dispatch,
     ReactNode,
     SetStateAction,
-    createContext,
     useCallback,
     useContext,
     useEffect,
     useState,
 } from 'react';
-import { Goal } from '@playbingo/types';
+import { Game, Goal } from '@playbingo/types';
 import { useApi } from '../lib/Hooks';
 import { alertError } from '../lib/Utils';
 import { KeyedMutator } from 'swr';
@@ -36,6 +36,9 @@ interface GoalManagerContext {
     canModerate: boolean;
     selectedGoal: Goal | undefined;
     goals: Goal[];
+    language: string;
+    defaultLanguage?: string;
+    allLanguages?: string[];
     shownGoals: Goal[];
     catList: string[];
     searchParams: SearchParams;
@@ -44,6 +47,7 @@ interface GoalManagerContext {
     deleteGoal: (id: string) => void;
     setShownCats: (cats: string[]) => void;
     setSort: (sort: SortOptions) => void;
+    setLanguage: (language: string) => void;
     setReverse: Dispatch<SetStateAction<boolean>>;
     setSearch: (search: string) => void;
     setSettings: Dispatch<SetStateAction<GoalManagerSettings>>;
@@ -57,6 +61,7 @@ const GoalManagerContext = createContext<GoalManagerContext>({
     canModerate: false,
     selectedGoal: undefined,
     goals: [],
+    language: '',
     shownGoals: [],
     catList: [],
     searchParams: { sort: null, reverse: false, search: '', shownCats: [] },
@@ -65,6 +70,7 @@ const GoalManagerContext = createContext<GoalManagerContext>({
     },
     setSelectedGoal() {},
     deleteGoal() {},
+    setLanguage() {},
     setShownCats() {},
     setSort() {},
     setReverse() {},
@@ -95,11 +101,16 @@ export function GoalManagerContextProvider({
         mutate: mutateGoals,
     } = useApi<Goal[]>(`/api/games/${slug}/goals`);
 
+    const { data: game, isLoading: gameLoading } = useApi<Game>(
+        `/api/games/${slug}`,
+    );
+
     // state
     // core
     const [selectedGoal, setSelectedGoal] = useState<Goal>();
     const [catList, setCatList] = useState<string[]>([]);
     const [newGoal, setNewGoal] = useState(false);
+    const [language, setLanguage] = useState<string>('');
     // search params
     const [sort, setSort] = useState<SortOptions | null>(SortOptions.DEFAULT);
     const [shownCats, setShownCats] = useState<string[]>([]);
@@ -143,10 +154,23 @@ export function GoalManagerContextProvider({
         setCatList(cats);
     }, [goals]);
 
+    useEffect(() => {
+        if (game?.defaultLanguage && !language) {
+            setLanguage(game.defaultLanguage);
+        }
+    }, [game?.defaultLanguage, language]);
+
     // base case
     if (!goals || goalsLoading) {
         return null;
     }
+
+    if (!game || gameLoading) {
+        return null;
+    }
+
+    const allLanguages = game.translations || [];
+    const defaultLanguage = game.defaultLanguage;
 
     // calculations
     const shownGoals = goals
@@ -191,6 +215,9 @@ export function GoalManagerContextProvider({
                 canModerate,
                 selectedGoal,
                 goals,
+                language,
+                defaultLanguage,
+                allLanguages,
                 shownGoals,
                 catList,
                 searchParams: { sort, search, reverse, shownCats },
@@ -198,6 +225,7 @@ export function GoalManagerContextProvider({
                 setSelectedGoal,
                 deleteGoal,
                 setShownCats,
+                setLanguage,
                 setSort,
                 setSearch,
                 setReverse,

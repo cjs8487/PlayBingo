@@ -18,6 +18,8 @@ export default function GoalManagement() {
         slug,
         canModerate,
         selectedGoal,
+        language,
+        defaultLanguage,
         goals,
         shownGoals,
         catList,
@@ -122,6 +124,10 @@ export default function GoalManagement() {
                         <GoalEditor
                             slug={slug}
                             goal={selectedGoal}
+                            language={language}
+                            isDefaultLanguage={
+                                language === defaultLanguage || !language
+                            }
                             mutateGoals={mutateGoals}
                             categories={catList}
                             canModerate={canModerate}
@@ -130,7 +136,16 @@ export default function GoalManagement() {
                     {newGoal && (
                         <GoalEditor
                             slug={slug}
-                            goal={{ id: '', goal: '', description: '' }}
+                            goal={{
+                                id: '',
+                                goal: '',
+                                description: '',
+                                translations: {},
+                            }}
+                            language={language}
+                            isDefaultLanguage={
+                                language === defaultLanguage || !defaultLanguage
+                            }
                             isNew
                             cancelNew={() => setNewGoal(false)}
                             mutateGoals={mutateGoals}
