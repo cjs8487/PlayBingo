@@ -1,11 +1,15 @@
 import {
+    Box,
+    Button,
     Card,
     CardContent,
-    Box,
-    Typography,
-    Button,
+    FormControl,
     FormControlLabel,
+    InputLabel,
+    MenuItem,
+    Select,
     Switch,
+    Typography,
 } from '@mui/material';
 import { ConnectionStatus, useRoomContext } from '../../context/RoomContext';
 import ColorSelect from './ColorSelect';
@@ -21,6 +25,10 @@ export default function PlayerInfo() {
         showCounters,
         toggleCounters,
         connectedPlayer,
+        language,
+        defaultLanguage,
+        availableLanguages,
+        setLanguage,
     } = useRoomContext();
 
     return (
@@ -70,6 +78,36 @@ export default function PlayerInfo() {
                         }
                         label="Show All Goal Details"
                     />
+                </Box>
+                <Box
+                    sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 1.5,
+                        mt: 1.5,
+                    }}
+                >
+                    <FormControl fullWidth>
+                        <InputLabel size="small" id="languageSelect-label">
+                            Language
+                        </InputLabel>
+                        <Select
+                            id="language-select"
+                            value={language}
+                            onChange={(e) => setLanguage(e.target.value)}
+                            size="small"
+                            fullWidth
+                        >
+                            <MenuItem key="default" value={defaultLanguage}>
+                                {defaultLanguage}
+                            </MenuItem>
+                            {availableLanguages?.map((lang) => (
+                                <MenuItem key={lang} value={lang}>
+                                    {lang}
+                                </MenuItem>
+                            ))}
+                        </Select>
+                    </FormControl>
                 </Box>
             </CardContent>
         </Card>

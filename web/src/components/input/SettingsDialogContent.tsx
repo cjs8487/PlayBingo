@@ -52,8 +52,6 @@ export const SettingsDialogContent: React.FC = () => {
                         }
                         label="Display additional information in goal list"
                     />
-
-                    {/* Horizontal layout: label + select + tooltip */}
                     <Box
                         sx={{
                             display: 'flex',
