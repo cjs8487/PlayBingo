@@ -809,12 +809,17 @@ export default class Room {
      * provided user minimal room permissions, or a Permissions object
      * containing he appropriate permissions based on the user
      */
-    async canAutoAuthenticate(user?: string): Promise<false | Permissions> {
+    async canAutoAuthenticate(
+        user: string,
+        isSession: boolean,
+    ): Promise<false | Permissions> {
         if (!user) {
             return false;
         }
 
-        const player = this.players.get(`user:${user}`);
+        const player = this.players.get(
+            `${isSession ? 'session' : 'user'}:${user}`,
+        );
         if (player) {
             return {
                 isMonitor: player.monitor,

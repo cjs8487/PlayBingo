@@ -312,7 +312,8 @@ rooms.get('/:slug', async (req, res) => {
         },
     };
 
-    const perms = await room.canAutoAuthenticate(req.session.user);
+    const userKey = req.session.user ?? req.session.id;
+    const perms = await room.canAutoAuthenticate(userKey, !req.session.user);
     if (perms) {
         roomData.token = createRoomToken(
             room,
