@@ -123,10 +123,7 @@ roomWebSocketServer.on('connection', (ws, req) => {
                 room.handleNewCard(action);
                 break;
             case 'revealCard':
-                const board = room.handleRevealCard(payload);
-                if (board) {
-                    ws.send(JSON.stringify({ action: 'syncBoard', board }));
-                }
+                room.handleRevealCard(payload);
                 break;
             case 'changeAuth':
                 const newToken = createRoomToken(

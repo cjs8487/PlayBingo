@@ -5,12 +5,12 @@
  * and run json-schema-to-typescript to regenerate this file.
  */
 
-/**
- * An incoming websocket message from the server telling the client of a change in room state or instructing it to take an action
- */
-export interface Cell {
+export type Cell = RevealedCell | HiddenCell;
+
+export interface RevealedCell {
   goal: Goal;
   completedPlayers: string[];
+  revealed: true;
 }
 /**
  * A single objective for a bingo game.
@@ -21,4 +21,8 @@ export interface Goal {
   description: string | null;
   difficulty?: number | null;
   categories?: string[];
+}
+export interface HiddenCell {
+  revealed: false;
+  completedPlayers: string[];
 }

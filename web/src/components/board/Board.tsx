@@ -1,8 +1,8 @@
+import { Box } from '@mui/material';
 import { useContext, useLayoutEffect, useRef, useState } from 'react';
+import { useWindowSize } from 'react-use';
 import { RoomContext } from '../../context/RoomContext';
 import Cell from './Cell';
-import { Box } from '@mui/material';
-import { useWindowSize } from 'react-use';
 
 export default function Board() {
     const { board, revealCard } = useContext(RoomContext);
@@ -77,12 +77,31 @@ export default function Board() {
                 }}
             >
                 {board.board.map((row, rowIndex) =>
-                    row.map((goal, colIndex) => (
+                    row.map((cell, colIndex) => (
                         <Cell
-                            key={goal.goal.id}
+                            key={
+                                cell.revealed
+                                    ? cell.goal.id
+                                    : 'hidden-' + rowIndex + '-' + colIndex
+                            }
                             row={rowIndex}
                             col={colIndex}
-                            cell={goal}
+                            goal={cell.revealed ? cell.goal.goal : undefined}
+                            description={
+                                cell.revealed
+                                    ? cell.goal.description
+                                    : undefined
+                            }
+                            difficulty={
+                                cell.revealed
+                                    ? (cell.goal.difficulty ?? undefined)
+                                    : undefined
+                            }
+                            categories={
+                                cell.revealed ? cell.goal.categories : undefined
+                            }
+                            completedPlayers={cell.completedPlayers}
+                            revealed={cell.revealed}
                         />
                     )),
                 )}
