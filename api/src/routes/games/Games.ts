@@ -47,6 +47,7 @@ import { getUser, getUsersEligibleToModerateGame } from '../../database/Users';
 import { deleteFile, saveFile } from '../../media/MediaServer';
 import { logError } from '../../Logger';
 import variants from './Variants';
+import { getVariant } from '../../database/games/Variants';
 
 const games = Router();
 
@@ -632,6 +633,7 @@ games.post('/:slug/generation', async (req, res) => {
 
 games.get('/:slug/sampleBoard', async (req, res) => {
     const { slug } = req.params;
+    const { variant } = req.query;
 
     const gameData = await gameForSlug(slug);
     if (!gameData) {
@@ -645,14 +647,42 @@ games.get('/:slug/sampleBoard', async (req, res) => {
         return;
     }
 
+    let variantData;
+    if (variant) {
+        if (typeof variant === 'string') {
+            variantData = await getVariant(variant);
+        } else {
+            res.status(400).send('Invalid variant parameter');
+            return;
+        }
+        if (!variantData) {
+            res.sendStatus(404);
+            return;
+        }
+        if (variantData.gameId !== gameData.id) {
+            res.sendStatus(404);
+            return;
+        }
+    }
+
     const goals = await goalsForGame(slug);
     const categories = await getCategories(slug);
 
-    const generator = new BoardGenerator(
-        goals,
-        categories,
-        gameData.generatorSettings as GeneratorSettings,
-    );
+    let generator: BoardGenerator;
+    if (variantData) {
+        generator = new BoardGenerator(
+            goals,
+            categories,
+            variantData.generatorSettings ?? gameData.generatorSettings,
+        );
+    } else {
+        generator = new BoardGenerator(
+            goals,
+            categories,
+            gameData.generatorSettings,
+        );
+    }
+
     generator.generateBoard();
     res.status(200).send({
         board: generator.board.map((goal) => ({
@@ -663,6 +693,7 @@ games.get('/:slug/sampleBoard', async (req, res) => {
             difficulty: goal.difficulty,
         })),
         seed: generator.seed,
+        variant: variantData ? variantData.name : undefined,
     });
 });
 

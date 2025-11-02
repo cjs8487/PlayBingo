@@ -63,7 +63,7 @@ export default async function GameLayout({
         notFound();
     }
 
-    const { coverImage, name, owners, moderators } = game;
+    const { coverImage, name, owners, moderators, variants } = game;
 
     return (
         <Box
@@ -249,7 +249,7 @@ export default async function GameLayout({
                         gap: 1,
                     }}
                 >
-                    <SidebarButtons slug={slug} />
+                    <SidebarButtons slug={slug} variants={variants ?? []} />
                 </Box>
             </Box>
             <GameTabs gameData={game} />
