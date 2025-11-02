@@ -50,6 +50,7 @@ export default function GameTabs({
     tabs.push('goals');
     if (canModerate) {
         tabs.push('categories');
+        tabs.push('translations');
     }
     if (isOwner) {
         if (difficultyVariantsEnabled) {

@@ -71,6 +71,7 @@ model Game {
   coverImage                  String?
   variants                    Variant[]
   goals                       Goal[]
+  defaultLanguage             String                        @default("English")
   translations                String[]                      @default([])
   owners                      User[]                        @relation("GameOwners")
   moderators                  User[]                        @relation("GameModerators")

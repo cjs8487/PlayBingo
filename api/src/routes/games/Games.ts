@@ -25,6 +25,7 @@ import {
     removeModerator,
     removeOwner,
     unfavoriteGame,
+    updateDefaultLanguage,
     updateDescription,
     updateDifficultyGroups,
     updateDifficultyVariant,
@@ -88,6 +89,7 @@ games.get('/:slug', async (req, res) => {
             avatar: mod.avatar ?? undefined,
         })),
         enableSRLv5: game.enableSRLv5,
+        defaultLanguage: game.defaultLanguage,
         translations: game.translations,
         racetimeBeta: game.racetimeBeta,
         racetimeCategory: game.racetimeCategory ?? undefined,
@@ -154,6 +156,7 @@ games.post('/:slug', async (req, res) => {
         enableSRLv5,
         racetimeCategory,
         racetimeGoal,
+        defaultLanguage,
         difficultyVariantsEnabled,
         difficultyGroups,
         slugWords,
@@ -190,6 +193,9 @@ games.post('/:slug', async (req, res) => {
     }
     if (racetimeGoal) {
         result = await updateRacetimeGoal(slug, racetimeGoal);
+    }
+    if (defaultLanguage) {
+        result = await updateDefaultLanguage(slug, defaultLanguage);
     }
     if (difficultyVariantsEnabled !== undefined) {
         result = await updateDifficultyVariantsEnabled(
