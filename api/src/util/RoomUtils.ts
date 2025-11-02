@@ -1,6 +1,7 @@
 import { Cell } from '@playbingo/types';
 import { GeneratorGoal } from '../core/generation/GeneratorCore';
 import { chunk } from './Array';
+import { BingoMode } from '@prisma/client';
 
 export const listToBoard = (list: GeneratorGoal[]): Cell[][] => {
     return chunk(
@@ -57,4 +58,29 @@ export const hasLineCompletion = (
     lineMask: bigint,
 ): boolean => {
     return (bitset & lineMask) === lineMask;
+};
+
+export const getModeString = (mode: BingoMode, lineCount: number): string => {
+    switch (mode) {
+        case BingoMode.LINES:
+            if (lineCount === 1) {
+                return 'Single Bingo';
+            } else if (lineCount === 2) {
+                return 'Double Bingo';
+            } else if (lineCount === 3) {
+                return 'Triple Bingo';
+            } else if (lineCount === 4) {
+                return 'Quad Bingo';
+            } else if (lineCount === 5) {
+                return 'Cinco Bingo';
+            } else {
+                return `${lineCount}-Line Bingo`;
+            }
+        case BingoMode.BLACKOUT:
+            return 'Blackout';
+        case BingoMode.LOCKOUT:
+            return 'Lockout';
+        default:
+            return 'Unknown Mode';
+    }
 };

@@ -1,4 +1,4 @@
-import { GenerationGoalRestriction, Goal } from '@prisma/client';
+import { GeneratorSettings } from '@playbingo/shared';
 import BoardGenerator from './BoardGenerator';
 import { GeneratorGoal } from './GeneratorCore';
 
@@ -31,6 +31,8 @@ LINE_CHECK_LIST[22] = [2, 7, 12, 17, 20, 21, 23, 24];
 LINE_CHECK_LIST[23] = [20, 21, 22, 24, 3, 8, 13, 18];
 LINE_CHECK_LIST[24] = [0, 6, 12, 18, 20, 21, 22, 23, 19, 14, 9, 4];
 
+type PlacementRestriction = GeneratorSettings['restrictions'][number];
+
 export type GoalPlacementRestriction = (
     generator: BoardGenerator,
     cell: number,
@@ -38,13 +40,13 @@ export type GoalPlacementRestriction = (
 ) => GeneratorGoal[];
 
 export const createPlacementRestriction = (
-    strategy: GenerationGoalRestriction,
+    restriction: PlacementRestriction,
 ) => {
-    switch (strategy) {
-        case 'LINE_TYPE_EXCLUSION':
+    switch (restriction.type) {
+        case 'line-type-exclusion':
             return preferDistinctTypesInLine;
         default:
-            throw Error('Unknwon GenerationGoalRestriction');
+            throw Error(`Unknown placement restriction ${restriction.type}`);
     }
 };
 
