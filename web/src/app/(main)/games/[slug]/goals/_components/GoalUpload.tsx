@@ -50,48 +50,7 @@ export default function GoalUpload({ isOpen, close, slug }: GoalUploadProps) {
                         </TabList>
                     </Box>
                     <TabPanel value="List">
-                        <Box>
-                            <Box
-                                sx={{
-                                    mb: 2.5,
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    columnGap: 3,
-                                    backgroundColor: 'warning.light',
-                                    px: 2,
-                                    py: 1,
-                                }}
-                            >
-                                <Warning />
-                                <Box
-                                    sx={{
-                                        color: 'warning.contrastText',
-                                    }}
-                                >
-                                    <Typography variant="body2">
-                                        Please ensure that the list you upload
-                                        is a proper json array.
-                                    </Typography>
-                                    <Typography variant="body2">
-                                        If you have troubles with the data
-                                        format, verify that it is correctly
-                                        formatted at{' '}
-                                        <Link
-                                            component={NextLink}
-                                            href="https://jsonlint.com"
-                                            color="warning.contrastText"
-                                        >
-                                            jsonlint.com
-                                        </Link>
-                                    </Typography>
-                                    <Typography variant="body2">
-                                        Please refresh the page afterwards to
-                                        see the changes.
-                                    </Typography>
-                                </Box>
-                            </Box>
-                            <ListUploadForm slug={slug} close={close} />
-                        </Box>
+                        <ListUploadForm slug={slug} close={close} />
                     </TabPanel>
                     <TabPanel value="SRLv5">
                         <Box>
