@@ -209,10 +209,26 @@ export default class Room {
                     this.alwaysRevealedMask |= rowColToMask(2, 2, 5);
                     break;
                 default:
-                    this.logWarn(
-                        'Unknown starting square for exploration. Exploration was not enabled for this room.',
-                    );
-                    this.exploration = false;
+                    const startCount = Number(explorationStart);
+                    if (isNaN(startCount)) {
+                        this.logWarn(
+                            'Unknown starting square for exploration. Exploration was not enabled for this room.',
+                        );
+                        this.exploration = false;
+                    }
+                    const cells = [...Array(25).keys()];
+                    shuffle(cells);
+                    for (let i = 0; i < startCount; i++) {
+                        const cell = cells.pop();
+                        if (!cell) {
+                            return;
+                        }
+                        this.alwaysRevealedMask |= rowColToMask(
+                            cell % 5,
+                            Math.floor(cell / 5),
+                            5,
+                        );
+                    }
             }
         }
     }

@@ -34,6 +34,33 @@ const roomValidationSchema = yup.object().shape({
     password: yup.string().required('Password is required'),
     game: yup.string().required('Game is required'),
     variant: yup.string(),
+    mode: yup
+        .string()
+        .required('Game mode is required')
+        .oneOf(['LINES', 'BLACKOUT', 'LOCKOUT'], 'Invalid game mode'),
+    explorationStart: yup
+        .string()
+        .oneOf(
+            ['TL', 'TR', 'BL', 'BR', 'CENTER', 'RANDOM'],
+            'Invalid starting square mode',
+        )
+        .when('exploration', {
+            is: true,
+            then: (schema) => schema.required('Starting square is required'),
+            otherwise: (schema) => schema.notRequired(),
+        }),
+    explorationStartCount: yup
+        .number()
+        .when(['exploration', 'explorationStart'], {
+            is: (exploration: boolean, explorationStart: string) =>
+                exploration && explorationStart === 'RANDOM',
+            then: (schema) =>
+                schema
+                    .required('Start count is required')
+                    .min(1, 'Must start with at least 1 revealed square')
+                    .max(5, 'Cannot start with more than 5 goals revealed'),
+            otherwise: (schema) => schema.notRequired(),
+        }),
 });
 
 function VariantSelectField() {
@@ -124,8 +151,10 @@ export default function RoomCreateForm({ game }: FormProps) {
                 lineCount: 1,
                 seed: undefined,
                 hideCard: false,
+                spectator: false,
                 exploration: false,
                 explorationStart: 'TL',
+                explorationStartCount: '',
             }}
             validationSchema={roomValidationSchema}
             onSubmit={async (values) => {
@@ -150,7 +179,7 @@ export default function RoomCreateForm({ game }: FormProps) {
                 router.push(`/rooms/${slug}`);
             }}
         >
-            {({ values: { mode, exploration } }) => (
+            {({ values: { mode, exploration, explorationStart } }) => (
                 <Form>
                     <Box
                         sx={{
@@ -215,7 +244,13 @@ export default function RoomCreateForm({ game }: FormProps) {
                             id="spectator"
                             label="Join as spectator?"
                         />
-                        <Box sx={{ display: 'flex' }}>
+                        <Box
+                            sx={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 2,
+                            }}
+                        >
                             <FormikSwitch
                                 name="exploration"
                                 id="exploration"
@@ -226,6 +261,7 @@ export default function RoomCreateForm({ game }: FormProps) {
                                 name="explorationStart"
                                 label="Starting Square"
                                 disabled={!exploration}
+                                sx={{ flexGrow: 1 }}
                                 options={[
                                     { value: 'TL', label: 'Top Left' },
                                     { value: 'TR', label: 'Top Right' },
@@ -237,9 +273,25 @@ export default function RoomCreateForm({ game }: FormProps) {
                                         tooltip:
                                             'The center square of the board starts revealed. If the board has an even width or height, two squares will be revealed in that direction.',
                                     },
+                                    {
+                                        value: 'RANDOM',
+                                        label: 'Random',
+                                        tooltip:
+                                            'A specified number of cells in the square will be chosen at random to start revealed',
+                                    },
                                 ]}
-                                sx={{ flexGrow: 1 }}
-                            ></FormikSelectField>
+                            />
+                            <NumberInput
+                                id="exploration-random-revealed-count"
+                                name="explorationStartCount"
+                                label="Start Count"
+                                disabled={
+                                    !exploration ||
+                                    explorationStart !== 'RANDOM'
+                                }
+                                min={1}
+                                max={5}
+                            />
                         </Box>
                         <Accordion>
                             <AccordionSummary expandIcon={<ExpandMoreIcon />}>
