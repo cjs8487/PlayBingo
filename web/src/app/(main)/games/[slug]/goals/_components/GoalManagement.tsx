@@ -2,17 +2,18 @@
 import { DeleteConfirmationDialogContent } from '@/components/input/DeleteConfirmationDialogContent';
 import { SettingsDialogContent } from '@/components/input/SettingsDialogContent';
 import { notifyMessage } from '@/lib/Utils';
+import CodeIcon from '@mui/icons-material/Code';
 import Settings from '@mui/icons-material/Settings';
 import UploadIcon from '@mui/icons-material/Upload';
-import CodeIcon from '@mui/icons-material/Code';
 import { Box, Button, IconButton, Typography } from '@mui/material';
 import { ReactNode, useRef, useState } from 'react';
-import { useGoalManagerContext } from '../../../../../../context/GoalManagerContext';
 import Dialog, { DialogRef } from '../../../../../../components/Dialog';
+import { useGoalManagerContext } from '../../../../../../context/GoalManagerContext';
+import GoalCodeDialog from './GoalCodeDialog';
+import GoalComments from './GoalComments';
 import GoalEditor from './GoalEditor';
 import GoalList from './GoalList';
 import GoalUpload from './GoalUpload';
-import GoalCodeDialog from './GoalCodeDialog';
 import Search from './Search';
 
 export default function GoalManagement() {
@@ -148,6 +149,7 @@ export default function GoalManagement() {
                             canModerate={canModerate}
                         />
                     )}
+                    <GoalComments />
                     <GoalUpload
                         isOpen={goalUploadOpen}
                         close={() => setGoalUploadOpen(false)}
