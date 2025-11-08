@@ -42,10 +42,8 @@ export default function SidebarButtons({ slug, variants }: Props) {
                 `/api/games/${slug}/sampleBoard${variantId ? `?variant=${variantId}` : ''}`,
             );
             if (!res.ok) {
-                alertError(
-                    `Failed to generate sample board - ${await res.text()}`,
-                );
-                return;
+                alertError(await res.text());
+                return false;
             }
             const {
                 board,
@@ -57,6 +55,7 @@ export default function SidebarButtons({ slug, variants }: Props) {
             setSampleSeed(seed);
             setSampleVariant(variant);
             handleClose();
+            return true;
         },
         [slug],
     );
@@ -76,9 +75,11 @@ export default function SidebarButtons({ slug, variants }: Props) {
 
     const openSampleBoard = useCallback(
         async (variant?: string) => {
-            await generateSampleBoard(variant);
-            setShowSampleBoard(true);
-            setShowDialog(true);
+            const success = await generateSampleBoard(variant);
+            if (success) {
+                setShowSampleBoard(true);
+                setShowDialog(true);
+            }
         },
         [generateSampleBoard],
     );
