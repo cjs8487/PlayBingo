@@ -134,14 +134,16 @@ export const makeGeneratorSchema = (categories: GoalCategory[]) => {
                                     .meta({ title: 'Random' }),
                             ]),
                         )
-                        .meta({ displayDetails: { row: true } }),
+                        .min(1, 'Rows must contain at least 1 cell.')
+                        .default([{ selectionCriteria: 'random' }]),
                 )
                 .min(1, 'Layout must have at least one row')
                 .refine(
                     (arr) => arr.every((row) => row.length === arr[0].length),
                     { error: 'All rows must be the same length' },
                 )
-                .meta({ title: 'Layout' }),
+                .meta({ title: 'Layout' })
+                .default([[]]),
         }),
     ]);
 

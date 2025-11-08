@@ -40,9 +40,8 @@ export default function CustomLayoutEditor({
     path,
     components,
 }: Props) {
-    console.log(schema);
-    const [width, setWidth] = useState(value[0].length);
-    const [height, setHeight] = useState(value.length);
+    const [width, setWidth] = useState(value[0]?.length ?? 5);
+    const [height, setHeight] = useState(value?.length ?? 5);
     const [showModal, setShowModal] = useState(false);
     const [modalRow, setModalRow] = useState(0);
     const [modalCol, setModalCol] = useState(0);
@@ -140,7 +139,7 @@ export default function CustomLayoutEditor({
                     borderColor: 'divider',
                     display: 'grid',
                     gridTemplateRows: `repeat(${value.length}, 1fr)`,
-                    gridTemplateColumns: `repeat(${value[0].length}, 1fr)`,
+                    gridTemplateColumns: `repeat(${value[0]?.length}, 1fr)`,
                 }}
             >
                 {value.map((row, rowIndex) => (
