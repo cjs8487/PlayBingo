@@ -1,14 +1,9 @@
-import { Box, AppBar, Toolbar, Typography } from '@mui/material';
+'use client';
+import { Box } from '@mui/material';
 import Footer from '../../components/footer/Footer';
-import LinkButton from '../../components/LinkButton';
-import DocUserMenu from './DocUserMenu';
-import Image from 'next/image';
+import Header from './_components/Header';
 
-export default function DocsLayout({
-    children,
-}: {
-    children: React.ReactNode;
-}) {
+export default function DocsLayout({ children }: LayoutProps<'/docs'>) {
     return (
         <Box
             sx={{
@@ -17,43 +12,7 @@ export default function DocsLayout({
                 height: '100vh',
             }}
         >
-            <AppBar position="sticky">
-                <Toolbar>
-                    <LinkButton href="/">
-                        <Image
-                            src="/logo.png"
-                            alt="PlayBingo logo"
-                            width={5900}
-                            height={1867}
-                            style={{ width: 'auto', height: '52px' }}
-                        />
-                        <Typography
-                            variant="h6"
-                            sx={{
-                                ml: 1,
-                            }}
-                        >
-                            Docs
-                        </Typography>
-                    </LinkButton>
-                    <Box
-                        sx={{
-                            flexGrow: 1,
-                        }}
-                    />
-                    <Box
-                        sx={{
-                            display: 'flex',
-                        }}
-                    >
-                        <LinkButton href="/docs">API Docs</LinkButton>
-                        <LinkButton href="/docs/websocket">
-                            Websocket
-                        </LinkButton>
-                    </Box>
-                    <DocUserMenu />
-                </Toolbar>
-            </AppBar>
+            <Header />
             <Box
                 sx={{
                     flexGrow: 1,
