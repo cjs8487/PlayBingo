@@ -47,6 +47,7 @@ import { getVariant } from '../../database/games/Variants';
 import { getUser, getUsersEligibleToModerateGame } from '../../database/Users';
 import { deleteFile, saveFile } from '../../media/MediaServer';
 import variants from './Variants';
+import { GenerationFailedError } from '../../core/generation/GenerationFailedError';
 
 const games = Router();
 
@@ -682,7 +683,14 @@ games.get('/:slug/sampleBoard', async (req, res) => {
         );
     }
 
-    generator.generateBoard();
+    try {
+        generator.generateBoard();
+    } catch (e) {
+        if (e instanceof GenerationFailedError) {
+            res.status(422).send(e.message);
+            return;
+        }
+    }
     res.status(200).send({
         board: generator.board.map((goal) => ({
             id: goal.id,
