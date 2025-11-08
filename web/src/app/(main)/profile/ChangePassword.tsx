@@ -10,7 +10,7 @@ import {
 } from '@mui/material';
 import { useUserContext } from '../../../context/UserContext';
 import { Form, Formik } from 'formik';
-import { forwardRef, useRef, useState } from 'react';
+import { forwardRef, RefObject, useRef, useState } from 'react';
 import Dialog, { DialogRef } from '../../../components/Dialog';
 import FormikTextField from '../../../components/input/FormikTextField';
 import { object, string } from 'yup';
@@ -33,10 +33,7 @@ export default function ChangePassword() {
                 <DialogTitle>Change Password</DialogTitle>
                 <DialogContent>
                     <Box sx={{ pt: 0.75, pb: 1 }}>
-                        <PasswordForm
-                            ref={formRef}
-                            dialogRef={dialogRef.current}
-                        />
+                        <PasswordForm ref={formRef} dialogRef={dialogRef} />
                     </Box>
                     <Typography
                         variant="caption"
@@ -86,7 +83,7 @@ const validationSchema = object({
 });
 
 interface FormProps {
-    dialogRef: DialogRef | null;
+    dialogRef: RefObject<DialogRef | null>;
 }
 
 const PasswordForm = forwardRef<HTMLFormElement, FormProps>(
@@ -118,7 +115,7 @@ const PasswordForm = forwardRef<HTMLFormElement, FormProps>(
                         return;
                     }
                     checkSession();
-                    dialogRef?.close();
+                    dialogRef.current?.close();
                 }}
                 validationSchema={validationSchema}
             >

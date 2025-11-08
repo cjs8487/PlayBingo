@@ -7,7 +7,6 @@ import {
     Typography,
 } from '@mui/material';
 import { RoomData } from '@playbingo/types';
-import Link from 'next/link';
 import { use } from 'react';
 import CacheBreaker from './CacheBreaker';
 
@@ -36,10 +35,7 @@ export default function ActiveRoomList() {
             {rooms.map((room) => (
                 <ListItem key={room.slug}>
                     <Card variant="outlined">
-                        <CardActionArea
-                            href={`/rooms/${room.slug}`}
-                            LinkComponent={Link}
-                        >
+                        <CardActionArea href={`/rooms/${room.slug}`}>
                             <CardContent>
                                 <Typography variant="h5">
                                     {room.name}
