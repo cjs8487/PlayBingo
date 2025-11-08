@@ -3,7 +3,6 @@ import {
     Dialog,
     DialogContent,
     DialogTitle,
-    TextField,
     Typography,
 } from '@mui/material';
 import { GeneratorSettings } from '@playbingo/shared';
@@ -13,6 +12,7 @@ import {
     JsonSchemaRenderer,
     JsonSchemaRendererProps,
 } from '../input/JsonSchemaRenderer';
+import NumberField from '../NumberField';
 
 export type CustomLayout = Extract<
     GeneratorSettings['boardLayout'],
@@ -106,30 +106,20 @@ export default function CustomLayoutEditor({
     return (
         <>
             <Box sx={{ display: 'flex', gap: 2, mb: 1.5 }}>
-                <TextField
-                    type="number"
+                <NumberField
                     label="Width"
                     value={(width as number) ?? ''}
                     error={!!errors[`${path}.0`]}
                     helperText={errors[`${path}.0`] ?? ' '}
-                    onChange={(e) =>
-                        doSetWidth(
-                            e.target.value === '' ? 1 : Number(e.target.value),
-                        )
-                    }
+                    onChange={(v) => doSetWidth(v ?? 1)}
                     sx={{ width: '100%' }}
                 />
-                <TextField
-                    type="number"
+                <NumberField
                     label="Height"
                     value={(height as number) ?? ''}
                     error={!!errors[path]}
                     helperText={errors[path] ?? ' '}
-                    onChange={(e) =>
-                        doSetHeight(
-                            e.target.value === '' ? 1 : Number(e.target.value),
-                        )
-                    }
+                    onChange={(v) => doSetHeight(v ?? 1)}
                     sx={{ width: '100%' }}
                 />
             </Box>
