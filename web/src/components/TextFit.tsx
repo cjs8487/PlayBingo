@@ -47,12 +47,12 @@ export default function TextFit({ text, sx }: { text: string; sx?: SxProps }) {
     }, [optimizedFontSize, fit]);
 
     useEffect(() => {
-        setOptimizedFontSize('20px');
         window.addEventListener('resize', resetFit);
         return () => window.removeEventListener('resize', resetFit);
     }, [resetFit]);
 
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         resetFit();
     }, [text, resetFit]);
 

@@ -1,10 +1,7 @@
 'use client';
 
 import { Box, Link, Typography } from '@mui/material';
-import Image from 'next/image';
 import NextLink from 'next/link';
-import logo from '../../public/logo.png';
-import Footer from '../components/footer/Footer';
 import TextFit from '../components/TextFit';
 
 const mockBoard = {
@@ -87,9 +84,10 @@ const titles = [
     },
 ];
 
+const randomIndex = Math.floor(Math.random() * titles.length);
+
 export default function NotFound() {
-    const { title, subtitle } =
-        titles[Math.floor(Math.random() * titles.length)];
+    const { title, subtitle } = titles[randomIndex];
 
     return (
         <Box
