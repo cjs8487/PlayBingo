@@ -5,8 +5,7 @@
     "required": [
         "id",
         "name",
-        "slug",
-        "generationSettings"
+        "slug"
     ],
     "description": "",
     "properties": {
@@ -74,7 +73,7 @@
             "type": "boolean"
         },
         "generationSettings": {
-            "$ref": "#/$defs/GeneratorSettings"
+            "type": "object"
         },
         "newGeneratorBeta": {
             "type": "boolean"
@@ -87,6 +86,12 @@
         },
         "linksMd": {
             "type": "string"
+        },
+        "variants": {
+            "type": "array",
+            "items": {
+                "$ref": "./Variant.json"
+            }
         }
     },
     "$defs": {
@@ -107,47 +112,6 @@
                     "type": "array",
                     "items": {
                         "type": "number"
-                    }
-                }
-            }
-        },
-        "GeneratorSettings": {
-            "type": "object",
-            "additionalProperties": false,
-            "required": [
-                "pruners",
-                "transformer",
-                "layout",
-                "goalSelection",
-                "cellRestrictions",
-                "globalAdjustments"
-            ],
-            "properties": {
-                "pruners": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "transformer": {
-                    "type": "string"
-                },
-                "layout": {
-                    "type": "string"
-                },
-                "goalSelection": {
-                    "type": "string"
-                },
-                "cellRestrictions": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "globalAdjustments": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
                     }
                 }
             }

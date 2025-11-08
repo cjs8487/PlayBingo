@@ -1,17 +1,11 @@
-import {
-    Category,
-    GenerationBoardLayout,
-    GenerationGlobalAdjustments,
-    GenerationGoalRestriction,
-    GenerationGoalSelection,
-    GenerationListMode,
-    GenerationListTransform,
-} from '@prisma/client';
+import { GeneratorSettings } from '@playbingo/shared';
+import { Category } from '@prisma/client';
 import { shuffle } from '../../util/Array';
 import {
     BoardLayoutGenerator,
     createLayoutGenerator,
 } from './BoardLayoutGenerator';
+import { GenerationFailedError } from './GenerationFailedError';
 import { GeneratorGoal } from './GeneratorCore';
 import { createGlobalAdjustment, GlobalAdjustment } from './GlobalAdjustments';
 import { createGoalGrouper, GoalGrouper } from './GoalGrouper';
@@ -21,15 +15,14 @@ import {
     createPlacementRestriction,
     GoalPlacementRestriction,
 } from './GoalPlacementRestriction';
-import { GenerationFailedError } from './GenerationFailedError';
 
 /**
  *
  */
 export default class BoardGenerator {
     // generation strategies
-    goalListPruners: GoalListPruner[];
-    goalListTransformer: GoalListTransformer;
+    goalFilters: GoalListPruner[];
+    goalTransformers: GoalListTransformer[];
     layoutGenerator: BoardLayoutGenerator;
     goalGrouper: GoalGrouper;
     placementRestrictions: GoalPlacementRestriction[];
@@ -50,34 +43,22 @@ export default class BoardGenerator {
     constructor(
         goals: GeneratorGoal[],
         categories: Category[],
-        pruneStrategies: GenerationListMode[],
-        transformStrategy: GenerationListTransform,
-        layoutStrategy: GenerationBoardLayout,
-        selectionStrategy: GenerationGoalSelection,
-        placementStrategies: GenerationGoalRestriction[],
-        adjustmentStrategies: GenerationGlobalAdjustments[],
+        config: GeneratorSettings,
         seed?: number,
     ) {
-        // input validation
-        if (layoutStrategy === GenerationBoardLayout.NONE) {
-            if (selectionStrategy !== GenerationGoalSelection.RANDOM) {
-                // random generation is the only mode that works with no board
-                // layout precalcualtion
-                throw Error('Invalid configuration');
-            }
-        }
-
         this.allGoals = goals;
         this.goals = [...this.allGoals];
         this.categories = categories;
-        this.goalListPruners = pruneStrategies.map((s) => createPruner(s));
-        this.goalListTransformer = createTransformer(transformStrategy);
-        this.layoutGenerator = createLayoutGenerator(layoutStrategy);
-        this.goalGrouper = createGoalGrouper(selectionStrategy);
-        this.placementRestrictions = placementStrategies.map((s) =>
+        this.goalFilters = config.goalFilters.map((s) => createPruner(s));
+        this.goalTransformers = config.goalTransformation.map((t) =>
+            createTransformer(t),
+        );
+        this.layoutGenerator = createLayoutGenerator(config.boardLayout);
+        this.goalGrouper = createGoalGrouper(config.boardLayout);
+        this.placementRestrictions = config.restrictions.map((s) =>
             createPlacementRestriction(s),
         );
-        this.globalAdjustments = adjustmentStrategies.map((s) =>
+        this.globalAdjustments = config.adjustments.map((s) =>
             createGlobalAdjustment(s),
         );
 
@@ -100,6 +81,13 @@ export default class BoardGenerator {
         // get the goal list to be used in generation
         this.pruneGoalList();
         this.transformGoals();
+
+        if (this.goals.length < 25) {
+            throw new GenerationFailedError(
+                'Not enough goals to generate. Are too many goals filtered?',
+                this,
+            );
+        }
 
         // board generation
         this.generateBoardLayout();
@@ -127,11 +115,11 @@ export default class BoardGenerator {
     }
 
     pruneGoalList() {
-        this.goalListPruners.forEach((f) => f(this));
+        this.goalFilters.forEach((f) => f(this));
     }
 
     transformGoals() {
-        this.goalListTransformer(this);
+        this.goalTransformers.forEach((t) => t(this));
     }
 
     generateBoardLayout() {
@@ -143,6 +131,13 @@ export default class BoardGenerator {
     }
 
     validGoalsForCell(cell: number) {
+        if (!this.groupedGoals[this.layout[cell]]) {
+            throw new GenerationFailedError(
+                `No goals meeting the layout criteria found. Criteria value: ${this.layout[cell]}`,
+                this,
+                cell,
+            );
+        }
         let goals = [...this.groupedGoals[this.layout[cell]]];
         this.placementRestrictions.forEach(
             (f) => (goals = f(this, cell, goals)),

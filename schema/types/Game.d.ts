@@ -23,11 +23,14 @@ export interface Game {
   difficultyGroups?: number;
   slugWords?: string[];
   useTypedRandom?: boolean;
-  generationSettings: GeneratorSettings;
+  generationSettings?: {
+    [k: string]: unknown;
+  };
   newGeneratorBeta?: boolean;
   descriptionMd?: string;
   setupMd?: string;
   linksMd?: string;
+  variants?: Variant[];
 }
 export interface User {
   id: string;
@@ -42,11 +45,11 @@ export interface DifficultyVariant {
   name: string;
   goalAmounts?: number[];
 }
-export interface GeneratorSettings {
-  pruners: string[];
-  transformer: string;
-  layout: string;
-  goalSelection: string;
-  cellRestrictions: string[];
-  globalAdjustments: string[];
+export interface Variant {
+  id: string;
+  name: string;
+  description?: string;
+  generatorSettings?: {
+    [k: string]: unknown;
+  };
 }

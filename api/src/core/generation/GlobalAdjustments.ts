@@ -1,22 +1,22 @@
-import { GenerationGlobalAdjustments, Goal } from '@prisma/client';
+import { GeneratorSettings } from '@playbingo/shared';
 import BoardGenerator from './BoardGenerator';
 import { GeneratorGoal } from './GeneratorCore';
+
+type Adjustment = GeneratorSettings['adjustments'][number];
 
 export type GlobalAdjustment = (
     generator: BoardGenerator,
     lastPlaced: GeneratorGoal,
 ) => void;
 
-export const createGlobalAdjustment = (
-    strategy: GenerationGlobalAdjustments,
-) => {
-    switch (strategy) {
-        case 'SYNERGIZE':
+export const createGlobalAdjustment = (adjustment: Adjustment) => {
+    switch (adjustment.type) {
+        case 'synergize':
             return synergize;
-        case 'BOARD_TYPE_MAX':
+        case 'board-type-max':
             return boardTypeMax;
         default:
-            throw Error('Unknown GenerationListMode strategy');
+            throw Error(`Unknown global adjustment`);
     }
 };
 

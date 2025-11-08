@@ -102,6 +102,8 @@ export interface RoomData {
    * The auto-authentication token generated for the logged in user.
    */
   token?: string;
+  variant: string;
+  mode: string;
 }
 export interface RacetimeConnection {
   /**

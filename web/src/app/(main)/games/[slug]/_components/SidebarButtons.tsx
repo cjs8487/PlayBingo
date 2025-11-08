@@ -1,5 +1,5 @@
 'use client';
-import { Close } from '@mui/icons-material';
+import { ArrowDropDown, Close } from '@mui/icons-material';
 import {
     Box,
     Button,
@@ -7,10 +7,12 @@ import {
     DialogContent,
     DialogTitle,
     IconButton,
+    Menu,
+    MenuItem,
     Tooltip,
     Typography,
 } from '@mui/material';
-import { Goal } from '@playbingo/types';
+import { Goal, Variant } from '@playbingo/types';
 import { ReactNode, useCallback, useState } from 'react';
 import RoomCreateForm from '../../../../../components/RoomCreateForm';
 import { alertError } from '../../../../../lib/Utils';
@@ -18,25 +20,45 @@ import TextFit from '../../../../../components/TextFit';
 
 interface Props {
     slug: string;
+    variants: Variant[];
 }
-export default function SidebarButtons({ slug }: Props) {
+export default function SidebarButtons({ slug, variants }: Props) {
     const [showDialog, setShowDialog] = useState(false);
     const [showSampleBoard, setShowSampleBoard] = useState(false);
     const [dialogContent, setDialogContent] = useState<ReactNode>(null);
     const [sampleBoard, setSampleBoard] = useState<Goal[]>([]);
     const [sampleSeed, setSampleSeed] = useState('');
+    const [sampleVariant, setSampleVariant] = useState<string | undefined>('');
+    const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+    const open = Boolean(anchorEl);
 
-    const generateSampleBoard = useCallback(async () => {
-        const res = await fetch(`/api/games/${slug}/sampleBoard`);
-        if (!res.ok) {
-            alertError(`Failed to generate sample board - ${await res.text()}`);
-            return;
-        }
-        const { board, seed }: { board: Goal[]; seed: string } =
-            await res.json();
-        setSampleBoard(board);
-        setSampleSeed(seed);
-    }, [slug]);
+    const handleClose = () => {
+        setAnchorEl(null);
+    };
+
+    const generateSampleBoard = useCallback(
+        async (variantId?: string) => {
+            const res = await fetch(
+                `/api/games/${slug}/sampleBoard${variantId ? `?variant=${variantId}` : ''}`,
+            );
+            if (!res.ok) {
+                alertError(await res.text());
+                return false;
+            }
+            const {
+                board,
+                seed,
+                variant,
+            }: { board: Goal[]; seed: string; variant: string | undefined } =
+                await res.json();
+            setSampleBoard(board);
+            setSampleSeed(seed);
+            setSampleVariant(variant);
+            handleClose();
+            return true;
+        },
+        [slug],
+    );
 
     const showRoomDialog = useCallback(() => {
         setDialogContent(
@@ -51,11 +73,27 @@ export default function SidebarButtons({ slug }: Props) {
         setShowDialog(true);
     }, [slug]);
 
-    const openSampleBoard = useCallback(async () => {
-        await generateSampleBoard();
-        setShowSampleBoard(true);
-        setShowDialog(true);
-    }, [generateSampleBoard]);
+    const openSampleBoard = useCallback(
+        async (variant?: string) => {
+            const success = await generateSampleBoard(variant);
+            if (success) {
+                setShowSampleBoard(true);
+                setShowDialog(true);
+            }
+        },
+        [generateSampleBoard],
+    );
+
+    const handleSampleBoardButton = useCallback(
+        (event: React.MouseEvent<HTMLButtonElement>) => {
+            if (variants.length > 0) {
+                setAnchorEl(event.currentTarget);
+            } else {
+                openSampleBoard();
+            }
+        },
+        [openSampleBoard, variants],
+    );
 
     return (
         <>
@@ -68,11 +106,37 @@ export default function SidebarButtons({ slug }: Props) {
             </Button>
             <Button
                 variant="outlined"
-                sx={{ width: '100%', px: 0 }}
-                onClick={openSampleBoard}
+                sx={{ width: '100%' }}
+                onClick={handleSampleBoardButton}
+                endIcon={variants.length > 0 ? <ArrowDropDown /> : null}
+                id="sample-board-button"
+                aria-controls={open ? 'sample-board-menu' : undefined}
+                aria-haspopup={variants.length > 0 ? 'true' : undefined}
+                aria-expanded={open ? 'true' : undefined}
             >
-                Generate Sample Board
+                Sample Board
             </Button>
+            <Menu
+                id="sample-board-menu"
+                anchorEl={anchorEl}
+                open={open}
+                onClose={handleClose}
+                slotProps={{
+                    list: {
+                        'aria-labelledby': 'sample-board-button',
+                    },
+                }}
+            >
+                <MenuItem onClick={() => openSampleBoard()}>Normal</MenuItem>
+                {variants.map((variant) => (
+                    <MenuItem
+                        key={variant.id}
+                        onClick={() => openSampleBoard(variant.id)}
+                    >
+                        {variant.name}
+                    </MenuItem>
+                ))}
+            </Menu>
             <Dialog open={showDialog} onClose={() => setShowDialog(false)}>
                 {showSampleBoard ? (
                     <>
@@ -92,6 +156,11 @@ export default function SidebarButtons({ slug }: Props) {
                             <Typography sx={{ mb: 1 }}>
                                 Seed: {sampleSeed}
                             </Typography>
+                            {sampleVariant && (
+                                <Typography sx={{ mb: 1 }}>
+                                    Variant: {sampleVariant}
+                                </Typography>
+                            )}
                             <Box
                                 sx={{
                                     display: 'grid',

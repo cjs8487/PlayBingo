@@ -1,4 +1,10 @@
-import { Card, CardActionArea, CardContent, Typography } from '@mui/material';
+import {
+    Box,
+    Card,
+    CardActionArea,
+    CardContent,
+    Typography,
+} from '@mui/material';
 import { useCallback, useContext, useState } from 'react';
 import { RoomContext } from '../../context/RoomContext';
 import ConnectionState from './ConnectionState';
@@ -34,20 +40,22 @@ export default function RoomInfo() {
                     <CardContent sx={{ textAlign: 'center' }}>
                         <Typography variant="h5">{roomData.name}</Typography>
                         <Typography>{roomData.game}</Typography>
-                        <Typography
-                            component="div"
-                            variant="caption"
+                        <Typography component="div" variant="caption">
+                            {roomData.slug}
+                        </Typography>
+                        <Box
                             sx={{
+                                display: 'flex',
+                                justifyContent: 'center',
+                                gap: 1,
+                                mt: 1,
                                 mb: 2,
                             }}
                         >
-                            {roomData.slug}
-                        </Typography>
-                        {/* <div>
-                            <div>Variant</div>
-                            <div />
-                            <div>Mode</div>
-                        </div> */}
+                            <Typography>{roomData.variant}</Typography>
+                            <Box sx={{ borderLeft: 1 }} />
+                            <Typography>{roomData.mode}</Typography>
+                        </Box>
                         <ConnectionState />
                     </CardContent>
                 </CardActionArea>

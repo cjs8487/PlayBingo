@@ -11,15 +11,7 @@ import {
     ServerMessage,
     UnmarkAction,
 } from '@playbingo/types';
-import {
-    BingoMode,
-    GenerationBoardLayout,
-    GenerationGlobalAdjustments,
-    GenerationGoalRestriction,
-    GenerationGoalSelection,
-    GenerationListMode,
-    GenerationListTransform,
-} from '@prisma/client';
+import { BingoMode } from '@prisma/client';
 import { WebSocket } from 'ws';
 import { roomCleanupInactive } from '../Environment';
 import { logError, logInfo, logWarn } from '../Logger';
@@ -48,7 +40,11 @@ import {
 import { getCategories } from '../database/games/GoalCategories';
 import { goalsForGame } from '../database/games/Goals';
 import { shuffle } from '../util/Array';
-import { computeLineMasks, listToBoard } from '../util/RoomUtils';
+import {
+    computeLineMasks,
+    getModeString,
+    listToBoard,
+} from '../util/RoomUtils';
 import Player from './Player';
 import { allRooms } from './RoomServer';
 import BoardGenerator from './generation/BoardGenerator';
@@ -59,6 +55,7 @@ import {
 import { generateFullRandom, generateRandomTyped } from './generation/Random';
 import { generateSRLv5 } from './generation/SRLv5';
 import RaceHandler, { RaceData } from './integration/races/RacetimeHandler';
+import { GeneratorSettings } from '@playbingo/shared';
 
 export enum BoardGenerationMode {
     RANDOM = 'Random',
@@ -89,15 +86,6 @@ export type BoardGenerationOptions =
     | BoardGenerationOptionsSRLv5
     | BoardGenerationOptionsDifficulty;
 
-export interface GeneratorConfig {
-    generationListMode: GenerationListMode[];
-    generationListTransform: GenerationListTransform;
-    generationBoardLayout: GenerationBoardLayout;
-    generationGoalSelection: GenerationGoalSelection;
-    generationGoalRestrictions: GenerationGoalRestriction[];
-    generationGlobalAdjustments: GenerationGlobalAdjustments[];
-}
-
 /**
  * Represents a room in the PlayBingo service. A room is container for a single
  * "game" of bingo, containing the board, game state, history, and all other
@@ -115,13 +103,14 @@ export default class Room {
     hideCard: boolean;
     bingoMode: BingoMode;
     lineCount: number;
+    variantName: string;
 
     lastGenerationMode: BoardGenerationOptions;
 
     victoryMasks: bigint[];
     completed: boolean;
 
-    generatorConfig?: GeneratorConfig;
+    generatorSettings?: GeneratorSettings;
     newGenerator: boolean;
 
     racetimeEligible: boolean;
@@ -145,8 +134,9 @@ export default class Room {
         bingoMode: BingoMode,
         lineCount: number,
         racetimeEligible: boolean,
+        variantName: string,
         racetimeUrl?: string,
-        generatorConfig?: GeneratorConfig,
+        generatorSettings?: GeneratorSettings,
     ) {
         this.name = name;
         this.game = game;
@@ -157,6 +147,7 @@ export default class Room {
         this.id = id;
         this.bingoMode = bingoMode;
         this.lineCount = lineCount;
+        this.variantName = variantName;
 
         this.lastGenerationMode = { mode: BoardGenerationMode.RANDOM };
 
@@ -187,8 +178,8 @@ export default class Room {
         this.hideCard = hideCard;
         this.completed = false;
 
-        this.generatorConfig = generatorConfig;
-        this.newGenerator = !!generatorConfig;
+        this.generatorSettings = generatorSettings;
+        this.newGenerator = !!generatorSettings;
 
         this.lastMessage = Date.now();
         this.inactivityWarningTimeout = setTimeout(
@@ -214,16 +205,11 @@ export default class Room {
         // game is enabled and configured for the new generator system
         // difficulty variants are mutually exclusive with th new generator
         // system currently, so if difficulty is selected go back to the old one
-        if (this.generatorConfig && mode !== BoardGenerationMode.DIFFICULTY) {
+        if (this.generatorSettings && mode !== BoardGenerationMode.DIFFICULTY) {
             const generator = new BoardGenerator(
                 goals,
                 categories,
-                this.generatorConfig.generationListMode,
-                this.generatorConfig.generationListTransform,
-                this.generatorConfig.generationBoardLayout,
-                this.generatorConfig.generationGoalSelection,
-                this.generatorConfig.generationGoalRestrictions,
-                this.generatorConfig.generationGlobalAdjustments,
+                this.generatorSettings,
             );
             generator.generateBoard();
             this.board = { board: listToBoard(generator.board) };
@@ -397,6 +383,8 @@ export default class Room {
                     ended: this.raceHandler.data?.ended_at ?? undefined,
                     status: this.raceHandler.data?.status.verbose_value,
                 },
+                mode: getModeString(this.bingoMode, this.lineCount),
+                variant: this.variantName,
             },
             players: this.getPlayers(),
         };
@@ -587,6 +575,8 @@ export default class Room {
                     url,
                 },
                 newGenerator: this.newGenerator,
+                mode: getModeString(this.bingoMode, this.lineCount),
+                variant: this.variantName,
             },
         });
         this.sendChat(`Racetime.gg room created ${url}`);
@@ -607,6 +597,8 @@ export default class Room {
                     url: undefined,
                 },
                 newGenerator: this.newGenerator,
+                mode: getModeString(this.bingoMode, this.lineCount),
+                variant: this.variantName,
             },
         });
     }

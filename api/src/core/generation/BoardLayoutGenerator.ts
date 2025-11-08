@@ -1,15 +1,17 @@
-import { GenerationBoardLayout } from '@prisma/client';
+import { GeneratorSettings } from '@playbingo/shared';
 import BoardGenerator from './BoardGenerator';
+
+type BoardLayout = GeneratorSettings['boardLayout'];
 
 export type BoardLayoutGenerator = (generator: BoardGenerator) => void;
 
-export const createLayoutGenerator = (strategy: GenerationBoardLayout) => {
-    switch (strategy) {
-        case 'NONE':
+export const createLayoutGenerator = (strategy: BoardLayout) => {
+    switch (strategy.mode) {
+        case 'random':
             return noLayout;
-        case 'SRLv5':
+        case 'srlv5':
             return magicSquare;
-        case 'ISAAC':
+        case 'isaac':
             return staticDifficulty;
         default:
             throw Error('Unknown GenerationListMode strategy');

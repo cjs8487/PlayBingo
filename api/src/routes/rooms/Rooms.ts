@@ -1,11 +1,10 @@
 import { randomInt } from 'crypto';
 import { Router } from 'express';
-import { logInfo, logWarn } from '../../Logger';
+import { logError, logInfo, logWarn } from '../../Logger';
 import { createRoomToken, verifyRoomToken } from '../../auth/RoomAuth';
 import Room, {
     BoardGenerationMode,
     BoardGenerationOptions,
-    GeneratorConfig,
 } from '../../core/Room';
 import { allRooms } from '../../core/RoomServer';
 import {
@@ -13,13 +12,21 @@ import {
     getFullRoomList,
     getRoomFromSlug,
 } from '../../database/Rooms';
-import { gameForSlug, goalCount } from '../../database/games/Games';
+import {
+    gameForSlug,
+    getDifficultyVariant,
+    goalCount,
+} from '../../database/games/Games';
 import { chunk } from '../../util/Array';
 import { randomWord, slugAdjectives, slugNouns } from '../../util/Words';
 import { handleAction } from './actions/Actions';
 import { getGoalList } from '../../database/games/Goals';
 import { RoomData } from '@playbingo/types';
 import Player from '../../core/Player';
+import { GeneratorSettings, makeGeneratorSchema } from '@playbingo/shared';
+import { getCategories } from '../../database/games/GoalCategories';
+import { getVariant } from '../../database/games/Variants';
+import { DifficultyVariant, Variant } from '@prisma/client';
 
 const MIN_ROOM_GOALS_REQUIRED = 25;
 const rooms = Router();
@@ -50,10 +57,10 @@ rooms.post('/', async (req, res) => {
         game,
         nickname,
         password,
-        /*variant,*/ mode,
+        variant,
+        mode,
         lineCount,
         generationMode,
-        difficulty,
         hideCard,
         seed,
         spectator,
@@ -87,16 +94,62 @@ rooms.post('/', async (req, res) => {
     const num = randomInt(1000, 10000);
     const slug = `${adj}-${noun}-${num}`;
 
-    let generatorConfig: GeneratorConfig | undefined = undefined;
+    let generatorSettings: GeneratorSettings | undefined = undefined;
+    let isDifficultyVariant = false;
+    let variantName = '';
     if (gameData.newGeneratorBeta) {
-        generatorConfig = {
-            generationListMode: gameData.generationListMode,
-            generationListTransform: gameData.generationListTransform,
-            generationBoardLayout: gameData.generationBoardLayout,
-            generationGoalSelection: gameData.generationGoalSelection,
-            generationGoalRestrictions: gameData.generationGoalRestrictions,
-            generationGlobalAdjustments: gameData.generationGlobalAdjustments,
-        };
+        const { schema } = makeGeneratorSchema(
+            ((await getCategories(gameData.slug)) ?? []).map((cat) => ({
+                id: cat.id,
+                name: cat.name,
+                max: cat.max,
+                goalCount: cat._count.goals,
+            })),
+        );
+        let result = undefined;
+        if (variant) {
+            let variantData;
+
+            variantData = await getDifficultyVariant(variant);
+            if (variantData) {
+                if (variantData.gameId !== gameData.id) {
+                    res.status(400).send('Invalid variant selected.');
+                    return;
+                }
+                generatorSettings = undefined;
+                isDifficultyVariant = true;
+                variantName = variantData.name;
+            } else {
+                variantData = await getVariant(variant);
+                if (!variantData || variantData.gameId !== gameData.id) {
+                    res.status(400).send('Invalid variant selected.');
+                    return;
+                }
+                result = schema.safeParse(variantData.generatorSettings);
+                variantName = variantData.name;
+            }
+        } else {
+            result = schema.safeParse(gameData.generatorSettings);
+            variantName = 'Normal';
+        }
+        if (result) {
+            if (!result.success) {
+                logError(
+                    `Invalid generator config in database for ${gameData.name} (${gameData.slug} ${variant ? variant : ''})`,
+                );
+                res.status(500).send('Invalid generator configuration.');
+                return;
+            }
+            generatorSettings = result.data;
+        }
+    } else if (variant) {
+        // difficulty variant on a game not enabled for new generator
+        const difficultyVariant = await getDifficultyVariant(variant);
+        if (!difficultyVariant || difficultyVariant.gameId !== gameData.id) {
+            res.status(400).send('Invalid variant selected.');
+        }
+        generatorSettings = undefined;
+        isDifficultyVariant = true;
     }
 
     const dbRoom = await createRoom(
@@ -108,6 +161,7 @@ rooms.post('/', async (req, res) => {
         hideCard,
         mode,
         lineCount,
+        variant,
     );
     const room = new Room(
         name,
@@ -122,26 +176,28 @@ rooms.post('/', async (req, res) => {
         gameData.racetimeBeta &&
             !!gameData.racetimeCategory &&
             !!gameData.racetimeGoal,
+        variantName,
         '',
-        generatorConfig,
+        generatorSettings,
     );
     const options: BoardGenerationOptions = {
         mode: BoardGenerationMode.RANDOM,
     } as BoardGenerationOptions; // necessary cast to avoid auto-narrowing
     let useDefault = true;
-    if (generationMode) {
-        options.mode = generationMode as BoardGenerationMode;
+    if (isDifficultyVariant) {
+        if (isDifficultyVariant) {
+            options.mode = BoardGenerationMode.DIFFICULTY;
+        }
+        //needed to force narrowing
         if (options.mode === BoardGenerationMode.DIFFICULTY) {
-            if (difficulty) {
-                options.difficulty = difficulty;
+            if (variant) {
+                options.difficulty = variant;
                 useDefault = false;
             } else {
                 logWarn(
-                    `Unable to generate using dificulty variants for ${slug}, falling back to default mode.`,
+                    `Unable to generate using difficulty variants for ${slug}, falling back to default mode.`,
                 );
             }
-        } else {
-            useDefault = false;
         }
     }
     if (useDefault) {
@@ -151,6 +207,7 @@ rooms.post('/', async (req, res) => {
             options.mode = BoardGenerationMode.RANDOM;
         }
     }
+
     options.seed = seed;
     await room.generateBoard(options);
     allRooms.set(slug, room);
@@ -175,6 +232,35 @@ async function getOrLoadRoom(slug: string): Promise<Room | null> {
     const dbRoom = await getRoomFromSlug(slug);
     if (!dbRoom) return null;
 
+    let variant: Variant | DifficultyVariant | null = null;
+    let variantName = '';
+    if (dbRoom.variantId) {
+        variant = await getVariant(dbRoom.variantId);
+        if (!variant) {
+            variant = await getDifficultyVariant(dbRoom.variantId);
+        }
+        if (variant) {
+            variantName = variant.name;
+        } else {
+            variantName = 'Unknown Variant';
+        }
+    } else {
+        variantName = 'Normal';
+    }
+
+    let generatorSettings: GeneratorSettings | undefined = undefined;
+    if (dbRoom.game?.newGeneratorBeta) {
+        if (
+            variant &&
+            'generatorSettings' in variant &&
+            variant.generatorSettings
+        ) {
+            generatorSettings = variant.generatorSettings;
+        } else {
+            generatorSettings = dbRoom.game.generatorSettings;
+        }
+    }
+
     const newRoom = new Room(
         dbRoom.name,
         dbRoom.game?.name ?? 'Deleted Game',
@@ -189,7 +275,9 @@ async function getOrLoadRoom(slug: string): Promise<Room | null> {
             !!dbRoom.game.racetimeCategory &&
             !!dbRoom.game.racetimeGoal) ||
             !!dbRoom.racetimeRoom,
+        variantName,
         dbRoom.racetimeRoom ?? '',
+        generatorSettings,
     );
 
     newRoom.board = {
@@ -310,6 +398,8 @@ rooms.get('/:slug', async (req, res) => {
             ended: room.raceHandler.data?.ended_at ?? undefined,
             status: room.raceHandler.data?.status.verbose_value,
         },
+        mode: room.bingoMode,
+        variant: room.variantName,
     };
 
     const userKey = req.session.user ?? req.session.id;
