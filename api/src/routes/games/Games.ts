@@ -690,6 +690,7 @@ games.get('/:slug/sampleBoard', async (req, res) => {
             res.status(422).send(e.message);
             return;
         }
+        res.status(500).send(`An unknown generation error occurred - ${e}`);
     }
     res.status(200).send({
         board: generator.board.map((goal) => ({

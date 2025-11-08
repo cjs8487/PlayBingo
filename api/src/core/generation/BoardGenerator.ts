@@ -82,6 +82,13 @@ export default class BoardGenerator {
         this.pruneGoalList();
         this.transformGoals();
 
+        if (this.goals.length < 25) {
+            throw new GenerationFailedError(
+                'Not enough goals to generate. Are too many goals filtered?',
+                this,
+            );
+        }
+
         // board generation
         this.generateBoardLayout();
 
@@ -124,6 +131,13 @@ export default class BoardGenerator {
     }
 
     validGoalsForCell(cell: number) {
+        if (!this.groupedGoals[this.layout[cell]]) {
+            throw new GenerationFailedError(
+                `No goals meeting the layout criteria found. Criteria value: ${this.layout[cell]}`,
+                this,
+                cell,
+            );
+        }
         let goals = [...this.groupedGoals[this.layout[cell]]];
         this.placementRestrictions.forEach(
             (f) => (goals = f(this, cell, goals)),
