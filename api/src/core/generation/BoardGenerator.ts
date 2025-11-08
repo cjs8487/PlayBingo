@@ -147,7 +147,6 @@ export default class BoardGenerator {
             this.board[rowIndex] = [];
             row.forEach((_, colIndex) => {
                 const goals = this.validGoalsForCell(rowIndex, colIndex);
-                console.log(goals);
                 const goal = goals.pop();
                 if (!goal) {
                     throw new GenerationFailedError(

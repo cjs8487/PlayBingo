@@ -158,7 +158,6 @@ describe('Board Layout', () => {
 
             //rows
             layout.forEach((row) => {
-                console.log(row);
                 let sum = 0;
                 row.forEach((cell) => {
                     expect(cell.selectionCriteria).toBe('difficulty');
