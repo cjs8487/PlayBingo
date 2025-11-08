@@ -13,6 +13,8 @@ export default function Board() {
 
     const { width, height } = useWindowSize();
     useLayoutEffect(() => {
+        // ref values are not available until after render
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setDimension(
             Math.min(
                 ref.current?.clientWidth ?? 0,

@@ -1,12 +1,23 @@
 'use client';
+import { LinkProps } from '@mui/material/Link';
 import { createTheme } from '@mui/material/styles';
 import { Roboto } from 'next/font/google';
+import NextLink, { LinkProps as NextLinkProps } from 'next/link';
+import { forwardRef } from 'react';
 
 const roboto = Roboto({
     weight: ['300', '400', '500', '700'],
     subsets: ['latin'],
     display: 'swap',
 });
+
+const LinkBehavior = forwardRef<HTMLAnchorElement, NextLinkProps>(
+    function Link(props, ref) {
+        const { href, ...other } = props;
+        // Map href (Material UI) -> to (react-router)
+        return <NextLink ref={ref} href={href} {...other} />;
+    },
+);
 
 const theme = createTheme({
     palette: {
@@ -70,6 +81,16 @@ const theme = createTheme({
                         display: 'flex',
                     },
                 },
+            },
+        },
+        MuiLink: {
+            defaultProps: {
+                component: LinkBehavior,
+            } as LinkProps,
+        },
+        MuiButtonBase: {
+            defaultProps: {
+                LinkComponent: LinkBehavior,
             },
         },
     },

@@ -1,7 +1,15 @@
 'use client';
-import { Dialog, DialogContent, DialogTitle, Button, Box, Typography, TextField, Alert } from '@mui/material';
+import {
+    Alert,
+    Box,
+    Button,
+    Dialog,
+    DialogContent,
+    DialogTitle,
+    TextField,
+    Typography,
+} from '@mui/material';
 import { useState } from 'react';
-import { notifyMessage } from '../../../../../../lib/Utils';
 
 interface ReplaceConfirmationDialogProps {
     isOpen: boolean;
@@ -40,8 +48,9 @@ export default function ReplaceConfirmationDialog({
                 <Box sx={{ mb: 2 }}>
                     <Alert severity="warning" sx={{ mb: 2 }}>
                         <Typography variant="body2">
-                            <strong>Warning:</strong> This action will replace ALL goals for this game. 
-                            This cannot be undone. Type REPLACE below to confirm this action.
+                            <strong>Warning:</strong> This action will replace
+                            ALL goals for this game. This cannot be undone. Type
+                            REPLACE below to confirm this action.
                         </Typography>
                     </Alert>
                     <Typography variant="body2" color="text.secondary">
@@ -81,7 +90,10 @@ export default function ReplaceConfirmationDialog({
                         onClick={handleSubmit}
                         variant="contained"
                         color="success"
-                        disabled={isLoading || confirmText.trim().toUpperCase() !== 'REPLACE'}
+                        disabled={
+                            isLoading ||
+                            confirmText.trim().toUpperCase() !== 'REPLACE'
+                        }
                     >
                         {isLoading ? 'Replacing...' : 'Replace All Goals'}
                     </Button>

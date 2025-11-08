@@ -1,4 +1,5 @@
 'use client';
+import { Goal, GoalCategory } from '@playbingo/types';
 import {
     Dispatch,
     ReactNode,
@@ -6,13 +7,11 @@ import {
     createContext,
     useCallback,
     useContext,
-    useEffect,
     useState,
 } from 'react';
-import { Goal } from '@playbingo/types';
+import { KeyedMutator } from 'swr';
 import { useApi } from '../lib/Hooks';
 import { alertError } from '../lib/Utils';
-import { KeyedMutator } from 'swr';
 
 export enum SortOptions {
     DEFAULT,
@@ -80,12 +79,14 @@ const GoalManagerContext = createContext<GoalManagerContext>({
 interface GoalManagerContextProps {
     slug: string;
     canModerate: boolean;
+    categories: GoalCategory[];
     children: ReactNode;
 }
 
 export function GoalManagerContextProvider({
     slug,
     canModerate,
+    categories,
     children,
 }: GoalManagerContextProps) {
     // API
@@ -98,7 +99,6 @@ export function GoalManagerContextProvider({
     // state
     // core
     const [selectedGoal, setSelectedGoal] = useState<Goal>();
-    const [catList, setCatList] = useState<string[]>([]);
     const [newGoal, setNewGoal] = useState(false);
     // search params
     const [sort, setSort] = useState<SortOptions | null>(SortOptions.DEFAULT);
@@ -128,20 +128,6 @@ export function GoalManagerContextProvider({
         },
         [mutateGoals],
     );
-
-    /// effects
-    useEffect(() => {
-        const cats: string[] = [];
-        goals?.forEach((goal) => {
-            if (goal.categories) {
-                cats.push(
-                    ...goal.categories.filter((cat) => !cats.includes(cat)),
-                );
-            }
-        });
-        cats.sort();
-        setCatList(cats);
-    }, [goals]);
 
     // base case
     if (!goals || goalsLoading) {
@@ -183,6 +169,7 @@ export function GoalManagerContextProvider({
     if (reverse) {
         shownGoals.reverse();
     }
+    const catList = categories.map((cat) => cat.name).sort();
 
     return (
         <GoalManagerContext.Provider

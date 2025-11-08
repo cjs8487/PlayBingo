@@ -3,7 +3,7 @@ import Image from 'next/image';
 import LinkButton from '../../../components/LinkButton';
 import DocUserMenu from '../DocUserMenu';
 
-export default function () {
+export default function Header() {
     return (
         <AppBar position="sticky">
             <Toolbar>

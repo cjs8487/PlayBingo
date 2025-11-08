@@ -42,6 +42,7 @@ export const UserContextProvider = ({ children }: React.PropsWithChildren) => {
         }
         setCheckDone(true);
     }, []);
+
     const doLogout = useCallback(async () => {
         const res = await logout();
         if (!res.ok) {
@@ -58,7 +59,10 @@ export const UserContextProvider = ({ children }: React.PropsWithChildren) => {
     }, [router]);
 
     useLayoutEffect(() => {
-        checkSession();
+        const doCheck = () => {
+            checkSession();
+        };
+        doCheck();
     }, [checkSession]);
 
     if (!checkDone) {
