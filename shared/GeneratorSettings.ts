@@ -96,7 +96,7 @@ export const makeGeneratorSchema = (categories: GoalCategory[]) => {
             type: z.literal('line-type-exclusion').meta({
                 title: 'Line Type Exclusion',
                 description:
-                    'Utilizes goal categories to minimize the synergy in each line by minimizing hte total overlap of categories in the line. With this restriction, a goal with the minimum possible overlap will be placed in each cell.',
+                    'Utilizes goal categories to minimize the synergy in each line by minimizing the total overlap of categories in the line. With this restriction, a goal with the minimum possible overlap will be placed in each cell.',
             }),
         }),
     ]);
@@ -135,7 +135,7 @@ export const makeGeneratorSchema = (categories: GoalCategory[]) => {
                 .meta({
                     title: 'Goal Filters',
                     description:
-                        'Goal filters allow the generator remove goals the meet specific criteria from the generation pool before generation starts. By default, the generator will pull from all goals available to the game',
+                        'Goal filters allow the generator to remove goals that meet specific criteria from the generation pool before generation starts. By default, the generator will pull from all goals available to the game',
                 }),
             goalTransformation: z
                 .array(GoalTransformationSchema)
