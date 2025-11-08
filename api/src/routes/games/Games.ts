@@ -1,4 +1,4 @@
-import { GeneratorSettings, makeGeneratorSchema } from '@playbingo/shared';
+import { makeGeneratorSchema } from '@playbingo/shared';
 import { Game } from '@playbingo/types';
 import { Router } from 'express';
 import BoardGenerator from '../../core/generation/BoardGenerator';
@@ -43,11 +43,10 @@ import {
     goalsForGame,
     goalsForGameFull,
 } from '../../database/games/Goals';
+import { getVariant } from '../../database/games/Variants';
 import { getUser, getUsersEligibleToModerateGame } from '../../database/Users';
 import { deleteFile, saveFile } from '../../media/MediaServer';
-import { logError } from '../../Logger';
 import variants from './Variants';
-import { getVariant } from '../../database/games/Variants';
 
 const games = Router();
 
@@ -673,7 +672,7 @@ games.get('/:slug/sampleBoard', async (req, res) => {
         generator = new BoardGenerator(
             goals,
             categories,
-            variantData.generatorSettings ?? gameData.generatorSettings,
+            variantData.generatorSettings,
         );
     } else {
         generator = new BoardGenerator(

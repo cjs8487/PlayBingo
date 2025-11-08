@@ -21,7 +21,7 @@ ALTER TABLE "Game" ADD COLUMN     "generatorSettings" JSONB NOT NULL DEFAULT '{}
 ALTER TABLE "Room" ADD COLUMN     "variantId" TEXT;
 
 -- AlterTable
-ALTER TABLE "Variant" ADD COLUMN     "generatorSettings" JSONB,
+ALTER TABLE "Variant" ADD COLUMN     "generatorSettings" JSONB NOT NULL DEFAULT '{}',
 ALTER COLUMN "gameId" SET NOT NULL;
 
 -- DropTable
