@@ -105,13 +105,13 @@ export default function CustomLayoutEditor({
 
     return (
         <>
-            <Box sx={{ display: 'flex', gap: 2 }}>
+            <Box sx={{ display: 'flex', gap: 2, mb: 1.5 }}>
                 <TextField
                     type="number"
                     label="Width"
                     value={(width as number) ?? ''}
-                    error={!!errors[path]}
-                    helperText={errors[path] ?? ' '}
+                    error={!!errors[`${path}.0`]}
+                    helperText={errors[`${path}.0`] ?? ' '}
                     onChange={(e) =>
                         doSetWidth(
                             e.target.value === '' ? 1 : Number(e.target.value),
