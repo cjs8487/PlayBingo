@@ -130,15 +130,14 @@ export default class BoardGenerator {
         this.pruneGoalList();
         this.transformGoals();
 
-        if (this.goals.length < 25) {
+        // board generation
+        this.generateBoardLayout();
+        if (this.goals.length < this.layout.length * this.layout[0].length) {
             throw new GenerationFailedError(
                 'Not enough goals to generate. Are too many goals filtered?',
                 this,
             );
         }
-
-        // board generation
-        this.generateBoardLayout();
 
         // preprocessing
 
