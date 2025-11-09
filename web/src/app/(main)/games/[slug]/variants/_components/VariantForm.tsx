@@ -1,4 +1,15 @@
 'use client';
+import { createVariant, updateVariant } from '@/actions/Variants';
+import CustomLayoutEditor, {
+    CustomLayout,
+    Schema,
+} from '@/components/generation/CustomLayoutEditor';
+import {
+    JSONSchema,
+    JsonSchemaRenderer,
+    useJSONForm,
+} from '@/components/input/JsonSchemaRenderer';
+import { alertError, notifyMessage } from '@/lib/Utils';
 import {
     Box,
     Button,
@@ -12,16 +23,6 @@ import { makeGeneratorSchema } from '@playbingo/shared';
 import { GoalCategory, Variant } from '@playbingo/types';
 import { useCallback, useState } from 'react';
 import z from 'zod';
-import {
-    JSONSchema,
-    JsonSchemaRenderer,
-    useJSONForm,
-} from '../../../../../../components/input/JsonSchemaRenderer';
-import { alertError, notifyMessage } from '../../../../../../lib/Utils';
-import {
-    createVariant,
-    updateVariant,
-} from '../../../../../../actions/Variants';
 
 interface BaseProps {
     slug: string;
@@ -149,6 +150,27 @@ export default function VariantForm({
                         onChange={setValues}
                         errors={errors}
                         path=""
+                        components={{
+                            'boardLayout.layout': ({
+                                schema,
+                                value,
+                                onChange,
+                                errors,
+                                path,
+                                components,
+                            }) => {
+                                return (
+                                    <CustomLayoutEditor
+                                        schema={schema as Schema}
+                                        value={value as CustomLayout}
+                                        onChange={onChange}
+                                        errors={errors}
+                                        path={path}
+                                        components={components}
+                                    />
+                                );
+                            },
+                        }}
                     />
                 </Box>
             </DialogContent>
