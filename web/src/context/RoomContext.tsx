@@ -85,7 +85,7 @@ interface RoomContext {
 
 export const RoomContext = createContext<RoomContext>({
     connectionStatus: ConnectionStatus.UNINITIALIZED,
-    board: { board: [] },
+    board: { board: [], width: 5, height: 5 },
     messages: [],
     color: 'blue',
     nickname: '',
