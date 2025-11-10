@@ -44,7 +44,7 @@ model Variant {
   description       String
   game              Game   @relation(fields: [gameId], references: [id])
   /// [GeneratorSettings]
-  generatorSettings Json
+  generatorSettings Json   @default("{}")
   gameId            String
   Room              Room[]
 }
