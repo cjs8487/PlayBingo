@@ -17,8 +17,7 @@ import {
 import { Game } from '@playbingo/types';
 import { Form, Formik } from 'formik';
 import { useContext } from 'react';
-import { toast } from 'react-toastify';
-import { useAsync, useCopyToClipboard } from 'react-use';
+import { useAsync } from 'react-use';
 import { RoomContext } from '../../context/RoomContext';
 import FormikTextField from '../input/FormikTextField';
 
@@ -31,7 +30,7 @@ export default function RoomControlDialog({
     show,
     close,
 }: RoomControlDialogProps) {
-    const { roomData, regenerateCard, board } = useContext(RoomContext);
+    const { roomData, regenerateCard } = useContext(RoomContext);
 
     const modes = useAsync(async () => {
         if (!roomData) {
@@ -50,8 +49,6 @@ export default function RoomControlDialog({
         }
         return modes;
     }, [roomData]);
-
-    const [, copyToClipboard] = useCopyToClipboard();
 
     if (modes.loading || modes.error || !modes.value) {
         return null;
@@ -166,31 +163,6 @@ export default function RoomControlDialog({
                         </Button>
                     </Box>
                 </Box>
-                {!board.hidden && (
-                    <Box
-                        sx={{
-                            pt: 2,
-                        }}
-                    >
-                        <Button
-                            onClick={() => {
-                                const data = board.board
-                                    .map((row) =>
-                                        row.map((cell) => ({
-                                            name: cell.goal,
-                                        })),
-                                    )
-                                    .flat();
-                                copyToClipboard(JSON.stringify(data));
-                                toast(
-                                    'Copied bingosync goal list for this board to your clipboard',
-                                );
-                            }}
-                        >
-                            Export to Bingosync
-                        </Button>
-                    </Box>
-                )}
             </DialogContent>
         </Dialog>
     );

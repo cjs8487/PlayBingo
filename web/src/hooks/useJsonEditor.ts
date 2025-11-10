@@ -8,9 +8,9 @@ export interface JsonError {
 
 export interface UseJsonEditorOptions {
     initialValue?: string;
-    onSave?: (parsedValue: any) => Promise<void> | void;
+    onSave?: (parsedValue: unknown) => Promise<void> | void;
     onCancel?: () => void;
-    validate?: (value: any) => string | null; // Return error message or null
+    validate?: (value: unknown) => string | null; // Return error message or null
 }
 
 export interface UseJsonEditorReturn {
@@ -35,44 +35,47 @@ export function useJsonEditor({
     const [error, setError] = useState<JsonError | null>(null);
     const [isLoading, setIsLoading] = useState(false);
 
-    const handleChange = useCallback((newValue: string) => {
-        setValue(newValue);
-        setError(null);
+    const handleChange = useCallback(
+        (newValue: string) => {
+            setValue(newValue);
+            setError(null);
 
-        // Validate JSON syntax
-        try {
-            const parsed = JSON.parse(newValue);
-            
-            // Run custom validation if provided
-            if (validate) {
-                const validationError = validate(parsed);
-                if (validationError) {
-                    setError({
-                        message: validationError,
-                    });
-                    return;
+            // Validate JSON syntax
+            try {
+                const parsed = JSON.parse(newValue);
+
+                // Run custom validation if provided
+                if (validate) {
+                    const validationError = validate(parsed);
+                    if (validationError) {
+                        setError({
+                            message: validationError,
+                        });
+                        return;
+                    }
+                }
+            } catch (err) {
+                if (err instanceof SyntaxError) {
+                    // Extract line and column from error message
+                    const match = err.message.match(/position (\d+)/);
+                    if (match) {
+                        const pos = parseInt(match[1]);
+                        const lines = newValue.substring(0, pos).split('\n');
+                        setError({
+                            line: lines.length,
+                            column: lines[lines.length - 1].length + 1,
+                            message: err.message,
+                        });
+                    } else {
+                        setError({
+                            message: err.message,
+                        });
+                    }
                 }
             }
-        } catch (err) {
-            if (err instanceof SyntaxError) {
-                // Extract line and column from error message
-                const match = err.message.match(/position (\d+)/);
-                if (match) {
-                    const pos = parseInt(match[1]);
-                    const lines = newValue.substring(0, pos).split('\n');
-                    setError({
-                        line: lines.length,
-                        column: lines[lines.length - 1].length + 1,
-                        message: err.message,
-                    });
-                } else {
-                    setError({
-                        message: err.message,
-                    });
-                }
-            }
-        }
-    }, [validate]);
+        },
+        [validate],
+    );
 
     const handleSave = useCallback(async () => {
         if (error) {

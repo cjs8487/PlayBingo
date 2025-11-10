@@ -26,6 +26,7 @@ const mockBoard = {
             },
             description: '',
             completedPlayers: text === '404' ? ['1'] : [],
+            revealed: true,
         })),
     ),
 };
@@ -116,6 +117,7 @@ export default function NotFound() {
         revealCard: () => {},
         toggleGoalDetails: () => {},
         toggleCounters: () => {},
+        changeAuth: () => {},
         spectator: false,
         monitor: false,
     };
