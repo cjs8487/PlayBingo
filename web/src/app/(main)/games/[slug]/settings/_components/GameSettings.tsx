@@ -23,10 +23,8 @@ import { mutate } from 'swr';
 import Dialog, { DialogRef } from '../../../../../../components/Dialog';
 import HoverIcon from '../../../../../../components/HoverIcon';
 import FormikFileUpload from '../../../../../../components/input/FileUpload';
-import FormikSwitch from '../../../../../../components/input/FormikSwitch';
 import FormikTextField from '../../../../../../components/input/FormikTextField';
 import { MarkdownField } from '../../../../../../components/input/MarkdownField';
-import NumberInput from '../../../../../../components/input/NumberInput';
 import { alertError, notifyMessage } from '../../../../../../lib/Utils';
 
 async function validateRacetimeCategory(value: string) {
@@ -270,104 +268,6 @@ function SettingsForm({ gameData }: FormProps) {
                                 label="Name"
                                 sx={{ flexGrow: 1 }}
                             />
-                        </Box>
-                        <Box
-                            sx={{
-                                display: 'flex',
-                                alignItems: 'center',
-                            }}
-                        >
-                            <FormikSwitch
-                                id="game-srlv5-generation-switch"
-                                label="Enable SRLv5 Board Generation"
-                                name="enableSRLv5"
-                            />
-                            <HoverIcon icon={<Info />}>
-                                SRLv5 generation requires goals to have a
-                                difficulty value assigned to them in order to be
-                                used in generation. The generator uses the
-                                difficulty value to balance each row, column,
-                                and diagonal, by having the difficulty of goals
-                                in each sum to the same value. It also tries to
-                                minimize synergy between goals in the same line
-                                by minimizing the category overlap.
-                            </HoverIcon>
-                        </Box>
-                        <Box
-                            sx={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                columnGap: 3,
-                            }}
-                        >
-                            <Box
-                                sx={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                }}
-                            >
-                                <FormikSwitch
-                                    id="game-difficulty-variants-switch"
-                                    label="Enable Difficulty Variants"
-                                    name="difficultyVariantsEnabled"
-                                />
-                                <HoverIcon icon={<Info />}>
-                                    Difficulty variants are a special type of
-                                    variants that modify generation instead of
-                                    the goal list. Difficulty variants modify
-                                    how many goals from a given difficulty are
-                                    selected during generation, which can impact
-                                    the difficulty or length of the final board.
-                                    When a difficulty variant is chosen, only
-                                    the Random generation mode is available.
-                                </HoverIcon>
-                            </Box>
-                            <Box
-                                sx={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    columnGap: 1,
-                                }}
-                            >
-                                <NumberInput
-                                    name="difficultyGroups"
-                                    label="Difficulty Groups"
-                                    min={0}
-                                    max={25}
-                                />
-                                <HoverIcon icon={<Info />}>
-                                    Difficulty groups is the number of groups
-                                    goals are grouped into for generating a
-                                    board for a difficulty variant. The
-                                    available goal difficulties will be split
-                                    into equal sized groups based on this
-                                    number. For example, if there are 5 groups
-                                    and 25 difficulties, every 5 difficulties
-                                    would be a group (1-5, 6-10, etc.). Setting
-                                    this to 0 is equivalent to disabling
-                                    difficulty variants, as the generator will
-                                    be unable to generate a board with 0 groups.
-                                </HoverIcon>
-                            </Box>
-                        </Box>
-                        <Box
-                            sx={{
-                                display: 'flex',
-                                alignItems: 'center',
-                            }}
-                        >
-                            <FormikSwitch
-                                id="game-typed-random-switch"
-                                label="Enable Category-Random Generation"
-                                name="useTypedRandom"
-                            />
-                            <HoverIcon icon={<Info />}>
-                                Category-Random generation allows random
-                                generation to apply the typed restrictions of
-                                SRLv5 generation, which attempts to minimize the
-                                category overlap of each line. Category-Random
-                                replaces Random generation.
-                            </HoverIcon>
                         </Box>
                         {gameData.racetimeBeta && <RacetimeSettings />}
                         <Box>
