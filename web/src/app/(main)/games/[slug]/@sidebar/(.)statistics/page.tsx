@@ -1,61 +1,44 @@
-'use client';
-import { ChevronRight } from '@mui/icons-material';
-import { Container, Drawer, IconButton, styled } from '@mui/material';
-import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { Goal } from '@playbingo/types';
+import { serverGet } from '../../../../../ServerUtils';
+import SidebarDrawer from '../_components/SidebarDrawer';
+import { Box } from '@mui/material';
 
-const DrawerHeader = styled('div')(({ theme }) => ({
-    display: 'flex',
-    alignItems: 'center',
-    padding: theme.spacing(0, 1),
-    // necessary for content to be below app bar
-    ...theme.mixins.toolbar,
-    justifyContent: 'flex-start',
-}));
+async function getGoals(slug: string): Promise<Goal[]> {
+    const res = await serverGet(`/api/games/${slug}/goals`);
+    if (!res.ok) {
+        return [];
+    }
+    return res.json();
+}
 
-export default function GameSidebarStatisticsPage() {
-    const router = useRouter();
-    const [open, setOpen] = useState(false);
-    const [hasOpened, setHasOpened] = useState(false);
+export default async function GameSidebarStatisticsPage({
+    params,
+}: PageProps<'/rooms/[slug]'>) {
+    const { slug } = await params;
+    const goals = await getGoals(slug);
 
-    const closeDrawer = () => {
-        setOpen(false);
-    };
-
-    useEffect(() => {
-        setOpen(true);
-        setHasOpened(true);
-    }, []);
-
-    useEffect(() => {
-        if (!open && hasOpened) {
-            const timeout = setTimeout(() => {
-                router.back();
-            }, 1000);
-            return () => clearTimeout(timeout);
-        }
-    }, [open, hasOpened, router]);
+    const categoryCounts = goals.reduce<{ [k: string]: number }>(
+        (curr, val) => {
+            val.categories?.forEach((cat) => {
+                if (curr[cat]) {
+                    curr[cat] += 1;
+                } else {
+                    curr[cat] = 1;
+                }
+            });
+            return curr;
+        },
+        {},
+    );
 
     return (
-        <Drawer
-            sx={{
-                top: 200,
-                // width: 200,
-                flexShrink: 0,
-                '& .MuiDrawer-paper': {
-                    // width: 200,
-                },
-            }}
-            variant="persistent"
-            anchor="right"
-            open={open}
-        >
-            <DrawerHeader>
-                <IconButton onClick={closeDrawer}>
-                    <ChevronRight />
-                </IconButton>
-            </DrawerHeader>
-            <Container>Game statistics sidebar</Container>
-        </Drawer>
+        <SidebarDrawer>
+            Total Goals: {goals.length}
+            {Object.keys(categoryCounts).map((cat) => (
+                <Box key={cat}>
+                    {cat}: {categoryCounts[cat]}
+                </Box>
+            ))}
+        </SidebarDrawer>
     );
 }
