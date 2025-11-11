@@ -54,6 +54,7 @@ export async function generateMetadata(
 export default async function GameLayout({
     params,
     children,
+    sidebar,
 }: LayoutProps<'/games/[slug]'>) {
     const { slug } = await params;
 
@@ -70,7 +71,7 @@ export default async function GameLayout({
             sx={{
                 display: 'grid',
                 gridTemplateRows: 'auto 1fr',
-                gridTemplateColumns: 'minmax(auto, 250px) 1fr',
+                gridTemplateColumns: 'minmax(auto, 250px) 1fr auto',
                 height: '100%',
                 overflowY: 'auto',
             }}
@@ -253,6 +254,7 @@ export default async function GameLayout({
                 </Box>
             </Box>
             <GameTabs gameData={game} />
+            <Box>{sidebar}</Box>
             <Box
                 sx={{
                     px: 4,

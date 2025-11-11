@@ -59,6 +59,7 @@ export default function GameTabs({
         }
         tabs.push('settings');
     }
+    tabs.push('statistics');
 
     return (
         <Box
