@@ -164,8 +164,6 @@ export default function BoardCell({
                     },
                     display: 'flex',
                     flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
                     width: '100%',
                     height: '100%',
                 }}
@@ -182,7 +180,7 @@ export default function BoardCell({
                     sx={{
                         zIndex: 2,
                         display: 'flex',
-                        height: '100%',
+                        height: showCounters ? 'calc(100% - 24px)' : '100%',
                         width: '100%',
                         alignItems: 'center',
                         justifyContent: 'center',
@@ -215,6 +213,7 @@ export default function BoardCell({
                 {revealed && showCounters && (
                     <Box
                         sx={{
+                            position: 'absolute',
                             bottom: 0,
                             display: 'flex',
                             backgroundColor: 'rgba(0,0,0,0.7)',
