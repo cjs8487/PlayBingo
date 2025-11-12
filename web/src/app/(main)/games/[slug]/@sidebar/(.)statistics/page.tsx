@@ -1,7 +1,8 @@
+import { Box, LinearProgress, Typography } from '@mui/material';
 import { Goal } from '@playbingo/types';
+import { Fragment } from 'react';
 import { serverGet } from '../../../../../ServerUtils';
 import SidebarDrawer from '../_components/SidebarDrawer';
-import { Box } from '@mui/material';
 
 async function getGoals(slug: string): Promise<Goal[]> {
     const res = await serverGet(`/api/games/${slug}/goals`);
@@ -34,11 +35,37 @@ export default async function GameSidebarStatisticsPage({
     return (
         <SidebarDrawer>
             Total Goals: {goals.length}
-            {Object.keys(categoryCounts).map((cat) => (
-                <Box key={cat}>
-                    {cat}: {categoryCounts[cat]}
-                </Box>
-            ))}
+            <Box
+                sx={{
+                    display: 'grid',
+                    gridTemplateColumns: 'auto auto 1fr',
+                    alignItems: 'center',
+                    columnGap: 2,
+                }}
+            >
+                {Object.keys(categoryCounts).map((cat) => (
+                    <Fragment key={cat}>
+                        <Typography>{cat}</Typography>
+                        <Typography sx={{ marginLeft: '' }}>
+                            {categoryCounts[cat]}
+                        </Typography>
+                        <Box sx={{ flexGrow: 1 }}>
+                            <LinearProgress
+                                variant="determinate"
+                                value={
+                                    (categoryCounts[cat] * 100) / goals.length
+                                }
+                                sx={{
+                                    marginLeft: 'auto',
+                                    width: '100%',
+                                    height: 10,
+                                    backgroundColor: 'background.paper',
+                                }}
+                            />
+                        </Box>
+                    </Fragment>
+                ))}
+            </Box>
         </SidebarDrawer>
     );
 }
