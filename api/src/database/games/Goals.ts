@@ -177,8 +177,8 @@ export const replaceAllGoalsForGame = async (
                         difficulty: g.difficulty ?? undefined,
                         game: { connect: { id: gameId } },
                     },
-                })
-            )
+                }),
+            ),
         );
     });
 
@@ -214,9 +214,11 @@ export const deleteAllGoalsForGame = async (gameSlug: string) => {
     }
 };
 
-export const getGoalList = (ids: string[]) => {
+export const getGoalList = async (ids: string[]) => {
     if (ids.length === 0) {
         return [];
     }
-    return prisma.goal.findMany({ where: { id: { in: ids } } });
+    const goals = await prisma.goal.findMany({ where: { id: { in: ids } } });
+    const map = new Map(goals.map((goal) => [goal.id, goal]));
+    return ids.map((id) => map.get(id)).filter((v) => !!v);
 };
