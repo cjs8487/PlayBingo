@@ -1,6 +1,6 @@
-import GoalManagement from '@/app/(main)/games/[slug]/goals/_components/GoalManagement';
-import { GoalManagerContextProvider } from '@/context/GoalManagerContext';
+import { Goal } from '@playbingo/types';
 import { serverGet } from '../../../../ServerUtils';
+import GoalExplorer from './_components/GoalExplorer';
 
 const getPermissions = async (
     slug: string,
@@ -13,6 +13,14 @@ const getPermissions = async (
     }
 };
 
+async function getGoals(slug: string): Promise<Goal[]> {
+    const res = await serverGet(`/api/games/${slug}/goals`);
+    if (!res.ok) {
+        return [];
+    }
+    return res.json();
+}
+
 interface Props {
     params: Promise<{ slug: string }>;
 }
@@ -22,9 +30,13 @@ export default async function GameGoals({ params }: Props) {
 
     const { canModerate } = await getPermissions(slug);
 
-    return (
-        <GoalManagerContextProvider slug={slug} canModerate={canModerate}>
-            <GoalManagement />
-        </GoalManagerContextProvider>
-    );
+    const goals = await getGoals(slug);
+
+    // return (
+    //     <GoalManagerContextProvider slug={slug} canModerate={canModerate}>
+    //         <GoalManagement />
+    //     </GoalManagerContextProvider>
+    // );
+
+    return <GoalExplorer goals={goals} />;
 }
