@@ -46,6 +46,8 @@ export default function CustomLayoutEditor({
     const [modalRow, setModalRow] = useState(0);
     const [modalCol, setModalCol] = useState(0);
 
+    console.log(width, height);
+
     const doSetWidth = (val: number) => {
         if (val <= 0) {
             return;
@@ -54,12 +56,14 @@ export default function CustomLayoutEditor({
         let newVal = value.map((row) => [...row.map((cell) => ({ ...cell }))]);
         if (val < width) {
             newVal = newVal.map((row) => {
-                row.pop();
+                row.splice(val, row.length);
                 return row;
             });
         } else if (val > width) {
             newVal = newVal.map((row) => {
-                row.push({ selectionCriteria: 'random' });
+                row.push(
+                    ...Array(val - width).fill({ selectionCriteria: 'random' }),
+                );
                 return row;
             });
         }
@@ -76,9 +80,13 @@ export default function CustomLayoutEditor({
             ...row.map((cell) => ({ ...cell })),
         ]);
         if (val < height) {
-            newVal.pop();
+            newVal.splice(val, newVal.length);
         } else if (val > height) {
-            newVal.push(Array(width).fill({ selectionCriteria: 'random' }));
+            newVal.push(
+                ...Array(val - height).fill(
+                    Array(width).fill({ selectionCriteria: 'random' }),
+                ),
+            );
         }
         setHeight(val);
         onChange(newVal);
@@ -108,7 +116,7 @@ export default function CustomLayoutEditor({
             <Box sx={{ display: 'flex', gap: 2, mb: 1.5 }}>
                 <NumberField
                     label="Width"
-                    value={(width as number) ?? ''}
+                    value={width ?? ''}
                     error={!!errors[`${path}.0`]}
                     helperText={errors[`${path}.0`] ?? ' '}
                     onChange={(v) => doSetWidth(v ?? 1)}
@@ -116,7 +124,7 @@ export default function CustomLayoutEditor({
                 />
                 <NumberField
                     label="Height"
-                    value={(height as number) ?? ''}
+                    value={height ?? ''}
                     error={!!errors[path]}
                     helperText={errors[path] ?? ' '}
                     onChange={(v) => doSetHeight(v ?? 1)}
