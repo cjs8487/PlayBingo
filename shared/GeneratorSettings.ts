@@ -102,37 +102,43 @@ export const makeGeneratorSchema = (categories: GoalCategory[]) => {
                 .array(
                     z
                         .array(
-                            z.discriminatedUnion('selectionCriteria', [
-                                z
-                                    .object({
-                                        selectionCriteria:
-                                            z.literal('difficulty'),
-                                        difficulty: z
-                                            .number()
-                                            .int()
-                                            .min(1, 'Value must be at least 1'),
-                                    })
-                                    .meta({ title: 'Difficulty' }),
-                                z
-                                    .object({
-                                        selectionCriteria:
-                                            z.literal('category'),
-                                        category: z.enum(catIds).meta({
-                                            enumMeta: Object.fromEntries(
-                                                categories.map((cat) => [
-                                                    cat.id,
-                                                    { label: cat.name },
-                                                ]),
-                                            ),
-                                        }),
-                                    })
-                                    .meta({ title: 'Category' }),
-                                z
-                                    .object({
-                                        selectionCriteria: z.literal('random'),
-                                    })
-                                    .meta({ title: 'Random' }),
-                            ]),
+                            z
+                                .discriminatedUnion('selectionCriteria', [
+                                    z
+                                        .object({
+                                            selectionCriteria:
+                                                z.literal('difficulty'),
+                                            difficulty: z
+                                                .number()
+                                                .int()
+                                                .min(
+                                                    1,
+                                                    'Value must be at least 1',
+                                                ),
+                                        })
+                                        .meta({ title: 'Difficulty' }),
+                                    z
+                                        .object({
+                                            selectionCriteria:
+                                                z.literal('category'),
+                                            category: z.enum(catIds).meta({
+                                                enumMeta: Object.fromEntries(
+                                                    categories.map((cat) => [
+                                                        cat.id,
+                                                        { label: cat.name },
+                                                    ]),
+                                                ),
+                                            }),
+                                        })
+                                        .meta({ title: 'Category' }),
+                                    z
+                                        .object({
+                                            selectionCriteria:
+                                                z.literal('random'),
+                                        })
+                                        .meta({ title: 'Random' }),
+                                ])
+                                .default({ selectionCriteria: 'random' }),
                         )
                         .min(1, 'Rows must contain at least 1 cell.')
                         .default([{ selectionCriteria: 'random' }]),

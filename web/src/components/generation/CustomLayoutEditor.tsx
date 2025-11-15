@@ -46,8 +46,6 @@ export default function CustomLayoutEditor({
     const [modalRow, setModalRow] = useState(0);
     const [modalCol, setModalCol] = useState(0);
 
-    console.log(width, height);
-
     const doSetWidth = (val: number) => {
         if (val <= 0) {
             return;
@@ -62,7 +60,7 @@ export default function CustomLayoutEditor({
         } else if (val > width) {
             newVal = newVal.map((row) => {
                 row.push(
-                    ...Array(val - width).fill({ selectionCriteria: 'random' }),
+                    ...Array(val - width).fill(schema.items.items.default),
                 );
                 return row;
             });
@@ -84,7 +82,7 @@ export default function CustomLayoutEditor({
         } else if (val > height) {
             newVal.push(
                 ...Array(val - height).fill(
-                    Array(width).fill({ selectionCriteria: 'random' }),
+                    Array(width).fill(schema.items.items.default),
                 ),
             );
         }
