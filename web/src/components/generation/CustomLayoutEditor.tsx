@@ -19,6 +19,8 @@ export type CustomLayout = Extract<
     { mode: 'custom' }
 >['layout'];
 
+type LayoutCell = CustomLayout[number][number];
+
 export type Schema = {
     items: {
         items: {
@@ -218,8 +220,7 @@ export default function CustomLayoutEditor({
                             value={value[modalRow][modalCol]}
                             onChange={(val) => {
                                 const next = value.map((row) => row.slice());
-                                next[modalRow][modalCol] =
-                                    val as CustomLayout[number][number];
+                                next[modalRow][modalCol] = val as LayoutCell;
                                 onChange(next);
                             }}
                             errors={errors}

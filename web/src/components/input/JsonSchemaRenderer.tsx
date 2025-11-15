@@ -38,7 +38,6 @@ export function useJSONForm<T extends ZodType<any, any>>(
 
     const doSetValues = useCallback(
         (values: JSONValue) => {
-            setValues(values);
             if (values) {
                 const result = schema.safeParse(values);
                 if (!result.success) {
@@ -46,9 +45,11 @@ export function useJSONForm<T extends ZodType<any, any>>(
                     for (const issue of result.error.issues) {
                         newErrors[issue.path.join('.')] = issue.message;
                     }
+                    setValues(values);
                     setErrors(newErrors);
                     setIsValid(false);
                 } else {
+                    setValues(result.data);
                     setErrors({});
                     setIsValid(true);
                 }
