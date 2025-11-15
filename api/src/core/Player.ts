@@ -258,7 +258,16 @@ export default class Player {
     }
 
     obfuscateBoard() {
-        this.exploredGoals = this.getRevealedMask();
+        if (this.spectator) {
+            this.exploredGoals = 0n;
+            this.room.players.forEach((player) => {
+                if (!player.spectator) {
+                    this.exploredGoals |= player.getRevealedMask();
+                }
+            });
+        } else {
+            this.exploredGoals = this.getRevealedMask();
+        }
         return this.room.board.map((row, rowIndex) =>
             row.map((cell, colIndex) =>
                 this.hasRevealed(rowIndex, colIndex)
