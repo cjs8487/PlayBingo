@@ -1,4 +1,4 @@
-import BoardGenerator from './BoardGenerator';
+import BoardGenerator, { LayoutCell } from './BoardGenerator';
 
 export class GenerationFailedError extends Error {
     public readonly failureReason: string;
@@ -7,7 +7,9 @@ export class GenerationFailedError extends Error {
     constructor(
         failureReason: string,
         generatorState: BoardGenerator,
-        boardIndex: number = -1,
+        rowIndex: number = -1,
+        colIndex: number = -1,
+        layoutCell?: LayoutCell,
     ) {
         super();
 
@@ -15,8 +17,12 @@ export class GenerationFailedError extends Error {
         this.generatorState = generatorState;
 
         let message = `Board generation failed - ${failureReason}.`;
-        if (boardIndex >= 0) {
-            message += ` This error occurred while attempting to place a goal at row ${Math.floor(boardIndex / 5) + 1}, column ${(boardIndex % 5) + 1}.`;
+        if (rowIndex >= 0 && colIndex >= 0) {
+            message += ` This error occurred while attempting to place a goal at row ${rowIndex + 1}, column ${colIndex + 1}.`;
+        }
+
+        if (layoutCell) {
+            message += ` The cell had the following layout data ${JSON.stringify(layoutCell)}`;
         }
 
         this.message = message;

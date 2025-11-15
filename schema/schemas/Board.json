@@ -9,17 +9,21 @@
     "$defs": {
         "RevealedBoard": {
             "additionalProperties": false,
-            "required": ["board"],
+            "required": ["board", "width", "height"],
             "properties": {
                 "board": {"type": "array", "items": {"type": "array", "items": {"$ref": "./Cell.json"}}},
-                "hidden": { "enum": [ false ]}
+                "hidden": { "enum": [ false ]},
+                "width": {"type": "number"},
+                "height": {"type": "number"}
             }
         },
         "HiddenBoard": {
             "additionalProperties": false,
-            "required": ["hidden"],
+            "required": ["hidden", "width", "height"],
             "properties": {
-                "hidden": { "enum": [ true ]}
+                "hidden": { "enum": [ true ]},
+                "width": {"type": "number"},
+                "height": {"type": "number"}
             }
         }
     }

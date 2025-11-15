@@ -87,9 +87,13 @@ export interface HiddenCell {
 export interface RevealedBoard {
   board: Cell[][];
   hidden?: false;
+  width: number;
+  height: number;
 }
 export interface HiddenBoard {
   hidden: true;
+  width: number;
+  height: number;
 }
 /**
  * Basic information about a room

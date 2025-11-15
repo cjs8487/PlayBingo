@@ -693,13 +693,15 @@ games.get('/:slug/sampleBoard', async (req, res) => {
         res.status(500).send(`An unknown generation error occurred - ${e}`);
     }
     res.status(200).send({
-        board: generator.board.map((goal) => ({
-            id: goal.id,
-            goal: goal.goal,
-            description: goal.description,
-            categories: goal.categories,
-            difficulty: goal.difficulty,
-        })),
+        board: generator.board.map((row) =>
+            row.map((goal) => ({
+                id: goal.id,
+                goal: goal.goal,
+                description: goal.description,
+                categories: goal.categories,
+                difficulty: goal.difficulty,
+            })),
+        ),
         seed: generator.seed,
         variant: variantData ? variantData.name : undefined,
     });

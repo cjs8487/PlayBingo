@@ -12,7 +12,7 @@ type BoardEvent =
           board: Board;
       };
 
-let board: Board = { board: [] };
+let board: Board = { board: [], width: 5, height: 5 };
 let listeners: (() => void)[] = [];
 
 export const subscribeToBoardUpdates = (listener: () => void) => {
@@ -33,7 +33,11 @@ export const emitBoardUpdate = (event: BoardEvent) => {
             }
             const newCells = board.board.map((row) => row.map((cell) => cell));
             newCells[event.row][event.col] = event.cell;
-            board = { board: newCells };
+            board = {
+                board: newCells,
+                width: board.width,
+                height: board.height,
+            };
             break;
         }
     }
@@ -44,5 +48,5 @@ export const emitBoardUpdate = (event: BoardEvent) => {
 
 export const getBoardSnapshot = () => board;
 
-const serverSnapshot = { board: [] };
+const serverSnapshot = { board: [], width: 5, height: 5 };
 export const getServerSnapshot = () => serverSnapshot;

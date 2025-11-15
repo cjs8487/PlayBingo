@@ -16,35 +16,37 @@ export default function CoreLayout({
     modal: ReactNode;
 }) {
     return (
-        <ConfirmProvider>
-            <Box
-                sx={{
-                    display: 'grid',
-                    gridTemplateColumns: '1fr',
-                    gridTemplateRows: 'auto 1fr auto',
-                    height: '100%',
-                    maxHeight: '100%',
-                    overflow: 'auto',
-                }}
-            >
-                <Header />
-                <CookieConsent
-                    location="bottom"
-                    buttonText="I understand"
-                    buttonStyle={{
-                        background: '#8c091b',
-                        color: '#fbfbfb',
-                        fontSize: '13px',
+        <>
+            <ConfirmProvider>
+                <Box
+                    sx={{
+                        display: 'grid',
+                        gridTemplateColumns: '1fr',
+                        gridTemplateRows: 'auto 1fr auto',
+                        height: '100%',
+                        maxHeight: '100%',
+                        overflow: 'auto',
                     }}
                 >
-                    This website uses cookies to provide some parts of its
-                    functionality.
-                </CookieConsent>
-                {children}
-                <Footer />
+                    <Header />
+                    {children}
+                    <Footer />
+                </Box>
                 <ToastContainer />
                 {modal}
-            </Box>
-        </ConfirmProvider>
+            </ConfirmProvider>
+            <CookieConsent
+                location="bottom"
+                buttonText="I understand"
+                buttonStyle={{
+                    background: '#8c091b',
+                    color: '#fbfbfb',
+                    fontSize: '13px',
+                }}
+            >
+                This website uses cookies to provide some parts of its
+                functionality.
+            </CookieConsent>
+        </>
     );
 }

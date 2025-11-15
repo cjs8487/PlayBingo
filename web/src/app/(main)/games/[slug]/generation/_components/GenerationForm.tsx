@@ -10,6 +10,10 @@ import { GoalCategory } from '@playbingo/types';
 import { useCallback } from 'react';
 import * as z from 'zod';
 import { alertError, notifyMessage } from '../../../../../../lib/Utils';
+import CustomLayoutEditor, {
+    CustomLayout,
+    Schema,
+} from '../../../../../../components/generation/CustomLayoutEditor';
 
 interface Props {
     slug: string;
@@ -67,6 +71,27 @@ export default function GenerationForm({
                 onChange={setValues}
                 errors={errors}
                 path=""
+                components={{
+                    'boardLayout.layout': ({
+                        schema,
+                        value,
+                        onChange,
+                        errors,
+                        path,
+                        components,
+                    }) => {
+                        return (
+                            <CustomLayoutEditor
+                                schema={schema as Schema}
+                                value={value as CustomLayout}
+                                onChange={onChange}
+                                errors={errors}
+                                path={path}
+                                components={components}
+                            />
+                        );
+                    },
+                }}
             />
             <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
                 <Button color="error" onClick={() => setValues({})}>

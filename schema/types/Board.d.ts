@@ -11,6 +11,8 @@ export type Cell = RevealedCell | HiddenCell;
 export interface RevealedBoard {
   board: Cell[][];
   hidden?: false;
+  width: number;
+  height: number;
 }
 export interface RevealedCell {
   goal: Goal;
@@ -33,4 +35,6 @@ export interface HiddenCell {
 }
 export interface HiddenBoard {
   hidden: true;
+  width: number;
+  height: number;
 }

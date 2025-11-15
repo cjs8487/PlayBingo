@@ -185,7 +185,12 @@ export default class Player {
             }
             finalMessage = {
                 action: 'syncBoard',
-                board: { hidden: false, board: this.obfuscateBoard() },
+                board: {
+                    hidden: false,
+                    board: this.obfuscateBoard(),
+                    width: this.room.board[0].length,
+                    height: this.room.board.length,
+                },
             };
         } else if (message.action === 'syncBoard' && this.room.exploration) {
             if (!message.board.hidden) {
