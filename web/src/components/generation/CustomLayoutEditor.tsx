@@ -168,6 +168,11 @@ export default function CustomLayoutEditor({
                                             zIndex: 10,
                                             scale: '110%',
                                         },
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        gap: 0.5,
                                     }}
                                     onClick={() =>
                                         openModal(rowIndex, colIndex)
