@@ -149,7 +149,7 @@ export const makeGeneratorSchema = (categories: GoalCategory[]) => {
                     { error: 'All rows must be the same length' },
                 )
                 .meta({ title: 'Layout' })
-                .default([[]]),
+                .default([[{ selectionCriteria: 'random' }]]),
         }),
     ]);
 
