@@ -1,10 +1,9 @@
 import { randomUUID } from 'crypto';
 import { Router } from 'express';
 import fileUpload, { UploadedFile } from 'express-fileupload';
-import path from 'path';
-import { requiresApiToken } from '../routes/middleware';
-import { isModerator, isOwner, slugForMedia } from '../database/games/Games';
 import { rm } from 'fs/promises';
+import path from 'path';
+import { isOwner, slugForMedia } from '../database/games/Games';
 
 const mediaServer = Router();
 
@@ -124,7 +123,7 @@ mediaServer.delete(':workflow/:id', async (req, res) => {
                 return;
             }
             // ensure the user has permission to remove the media
-            if (!isOwner(slug, req.session.user)) {
+            if (!(await isOwner(slug, req.session.user))) {
                 res.sendStatus(403);
                 return;
             }

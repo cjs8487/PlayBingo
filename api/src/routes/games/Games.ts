@@ -283,12 +283,13 @@ games.get('/:slug/eligibleMods', async (req, res) => {
 games.post('/:slug/owners', async (req, res) => {
     const { slug } = req.params;
     const { users } = req.body;
+    console.log(req.session.user);
 
     if (!req.session.user) {
         res.sendStatus(401);
         return;
     }
-    if (!isOwner(slug, req.session.user)) {
+    if (!(await isOwner(slug, req.session.user))) {
         res.sendStatus(403);
         return;
     }
@@ -329,7 +330,7 @@ games.delete('/:slug/owners', async (req, res) => {
         res.sendStatus(401);
         return;
     }
-    if (!isOwner(slug, req.session.user)) {
+    if (!(await isOwner(slug, req.session.user))) {
         res.sendStatus(403);
         return;
     }
@@ -363,7 +364,7 @@ games.post('/:slug/moderators', async (req, res) => {
         res.sendStatus(401);
         return;
     }
-    if (!isOwner(slug, req.session.user)) {
+    if (!(await isOwner(slug, req.session.user))) {
         res.sendStatus(403);
         return;
     }
@@ -404,7 +405,7 @@ games.delete('/:slug/moderators', async (req, res) => {
         res.sendStatus(401);
         return;
     }
-    if (!isOwner(slug, req.session.user)) {
+    if (!(await isOwner(slug, req.session.user))) {
         res.sendStatus(403);
         return;
     }
@@ -547,7 +548,7 @@ games.delete('/:slug', async (req, res) => {
 
     const { slug } = req.params;
 
-    if (!isOwner(slug, req.session.user)) {
+    if (!(await isOwner(slug, req.session.user))) {
         res.sendStatus(403);
         return;
     }
@@ -579,7 +580,7 @@ games
             res.sendStatus(401);
             return;
         }
-        if (!isModerator(slug, req.session.user)) {
+        if (!(await isModerator(slug, req.session.user))) {
             res.sendStatus(403);
             return;
         }
@@ -605,7 +606,7 @@ games.post('/:slug/generation', async (req, res) => {
 
     const { slug } = req.params;
 
-    if (!isOwner(slug, req.session.user)) {
+    if (!(await isOwner(slug, req.session.user))) {
         res.sendStatus(403);
         return;
     }

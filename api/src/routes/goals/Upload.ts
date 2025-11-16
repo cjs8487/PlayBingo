@@ -6,7 +6,11 @@ import {
     updateSRLv5Enabled,
 } from '../../database/games/Games';
 import { getUser } from '../../database/Users';
-import { createGoals, GoalInput, replaceAllGoalsForGame } from '../../database/games/Goals';
+import {
+    createGoals,
+    GoalInput,
+    replaceAllGoalsForGame,
+} from '../../database/games/Goals';
 import { Prisma } from '@prisma/client';
 import { requiresApiToken } from '../middleware';
 
@@ -19,7 +23,7 @@ upload.post('/srlv5', async (req, res) => {
         res.sendStatus(401);
         return;
     }
-    if (!isOwner(slug, req.session.user)) {
+    if (!(await isOwner(slug, req.session.user))) {
         res.sendStatus(403);
         return;
     }
@@ -52,7 +56,7 @@ upload.post('/list', async (req, res) => {
         res.sendStatus(401);
         return;
     }
-    if (!isOwner(slug, req.session.user)) {
+    if (!(await isOwner(slug, req.session.user))) {
         res.sendStatus(403);
         return;
     }
@@ -107,7 +111,7 @@ upload.post('/replace', async (req, res) => {
 
     const isGameOwner = await isOwner(slug, req.session.user);
     const isGameModerator = await isModerator(slug, req.session.user);
-    
+
     if (!user.staff && !isGameOwner && !isGameModerator) {
         res.sendStatus(403);
         return;

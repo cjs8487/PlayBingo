@@ -225,11 +225,11 @@ export const removeModerator = (slug: string, user: string) => {
 };
 
 export const isOwner = async (slug: string, user: string) => {
-    return (
-        (await prisma.game.count({
-            where: { slug, owners: { some: { id: user } } },
-        })) > 0
-    );
+    const count = await prisma.game.count({
+        where: { AND: [{ slug }, { owners: { some: { id: user } } }] },
+    });
+    console.log(count);
+    return count > 0;
 };
 
 /**
