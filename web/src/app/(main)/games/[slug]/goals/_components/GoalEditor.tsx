@@ -1,5 +1,4 @@
 import NumberInput from '@/components/input/NumberInput';
-import { Category, Goal } from '@playbingo/types';
 import CheckBoxIcon from '@mui/icons-material/CheckBox';
 import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
 import {
@@ -7,13 +6,17 @@ import {
     Box,
     Button,
     Checkbox,
+    Chip,
     TextField,
+    Typography,
     createFilterOptions,
 } from '@mui/material';
+import { Category, Goal } from '@playbingo/types';
 import { Form, Formik, useField } from 'formik';
 import { KeyedMutator } from 'swr';
-import { alertError } from '../../../../../../lib/Utils';
+import FormikFileUpload from '../../../../../../components/input/FileUpload';
 import FormikTextField from '../../../../../../components/input/FormikTextField';
+import { alertError } from '../../../../../../lib/Utils';
 
 const icon = <CheckBoxOutlineBlankIcon fontSize="small" />;
 const checkedIcon = <CheckBoxIcon fontSize="small" />;
@@ -107,6 +110,9 @@ export default function GoalEditor({
                 description: goal.description ?? '',
                 categories: goal.categories?.map((c) => c.name) ?? [],
                 difficulty: goal.difficulty ?? 0,
+                image: goal.image ?? '',
+                imageAdditionalInfo: goal.imageAdditionalInfo ?? '',
+                imageCount: goal.imageCount,
             }}
             onSubmit={async ({
                 goal: goalText,
@@ -173,7 +179,12 @@ export default function GoalEditor({
             }}
             enableReinitialize
         >
-            {({ isSubmitting, isValidating, resetForm }) => (
+            {({
+                isSubmitting,
+                isValidating,
+                resetForm,
+                values: { imageAdditionalInfo, imageCount },
+            }) => (
                 <Form>
                     <Box
                         sx={{
@@ -227,6 +238,52 @@ export default function GoalEditor({
                                     max={25}
                                 />
                             </Box>
+                        </Box>
+                    </Box>
+                    <Box sx={{ mt: 2, display: 'flex', gap: 4 }}>
+                        <Box sx={{ position: 'relative' }}>
+                            <FormikFileUpload
+                                name="image"
+                                workflow="goalImage"
+                                edit
+                            />
+                            {imageAdditionalInfo && (
+                                <Chip
+                                    label={imageAdditionalInfo}
+                                    sx={{
+                                        position: 'absolute',
+                                        top: 0,
+                                        right: 0,
+                                        mt: 0.5,
+                                        mr: 0.5,
+                                    }}
+                                />
+                            )}
+                            {imageCount && (
+                                <Typography
+                                    sx={{
+                                        position: 'absolute',
+                                        top: '50%',
+                                        right: '50%',
+                                        transform: 'translate(50%, 50%)',
+                                    }}
+                                >
+                                    {imageCount}
+                                </Typography>
+                            )}
+                        </Box>
+                        <Box
+                            sx={{
+                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: 2,
+                            }}
+                        >
+                            <FormikTextField
+                                name="imageAdditionalInfo"
+                                label="Image Label"
+                            />
+                            <NumberInput name="imageCount" label="Count" />
                         </Box>
                     </Box>
                     {canModerate && (
