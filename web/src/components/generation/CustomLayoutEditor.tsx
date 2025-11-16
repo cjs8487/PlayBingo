@@ -113,6 +113,9 @@ export default function CustomLayoutEditor({
 
     return (
         <>
+            <Typography variant="subtitle2" sx={{ mb: 2.5 }}>
+                The maximum allowed board size is 15x15.
+            </Typography>
             <Box sx={{ display: 'flex', gap: 2, mb: 1.5 }}>
                 <NumberField
                     label="Width"
