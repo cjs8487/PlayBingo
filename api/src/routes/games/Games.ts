@@ -146,6 +146,16 @@ games.post('/', async (req, res) => {
 
 games.post('/:slug', async (req, res) => {
     const { slug } = req.params;
+
+    if (!req.session.user) {
+        res.sendStatus(401);
+        return;
+    }
+    if (!(await isOwner(slug, req.session.user))) {
+        res.sendStatus(403);
+        return;
+    }
+
     const {
         name,
         coverImage,
