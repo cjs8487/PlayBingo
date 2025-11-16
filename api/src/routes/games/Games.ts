@@ -35,7 +35,7 @@ import {
     updateUseTypedRandom,
 } from '../../database/games/Games';
 import {
-    createCateogry,
+    createCategory,
     getCategories,
 } from '../../database/games/GoalCategories';
 import {
@@ -603,7 +603,7 @@ games
             res.status(400).send('Invalid value for max');
             return;
         }
-        const cat = await createCateogry(name, max);
+        const cat = await createCategory(name, max);
         res.status(200).json(cat);
     });
 
