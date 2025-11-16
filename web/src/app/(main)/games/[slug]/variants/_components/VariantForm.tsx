@@ -58,7 +58,9 @@ export default function VariantForm({
     );
     const [nameError, setNameError] = useState<string | null>(null);
 
-    const { values, setValues, errors, isValid, handleSubmit } = useJSONForm(
+    const { values, setValues, errors, isValid, handleSubmit } = useJSONForm<
+        typeof schema
+    >(
         schema,
         schema.safeParse(editVariant?.generatorSettings).data ?? {
             goalFilters: [],
