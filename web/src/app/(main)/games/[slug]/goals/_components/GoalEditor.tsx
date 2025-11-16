@@ -17,6 +17,7 @@ import { KeyedMutator } from 'swr';
 import FormikFileUpload from '../../../../../../components/input/FileUpload';
 import FormikTextField from '../../../../../../components/input/FormikTextField';
 import { alertError } from '../../../../../../lib/Utils';
+import FormikColorSelect from '../../../../../../components/input/FormikColorSelect';
 
 const icon = <CheckBoxOutlineBlankIcon fontSize="small" />;
 const checkedIcon = <CheckBoxIcon fontSize="small" />;
@@ -112,7 +113,8 @@ export default function GoalEditor({
                 difficulty: goal.difficulty ?? 0,
                 image: goal.image ?? '',
                 imageAdditionalInfo: goal.imageAdditionalInfo ?? '',
-                imageCount: goal.imageCount,
+                imageCount: goal.imageCount ?? '',
+                imageChipColor: goal.imageChipColor ?? '',
             }}
             onSubmit={async ({
                 goal: goalText,
@@ -183,7 +185,7 @@ export default function GoalEditor({
                 isSubmitting,
                 isValidating,
                 resetForm,
-                values: { imageAdditionalInfo, imageCount },
+                values: { imageAdditionalInfo, imageCount, imageChipColor },
             }) => (
                 <Form>
                     <Box
@@ -241,7 +243,13 @@ export default function GoalEditor({
                         </Box>
                     </Box>
                     <Box sx={{ mt: 2, display: 'flex', gap: 4 }}>
-                        <Box sx={{ position: 'relative' }}>
+                        <Box
+                            sx={{
+                                position: 'relative',
+                                width: '250px',
+                                height: '250px',
+                            }}
+                        >
                             <FormikFileUpload
                                 name="image"
                                 workflow="goalImage"
@@ -256,6 +264,7 @@ export default function GoalEditor({
                                         right: 0,
                                         mt: 0.5,
                                         mr: 0.5,
+                                        backgroundColor: imageChipColor,
                                     }}
                                 />
                             )}
@@ -282,6 +291,10 @@ export default function GoalEditor({
                             <FormikTextField
                                 name="imageAdditionalInfo"
                                 label="Image Label"
+                            />
+                            <FormikColorSelect
+                                name="imageChipColor"
+                                label="Background Color"
                             />
                             <NumberInput name="imageCount" label="Count" />
                         </Box>
