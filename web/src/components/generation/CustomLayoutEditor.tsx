@@ -121,6 +121,8 @@ export default function CustomLayoutEditor({
                     helperText={errors[`${path}.0`] ?? ' '}
                     onChange={(v) => doSetWidth(v ?? 1)}
                     sx={{ width: '100%' }}
+                    min={1}
+                    max={15}
                 />
                 <NumberField
                     label="Height"
@@ -129,6 +131,8 @@ export default function CustomLayoutEditor({
                     helperText={errors[path] ?? ' '}
                     onChange={(v) => doSetHeight(v ?? 1)}
                     sx={{ width: '100%' }}
+                    min={1}
+                    max={15}
                 />
             </Box>
             <Box
