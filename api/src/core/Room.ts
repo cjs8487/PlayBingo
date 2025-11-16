@@ -48,7 +48,7 @@ import {
 } from '../util/RoomUtils';
 import Player from './Player';
 import { allRooms } from './RoomServer';
-import BoardGenerator from './generation/BoardGenerator';
+import { BoardGenerator } from './generation/BoardGenerator';
 import {
     GeneratorGoal,
     GlobalGenerationState,
@@ -255,7 +255,13 @@ export default class Room {
                 this.generatorSettings,
             );
             generator.generateBoard();
-            this.board = listToBoard(generator.board);
+            this.board = generator.board.map((row) =>
+                row.map((goal) => ({
+                    goal: goal,
+                    completedPlayers: [],
+                    revealed: true,
+                })),
+            );
         } else {
             const globalState: GlobalGenerationState = {
                 useCategoryMaxes: categories.some((cat) => cat.max > 0),
@@ -343,7 +349,7 @@ export default class Room {
                 this.logError(`Failed to generate board ${e}`);
                 return;
             }
-            this.board = listToBoard(goalList);
+            this.board = listToBoard(goalList, 5);
         }
 
         this.sendSyncBoard();
@@ -409,14 +415,18 @@ export default class Room {
         createUpdatePlayer(this.id, player).then();
         return {
             action: 'connected',
-            board: this.hideCard
-                ? { hidden: true }
-                : {
-                      hidden: false,
-                      board: this.exploration
-                          ? player.obfuscateBoard()
-                          : this.board,
-                  },
+            board: {
+                width: this.board[0].length,
+                height: this.board.length,
+                ...(this.hideCard
+                    ? { hidden: true }
+                    : {
+                          hidden: false,
+                          board: this.exploration
+                              ? player.obfuscateBoard()
+                              : this.board,
+                      }),
+            },
             chatHistory: this.chatHistory,
             connectedPlayer: player.toClientData(),
             roomData: {
@@ -665,7 +675,12 @@ export default class Room {
         ]);
         player.sendMessage({
             action: 'syncBoard',
-            board: { hidden: false, board: this.board },
+            board: {
+                hidden: false,
+                board: this.board,
+                width: this.board[0].length,
+                height: this.board.length,
+            },
         });
     }
     //#endregion
@@ -701,9 +716,13 @@ export default class Room {
     sendSyncBoard() {
         this.sendServerMessage({
             action: 'syncBoard',
-            board: this.hideCard
-                ? { hidden: true }
-                : { hidden: false, board: this.board },
+            board: {
+                width: this.board[0].length,
+                height: this.board.length,
+                ...(this.hideCard
+                    ? { hidden: true }
+                    : { hidden: false, board: this.board }),
+            },
         });
     }
 

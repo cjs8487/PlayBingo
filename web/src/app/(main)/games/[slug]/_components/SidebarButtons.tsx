@@ -26,9 +26,11 @@ export default function SidebarButtons({ slug, variants }: Props) {
     const [showDialog, setShowDialog] = useState(false);
     const [showSampleBoard, setShowSampleBoard] = useState(false);
     const [dialogContent, setDialogContent] = useState<ReactNode>(null);
-    const [sampleBoard, setSampleBoard] = useState<Goal[]>([]);
+    const [sampleBoard, setSampleBoard] = useState<Goal[][]>([]);
     const [sampleSeed, setSampleSeed] = useState('');
     const [sampleVariant, setSampleVariant] = useState<string | undefined>('');
+    const [sampleWidth, setSampleWidth] = useState(5);
+    const [sampleHeight, setSampleHeight] = useState(5);
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const open = Boolean(anchorEl);
 
@@ -49,11 +51,20 @@ export default function SidebarButtons({ slug, variants }: Props) {
                 board,
                 seed,
                 variant,
-            }: { board: Goal[]; seed: string; variant: string | undefined } =
-                await res.json();
+                width,
+                height,
+            }: {
+                board: Goal[][];
+                seed: string;
+                variant: string | undefined;
+                width: number;
+                height: number;
+            } = await res.json();
             setSampleBoard(board);
             setSampleSeed(seed);
             setSampleVariant(variant);
+            setSampleWidth(width);
+            setSampleHeight(height);
             handleClose();
             return true;
         },
@@ -164,62 +175,64 @@ export default function SidebarButtons({ slug, variants }: Props) {
                             <Box
                                 sx={{
                                     display: 'grid',
-                                    gridTemplateRows: 'repeat(5, 1fr)',
-                                    gridTemplateColumns: 'repeat(5, 1fr)',
+                                    gridTemplateRows: `repeat(${sampleHeight}, 1fr)`,
+                                    gridTemplateColumns: `repeat(${sampleWidth}, 1fr)`,
                                     border: 1,
                                     borderColor: 'divider',
                                     width: '100%',
                                     aspectRatio: '1 / 1',
                                 }}
                             >
-                                {sampleBoard.map((goal) => (
-                                    <Tooltip
-                                        key={goal.id}
-                                        title={
-                                            <>
-                                                <Box sx={{ pb: 1.5 }}>
-                                                    {goal.description}
-                                                </Box>
-                                                {goal.difficulty && (
-                                                    <Box>
-                                                        Difficulty:{' '}
-                                                        {goal.difficulty}
+                                {sampleBoard.map((row) =>
+                                    row.map((goal) => (
+                                        <Tooltip
+                                            key={goal.id}
+                                            title={
+                                                <>
+                                                    <Box sx={{ pb: 1.5 }}>
+                                                        {goal.description}
                                                     </Box>
-                                                )}
-                                                {goal.categories &&
-                                                    goal.categories.length >
-                                                        0 && (
+                                                    {goal.difficulty && (
                                                         <Box>
-                                                            Categories:{' '}
-                                                            {goal.categories.join(
-                                                                ', ',
-                                                            )}
+                                                            Difficulty:{' '}
+                                                            {goal.difficulty}
                                                         </Box>
                                                     )}
-                                            </>
-                                        }
-                                    >
-                                        <Box
-                                            sx={{
-                                                border: 1,
-                                                borderColor: 'divider',
-                                                aspectRatio: '1 / 1',
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'center',
-                                                width: '100%',
-                                                height: '100%',
-                                            }}
+                                                    {goal.categories &&
+                                                        goal.categories.length >
+                                                            0 && (
+                                                            <Box>
+                                                                Categories:{' '}
+                                                                {goal.categories.join(
+                                                                    ', ',
+                                                                )}
+                                                            </Box>
+                                                        )}
+                                                </>
+                                            }
                                         >
-                                            <TextFit
-                                                text={goal.goal}
+                                            <Box
                                                 sx={{
-                                                    textAlign: 'center',
+                                                    border: 1,
+                                                    borderColor: 'divider',
+                                                    aspectRatio: '1 / 1',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                    width: '100%',
+                                                    height: '100%',
                                                 }}
-                                            />
-                                        </Box>
-                                    </Tooltip>
-                                ))}
+                                            >
+                                                <TextFit
+                                                    text={goal.goal}
+                                                    sx={{
+                                                        textAlign: 'center',
+                                                    }}
+                                                />
+                                            </Box>
+                                        </Tooltip>
+                                    )),
+                                )}
                             </Box>
                         </DialogContent>
                     </>

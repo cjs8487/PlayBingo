@@ -1,7 +1,8 @@
 import { makeGeneratorSchema } from '@playbingo/shared';
 import { Game } from '@playbingo/types';
 import { Router } from 'express';
-import BoardGenerator from '../../core/generation/BoardGenerator';
+import { BoardGenerator } from '../../core/generation/BoardGenerator';
+import { GenerationFailedError } from '../../core/generation/GenerationFailedError';
 import {
     addModerators,
     addOwners,
@@ -47,7 +48,6 @@ import { getVariant } from '../../database/games/Variants';
 import { getUser, getUsersEligibleToModerateGame } from '../../database/Users';
 import { deleteFile, saveFile } from '../../media/MediaServer';
 import variants from './Variants';
-import { GenerationFailedError } from '../../core/generation/GenerationFailedError';
 
 const games = Router();
 
@@ -693,13 +693,17 @@ games.get('/:slug/sampleBoard', async (req, res) => {
         res.status(500).send(`An unknown generation error occurred - ${e}`);
     }
     res.status(200).send({
-        board: generator.board.map((goal) => ({
-            id: goal.id,
-            goal: goal.goal,
-            description: goal.description,
-            categories: goal.categories,
-            difficulty: goal.difficulty,
-        })),
+        board: generator.board.map((row) =>
+            row.map((goal) => ({
+                id: goal.id,
+                goal: goal.goal,
+                description: goal.description,
+                categories: goal.categories,
+                difficulty: goal.difficulty,
+            })),
+        ),
+        width: generator.board[0].length,
+        height: generator.board.length,
         seed: generator.seed,
         variant: variantData ? variantData.name : undefined,
     });

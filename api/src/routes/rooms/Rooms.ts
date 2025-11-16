@@ -294,14 +294,25 @@ async function getOrLoadRoom(slug: string): Promise<Room | null> {
         generatorSettings,
     );
 
-    newRoom.board = chunk(
-        (await getGoalList(dbRoom.board)).map((goal) => ({
-            goal: goal,
-            completedPlayers: [],
-            revealed: true,
-        })),
-        5,
-    );
+    if (generatorSettings?.boardLayout.mode === 'custom') {
+        newRoom.board = chunk(
+            (await getGoalList(dbRoom.board)).map((goal) => ({
+                goal: goal,
+                completedPlayers: [],
+                revealed: true,
+            })),
+            generatorSettings.boardLayout.layout[0].length,
+        );
+    } else {
+        newRoom.board = chunk(
+            (await getGoalList(dbRoom.board)).map((goal) => ({
+                goal: goal,
+                completedPlayers: [],
+                revealed: true,
+            })),
+            5,
+        );
+    }
 
     dbRoom.players.forEach((dbPlayer) => {
         const player = new Player(

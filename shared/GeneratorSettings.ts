@@ -4,6 +4,9 @@ import * as z from 'zod';
 declare module 'zod' {
     interface GlobalMeta {
         enumMeta?: Record<string, { label: string; description?: string }>;
+        displayDetails?: {
+            row?: boolean;
+        };
     }
 }
 
@@ -79,15 +82,79 @@ export const makeGeneratorSchema = (categories: GoalCategory[]) => {
             mode: z.literal('srlv5').meta({
                 title: 'SRLv5',
                 description:
-                    'Generates a board using difficulties 1-25 to balance each line. Each difficulty appears on the board exactly once amd the sum of the difficulties in each line sums to the same value. Goals with an invalid difficulty will be ignored.',
+                    'Generates a 5x5 board using difficulties 1-25 to balance each line. Each difficulty appears on the board exactly once amd the sum of the difficulties in each line sums to the same value. Goals with an invalid difficulty will be ignored.',
             }),
         }),
         z.object({
             mode: z.literal('isaac').meta({
                 title: 'Static (Isaac)',
                 description:
-                    'Generates a board with a static layout using difficulties 1-4. The center cell of the board is always 4, and all sum of difficulties in lines including the center cell is 10. All other lines have a difficulty sum of 9. Goals with an invalid difficulty will be ignored.',
+                    'Generates a 5x5 board with a static layout using difficulties 1-4. The center cell of the board is always 4, and all sum of difficulties in lines including the center cell is 10. All other lines have a difficulty sum of 9. Goals with an invalid difficulty will be ignored.',
             }),
+        }),
+        z.object({
+            mode: z.literal('custom').meta({
+                title: 'Custom',
+                description:
+                    'Generates a board with a custom layout. Custom layouts have no restriction on the size of the board, but must be able fill every cell with at least one goal from the pool. Goals with an invalid value based on the selection criteria for the cell will be ignored when placing a goal in that cell. ',
+            }),
+            layout: z
+                .array(
+                    z
+                        .array(
+                            z
+                                .discriminatedUnion('selectionCriteria', [
+                                    z
+                                        .object({
+                                            selectionCriteria:
+                                                z.literal('difficulty'),
+                                            difficulty: z
+                                                .number()
+                                                .int()
+                                                .min(
+                                                    1,
+                                                    'Value must be at least 1',
+                                                ),
+                                        })
+                                        .meta({ title: 'Difficulty' }),
+                                    z
+                                        .object({
+                                            selectionCriteria:
+                                                z.literal('category'),
+                                            category: z.enum(catIds).meta({
+                                                enumMeta: Object.fromEntries(
+                                                    categories.map((cat) => [
+                                                        cat.id,
+                                                        { label: cat.name },
+                                                    ]),
+                                                ),
+                                            }),
+                                        })
+                                        .meta({ title: 'Category' }),
+                                    z
+                                        .object({
+                                            selectionCriteria:
+                                                z.literal('random'),
+                                        })
+                                        .meta({ title: 'Random' }),
+                                ])
+                                .default({ selectionCriteria: 'random' }),
+                        )
+                        .min(1, 'Rows must contain at least 1 cell.')
+                        .max(
+                            15,
+                            '15x15 is the maximum supported size on PlayBingo',
+                        )
+                        .default([{ selectionCriteria: 'random' }]),
+                )
+                .min(1, 'Layout must have at least one row')
+                .max(15, '15x15 is the maximum supported board size')
+                .refine(
+                    (arr) => arr.every((row) => row.length === arr[0].length),
+                    { error: 'All rows must be the same length' },
+                )
+                .meta({ title: 'Layout' })
+                .default([[{ selectionCriteria: 'random' }]]),
         }),
     ]);
 

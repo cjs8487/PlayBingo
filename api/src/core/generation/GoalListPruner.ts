@@ -1,6 +1,5 @@
-import { Goal } from '@playbingo/types';
-import BoardGenerator from './BoardGenerator';
 import { GeneratorSettings } from '@playbingo/shared';
+import { BoardGenerator } from './BoardGenerator';
 
 type GoalFilter = GeneratorSettings['goalFilters'][number];
 

@@ -15,7 +15,13 @@ import {
     Tooltip,
     Typography,
 } from '@mui/material';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import React, {
+    ReactNode,
+    useCallback,
+    useEffect,
+    useMemo,
+    useState,
+} from 'react';
 import z, { ZodType } from 'zod';
 import NumberField from '../NumberField';
 
@@ -32,7 +38,6 @@ export function useJSONForm<T extends ZodType<any, any>>(
 
     const doSetValues = useCallback(
         (values: JSONValue) => {
-            setValues(values);
             if (values) {
                 const result = schema.safeParse(values);
                 if (!result.success) {
@@ -40,9 +45,11 @@ export function useJSONForm<T extends ZodType<any, any>>(
                     for (const issue of result.error.issues) {
                         newErrors[issue.path.join('.')] = issue.message;
                     }
+                    setValues(values);
                     setErrors(newErrors);
                     setIsValid(false);
                 } else {
+                    setValues(result.data);
                     setErrors({});
                     setIsValid(true);
                 }
@@ -103,6 +110,7 @@ export type JSONSchema = {
     description?: string;
     minimum?: number;
     maximum?: number;
+    displayDetails?: { row?: boolean };
 };
 
 /** ---------- Utilities ---------- */
@@ -271,6 +279,7 @@ function OneOfAnyOfRenderer({
     onChange,
     errors,
     path,
+    components,
 }: JsonSchemaRendererProps) {
     const options = (schema.oneOf ?? schema.anyOf)!;
     const discrKey = useMemo(() => inferDiscriminatorKey(options), [options]);
@@ -369,17 +378,19 @@ function OneOfAnyOfRenderer({
                 }
                 errors={errors}
                 path={path}
+                components={components}
             />
         </Box>
     );
 }
 
-interface JsonSchemaRendererProps {
+export interface JsonSchemaRendererProps {
     schema: JSONSchema;
     value: JSONValue;
     onChange: (val: JSONValue) => void;
     errors: Record<string, string>;
     path: string;
+    components: Record<string, (props: JsonSchemaRendererProps) => ReactNode>;
 }
 
 export function JsonSchemaRenderer({
@@ -388,8 +399,20 @@ export function JsonSchemaRenderer({
     onChange,
     errors,
     path,
+    components,
 }: JsonSchemaRendererProps) {
     if (!schema) return null;
+
+    if (components[path]) {
+        return components[path]({
+            schema,
+            value,
+            onChange,
+            errors,
+            path,
+            components,
+        });
+    }
 
     /** ----- oneOf / anyOf ----- */
     if (schema.oneOf || schema.anyOf) {
@@ -400,6 +423,7 @@ export function JsonSchemaRenderer({
                 onChange={onChange}
                 errors={errors}
                 path={path}
+                components={components}
             />
         );
     }
@@ -483,6 +507,7 @@ export function JsonSchemaRenderer({
                             }
                             errors={errors}
                             path={newPath}
+                            components={components}
                         />
                     );
 
@@ -548,7 +573,9 @@ export function JsonSchemaRenderer({
             <Box
                 sx={{
                     display: 'flex',
-                    flexDirection: 'column',
+                    flexDirection: schema.displayDetails?.row
+                        ? 'row'
+                        : 'column',
                     gap: 1,
                     width: '100%',
                 }}
@@ -568,6 +595,7 @@ export function JsonSchemaRenderer({
                             }}
                             errors={errors}
                             path={idxPath}
+                            components={components}
                         />
                     );
                     return (
@@ -655,7 +683,7 @@ export function JsonSchemaRenderer({
                 value={(value as string) ?? ''}
                 onChange={(e) => onChange(e.target.value)}
                 error={!!errors[path]}
-                helperText={errors[path]}
+                helperText={errors[path] ?? ' '}
                 sx={{ width: '100%' }}
             />
         );
