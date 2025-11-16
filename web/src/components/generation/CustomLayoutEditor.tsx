@@ -1,6 +1,8 @@
 import {
     Box,
+    Button,
     Dialog,
+    DialogActions,
     DialogContent,
     DialogTitle,
     Typography,
@@ -100,8 +102,6 @@ export default function CustomLayoutEditor({
 
     const closeModal = useCallback(() => {
         setShowModal(false);
-        setModalRow(0);
-        setModalCol(0);
     }, []);
 
     const getCriteriaType = (
@@ -233,6 +233,9 @@ export default function CustomLayoutEditor({
                         />
                     </Box>
                 </DialogContent>
+                <DialogActions>
+                    <Button onClick={closeModal}>Close</Button>
+                </DialogActions>
             </Dialog>
         </>
     );
