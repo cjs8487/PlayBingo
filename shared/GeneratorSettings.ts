@@ -141,9 +141,14 @@ export const makeGeneratorSchema = (categories: GoalCategory[]) => {
                                 .default({ selectionCriteria: 'random' }),
                         )
                         .min(1, 'Rows must contain at least 1 cell.')
+                        .max(
+                            15,
+                            '15x15 is the maximum supported size on PlayBingo',
+                        )
                         .default([{ selectionCriteria: 'random' }]),
                 )
                 .min(1, 'Layout must have at least one row')
+                .max(15, '15x15 is the maximum supported board size')
                 .refine(
                     (arr) => arr.every((row) => row.length === arr[0].length),
                     { error: 'All rows must be the same length' },
