@@ -283,7 +283,6 @@ games.get('/:slug/eligibleMods', async (req, res) => {
 games.post('/:slug/owners', async (req, res) => {
     const { slug } = req.params;
     const { users } = req.body;
-    console.log(req.session.user);
 
     if (!req.session.user) {
         res.sendStatus(401);
