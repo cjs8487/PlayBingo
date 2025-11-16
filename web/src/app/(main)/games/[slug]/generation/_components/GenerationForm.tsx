@@ -29,9 +29,7 @@ export default function GenerationForm({
     const { schema, metadata } = makeGeneratorSchema(categories);
     const schemaJson = z.toJSONSchema(schema, { metadata });
 
-    const { values, setValues, errors, isValid, handleSubmit } = useJSONForm<
-        typeof schema
-    >(
+    const { values, setValues, errors, isValid, handleSubmit } = useJSONForm(
         schema,
         initialValues ?? {
             goalFilters: [],
