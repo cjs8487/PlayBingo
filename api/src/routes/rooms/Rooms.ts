@@ -164,7 +164,7 @@ rooms.post('/', async (req, res) => {
         hideCard,
         mode,
         lineCount,
-        variant,
+        isDifficultyVariant ? undefined : variant,
         exploration
             ? explorationStart === 'RANDOM'
                 ? `${explorationStartCount}`
