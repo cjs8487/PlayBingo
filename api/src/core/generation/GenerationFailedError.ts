@@ -1,4 +1,4 @@
-import BoardGenerator, { LayoutCell } from './BoardGenerator';
+import { BoardGenerator, LayoutCell } from './BoardGenerator';
 
 export class GenerationFailedError extends Error {
     public readonly failureReason: string;

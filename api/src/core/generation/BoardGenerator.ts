@@ -21,7 +21,7 @@ export type LayoutCell = Extract<
 /**
  *
  */
-export default class BoardGenerator {
+export class BoardGenerator {
     // generation strategies
     goalFilters: GoalListPruner[];
     goalTransformers: GoalListTransformer[];

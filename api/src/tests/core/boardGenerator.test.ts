@@ -1,5 +1,6 @@
 import { Category } from '@prisma/client';
-import BoardGenerator, {
+import {
+    BoardGenerator,
     LayoutCell,
 } from '../../core/generation/BoardGenerator';
 import { GeneratorGoal } from '../../core/generation/GeneratorCore';

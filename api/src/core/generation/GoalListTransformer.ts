@@ -1,5 +1,5 @@
 import { GeneratorSettings } from '@playbingo/shared';
-import BoardGenerator from './BoardGenerator';
+import { BoardGenerator } from './BoardGenerator';
 
 type GoalTransformer = GeneratorSettings['goalTransformation'][number];
 

@@ -1,5 +1,5 @@
 import { GeneratorSettings } from '@playbingo/shared';
-import BoardGenerator from './BoardGenerator';
+import { BoardGenerator } from './BoardGenerator';
 import { GeneratorGoal } from './GeneratorCore';
 
 const LINE_CHECK_LIST: number[][] = [];

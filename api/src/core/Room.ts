@@ -48,7 +48,7 @@ import {
 } from '../util/RoomUtils';
 import Player from './Player';
 import { allRooms } from './RoomServer';
-import BoardGenerator from './generation/BoardGenerator';
+import { BoardGenerator } from './generation/BoardGenerator';
 import {
     GeneratorGoal,
     GlobalGenerationState,

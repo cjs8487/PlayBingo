@@ -1,7 +1,8 @@
 import { makeGeneratorSchema } from '@playbingo/shared';
 import { Game } from '@playbingo/types';
 import { Router } from 'express';
-import BoardGenerator from '../../core/generation/BoardGenerator';
+import { BoardGenerator } from '../../core/generation/BoardGenerator';
+import { GenerationFailedError } from '../../core/generation/GenerationFailedError';
 import {
     addModerators,
     addOwners,
@@ -47,7 +48,6 @@ import { getVariant } from '../../database/games/Variants';
 import { getUser, getUsersEligibleToModerateGame } from '../../database/Users';
 import { deleteFile, saveFile } from '../../media/MediaServer';
 import variants from './Variants';
-import { GenerationFailedError } from '../../core/generation/GenerationFailedError';
 
 const games = Router();
 

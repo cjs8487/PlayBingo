@@ -1,5 +1,5 @@
 import { GeneratorSettings } from '@playbingo/shared';
-import BoardGenerator, { LayoutCell } from './BoardGenerator';
+import { BoardGenerator, LayoutCell } from './BoardGenerator';
 
 type BoardLayout = GeneratorSettings['boardLayout'];
 
