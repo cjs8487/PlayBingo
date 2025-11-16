@@ -29,6 +29,8 @@ export default function SidebarButtons({ slug, variants }: Props) {
     const [sampleBoard, setSampleBoard] = useState<Goal[][]>([]);
     const [sampleSeed, setSampleSeed] = useState('');
     const [sampleVariant, setSampleVariant] = useState<string | undefined>('');
+    const [sampleWidth, setSampleWidth] = useState(5);
+    const [sampleHeight, setSampleHeight] = useState(5);
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const open = Boolean(anchorEl);
 
@@ -49,11 +51,20 @@ export default function SidebarButtons({ slug, variants }: Props) {
                 board,
                 seed,
                 variant,
-            }: { board: Goal[][]; seed: string; variant: string | undefined } =
-                await res.json();
+                width,
+                height,
+            }: {
+                board: Goal[][];
+                seed: string;
+                variant: string | undefined;
+                width: number;
+                height: number;
+            } = await res.json();
             setSampleBoard(board);
             setSampleSeed(seed);
             setSampleVariant(variant);
+            setSampleWidth(width);
+            setSampleHeight(height);
             handleClose();
             return true;
         },
@@ -164,8 +175,8 @@ export default function SidebarButtons({ slug, variants }: Props) {
                             <Box
                                 sx={{
                                     display: 'grid',
-                                    gridTemplateRows: 'repeat(5, 1fr)',
-                                    gridTemplateColumns: 'repeat(5, 1fr)',
+                                    gridTemplateRows: `repeat(${sampleHeight}, 1fr)`,
+                                    gridTemplateColumns: `repeat(${sampleWidth}, 1fr)`,
                                     border: 1,
                                     borderColor: 'divider',
                                     width: '100%',

@@ -702,6 +702,8 @@ games.get('/:slug/sampleBoard', async (req, res) => {
                 difficulty: goal.difficulty,
             })),
         ),
+        width: generator.board[0].length,
+        height: generator.board.length,
         seed: generator.seed,
         variant: variantData ? variantData.name : undefined,
     });
