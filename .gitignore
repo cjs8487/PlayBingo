@@ -45,5 +45,5 @@ next-env.d.ts
 *.log.gz
 *.log.*.gz
 
-/api/media/**/*.png
-/api/media/**/*.jpeg
+/api/media/**
+/api/media/**

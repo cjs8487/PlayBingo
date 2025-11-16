@@ -228,7 +228,6 @@ export const isOwner = async (slug: string, user: string) => {
     const count = await prisma.game.count({
         where: { AND: [{ slug }, { owners: { some: { id: user } } }] },
     });
-    console.log(count);
     return count > 0;
 };
 
