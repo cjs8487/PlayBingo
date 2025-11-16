@@ -88,7 +88,9 @@ export default function FormikFileUpload({
         if (value) {
             setFile({ preview: getMediaForWorkflow(workflow, value) });
         }
-    }, [value, workflow]);
+        // this is a mount effect
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     const {
         getRootProps,
