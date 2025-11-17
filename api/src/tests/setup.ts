@@ -21,5 +21,6 @@ mockValidTokenPayload.active = true;
 
 export const mockFindToken = jest
     .spyOn(prisma.apiToken, 'findUnique')
+    .mockResolvedValueOnce(null)
     .mockResolvedValueOnce(revokedTokenPayload)
     .mockResolvedValue(mockValidTokenPayload);
