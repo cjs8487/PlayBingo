@@ -58,7 +58,6 @@ export default function NumberInput({
             value={value}
             disabled={disabled}
             onChange={(e) => setValue(Number(e.target.value))}
-            size="small"
             sx={{ p: 0 }}
             slotProps={{
                 input: {
