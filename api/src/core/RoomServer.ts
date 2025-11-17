@@ -15,7 +15,7 @@ export const roomWebSocketServer: WebSocketServer = new WebSocketServer({
 
 export const allRooms = new Map<string, Room>();
 
-const cleanupInterval = setInterval(() => {
+export const cleanupInterval = setInterval(() => {
     allRooms.forEach((room, key) => {
         if (room.canClose()) {
             room.close();

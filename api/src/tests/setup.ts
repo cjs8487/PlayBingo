@@ -1,10 +1,16 @@
 import { mock } from 'jest-mock-extended';
 import { ApiToken } from '@prisma/client';
 import { prisma } from '../database/Database';
-import Room from '../core/Room';
+import { cleanupInterval } from '../core/RoomServer';
+import { closeSessionDatabase } from '../util/Session';
 
 beforeEach(() => {
     // mockReset(prismaMock);
+});
+
+afterAll(() => {
+    clearInterval(cleanupInterval);
+    closeSessionDatabase();
 });
 
 const revokedTokenPayload = mock<ApiToken>();
