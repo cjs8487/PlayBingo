@@ -92,6 +92,18 @@
             "items": {
                 "$ref": "./Variant.json"
             }
+        },
+        "images": {
+            "type": "array",
+            "items": {
+                "$ref": "./GoalImage.json"
+            }
+        },
+        "imageTags": {
+            "type": "array",
+            "items": {
+                "$ref": "./GoalImageTag.json"
+            }
         }
     },
     "$defs": {
