@@ -57,6 +57,7 @@ interface BaseProps {
     edit?: boolean;
     circle?: boolean;
     size?: string | number;
+    shortMessage?: boolean;
 }
 
 interface CircleProps extends BaseProps {
@@ -77,6 +78,7 @@ export default function FormikFileUpload({
     edit,
     circle,
     size,
+    shortMessage: shortMessage,
 }: Props) {
     const [{ value }, , { setValue }] = useField<string>(name);
     const [file, setFile] = useState<{ preview: string }>();
@@ -209,11 +211,17 @@ export default function FormikFileUpload({
                 {!file && (
                     <>
                         <FileUpload />
-                        <Typography variant="caption">
-                            {isDragActive
-                                ? 'Drop files here to upload.'
-                                : 'Drag and drop a file or click to upload.'}
-                        </Typography>
+                        {shortMessage ? (
+                            <Typography variant="caption">
+                                {isDragActive ? '' : 'Upload file'}
+                            </Typography>
+                        ) : (
+                            <Typography variant="caption">
+                                {isDragActive
+                                    ? 'Drop files here to upload.'
+                                    : 'Drag and drop a file or click to upload.'}
+                            </Typography>
+                        )}
                     </>
                 )}
             </Box>
