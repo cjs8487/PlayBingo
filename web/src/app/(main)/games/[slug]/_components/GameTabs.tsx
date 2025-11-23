@@ -80,15 +80,25 @@ export default function GameTabs({
                     elevation={page === segment ? 1 : 0}
                     sx={{
                         border: 2,
-                        borderTop: page === segment ? 4 : 2,
                         borderBottom: page === segment ? 0 : 2,
                         borderBottomLeftRadius: 0,
                         borderBottomRightRadius: 0,
                         borderColor: 'divider',
-                        borderTopColor: page === segment ? 'white' : 'divider',
                         marginLeft: index > 0 ? '-2px' : 0,
                         minWidth: 'fit-content',
                         zIndex: 10,
+                        '::before': {
+                            content: '""',
+                            display: page === segment ? 'block' : 'none',
+                            width: '100%',
+                            height: 4,
+                            background: 'white',
+                            borderRadius: 1,
+                            borderBottomLeftRadius: 0,
+                            borderBottomRightRadius: 0,
+                            zIndex: 0,
+                            boxSizing: 'border-box',
+                        },
                     }}
                 >
                     {page === segment ? (
