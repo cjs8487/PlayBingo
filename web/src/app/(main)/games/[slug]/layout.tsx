@@ -1,5 +1,4 @@
 import { Avatar, Box, Paper, Typography } from '@mui/material';
-import { grey } from '@mui/material/colors';
 import { Game } from '@playbingo/types';
 import { Metadata, ResolvingMetadata } from 'next';
 import Image from 'next/image';
@@ -234,14 +233,14 @@ export default async function GameLayout({
                 sx={{
                     px: 4,
                     pt: 2,
-                    height: '100%',
+                    height: 'calc(100% + 2px)',
                     maxHeight: '100%',
                     maxWidth: '100%',
                     overflowY: 'auto',
-                    background: grey[900],
+                    mt: '-2px',
+                    borderTop: 2,
                     borderLeft: 2,
                     borderColor: 'divider',
-                    borderRadius: 0,
                 }}
             >
                 {children}
