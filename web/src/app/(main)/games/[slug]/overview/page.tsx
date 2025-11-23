@@ -1,6 +1,7 @@
 import { Box, Card, CardContent, Typography } from '@mui/material';
 import { Game } from '@playbingo/types';
 import ReactMarkdown from 'react-markdown';
+import MarkdownDisplay from '../../../../../components/MarkdownDisplay';
 import { getFullUrl } from '../../../../../lib/Utils';
 
 async function getGame(slug: string): Promise<Game | undefined> {
@@ -44,6 +45,7 @@ export default async function Summary({ params }: Props) {
                         gridRow: 1,
                         gridColumn: `1 / ${hasLinks ? 'span 1' : 'span 2'}`,
                     }}
+                    elevation={3}
                 >
                     <CardContent>
                         <Typography variant="h5" sx={{ mb: 1 }}>
@@ -51,9 +53,9 @@ export default async function Summary({ params }: Props) {
                         </Typography>
                         {hasDescription && (
                             <>
-                                <ReactMarkdown>
-                                    {game.descriptionMd}
-                                </ReactMarkdown>
+                                <MarkdownDisplay
+                                    source={game.descriptionMd ?? ''}
+                                />
                             </>
                         )}
                         {hasVariants && (
@@ -86,7 +88,7 @@ export default async function Summary({ params }: Props) {
                 >
                     <CardContent>
                         <Typography variant="h5">Setup</Typography>
-                        <ReactMarkdown>{game.setupMd}</ReactMarkdown>
+                        <MarkdownDisplay source={game.setupMd ?? ''} />
                     </CardContent>
                 </Card>
             )}

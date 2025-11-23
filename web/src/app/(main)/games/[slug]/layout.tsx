@@ -1,4 +1,4 @@
-import { Avatar, Box, Typography } from '@mui/material';
+import { Avatar, Box, Paper, Typography } from '@mui/material';
 import { grey } from '@mui/material/colors';
 import { Game } from '@playbingo/types';
 import { Metadata, ResolvingMetadata } from 'next';
@@ -253,7 +253,7 @@ export default async function GameLayout({
                 </Box>
             </Box>
             <GameTabs gameData={game} />
-            <Box
+            <Paper
                 sx={{
                     px: 4,
                     pt: 2,
@@ -264,10 +264,11 @@ export default async function GameLayout({
                     background: grey[900],
                     borderLeft: 2,
                     borderColor: 'divider',
+                    borderRadius: 0,
                 }}
             >
                 {children}
-            </Box>
+            </Paper>
         </Box>
     );
 }
