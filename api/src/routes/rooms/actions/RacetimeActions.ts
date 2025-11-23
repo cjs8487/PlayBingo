@@ -143,7 +143,7 @@ const createRacetimeRoom = async (
 };
 
 const refreshConnection = async (room: Room): Promise<ActionResult> => {
-    room.refreshRacetimeHandler();
+    await room.refreshRacetimeHandler();
     return {
         code: 200,
         value: {},
@@ -155,7 +155,7 @@ const joinPlayer = async (
     roomToken: RoomTokenPayload,
     racetimeId: string,
 ): Promise<ActionResult> => {
-    if (!room.joinRaceRoom(racetimeId, roomToken)) {
+    if (!(await room.joinRaceRoom(racetimeId, roomToken))) {
         return {
             code: 403,
             message: 'Forbidden',
@@ -171,7 +171,7 @@ const readyPlayer = async (
     room: Room,
     roomToken: RoomTokenPayload,
 ): Promise<ActionResult> => {
-    if (!room.readyPlayer(roomToken)) {
+    if (!(await room.readyPlayer(roomToken))) {
         return {
             code: 403,
             message: 'Forbidden',
@@ -187,7 +187,7 @@ const unreadyPlayer = async (
     room: Room,
     roomToken: RoomTokenPayload,
 ): Promise<ActionResult> => {
-    if (!room.unreadyPlayer(roomToken)) {
+    if (!(await room.unreadyPlayer(roomToken))) {
         return {
             code: 403,
             message: 'Forbidden',

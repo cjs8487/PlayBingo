@@ -1,7 +1,6 @@
 import { mock } from 'jest-mock-extended';
 import { ApiToken } from '@prisma/client';
 import { prisma } from '../database/Database';
-import Room from '../core/Room';
 
 beforeEach(() => {
     // mockReset(prismaMock);

@@ -273,7 +273,7 @@ export default class Room {
                         goalList = generateSRLv5(goals, globalState, seed);
                         goalList.shift();
                         break;
-                    case BoardGenerationMode.DIFFICULTY:
+                    case BoardGenerationMode.DIFFICULTY: {
                         const { difficulty } = options;
                         const variant = await getDifficultyVariant(difficulty);
                         const numGroups = await getDifficultyGroupCount(
@@ -333,6 +333,7 @@ export default class Room {
                         }
                         shuffle(goalList, seed);
                         break;
+                    }
                     case BoardGenerationMode.RANDOM:
                         if (await useTypedRandom(this.game)) {
                             goalList = generateRandomTyped(goals, seed);

@@ -25,9 +25,9 @@ beforeAll(() => {
     server = app.listen(0);
 });
 
-afterAll(async () => {
+afterAll(() => {
     // Close the server after tests
-    await server.close();
+    server.close();
 });
 
 describe('Basic Test to create a new user', () => {

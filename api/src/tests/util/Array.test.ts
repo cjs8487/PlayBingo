@@ -54,7 +54,7 @@ describe('shuffle', () => {
     it('should not introduce undefined', () => {
         const array = [1];
         const seed = 609754;
-        shuffle(array);
+        shuffle(array, seed);
         expect(array).not.toContain(undefined);
     });
 

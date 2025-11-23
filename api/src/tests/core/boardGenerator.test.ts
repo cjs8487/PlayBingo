@@ -35,9 +35,9 @@ describe('Goal Filters', () => {
             });
             generator.pruneGoalList();
             expect(generator.goals.length).toBeGreaterThan(0);
-            generator.goals.forEach((g) =>
-                expect(g.difficulty).toBeGreaterThanOrEqual(5),
-            );
+            generator.goals.forEach((g) => {
+                expect(g.difficulty).toBeGreaterThanOrEqual(5);
+            });
         });
 
         it('Filters out all goals with difficulty greater than maximum', () => {
@@ -50,9 +50,9 @@ describe('Goal Filters', () => {
             });
             generator.pruneGoalList();
             expect(generator.goals.length).toBeGreaterThan(0);
-            generator.goals.forEach((g) =>
-                expect(g.difficulty).toBeLessThanOrEqual(15),
-            );
+            generator.goals.forEach((g) => {
+                expect(g.difficulty).toBeLessThanOrEqual(15);
+            });
         });
 
         it('Filters out all goals with difficulty less than minimum and greater than maximum', () => {
@@ -97,8 +97,6 @@ describe('Goal Filters', () => {
         });
     });
 });
-
-describe('Goal Transformation', () => {});
 
 describe('Board Layout', () => {
     describe('No Layout', () => {
@@ -515,15 +513,14 @@ describe('Global Adjustments', () => {
 });
 
 describe('Full Generation', () => {
-    const generator = new BoardGenerator(goals, categories, {
-        goalFilters: [],
-        goalTransformation: [],
-        boardLayout: { mode: 'random' },
-        restrictions: [],
-        adjustments: [],
-    });
-
     it('Successfully generates a fully random board', () => {
+        const generator = new BoardGenerator(goals, categories, {
+            goalFilters: [],
+            goalTransformation: [],
+            boardLayout: { mode: 'random' },
+            restrictions: [],
+            adjustments: [],
+        });
         generator.reset();
         expect(() => generator.generateBoard()).not.toThrow();
         expect(generator.board).toHaveLength(5);
@@ -553,6 +550,13 @@ describe('Full Generation', () => {
     });
 
     it('Generates the same board given the same seed (Random)', () => {
+        const generator = new BoardGenerator(goals, categories, {
+            goalFilters: [],
+            goalTransformation: [],
+            boardLayout: { mode: 'random' },
+            restrictions: [],
+            adjustments: [],
+        });
         generator.reset(12345);
         generator.generateBoard();
         const board1 = generator.board;
@@ -588,6 +592,8 @@ describe('Full Generation', () => {
             adjustments: [{ type: 'board-type-max' }],
         });
         generator.reset();
-        expect(() => generator.generateBoard()).not.toThrow();
+        expect(() => {
+            generator.generateBoard();
+        }).not.toThrow();
     });
 });

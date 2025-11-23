@@ -69,19 +69,19 @@ describe('Goal Tracking', () => {
         const unmarked = Array.from(Array(25), (_, index) => index).filter(
             (index) => !toMark.includes(index),
         );
-        toMark.forEach((index) =>
-            player.mark(index % 5, Math.floor(index / 5)),
-        );
-        toMark.forEach((index) =>
+        toMark.forEach((index) => {
+            player.mark(index % 5, Math.floor(index / 5));
+        });
+        toMark.forEach((index) => {
             expect(
                 player.hasMarked(index % 5, Math.floor(index / 5)),
-            ).toBeTruthy(),
-        );
-        unmarked.forEach((index) =>
+            ).toBeTruthy();
+        });
+        unmarked.forEach((index) => {
             expect(
                 player.hasMarked(index % 5, Math.floor(index / 5)),
-            ).toBeFalsy(),
-        );
+            ).toBeFalsy();
+        });
     });
 
     it('Correctly determines if a set of goals is marked', () => {

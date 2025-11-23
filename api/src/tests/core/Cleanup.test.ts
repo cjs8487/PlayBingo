@@ -1,8 +1,7 @@
 import { BingoMode } from '@prisma/client';
 import Room from '../../core/Room';
-import { roomCleanupInactive } from '../../Environment';
-import { mockReset } from 'jest-mock-extended';
 import { allRooms } from '../../core/RoomServer';
+import { roomCleanupInactive } from '../../Environment';
 
 afterEach(() => {
     jest.clearAllMocks();
@@ -57,11 +56,15 @@ describe('Inactivity timeout', () => {
         const room = createRoom();
         jest.spyOn(room, 'warnClose');
         jest.spyOn(room, 'close');
+        // eslint-disable-next-line @typescript-eslint/unbound-method
         expect(room.warnClose).not.toHaveBeenCalled();
         jest.runOnlyPendingTimers();
+        // eslint-disable-next-line @typescript-eslint/unbound-method
         expect(room.warnClose).toHaveBeenCalledTimes(1);
+        // eslint-disable-next-line @typescript-eslint/unbound-method
         expect(room.close).not.toHaveBeenCalled();
         jest.runOnlyPendingTimers();
+        // eslint-disable-next-line @typescript-eslint/unbound-method
         expect(room.close).toHaveBeenCalledTimes(1);
     });
 });

@@ -19,20 +19,19 @@ const createBoard = (): Cell[][] =>
 
 const boardToBitset = (board: Cell[][], color: string) => {
     let bitset = 0n;
-    board.forEach((row, rowIndex) =>
+    board.forEach((row, rowIndex) => {
         row.forEach((cell, colIndex) => {
             if (cell.completedPlayers.includes(color)) {
                 bitset |= 1n << BigInt(rowIndex * board.length + colIndex);
             }
-        }),
-    );
+        });
+    });
     return bitset;
 };
 
 const standardBoardLines = computeLineMasks(5, 5);
 
 const countLines = (board: Cell[][], color: string) => {
-    let count = 0;
     const bitset = boardToBitset(board, color);
     return standardBoardLines.reduce(
         (sum, mask) => (hasLineCompletion(bitset, mask) ? sum + 1 : sum),
@@ -98,11 +97,11 @@ describe('Mask Generation', () => {
 describe('Win Conditions', () => {
     it('Detects no win conditions on an empty board', () => {
         const board = createBoard();
-        standardBoardLines.forEach((line) =>
+        standardBoardLines.forEach((line) => {
             expect(
                 hasLineCompletion(boardToBitset(board, 'blue'), line),
-            ).toBeFalsy(),
-        );
+            ).toBeFalsy();
+        });
     });
 
     it('Correctly detects single rows', () => {

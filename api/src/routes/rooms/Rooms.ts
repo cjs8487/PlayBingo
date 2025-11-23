@@ -263,11 +263,7 @@ async function getOrLoadRoom(slug: string): Promise<Room | null> {
 
     let generatorSettings: GeneratorSettings | undefined = undefined;
     if (dbRoom.game?.newGeneratorBeta) {
-        if (
-            variant &&
-            'generatorSettings' in variant &&
-            variant.generatorSettings
-        ) {
+        if (variant && 'generatorSettings' in variant) {
             generatorSettings = variant.generatorSettings;
         } else {
             generatorSettings = dbRoom.game.generatorSettings;
