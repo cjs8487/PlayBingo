@@ -1,7 +1,6 @@
 'use client';
 
-import { Box, Button } from '@mui/material';
-import { grey } from '@mui/material/colors';
+import { Box, Button, Paper } from '@mui/material';
 import { Game } from '@playbingo/types';
 import NextLink from 'next/link';
 import { useSelectedLayoutSegment } from 'next/navigation';
@@ -67,46 +66,63 @@ export default function GameTabs({
                 maxWidth: '100%',
                 overflowX: 'auto',
                 pt: 4,
+                pl: 4,
+                zIndex: 2,
                 scrollbarWidth: 0,
                 '::-webkit-scrollbar': {
                     display: 'none',
                 },
             }}
         >
-            <Box sx={{ width: 32, borderBottom: 2, borderColor: 'divider' }} />
             {tabs.map((page, index) => (
-                <Button
+                <Paper
                     key={page}
-                    component={NextLink}
-                    href={`/games/${slug}/${page}`}
+                    elevation={page === segment ? 1 : 0}
                     sx={{
-                        p: 2,
-                        borderRadius: 0,
-                        border: 1,
-                        borderLeft: 1,
-                        borderBottom: 2,
+                        border: 2,
                         borderTop: page === segment ? 4 : 2,
+                        borderBottom: page === segment ? 0 : 2,
+                        borderBottomLeftRadius: 0,
+                        borderBottomRightRadius: 0,
                         borderColor: 'divider',
                         borderTopColor: page === segment ? 'white' : 'divider',
-                        borderBottomColor:
-                            page === segment ? grey[900] : 'divider',
-                        background: page === segment ? grey[900] : 'inherit',
-                        marginLeft: index > 0 ? '-1px' : 0,
+                        marginLeft: index > 0 ? '-2px' : 0,
                         minWidth: 'fit-content',
-                        ':hover': {
-                            backgroundColor:
-                                page !== segment
-                                    ? 'rgba(182, 105, 250, 0.08)'
-                                    : grey[900],
-                        },
+                        zIndex: 10,
                     }}
                 >
-                    {page}
-                </Button>
+                    {page === segment ? (
+                        <Box
+                            sx={{
+                                p: 2,
+                                borderBottomLeftRadius: 0,
+                                borderBottomRightRadius: 0,
+                                textTransform: 'uppercase',
+                                fontSize: '0.875rem',
+                                fontWeight: 500,
+                                color: 'primary.main',
+                                pointerEvents: 'none',
+                                cursor: 'default',
+                                userSelect: 'none',
+                            }}
+                        >
+                            {page}
+                        </Box>
+                    ) : (
+                        <Button
+                            component={NextLink}
+                            href={`/games/${slug}/${page}`}
+                            sx={{
+                                p: 2,
+                                borderBottomLeftRadius: 0,
+                                borderBottomRightRadius: 0,
+                            }}
+                        >
+                            {page}
+                        </Button>
+                    )}
+                </Paper>
             ))}
-            <Box
-                sx={{ flexGrow: 1, borderBottom: 2, borderColor: 'divider' }}
-            />
         </Box>
     );
 }
