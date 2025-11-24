@@ -173,6 +173,10 @@ export const updateRacetimeGoal = (slug: string, racetimeGoal: string) => {
     return prisma.game.update({ where: { slug }, data: { racetimeGoal } });
 };
 
+export const updateDefaultLanguage = (slug: string, defaultLanguage: string) => {
+    return prisma.game.update({ where: { slug }, data: { defaultLanguage } });
+}
+
 export const updateSlugWords = (slug: string, slugWords: string[]) => {
     return prisma.game.update({ where: { slug }, data: { slugWords } });
 };

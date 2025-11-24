@@ -2,13 +2,18 @@
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "type": "object",
     "additionalProperties": false,
-    "required": ["id", "goal", "description"],
+    "required": ["id", "goal", "description", "translations"],
     "description": "A single objective for a bingo game.",
     "properties": {
         "id": {"type": "string"},
         "goal": {"type": "string"},
         "description": {"type": ["string", "null"]},
-        "difficulty": {"type": ["number", "null"]},
+        "translations": {
+          "type": "object",
+          "additionalProperties": {"type": "string"},
+          "description": "Translation texts for this goal in json object"
+        },
+      "difficulty": {"type": ["number", "null"]},
         "categories": {"type": "array", "items": {"type": "string"}}
     }
 }

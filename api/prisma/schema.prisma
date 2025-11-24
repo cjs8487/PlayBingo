@@ -6,7 +6,9 @@ generator client {
 }
 
 generator json {
-  provider = "prisma-json-types-generator"
+  provider  = "prisma-json-types-generator"
+  namespace = "PrismaJson"
+  allowAny  = false
 }
 
 datasource db {
@@ -17,6 +19,9 @@ datasource db {
 model Goal {
   id            String     @id @unique @default(cuid())
   goal          String
+  // DO NOT REMOVE
+  /// [GoalTranslations]
+  translations  Json          @default("{}")
   description   String?
   oldCategories String[]
   categories    Category[] @relation("GoalCategories")
@@ -56,6 +61,8 @@ model Game {
   coverImage                  String?
   variants                    Variant[]
   goals                       Goal[]
+  defaultLanguage             String                        @default("English")
+  translations                String[]                      @default([])
   owners                      User[]                        @relation("GameOwners")
   moderators                  User[]                        @relation("GameModerators")
   createdAt                   DateTime                      @default(now())

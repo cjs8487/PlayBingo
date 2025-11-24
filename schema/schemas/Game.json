@@ -42,6 +42,15 @@
         "enableSRLv5": {
             "type": "boolean"
         },
+        "defaultLanguage": {
+            "type": "string"
+        },
+        "translations": {
+            "type": "array",
+            "items": {
+                "type": "string"
+            }
+        },
         "racetimeBeta": {
             "type": "boolean"
         },

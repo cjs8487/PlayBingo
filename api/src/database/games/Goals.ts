@@ -29,6 +29,7 @@ export const createGoal = async (
     goal: string,
     description?: string,
     categories?: string[],
+    translations?: {[lang: string]: string},
     difficulty?: number,
 ) => {
     const gameId = (await gameForSlug(gameSlug))?.id;
@@ -55,6 +56,7 @@ export const createGoal = async (
                 })),
             },
             difficulty,
+            translations,
             game: { connect: { slug: gameSlug } },
         },
     });

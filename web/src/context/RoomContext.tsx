@@ -3,16 +3,18 @@ import {
     Board,
     Cell,
     ChatMessage,
+    Game,
     Player,
     RoomAction,
     RoomData,
     ServerMessage,
 } from '@playbingo/types';
 import {
-    ReactNode,
     createContext,
+    ReactNode,
     useCallback,
     useContext,
+    useEffect,
     useMemo,
     useState,
     useSyncExternalStore,
@@ -27,6 +29,7 @@ import {
 } from '../lib/BoardStore';
 import { alertError } from '../lib/Utils';
 import { useUserContext } from './UserContext';
+import { useApi } from '@/lib/Hooks';
 
 const websocketBase = (process.env.NEXT_PUBLIC_API_PATH ?? '').replace(
     'http',
@@ -58,6 +61,9 @@ interface RoomContext {
     starredGoals: number[];
     showGoalDetails: boolean;
     showCounters: boolean;
+    language: string;
+    availableLanguages: string[];
+    defaultLanguage: string;
     connectedPlayer?: Player;
     colorMap: { [k: string]: string };
     connect: (
@@ -65,6 +71,7 @@ interface RoomContext {
         password: string,
         spectator: boolean,
     ) => Promise<{ success: boolean; message?: string }>;
+    setLanguage: (language: string) => void;
     sendChatMessage: (message: string) => void;
     markGoal: (row: number, col: number) => void;
     unmarkGoal: (row: number, col: number) => void;
@@ -91,12 +98,16 @@ export const RoomContext = createContext<RoomContext>({
     nickname: '',
     players: [],
     starredGoals: [],
+    language: '',
+    defaultLanguage: '',
+    availableLanguages: [],
     showGoalDetails: false,
     showCounters: false,
     colorMap: {},
     async connect() {
         return { success: false };
     },
+    setLanguage() {},
     sendChatMessage() {},
     markGoal() {},
     unmarkGoal() {},
@@ -149,6 +160,7 @@ export function RoomContextProvider({
             : ConnectionStatus.UNINITIALIZED,
     );
     const [players, setPlayers] = useState<Player[]>([]);
+    const [language, setLanguage] = useState('');
     const [connectedPlayer, setConnectedPlayer] = useState<Player>();
     const colorMap = useMemo(() => {
         const colorMap: { [k: string]: string } = {};
@@ -206,6 +218,10 @@ export function RoomContextProvider({
     const onUpdateRoomData = useCallback((roomData: RoomData) => {
         setRoomData(roomData);
     }, []);
+
+    const { data: gameData, isLoading: loadingGames } = useApi<Game>(
+        `/api/games/${roomData.gameSlug}`,
+    );
 
     // websocket
     const { sendJsonMessage } = useWebSocket(
@@ -501,12 +517,28 @@ export function RoomContextProvider({
         [sendJsonMessage, authToken],
     );
 
+    useEffect(() => {
+        if (gameData?.defaultLanguage && !language) {
+            setLanguage(gameData.defaultLanguage);
+        }
+    }, [gameData?.defaultLanguage, language]);
+
+    if (!gameData || loadingGames) {
+        return null;
+    }
+
+    const availableLanguages = gameData?.translations || [];
+    const defaultLanguage = gameData?.defaultLanguage || '';
+
     return (
         <RoomContext.Provider
             value={{
                 connectionStatus,
                 board,
                 messages,
+                language,
+                defaultLanguage,
+                availableLanguages,
                 color,
                 roomData,
                 nickname,
@@ -517,6 +549,7 @@ export function RoomContextProvider({
                 connectedPlayer,
                 colorMap,
                 connect,
+                setLanguage,
                 sendChatMessage,
                 markGoal,
                 unmarkGoal,

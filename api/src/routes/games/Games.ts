@@ -1,5 +1,13 @@
-import { makeGeneratorSchema } from '@playbingo/shared';
 import { Game } from '@playbingo/types';
+import {
+    GenerationBoardLayout,
+    GenerationGlobalAdjustments,
+    GenerationGoalRestriction,
+    GenerationGoalSelection,
+    GenerationListMode,
+    GenerationListTransform,
+} from '@prisma/client';
+import { makeGeneratorSchema } from '@playbingo/shared';
 import { Router } from 'express';
 import { BoardGenerator } from '../../core/generation/BoardGenerator';
 import { GenerationFailedError } from '../../core/generation/GenerationFailedError';
@@ -19,6 +27,7 @@ import {
     removeModerator,
     removeOwner,
     unfavoriteGame,
+    updateDefaultLanguage,
     updateDescription,
     updateDifficultyGroups,
     updateDifficultyVariant,
@@ -47,9 +56,12 @@ import {
 import { getVariant } from '../../database/games/Variants';
 import { getUser, getUsersEligibleToModerateGame } from '../../database/Users';
 import { deleteFile, saveFile } from '../../media/MediaServer';
+import { translationsRouter } from './translations/Translations';
 import variants from './Variants';
 
 const games = Router();
+
+games.use(translationsRouter);
 
 games.get('/', async (req, res) => {
     const result = await allGames(req.session.user);
@@ -81,6 +93,8 @@ games.get('/:slug', async (req, res) => {
             avatar: mod.avatar ?? undefined,
         })),
         enableSRLv5: game.enableSRLv5,
+        defaultLanguage: game.defaultLanguage,
+        translations: game.translations,
         racetimeBeta: game.racetimeBeta,
         racetimeCategory: game.racetimeCategory ?? undefined,
         racetimeGoal: game.racetimeGoal ?? undefined,
@@ -162,6 +176,7 @@ games.post('/:slug', async (req, res) => {
         enableSRLv5,
         racetimeCategory,
         racetimeGoal,
+        defaultLanguage,
         difficultyVariantsEnabled,
         difficultyGroups,
         slugWords,
@@ -198,6 +213,9 @@ games.post('/:slug', async (req, res) => {
     }
     if (racetimeGoal) {
         result = await updateRacetimeGoal(slug, racetimeGoal);
+    }
+    if (defaultLanguage) {
+        result = await updateDefaultLanguage(slug, defaultLanguage);
     }
     if (difficultyVariantsEnabled !== undefined) {
         result = await updateDifficultyVariantsEnabled(
@@ -261,7 +279,7 @@ games.get('/:slug/goals', async (req, res) => {
 
 games.post('/:slug/goals', async (req, res) => {
     const { slug } = req.params;
-    const { goal, description, categories, difficulty } = req.body;
+    const { goal, description, categories, difficulty, translations } = req.body;
     let difficultyNum: number | undefined = undefined;
     if (difficulty) {
         difficultyNum = Number(difficulty);
@@ -279,6 +297,7 @@ games.post('/:slug/goals', async (req, res) => {
         goal,
         description,
         categories,
+        translations,
         difficultyNum,
     );
     res.status(200).json(newGoal);

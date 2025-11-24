@@ -58,7 +58,9 @@ export default function BoardCell({
         showCounters,
         connectedPlayer,
         colorMap,
-    } = useRoomContext();
+        language,
+        defaultLanguage,
+    } = useContext(RoomContext);
 
     const [wasRevealed, setWasRevealed] = useState(false);
     const [animating, setAnimating] = useState(false);
@@ -188,7 +190,11 @@ export default function BoardCell({
                     }}
                 >
                     <TextFit
-                        text={goal}
+                        text={
+                            language === defaultLanguage
+                                ? goal.goal
+                                : goal.translations[language] || goal.goal
+                        }
                         sx={{
                             p: 1,
                             filter: 'drop-shadow(2px 2px 2px rgba(0,0,0,0))',

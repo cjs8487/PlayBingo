@@ -7,8 +7,8 @@ import {
     Box,
     Button,
     Checkbox,
-    TextField,
     createFilterOptions,
+    TextField,
 } from '@mui/material';
 import { Form, Formik, useField } from 'formik';
 import { KeyedMutator } from 'swr';
@@ -86,6 +86,8 @@ function CategorySelect({ categories }: CategorySelectProps) {
 interface GoalEditorProps {
     slug: string;
     goal: Goal;
+    language: string;
+    isDefaultLanguage: boolean;
     isNew?: boolean;
     cancelNew?: () => void;
     mutateGoals: KeyedMutator<Goal[]>;
@@ -96,6 +98,8 @@ interface GoalEditorProps {
 export default function GoalEditor({
     slug,
     goal,
+    language,
+    isDefaultLanguage,
     isNew,
     cancelNew,
     mutateGoals,
@@ -105,7 +109,9 @@ export default function GoalEditor({
     return (
         <Formik
             initialValues={{
-                goal: goal.goal,
+                goal: isDefaultLanguage
+                    ? goal.goal
+                    : goal.translations[language],
                 description: goal.description ?? '',
                 categories: goal.categories ?? [],
                 difficulty: goal.difficulty ?? 0,
@@ -123,10 +129,16 @@ export default function GoalEditor({
                             'Content-Type': 'application/json',
                         },
                         body: JSON.stringify({
-                            goal: goalText,
+                            goal: isDefaultLanguage ? goalText : '',
                             description,
                             categories,
                             difficulty,
+                            translations: !isDefaultLanguage
+                                ? {
+                                      ...goal.translations,
+                                      [language]: { goalText },
+                                  }
+                                : goal.translations,
                         }),
                     });
                     if (!res.ok) {
@@ -145,7 +157,10 @@ export default function GoalEditor({
                             'Content-Type': 'application/json',
                         },
                         body: JSON.stringify({
-                            goal: goalText !== goal.goal ? goalText : undefined,
+                            goal:
+                                isDefaultLanguage && goalText !== goal.goal
+                                    ? goalText
+                                    : undefined,
                             description:
                                 description !== goal.description
                                     ? description
@@ -161,6 +176,12 @@ export default function GoalEditor({
                                 difficulty !== goal.difficulty
                                     ? difficulty
                                     : undefined,
+                            translations: !isDefaultLanguage
+                                ? {
+                                      ...goal.translations,
+                                      [language]: goalText,
+                                  }
+                                : goal.translations,
                         }),
                     });
                     if (!res.ok) {
@@ -187,7 +208,11 @@ export default function GoalEditor({
                         <FormikTextField
                             id="goal-name"
                             name="goal"
-                            label="Goal Text"
+                            label={
+                                isDefaultLanguage
+                                    ? 'Goal Text'
+                                    : `Goal Text - ${language}`
+                            }
                             disabled={!canModerate}
                             fullWidth
                         />
