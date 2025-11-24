@@ -5,6 +5,7 @@ import {
     ChatMessage,
     Game,
     Player,
+    RoomAction,
     RoomData,
     ServerMessage,
 } from '@playbingo/types';
@@ -86,11 +87,12 @@ interface RoomContext {
     revealCard: () => void;
     toggleGoalDetails: () => void;
     toggleCounters: () => void;
+    changeAuth: (spectate: boolean) => void;
 }
 
 export const RoomContext = createContext<RoomContext>({
     connectionStatus: ConnectionStatus.UNINITIALIZED,
-    board: { board: [] },
+    board: { board: [], width: 5, height: 5 },
     messages: [],
     color: 'blue',
     nickname: '',
@@ -121,6 +123,7 @@ export const RoomContext = createContext<RoomContext>({
     revealCard() {},
     toggleGoalDetails() {},
     toggleCounters() {},
+    changeAuth() {},
 });
 
 interface RoomContextProps {
@@ -139,7 +142,9 @@ export function RoomContextProvider({
     const [roomData, setRoomData] = useState<RoomData>(serverRoomData);
 
     const [authToken, setAuthToken] = useState<string>(
-        serverRoomData.token ?? '',
+        localStorage.getItem(`authToken-${roomData.slug}`) ??
+            serverRoomData.token ??
+            '',
     );
     const [nickname, setNickname] = useState(
         localStorage.getItem('PlayBingo.temp.nickname') ??
@@ -201,6 +206,7 @@ export function RoomContextProvider({
             setMessages(chatHistory);
             setConnectionStatus(ConnectionStatus.CONNECTED);
             setRoomData(roomData);
+            localStorage.removeItem(`authToken-${roomData.slug}`);
         },
         [],
     );
@@ -291,6 +297,8 @@ export function RoomContextProvider({
                             });
                         }
                         break;
+                    case 'reauthenticate':
+                        setAuthToken(payload.authToken);
                 }
             },
             onClose() {
@@ -498,6 +506,16 @@ export function RoomContextProvider({
             return !curr;
         });
     }, []);
+    const changeAuth = useCallback(
+        (spectate: boolean) => {
+            sendJsonMessage({
+                action: 'changeAuth',
+                authToken,
+                payload: { spectate },
+            } as RoomAction);
+        },
+        [sendJsonMessage, authToken],
+    );
 
     useEffect(() => {
         if (gameData?.defaultLanguage && !language) {
@@ -547,6 +565,7 @@ export function RoomContextProvider({
                 revealCard,
                 toggleGoalDetails,
                 toggleCounters,
+                changeAuth,
             }}
         >
             {children}

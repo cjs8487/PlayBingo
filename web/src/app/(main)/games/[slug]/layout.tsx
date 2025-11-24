@@ -1,4 +1,4 @@
-import { Avatar, Box, Typography } from '@mui/material';
+import { Avatar, Box, Paper, Typography } from '@mui/material';
 import { grey } from '@mui/material/colors';
 import { Game } from '@playbingo/types';
 import { Metadata, ResolvingMetadata } from 'next';
@@ -63,7 +63,7 @@ export default async function GameLayout({
         notFound();
     }
 
-    const { coverImage, name, owners, moderators } = game;
+    const { coverImage, name, owners, moderators, variants } = game;
 
     return (
         <Box
@@ -249,24 +249,26 @@ export default async function GameLayout({
                         gap: 1,
                     }}
                 >
-                    <SidebarButtons slug={slug} />
+                    <SidebarButtons slug={slug} variants={variants ?? []} />
                 </Box>
             </Box>
             <GameTabs gameData={game} />
-            <Box
+            <Paper
                 sx={{
                     px: 4,
                     pt: 2,
                     height: '100%',
                     maxHeight: '100%',
+                    maxWidth: '100%',
                     overflowY: 'auto',
                     background: grey[900],
                     borderLeft: 2,
                     borderColor: 'divider',
+                    borderRadius: 0,
                 }}
             >
                 {children}
-            </Box>
+            </Paper>
         </Box>
     );
 }

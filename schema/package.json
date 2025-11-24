@@ -1,9 +1,9 @@
 {
   "name": "@playbingo/types",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "",
   "scripts": {
-    "types:generate": "ts-node Generate.ts"
+    "types:generate": "tsx Generate.ts"
   },
   "author": "",
   "license": "ISC",
@@ -13,6 +13,7 @@
   "devDependencies": {
     "@types/node": "^20.10.4",
     "ts-node": "^10.9.2",
+    "tsx": "^4.20.6",
     "typescript": "^5.3.3"
   }
 }

@@ -139,6 +139,54 @@ export const createGoals = async (slug: string, goals: GoalInput[]) => {
     );
 };
 
+/**
+ * Replaces all goals for a given game within a single transaction.
+ * If any create fails, the delete is rolled back as well.
+ */
+export const replaceAllGoalsForGame = async (
+    slug: string,
+    goals: GoalInput[],
+) => {
+    const game = await gameForSlug(slug);
+    const gameId = game?.id;
+    if (!gameId) {
+        return false;
+    }
+
+    await prisma.$transaction(async (tx) => {
+        await tx.goal.deleteMany({ where: { game: { slug } } });
+
+        await Promise.all(
+            goals.map((g) =>
+                tx.goal.create({
+                    data: {
+                        goal: g.goal,
+                        description: g.description,
+                        categories: {
+                            connectOrCreate: g.categories?.map((cat) => ({
+                                create: {
+                                    name: cat,
+                                    game: { connect: { slug } },
+                                },
+                                where: {
+                                    gameId_name: {
+                                        gameId,
+                                        name: cat,
+                                    },
+                                },
+                            })),
+                        },
+                        difficulty: g.difficulty ?? undefined,
+                        game: { connect: { id: gameId } },
+                    },
+                }),
+            ),
+        );
+    });
+
+    return true;
+};
+
 export const gameForGoal = async (goalId: string) => {
     const goal = await prisma.goal.findUnique({
         where: { id: goalId },
@@ -168,9 +216,11 @@ export const deleteAllGoalsForGame = async (gameSlug: string) => {
     }
 };
 
-export const getGoalList = (ids: string[]) => {
+export const getGoalList = async (ids: string[]) => {
     if (ids.length === 0) {
         return [];
     }
-    return prisma.goal.findMany({ where: { id: { in: ids } } });
+    const goals = await prisma.goal.findMany({ where: { id: { in: ids } } });
+    const map = new Map(goals.map((goal) => [goal.id, goal]));
+    return ids.map((id) => map.get(id)).filter((v) => !!v);
 };

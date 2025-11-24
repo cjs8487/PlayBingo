@@ -1,25 +1,54 @@
 'use client';
-import Add from '@mui/icons-material/Add';
-import Remove from '@mui/icons-material/Remove';
-import Star from '@mui/icons-material/Star';
-import { Box, IconButton, Tooltip, Typography } from '@mui/material';
-import { Cell } from '@playbingo/types';
-import { useCallback, useContext, useState } from 'react';
-import { RoomContext } from '../../context/RoomContext';
+import { Box, IconButton, SxProps, Tooltip, Typography } from '@mui/material';
+import { useCallback, useEffect, useState } from 'react';
 import TextFit from '../TextFit';
+import Star from '@mui/icons-material/Star';
+import { useRoomContext } from '../../context/RoomContext';
+import { Add, Remove } from '@mui/icons-material';
 
-interface CellProps {
-    cell: Cell;
+const fogSx: SxProps = {
+    position: 'absolute',
+    inset: 0,
+    zIndex: 90,
+    background: `
+linear-gradient(125deg, rgba(0,0,0,0) 0%, rgba(161, 151, 151, 0.69) 10%, rgba(15, 15, 15, 0.57) 60%, rgba(93, 87, 87, 0.47) 90%, rgba(10,10,20,0.95) 100%),
+radial-gradient(circle at 40% 30%, rgba(147, 137, 137, 0.13) 0%, rgba(0,0,0,0) 95%)
+`,
+    mixBlendMode: 'lighten',
+    backdropFilter: 'blur(6px) brightness(0.8)',
+    WebkitBackdropFilter: 'blur(6px) brightness(0.8)',
+    '::after': {
+        content: "''",
+        position: 'absolute',
+        inset: 0,
+        background:
+            'radial-gradient(ellipse at center, rgba(105, 105, 105, 0.15) 0%, rgba(0,0,0,0.6) 100%)',
+        pointerEvents: 'none',
+    },
+};
+interface BoardCellProps {
+    goal?: string;
+    description?: string | null;
+    difficulty?: number;
+    categories?: string[];
+    completedPlayers: string[];
+    revealed?: boolean;
+    onReveal?: () => void;
     row: number;
     col: number;
 }
 
 export default function BoardCell({
-    cell: { goal, completedPlayers },
+    goal = '',
+    description,
+    difficulty,
+    categories,
+    completedPlayers,
+    revealed = false,
+    onReveal,
     row,
     col,
-}: CellProps) {
-    // context
+}: BoardCellProps) {
     const {
         markGoal,
         unmarkGoal,
@@ -33,9 +62,17 @@ export default function BoardCell({
         defaultLanguage,
     } = useContext(RoomContext);
 
-    // callbacks
+    const [wasRevealed, setWasRevealed] = useState(false);
+    const [animating, setAnimating] = useState(false);
+
     const toggleSpace = useCallback(() => {
         if (!connectedPlayer) {
+            return;
+        }
+        if (connectedPlayer.spectator) {
+            return;
+        }
+        if (!revealed) {
             return;
         }
         if (completedPlayers.includes(connectedPlayer.id)) {
@@ -43,7 +80,29 @@ export default function BoardCell({
         } else {
             markGoal(row, col);
         }
-    }, [row, col, markGoal, unmarkGoal, connectedPlayer, completedPlayers]);
+    }, [
+        connectedPlayer,
+        revealed,
+        completedPlayers,
+        unmarkGoal,
+        row,
+        col,
+        markGoal,
+    ]);
+
+    useEffect(() => {
+        if (revealed && !wasRevealed) {
+            setWasRevealed(true);
+            setAnimating(true);
+            const timer = setTimeout(() => {
+                setAnimating(false);
+                if (onReveal) onReveal();
+            }, 1000);
+            return () => {
+                clearTimeout(timer);
+            };
+        }
+    }, [revealed, wasRevealed, onReveal]);
 
     // calculations
     const colorPortion = 360 / completedPlayers.length;
@@ -65,16 +124,14 @@ export default function BoardCell({
             title={
                 showGoalDetails ? (
                     <>
-                        <Box sx={{ pb: 1.5 }}>{goal.description}</Box>
-                        {goal.difficulty && (
-                            <Box>Difficulty: {goal.difficulty}</Box>
-                        )}
-                        {goal.categories && (
-                            <Box>Categories: {goal.categories.join(', ')}</Box>
+                        <Box sx={{ pb: 1.5 }}>{description}</Box>
+                        {difficulty && <Box>Difficulty: {difficulty}</Box>}
+                        {categories && (
+                            <Box>Categories: {categories.join(', ')}</Box>
                         )}
                     </>
                 ) : (
-                    goal.description
+                    description
                 )
             }
             arrow
@@ -97,21 +154,18 @@ export default function BoardCell({
                     position: 'relative',
                     aspectRatio: '1 / 1',
                     flexGrow: 1,
-                    cursor: 'pointer',
+                    cursor: revealed ? 'pointer' : 'default',
                     overflow: 'hidden',
                     border: 1,
                     borderColor: 'divider',
-                    transition: 'all',
-                    transitionDuration: 300,
+                    transition: 'all 0.3s ease',
                     background: (theme) => theme.palette.background.default,
                     ':hover': {
-                        zIndex: 10,
-                        scale: '110%',
+                        zIndex: 100,
+                        scale: revealed ? '110%' : '100%',
                     },
                     display: 'flex',
                     flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
                     width: '100%',
                     height: '100%',
                 }}
@@ -126,10 +180,9 @@ export default function BoardCell({
             >
                 <Box
                     sx={{
-                        // position: 'absolute',
-                        zIndex: 10,
+                        zIndex: 2,
                         display: 'flex',
-                        height: '100%',
+                        height: showCounters ? 'calc(100% - 24px)' : '100%',
                         width: '100%',
                         alignItems: 'center',
                         justifyContent: 'center',
@@ -150,7 +203,7 @@ export default function BoardCell({
                 </Box>
                 {colors.map((color, index) => (
                     <Box
-                        key={color}
+                        key={`${color}-${index}`}
                         sx={{
                             position: 'absolute',
                             width: '100%',
@@ -163,9 +216,10 @@ export default function BoardCell({
                         }}
                     />
                 ))}
-                {showCounters && (
+                {revealed && showCounters && (
                     <Box
                         sx={{
+                            position: 'absolute',
                             bottom: 0,
                             display: 'flex',
                             backgroundColor: 'rgba(0,0,0,0.7)',
@@ -210,6 +264,15 @@ export default function BoardCell({
                     <Box sx={{ position: 'absolute', right: 0 }}>
                         <Star />
                     </Box>
+                )}
+                {!revealed && <Box sx={fogSx} />}
+                {animating && (
+                    <Box
+                        sx={{
+                            ...fogSx,
+                            animation: 'fogReveal 1s ease-in forwards',
+                        }}
+                    />
                 )}
             </Box>
         </Tooltip>

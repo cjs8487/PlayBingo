@@ -1,0 +1,19 @@
+{
+    "extends": "@tsconfig/node22/tsconfig.json",
+    "compilerOptions": {
+        "allowJs": true,
+        "declaration": true,
+        "allowSyntheticDefaultImports": true,
+        "noFallthroughCasesInSwitch": true,
+        "resolveJsonModule": true,
+        "isolatedModules": true,
+        "sourceMap": true,
+        "outDir": "build",
+        "baseUrl": "./src",
+        "declarationMap": true,
+    },
+    "ts-node": {
+        "esm": true
+    },
+    "include": ["GeneratorSettings.ts", "index.ts"],
+}

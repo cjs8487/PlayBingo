@@ -1,6 +1,6 @@
 import { prisma } from '../Database';
 
-export const createCateogry = (
+export const createCategory = (
     name: string,
     gameSlug: string,
     max?: number,

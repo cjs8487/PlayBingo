@@ -40,8 +40,10 @@ next-env.d.ts
 
 *.db
 *.log
+*.log.*
 *-audit.json
 *.log.gz
+*.log.*.gz
 
-/api/media/**/*.png
-/api/media/**/*.jpeg
+/api/media/**
+/api/media/**

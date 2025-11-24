@@ -47,6 +47,10 @@ export type ServerMessage = (
   | {
       action: "forbidden";
     }
+  | {
+      action: "reauthenticate";
+      authToken: string;
+    }
 ) & {
   players?: Player[];
   connectedPlayer?: Player;
@@ -58,14 +62,13 @@ export type ChatMessage = (
       color: string;
     }
 )[];
+export type Cell = RevealedCell | HiddenCell;
 export type Board = RevealedBoard | HiddenBoard;
 
-/**
- * An incoming websocket message from the server telling the client of a change in room state or instructing it to take an action
- */
-export interface Cell {
+export interface RevealedCell {
   goal: Goal;
   completedPlayers: string[];
+  revealed: true;
 }
 /**
  * A single objective for a bingo game.
@@ -83,12 +86,20 @@ export interface Goal {
   difficulty?: number | null;
   categories?: string[];
 }
+export interface HiddenCell {
+  revealed: false;
+  completedPlayers: string[];
+}
 export interface RevealedBoard {
   board: Cell[][];
   hidden?: false;
+  width: number;
+  height: number;
 }
 export interface HiddenBoard {
   hidden: true;
+  width: number;
+  height: number;
 }
 /**
  * Basic information about a room
@@ -104,6 +115,8 @@ export interface RoomData {
    * The auto-authentication token generated for the logged in user.
    */
   token?: string;
+  variant: string;
+  mode: string;
 }
 export interface RacetimeConnection {
   /**

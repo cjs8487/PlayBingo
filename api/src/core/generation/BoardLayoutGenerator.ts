@@ -1,23 +1,29 @@
-import { GenerationBoardLayout } from '@prisma/client';
-import BoardGenerator from './BoardGenerator';
+import { GeneratorSettings } from '@playbingo/shared';
+import { BoardGenerator, LayoutCell } from './BoardGenerator';
+
+type BoardLayout = GeneratorSettings['boardLayout'];
 
 export type BoardLayoutGenerator = (generator: BoardGenerator) => void;
 
-export const createLayoutGenerator = (strategy: GenerationBoardLayout) => {
-    switch (strategy) {
-        case 'NONE':
+export const createLayoutGenerator = (strategy: BoardLayout) => {
+    switch (strategy.mode) {
+        case 'random':
             return noLayout;
-        case 'SRLv5':
+        case 'srlv5':
             return magicSquare;
-        case 'ISAAC':
+        case 'isaac':
             return staticDifficulty;
+        case 'custom':
+            return custom;
         default:
             throw Error('Unknown GenerationListMode strategy');
     }
 };
 
 const noLayout: BoardLayoutGenerator = (generator) => {
-    generator.layout = new Array(25).fill(0);
+    generator.layout = new Array(5).fill(
+        Array(5).fill({ selectionCriteria: 'random' }),
+    );
 };
 
 const magicSquareValue = (i: number, seed: number) => {
@@ -63,17 +69,37 @@ const magicSquareValue = (i: number, seed: number) => {
 };
 
 const magicSquare: BoardLayoutGenerator = (generator) => {
-    for (let i = 0; i < 25; i++) {
-        generator.layout[i] = magicSquareValue(i + 1, generator.seed);
+    for (let r = 0; r < 5; r++) {
+        generator.layout[r] = [];
+        for (let c = 0; c < 5; c++) {
+            generator.layout[r][c] = {
+                selectionCriteria: 'difficulty',
+                difficulty: magicSquareValue(r * 5 + c + 1, generator.seed),
+            };
+        }
     }
 };
 
 const staticDifficulty: BoardLayoutGenerator = (generator) => {
+    const one: LayoutCell = { selectionCriteria: 'difficulty', difficulty: 1 };
+    const two: LayoutCell = { selectionCriteria: 'difficulty', difficulty: 2 };
+    const three: LayoutCell = {
+        selectionCriteria: 'difficulty',
+        difficulty: 3,
+    };
+    const four: LayoutCell = { selectionCriteria: 'difficulty', difficulty: 4 };
     generator.layout = [
-        [2, 3, 1, 1, 2],
-        [3, 1, 2, 2, 1],
-        [1, 2, 4, 2, 1],
-        [2, 1, 2, 1, 3],
-        [1, 2, 1, 3, 2],
-    ].flat();
+        [two, three, one, one, two],
+        [three, one, two, two, one],
+        [one, two, four, two, one],
+        [two, one, two, one, three],
+        [one, two, one, three, two],
+    ];
+};
+
+const custom: BoardLayoutGenerator = (generator) => {
+    if (!generator.customBoardLayout) {
+        throw new Error('Custom board layout not provided');
+    }
+    generator.layout = generator.customBoardLayout;
 };

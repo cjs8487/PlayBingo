@@ -15,6 +15,7 @@ export const rotateTransport: DailyRotateFile = new DailyRotateFile({
     symlinkName: 'current.log',
     handleExceptions: true,
     handleRejections: true,
+    maxSize: '1g',
 });
 
 export const logger = createLogger({

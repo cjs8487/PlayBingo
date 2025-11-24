@@ -15,7 +15,8 @@
         {"$ref": "#/$defs/UnmarkAction"},
         {"$ref": "#/$defs/ChangeColorAction"},
         {"$ref": "#/$defs/NewCardAction"},
-        {"$ref": "#/$defs/RevealCardAction"}
+        {"$ref": "#/$defs/RevealCardAction"},
+        {"$ref": "#/$defs/ChangeAuthAction"}
     ],
     "$defs": {
         "JoinAction": {
@@ -118,6 +119,20 @@
             "additionalProperties": false,
             "properties": {
                 "action": "revealCard"
+            }
+        },
+        "ChangeAuthAction": {
+            "required": ["action", "payload"],
+            "additionalProperties": false,
+            "properties": {
+                "action": "changeAuth",
+                "payload": {
+                    "required": ["spectate"],
+                    "additionalProperties": false,
+                    "properties": {
+                        "spectate": {"type": "boolean"}
+                    }
+                }
             }
         }
     }

@@ -11,6 +11,8 @@ import theme from '../theme';
 
 const mockBoard = {
     hidden: false,
+    width: 5,
+    height: 5,
     board: [
         ['Oops!', 'So Lost', 'Wow', 'Much Empty', 'Try Again'],
         ['Not Found', 'Woot', 'Where?', 'Still Empty', 'Lost Again'],
@@ -26,6 +28,7 @@ const mockBoard = {
             },
             description: '',
             completedPlayers: text === '404' ? ['1'] : [],
+            revealed: true,
         })),
     ),
 };
@@ -116,6 +119,7 @@ export default function NotFound() {
         revealCard: () => {},
         toggleGoalDetails: () => {},
         toggleCounters: () => {},
+        changeAuth: () => {},
         spectator: false,
         monitor: false,
     };

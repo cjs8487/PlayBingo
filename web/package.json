@@ -1,14 +1,18 @@
 {
     "name": "web",
-    "version": "1.0.0 beta 1",
+    "version": "0.9.0",
     "private": true,
     "scripts": {
         "dev": "next dev",
         "build": "next build",
         "start": "next start",
-        "lint": "next lint"
+        "lint": "next lint",
+        "ts": "tsc --noEmit --incremental",
+        "ts:watch": "npm run ts -- --watch"
     },
     "dependencies": {
+        "@codemirror/lang-json": "^6.0.2",
+        "@codemirror/lint": "^6.8.5",
         "@emotion/cache": "^11.11.0",
         "@emotion/react": "^11.14.0",
         "@emotion/styled": "^11.14.0",
@@ -16,15 +20,20 @@
         "@fortawesome/free-brands-svg-icons": "^6.7.2",
         "@fortawesome/free-solid-svg-icons": "^6.7.2",
         "@fortawesome/react-fontawesome": "^0.2.0",
+        "@lezer/highlight": "^1.2.1",
         "@mui/icons-material": "^7.0.0",
         "@mui/lab": "^7.0.0-beta.11",
         "@mui/material": "^7.0.0",
         "@mui/material-nextjs": "^7.0.0",
+        "@playbingo/shared": "file:../shared",
+        "@uiw/codemirror-themes": "^4.25.2",
+        "@uiw/react-codemirror": "^4.25.2",
         "@uiw/react-md-editor": "^4.0.7",
         "dompurify": "^3.2.6",
         "formik": "^2.4.5",
         "luxon": "^3.6.1",
         "marked": "^16.0.0",
+        "material-ui-confirm": "^4.0.0",
         "mdi-material-ui": "^7.9.4",
         "next": "^15.5.3",
         "react": "^19.1.1",
@@ -33,6 +42,7 @@
         "react-dom": "^19.1.1",
         "react-dropzone": "^14.3.8",
         "react-markdown": "^10.1.0",
+        "react-number-format": "^5.4.4",
         "react-syntax-highlighter": "^15.6.1",
         "react-toastify": "^11.0.2",
         "react-use": "^17.6.0",
@@ -42,7 +52,8 @@
         "sanitize-html": "^2.17.0",
         "set-cookie-parser": "^2.7.0",
         "swr": "^2.3.0",
-        "yup": "^1.6.1"
+        "yup": "^1.6.1",
+        "zod": "^4.1.5"
     },
     "devDependencies": {
         "@eslint/eslintrc": "^3.3.1",

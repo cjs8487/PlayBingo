@@ -7,19 +7,11 @@ import {
     MarkAction,
     NewCardAction,
     Player as PlayerData,
-    RevealedBoard,
+    RevealedCell,
     ServerMessage,
     UnmarkAction,
 } from '@playbingo/types';
-import {
-    BingoMode,
-    GenerationBoardLayout,
-    GenerationGlobalAdjustments,
-    GenerationGoalRestriction,
-    GenerationGoalSelection,
-    GenerationListMode,
-    GenerationListTransform,
-} from '@prisma/client';
+import { BingoMode } from '@prisma/client';
 import { WebSocket } from 'ws';
 import { roomCleanupInactive } from '../Environment';
 import { logError, logInfo, logWarn } from '../Logger';
@@ -48,10 +40,15 @@ import {
 import { getCategories } from '../database/games/GoalCategories';
 import { goalsForGame } from '../database/games/Goals';
 import { shuffle } from '../util/Array';
-import { computeLineMasks, listToBoard } from '../util/RoomUtils';
+import {
+    computeLineMasks,
+    getModeString,
+    listToBoard,
+    rowColToMask,
+} from '../util/RoomUtils';
 import Player from './Player';
 import { allRooms } from './RoomServer';
-import BoardGenerator from './generation/BoardGenerator';
+import { BoardGenerator } from './generation/BoardGenerator';
 import {
     GeneratorGoal,
     GlobalGenerationState,
@@ -59,6 +56,7 @@ import {
 import { generateFullRandom, generateRandomTyped } from './generation/Random';
 import { generateSRLv5 } from './generation/SRLv5';
 import RaceHandler, { RaceData } from './integration/races/RacetimeHandler';
+import { GeneratorSettings } from '@playbingo/shared';
 
 export enum BoardGenerationMode {
     RANDOM = 'Random',
@@ -89,15 +87,6 @@ export type BoardGenerationOptions =
     | BoardGenerationOptionsSRLv5
     | BoardGenerationOptionsDifficulty;
 
-export interface GeneratorConfig {
-    generationListMode: GenerationListMode[];
-    generationListTransform: GenerationListTransform;
-    generationBoardLayout: GenerationBoardLayout;
-    generationGoalSelection: GenerationGoalSelection;
-    generationGoalRestrictions: GenerationGoalRestriction[];
-    generationGlobalAdjustments: GenerationGlobalAdjustments[];
-}
-
 /**
  * Represents a room in the PlayBingo service. A room is container for a single
  * "game" of bingo, containing the board, game state, history, and all other
@@ -109,19 +98,22 @@ export default class Room {
     gameSlug: string;
     password: string;
     slug: string;
-    board: RevealedBoard;
+    board: RevealedCell[][];
     chatHistory: ChatMessage[];
     id: string;
     hideCard: boolean;
     bingoMode: BingoMode;
     lineCount: number;
+    variantName: string;
+    exploration: boolean = false;
+    alwaysRevealedMask: bigint = 0n;
 
     lastGenerationMode: BoardGenerationOptions;
 
     victoryMasks: bigint[];
     completed: boolean;
 
-    generatorConfig?: GeneratorConfig;
+    generatorSettings?: GeneratorSettings;
     newGenerator: boolean;
 
     racetimeEligible: boolean;
@@ -145,8 +137,10 @@ export default class Room {
         bingoMode: BingoMode,
         lineCount: number,
         racetimeEligible: boolean,
+        variantName: string,
+        explorationStart?: string,
         racetimeUrl?: string,
-        generatorConfig?: GeneratorConfig,
+        generatorSettings?: GeneratorSettings,
     ) {
         this.name = name;
         this.game = game;
@@ -157,16 +151,14 @@ export default class Room {
         this.id = id;
         this.bingoMode = bingoMode;
         this.lineCount = lineCount;
+        this.variantName = variantName;
 
         this.lastGenerationMode = { mode: BoardGenerationMode.RANDOM };
 
         this.racetimeEligible = !!racetimeEligible;
         this.raceHandler = new RaceHandler(this);
 
-        this.board = {
-            board: [],
-            hidden: false,
-        };
+        this.board = [];
 
         if (racetimeUrl) {
             this.raceHandler.connect(racetimeUrl);
@@ -187,8 +179,8 @@ export default class Room {
         this.hideCard = hideCard;
         this.completed = false;
 
-        this.generatorConfig = generatorConfig;
-        this.newGenerator = !!generatorConfig;
+        this.generatorSettings = generatorSettings;
+        this.newGenerator = !!generatorSettings;
 
         this.lastMessage = Date.now();
         this.inactivityWarningTimeout = setTimeout(
@@ -197,6 +189,48 @@ export default class Room {
         );
 
         this.players = new Map<string, Player>();
+
+        if (explorationStart) {
+            this.exploration = true;
+            switch (explorationStart) {
+                case 'TL':
+                    this.alwaysRevealedMask |= rowColToMask(0, 0, 5);
+                    break;
+                case 'TR':
+                    this.alwaysRevealedMask |= rowColToMask(0, 4, 5);
+                    break;
+                case 'BL':
+                    this.alwaysRevealedMask |= rowColToMask(4, 0, 5);
+                    break;
+                case 'BR':
+                    this.alwaysRevealedMask |= rowColToMask(4, 4, 5);
+                    break;
+                case 'CENTER':
+                    this.alwaysRevealedMask |= rowColToMask(2, 2, 5);
+                    break;
+                default:
+                    const startCount = Number(explorationStart);
+                    if (isNaN(startCount)) {
+                        this.logWarn(
+                            'Unknown starting square for exploration. Exploration was not enabled for this room.',
+                        );
+                        this.exploration = false;
+                    }
+                    const cells = [...Array(25).keys()];
+                    shuffle(cells);
+                    for (let i = 0; i < startCount; i++) {
+                        const cell = cells.pop();
+                        if (!cell) {
+                            return;
+                        }
+                        this.alwaysRevealedMask |= rowColToMask(
+                            cell % 5,
+                            Math.floor(cell / 5),
+                            5,
+                        );
+                    }
+            }
+        }
     }
 
     async generateBoard(options: BoardGenerationOptions) {
@@ -214,19 +248,20 @@ export default class Room {
         // game is enabled and configured for the new generator system
         // difficulty variants are mutually exclusive with th new generator
         // system currently, so if difficulty is selected go back to the old one
-        if (this.generatorConfig && mode !== BoardGenerationMode.DIFFICULTY) {
+        if (this.generatorSettings && mode !== BoardGenerationMode.DIFFICULTY) {
             const generator = new BoardGenerator(
                 goals,
                 categories,
-                this.generatorConfig.generationListMode,
-                this.generatorConfig.generationListTransform,
-                this.generatorConfig.generationBoardLayout,
-                this.generatorConfig.generationGoalSelection,
-                this.generatorConfig.generationGoalRestrictions,
-                this.generatorConfig.generationGlobalAdjustments,
+                this.generatorSettings,
             );
             generator.generateBoard();
-            this.board = { board: listToBoard(generator.board) };
+            this.board = generator.board.map((row) =>
+                row.map((goal) => ({
+                    goal: goal,
+                    completedPlayers: [],
+                    revealed: true,
+                })),
+            );
         } else {
             const globalState: GlobalGenerationState = {
                 useCategoryMaxes: categories.some((cat) => cat.max > 0),
@@ -314,13 +349,13 @@ export default class Room {
                 this.logError(`Failed to generate board ${e}`);
                 return;
             }
-            this.board = { board: listToBoard(goalList) };
+            this.board = listToBoard(goalList, 5);
         }
 
         this.sendSyncBoard();
         setRoomBoard(
             this.id,
-            this.board.board.flat().map((cell) => cell.goal.id),
+            this.board.flat().map((cell) => cell.goal.id),
         );
     }
 
@@ -380,7 +415,18 @@ export default class Room {
         createUpdatePlayer(this.id, player).then();
         return {
             action: 'connected',
-            board: this.hideCard ? { hidden: true } : this.board,
+            board: {
+                width: this.board[0].length,
+                height: this.board.length,
+                ...(this.hideCard
+                    ? { hidden: true }
+                    : {
+                          hidden: false,
+                          board: this.exploration
+                              ? player.obfuscateBoard()
+                              : this.board,
+                      }),
+            },
             chatHistory: this.chatHistory,
             connectedPlayer: player.toClientData(),
             roomData: {
@@ -397,6 +443,8 @@ export default class Room {
                     ended: this.raceHandler.data?.ended_at ?? undefined,
                     status: this.raceHandler.data?.status.verbose_value,
                 },
+                mode: getModeString(this.bingoMode, this.lineCount),
+                variant: this.variantName,
             },
             players: this.getPlayers(),
         };
@@ -461,26 +509,25 @@ export default class Room {
         }
         const { row, col } = action.payload;
         if (row === undefined || col === undefined) return;
-        const index = row * 5 + col;
-        if (player.hasMarked(index)) return;
+        if (player.hasMarked(row, col)) return;
 
         if (
             this.bingoMode === BingoMode.LOCKOUT &&
-            this.board.board[row][col].completedPlayers.length > 0
+            this.board[row][col].completedPlayers.length > 0
         )
             return;
-        this.board.board[row][col].completedPlayers.push(player.id);
-        this.board.board[row][col].completedPlayers.sort((a, b) =>
+        this.board[row][col].completedPlayers.push(player.id);
+        this.board[row][col].completedPlayers.sort((a, b) =>
             a.localeCompare(b),
         );
-        player.mark(index);
+        player.mark(row, col);
         this.sendCellUpdate(row, col);
         this.sendChat([
             {
                 contents: player.nickname,
                 color: player.color,
             },
-            ` marked ${this.board.board[row][col].goal.goal} (${row},${col})`,
+            ` marked ${this.board[row][col].goal.goal} (${row},${col})`,
         ]);
         addMarkAction(this.id, player.id, row, col).then();
         this.checkWinConditions();
@@ -496,16 +543,15 @@ export default class Room {
         }
         const { row: unRow, col: unCol } = action.payload;
         if (unRow === undefined || unCol === undefined) return;
-        const index = unRow * 5 + unCol;
-        if (!player.hasMarked(index)) return;
-        this.board.board[unRow][unCol].completedPlayers = this.board.board[
-            unRow
-        ][unCol].completedPlayers.filter((playerId) => playerId !== player.id);
-        player.unmark(index);
+        if (!player.hasMarked(unRow, unCol)) return;
+        this.board[unRow][unCol].completedPlayers = this.board[unRow][
+            unCol
+        ].completedPlayers.filter((playerId) => playerId !== player.id);
+        player.unmark(unRow, unCol);
         this.sendCellUpdate(unRow, unCol);
         this.sendChat([
             { contents: player.nickname, color: player.color },
-            ` unmarked ${this.board.board[unRow][unCol].goal.goal} (${unRow},${unCol})`,
+            ` unmarked ${this.board[unRow][unCol].goal.goal} (${unRow},${unCol})`,
         ]);
         addUnmarkAction(this.id, player.id, unRow, unCol).then();
         this.checkWinConditions();
@@ -587,6 +633,8 @@ export default class Room {
                     url,
                 },
                 newGenerator: this.newGenerator,
+                mode: getModeString(this.bingoMode, this.lineCount),
+                variant: this.variantName,
             },
         });
         this.sendChat(`Racetime.gg room created ${url}`);
@@ -607,6 +655,8 @@ export default class Room {
                     url: undefined,
                 },
                 newGenerator: this.newGenerator,
+                mode: getModeString(this.bingoMode, this.lineCount),
+                variant: this.variantName,
             },
         });
     }
@@ -623,7 +673,15 @@ export default class Room {
             },
             ' has revealed the card.',
         ]);
-        return this.board;
+        player.sendMessage({
+            action: 'syncBoard',
+            board: {
+                hidden: false,
+                board: this.board,
+                width: this.board[0].length,
+                height: this.board.length,
+            },
+        });
     }
     //#endregion
 
@@ -651,14 +709,20 @@ export default class Room {
             action: 'cellUpdate',
             row,
             col,
-            cell: this.board.board[row][col],
+            cell: this.board[row][col],
         });
     }
 
     sendSyncBoard() {
         this.sendServerMessage({
             action: 'syncBoard',
-            board: this.hideCard ? { hidden: true } : this.board,
+            board: {
+                width: this.board[0].length,
+                height: this.board.length,
+                ...(this.hideCard
+                    ? { hidden: true }
+                    : { hidden: false, board: this.board }),
+            },
         });
     }
 
@@ -809,12 +873,17 @@ export default class Room {
      * provided user minimal room permissions, or a Permissions object
      * containing he appropriate permissions based on the user
      */
-    async canAutoAuthenticate(user?: string): Promise<false | Permissions> {
+    async canAutoAuthenticate(
+        user: string,
+        isSession: boolean,
+    ): Promise<false | Permissions> {
         if (!user) {
             return false;
         }
 
-        const player = this.players.get(`user:${user}`);
+        const player = this.players.get(
+            `${isSession ? 'session' : 'user'}:${user}`,
+        );
         if (player) {
             return {
                 isMonitor: player.monitor,

@@ -29,6 +29,7 @@ export default function PlayerInfo() {
         defaultLanguage,
         availableLanguages,
         setLanguage,
+        changeAuth,
     } = useRoomContext();
 
     return (
@@ -51,7 +52,18 @@ export default function PlayerInfo() {
                     )}
                     <Box sx={{ flexGrow: 1 }} />
                     {connectionStatus !== ConnectionStatus.CLOSED && (
-                        <Button onClick={disconnect}>Disconnect</Button>
+                        <>
+                            {connectedPlayer?.spectator ? (
+                                <Button onClick={() => changeAuth(false)}>
+                                    Join Game
+                                </Button>
+                            ) : (
+                                <Button onClick={() => changeAuth(true)}>
+                                    Spectate
+                                </Button>
+                            )}
+                            <Button onClick={disconnect}>Disconnect</Button>
+                        </>
                     )}
                 </Box>
                 <Box>

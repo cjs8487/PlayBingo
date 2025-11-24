@@ -2,7 +2,6 @@ import { BingoMode, RoomActionType } from '@prisma/client';
 import { prisma } from './Database';
 import { JsonObject } from '@prisma/client/runtime/library';
 import Player from '../core/Player';
-import Room from '../core/Room';
 
 export const createRoom = (
     slug: string,
@@ -13,6 +12,8 @@ export const createRoom = (
     hideCard: boolean,
     bingoMode: BingoMode,
     lineCount: number = 1,
+    variant?: string,
+    explorationStart?: string,
 ) => {
     return prisma.room.create({
         data: {
@@ -24,6 +25,9 @@ export const createRoom = (
             hideCard,
             bingoMode,
             lineCount,
+            variant: variant ? { connect: { id: variant } } : undefined,
+            exploration: !!explorationStart,
+            explorationStart,
         },
     });
 };

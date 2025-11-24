@@ -4,6 +4,7 @@ import { SettingsDialogContent } from '@/components/input/SettingsDialogContent'
 import { notifyMessage } from '@/lib/Utils';
 import Settings from '@mui/icons-material/Settings';
 import UploadIcon from '@mui/icons-material/Upload';
+import CodeIcon from '@mui/icons-material/Code';
 import { Box, Button, IconButton, Typography } from '@mui/material';
 import { ReactNode, useRef, useState } from 'react';
 import { useGoalManagerContext } from '../../../../../../context/GoalManagerContext';
@@ -11,6 +12,7 @@ import Dialog, { DialogRef } from '../../../../../../components/Dialog';
 import GoalEditor from './GoalEditor';
 import GoalList from './GoalList';
 import GoalUpload from './GoalUpload';
+import GoalCodeDialog from './GoalCodeDialog';
 import Search from './Search';
 
 export default function GoalManagement() {
@@ -29,6 +31,7 @@ export default function GoalManagement() {
     } = useGoalManagerContext();
 
     const [goalUploadOpen, setGoalUploadOpen] = useState(false);
+    const [goalCodeOpen, setGoalCodeOpen] = useState(false);
     const [loading, setLoading] = useState(false);
     const [dialogContent, setDialogContent] = useState<ReactNode>(null);
     const dialogRef = useRef<DialogRef>(null);
@@ -100,6 +103,13 @@ export default function GoalManagement() {
                                         Upload
                                     </Button>
                                     <Button
+                                        onClick={() => setGoalCodeOpen(true)}
+                                        startIcon={<CodeIcon />}
+                                        color="info"
+                                    >
+                                        Code
+                                    </Button>
+                                    <Button
                                         onClick={openDeleteConfirmationDialog}
                                         color="error"
                                     >
@@ -156,6 +166,11 @@ export default function GoalManagement() {
                     <GoalUpload
                         isOpen={goalUploadOpen}
                         close={() => setGoalUploadOpen(false)}
+                        slug={slug}
+                    />
+                    <GoalCodeDialog
+                        isOpen={goalCodeOpen}
+                        close={() => setGoalCodeOpen(false)}
                         slug={slug}
                     />
                 </Box>

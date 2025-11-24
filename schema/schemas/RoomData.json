@@ -7,7 +7,9 @@
         "game",
         "slug",
         "gameSlug",
-        "newGenerator"
+        "newGenerator",
+        "variant",
+        "mode"
     ],
     "description": "Basic information about a room",
     "properties": {
@@ -32,6 +34,12 @@
         "token": {
             "type": "string",
             "description": "The auto-authentication token generated for the logged in user."
+        },
+        "variant": {
+            "type": "string"
+        },
+        "mode": {
+            "type": "string"
         }
     },
     "$defs": {

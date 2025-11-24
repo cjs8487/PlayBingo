@@ -9,6 +9,7 @@ import {
     Button,
     CircularProgress,
     FormControl,
+    FormHelperText,
     InputLabel,
     MenuItem,
     Select,
@@ -32,20 +33,45 @@ const roomValidationSchema = yup.object().shape({
     nickname: yup.string().required('Player nickname is required'),
     password: yup.string().required('Password is required'),
     game: yup.string().required('Game is required'),
-    // variant: yup.string().required('Game variant is required'),
+    variant: yup.string(),
     mode: yup
         .string()
         .required('Game mode is required')
         .oneOf(['LINES', 'BLACKOUT', 'LOCKOUT'], 'Invalid game mode'),
+    explorationStart: yup
+        .string()
+        .oneOf(
+            ['TL', 'TR', 'BL', 'BR', 'CENTER', 'RANDOM'],
+            'Invalid starting square mode',
+        )
+        .when('exploration', {
+            is: true,
+            then: (schema) => schema.required('Starting square is required'),
+            otherwise: (schema) => schema.notRequired(),
+        }),
+    explorationStartCount: yup
+        .number()
+        .when(['exploration', 'explorationStart'], {
+            is: (exploration: boolean, explorationStart: string) =>
+                exploration && explorationStart === 'RANDOM',
+            then: (schema) =>
+                schema
+                    .required('Start count is required')
+                    .min(1, 'Must start with at least 1 revealed square')
+                    .max(5, 'Cannot start with more than 5 goals revealed'),
+            otherwise: (schema) => schema.notRequired(),
+        }),
 });
 
-function GenerationModeSelectField() {
+function VariantSelectField() {
     const {
         values: { game },
     } = useFormikContext<{ game: string }>();
-    const [field] = useField<string>('generationMode');
+    const [field, meta] = useField<string>('variant');
 
-    const modes = useAsync(async () => {
+    const error = meta.touched && !!meta.error;
+
+    const options = useAsync(async () => {
         if (!game) {
             return [];
         }
@@ -55,92 +81,44 @@ function GenerationModeSelectField() {
             return [];
         }
         const gameData: Game = await res.json();
-
-        const modes = ['Random'];
-        if (gameData.enableSRLv5) {
-            modes.push('SRLv5');
-        }
-        if (gameData.difficultyVariantsEnabled) {
-            modes.push('Difficulty');
-        }
-        return modes;
+        return [
+            ...(gameData.difficultyVariants ?? []),
+            ...(gameData.variants ?? []),
+        ];
     }, [game]);
 
-    if (modes.loading || modes.error || !modes.value) {
-        return null;
-    }
+    const disabled = !options.value || options.value.length === 0;
 
     return (
         <FormControl>
-            <InputLabel id="generationMode-label">Generation Mode</InputLabel>
+            <InputLabel id="variant-label">Variant</InputLabel>
             <Select
-                id="generationMode"
-                labelId="generationMode-label"
-                name="generationMode"
+                id="variant"
+                labelId="variant-label"
+                name="variant"
                 value={field.value}
                 onBlur={field.onBlur}
                 onChange={field.onChange}
                 fullWidth
+                label="Variant"
+                disabled={disabled}
             >
-                {modes.value.map((mode) => (
-                    <MenuItem key={mode} value={mode}>
-                        {mode}
+                {options.value?.map((option) => (
+                    <MenuItem key={option.id} value={option.id}>
+                        {option.name}
                     </MenuItem>
                 ))}
             </Select>
-        </FormControl>
-    );
-}
-
-function DifficultySelectField() {
-    const {
-        values: { game, generationMode },
-    } = useFormikContext<{ game: string; generationMode: string }>();
-    const [field] = useField<string>('difficulty');
-
-    const difficulties = useAsync(async () => {
-        if (!game) {
-            return [];
-        }
-
-        const res = await fetch(`/api/games/${game}`);
-        if (!res.ok) {
-            return [];
-        }
-        const gameData: Game = await res.json();
-        return gameData.difficultyVariantsEnabled
-            ? (gameData.difficultyVariants ?? [])
-            : [];
-    }, [game]);
-
-    if (
-        difficulties.loading ||
-        difficulties.error ||
-        !difficulties.value ||
-        difficulties.value.length === 0 ||
-        generationMode !== 'Difficulty'
-    ) {
-        return null;
-    }
-
-    return (
-        <FormControl>
-            <InputLabel id="difficulty-label">Difficulty</InputLabel>
-            <Select
-                id="difficulty"
-                labelId="difficulty-label"
-                name="difficulty"
-                value={field.value}
-                onBlur={field.onBlur}
-                onChange={field.onChange}
-                fullWidth
-            >
-                {difficulties.value.map((difficulty) => (
-                    <MenuItem key={difficulty.id} value={difficulty.id}>
-                        {difficulty.name}
-                    </MenuItem>
-                ))}
-            </Select>
+            {error && (
+                <FormHelperText error={error}>{meta.error}</FormHelperText>
+            )}
+            {disabled && (
+                <FormHelperText>
+                    {options.loading
+                        ? 'Loading variants...'
+                        : 'No variants available'}
+                </FormHelperText>
+            )}
         </FormControl>
     );
 }
@@ -172,9 +150,11 @@ export default function RoomCreateForm({ game }: FormProps) {
                 mode: 'LINES',
                 lineCount: 1,
                 seed: undefined,
-                generationMode: '',
-                difficulty: '',
                 hideCard: false,
+                spectator: false,
+                exploration: false,
+                explorationStart: 'TL',
+                explorationStartCount: '',
             }}
             validationSchema={roomValidationSchema}
             onSubmit={async (values) => {
@@ -199,7 +179,7 @@ export default function RoomCreateForm({ game }: FormProps) {
                 router.push(`/rooms/${slug}`);
             }}
         >
-            {({ values: { mode } }) => (
+            {({ values: { mode, exploration, explorationStart } }) => (
                 <Form>
                     <Box
                         sx={{
@@ -226,13 +206,7 @@ export default function RoomCreateForm({ game }: FormProps) {
                                 value: game.slug,
                             }))}
                         />
-                        {/* <div>
-                            <label>
-                                <div>Variant</div>
-                                <Field name="variant" />
-                            </label>
-                            <ErrorMessage name="variant" component="div" />
-                        </div> */}
+                        <VariantSelectField />
                         <Box
                             sx={{
                                 display: 'flex',
@@ -260,8 +234,6 @@ export default function RoomCreateForm({ game }: FormProps) {
                                 />
                             )}
                         </Box>
-                        <GenerationModeSelectField />
-                        <DifficultySelectField />
                         <FormikSwitch
                             id="hide-card"
                             name="hideCard"
@@ -272,6 +244,55 @@ export default function RoomCreateForm({ game }: FormProps) {
                             id="spectator"
                             label="Join as spectator?"
                         />
+                        <Box
+                            sx={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 2,
+                            }}
+                        >
+                            <FormikSwitch
+                                name="exploration"
+                                id="exploration"
+                                label="Exploration"
+                            />
+                            <FormikSelectField
+                                id="room-mode-select"
+                                name="explorationStart"
+                                label="Starting Square"
+                                disabled={!exploration}
+                                sx={{ flexGrow: 1 }}
+                                options={[
+                                    { value: 'TL', label: 'Top Left' },
+                                    { value: 'TR', label: 'Top Right' },
+                                    { value: 'BL', label: 'Bottom Left' },
+                                    { value: 'BR', label: 'Bottom Right' },
+                                    {
+                                        value: 'CENTER',
+                                        label: 'Center',
+                                        tooltip:
+                                            'The center square of the board starts revealed. If the board has an even width or height, two squares will be revealed in that direction.',
+                                    },
+                                    {
+                                        value: 'RANDOM',
+                                        label: 'Random',
+                                        tooltip:
+                                            'A specified number of cells in the square will be chosen at random to start revealed',
+                                    },
+                                ]}
+                            />
+                            <NumberInput
+                                id="exploration-random-revealed-count"
+                                name="explorationStartCount"
+                                label="Start Count"
+                                disabled={
+                                    !exploration ||
+                                    explorationStart !== 'RANDOM'
+                                }
+                                min={1}
+                                max={5}
+                            />
+                        </Box>
                         <Accordion>
                             <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                                 Advanced Generation Options

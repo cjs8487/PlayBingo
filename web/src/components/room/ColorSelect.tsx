@@ -83,6 +83,7 @@ export default function ColorSelect() {
                         sx={{
                             position: 'absolute',
                             zIndex: 20,
+                            transform: 'translate(-65%, 40px)',
                         }}
                     >
                         <SketchPicker

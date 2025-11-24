@@ -17,19 +17,18 @@ datasource db {
 }
 
 model Goal {
-  id            String        @id @unique @default(cuid())
+  id            String     @id @unique @default(cuid())
   goal          String
   // DO NOT REMOVE
   /// [GoalTranslations]
   translations  Json          @default("{}")
   description   String?
   oldCategories String[]
-  categories    Category[]    @relation("GoalCategories")
+  categories    Category[] @relation("GoalCategories")
   difficulty    Int?
-  game          Game          @relation(fields: [gameId], references: [id])
-  variants      GoalVariant[]
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
+  game          Game       @relation(fields: [gameId], references: [id])
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
   gameId        String
 }
 
@@ -44,24 +43,15 @@ model Category {
   @@unique([gameId, name])
 }
 
-model GoalVariant {
-  id          String   @id @unique @default(cuid())
-  goal        String?
-  description String?
-  active      Boolean?
-  baseGoal    Goal     @relation(fields: [goalId], references: [id])
-  variant     Variant  @relation(fields: [variantId], references: [id])
-  goalId      String
-  variantId   String
-}
-
 model Variant {
-  id          String        @id @unique @default(cuid())
-  name        String
-  description String
-  goals       GoalVariant[]
-  game        Game?         @relation(fields: [gameId], references: [id])
-  gameId      String?
+  id                String @id @unique @default(cuid())
+  name              String
+  description       String
+  game              Game   @relation(fields: [gameId], references: [id])
+  /// [GeneratorSettings]
+  generatorSettings Json   @default("{}")
+  gameId            String
+  Room              Room[]
 }
 
 model Game {
@@ -95,6 +85,8 @@ model Game {
   generationGoalSelection     GenerationGoalSelection       @default(RANDOM)
   generationGoalRestrictions  GenerationGoalRestriction[]   @default([])
   generationGlobalAdjustments GenerationGlobalAdjustments[] @default([])
+  /// [GeneratorSettings]
+  generatorSettings           Json                          @default("{}")
   newGeneratorBeta            Boolean                       @default(true)
   descriptionMd               String?
   setupMd                     String?
@@ -143,20 +135,24 @@ model Connection {
 }
 
 model Room {
-  id           String       @id @unique @default(cuid())
-  slug         String       @unique
-  name         String
-  private      Boolean
-  password     String?
-  history      RoomAction[]
-  game         Game?        @relation(fields: [gameId], references: [id])
-  gameId       String?
-  board        String[]
-  racetimeRoom String?
-  hideCard     Boolean      @default(false)
-  bingoMode    BingoMode    @default(LINES)
-  lineCount    Int          @default(1)
-  players      Player[]
+  id               String       @id @unique @default(cuid())
+  slug             String       @unique
+  name             String
+  private          Boolean
+  password         String?
+  history          RoomAction[]
+  game             Game?        @relation(fields: [gameId], references: [id])
+  gameId           String?
+  board            String[]
+  racetimeRoom     String?
+  hideCard         Boolean      @default(false)
+  bingoMode        BingoMode    @default(LINES)
+  lineCount        Int          @default(1)
+  players          Player[]
+  variant          Variant?     @relation(fields: [variantId], references: [id])
+  variantId        String?
+  exploration      Boolean      @default(false)
+  explorationStart String?
 }
 
 model Player {

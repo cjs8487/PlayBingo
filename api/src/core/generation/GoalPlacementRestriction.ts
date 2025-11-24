@@ -1,5 +1,5 @@
-import { GenerationGoalRestriction, Goal } from '@prisma/client';
-import BoardGenerator from './BoardGenerator';
+import { GeneratorSettings } from '@playbingo/shared';
+import { BoardGenerator } from './BoardGenerator';
 import { GeneratorGoal } from './GeneratorCore';
 
 const LINE_CHECK_LIST: number[][] = [];
@@ -31,36 +31,60 @@ LINE_CHECK_LIST[22] = [2, 7, 12, 17, 20, 21, 23, 24];
 LINE_CHECK_LIST[23] = [20, 21, 22, 24, 3, 8, 13, 18];
 LINE_CHECK_LIST[24] = [0, 6, 12, 18, 20, 21, 22, 23, 19, 14, 9, 4];
 
+type PlacementRestriction = GeneratorSettings['restrictions'][number];
+
 export type GoalPlacementRestriction = (
     generator: BoardGenerator,
-    cell: number,
+    row: number,
+    col: number,
     goals: GeneratorGoal[],
 ) => GeneratorGoal[];
 
 export const createPlacementRestriction = (
-    strategy: GenerationGoalRestriction,
+    restriction: PlacementRestriction,
 ) => {
-    switch (strategy) {
-        case 'LINE_TYPE_EXCLUSION':
+    switch (restriction.type) {
+        case 'line-type-exclusion':
             return preferDistinctTypesInLine;
         default:
-            throw Error('Unknwon GenerationGoalRestriction');
+            throw Error(`Unknown placement restriction ${restriction.type}`);
     }
 };
 
 const preferDistinctTypesInLine: GoalPlacementRestriction = (
     generator,
-    cell,
+    row,
+    col,
     goals,
 ) => {
     // minimizes the type overlap with already placed goals
     let minSyn = Number.MAX_VALUE;
     let synGoals: GeneratorGoal[] = [];
+
+    const cellsToCheck: GeneratorGoal[] = [];
+    // row
+    if (generator.board[row]) {
+        cellsToCheck.push(...generator.board[row]);
+    }
+    // col
+    cellsToCheck.push(...generator.board.map((row) => row[col]));
+    // main diagonal
+    if (row === col) {
+        cellsToCheck.push(...generator.board.map((r, i) => r[i]));
+    }
+    // anti-diagonal
+    const n = generator.layout[0].length;
+    if (row + col === n - 1) {
+        cellsToCheck.push(...generator.board.map((r, i) => r[n - 1 - i]));
+    }
+
     goals.forEach((g) => {
         let synergy = 0;
-        for (let j = 0; j < LINE_CHECK_LIST[cell].length; j++) {
-            const typesB =
-                generator.board[LINE_CHECK_LIST[cell][j]]?.categories;
+        cellsToCheck.forEach((cell) => {
+            if (!cell) {
+                return;
+            }
+            const typesB = cell.categories;
             if (
                 typeof g.categories != 'undefined' &&
                 typeof typesB != 'undefined'
@@ -79,7 +103,7 @@ const preferDistinctTypesInLine: GoalPlacementRestriction = (
                     }
                 }
             }
-        }
+        });
         if (synergy === minSyn) {
             synGoals.push(g);
         } else if (synergy < minSyn) {

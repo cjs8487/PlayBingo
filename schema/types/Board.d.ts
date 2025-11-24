@@ -6,17 +6,18 @@
  */
 
 export type Board = RevealedBoard | HiddenBoard;
+export type Cell = RevealedCell | HiddenCell;
 
 export interface RevealedBoard {
   board: Cell[][];
   hidden?: false;
+  width: number;
+  height: number;
 }
-/**
- * An incoming websocket message from the server telling the client of a change in room state or instructing it to take an action
- */
-export interface Cell {
+export interface RevealedCell {
   goal: Goal;
   completedPlayers: string[];
+  revealed: true;
 }
 /**
  * A single objective for a bingo game.
@@ -34,6 +35,12 @@ export interface Goal {
   difficulty?: number | null;
   categories?: string[];
 }
+export interface HiddenCell {
+  revealed: false;
+  completedPlayers: string[];
+}
 export interface HiddenBoard {
   hidden: true;
+  width: number;
+  height: number;
 }

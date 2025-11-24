@@ -1,5 +1,6 @@
-import { Box, Button, TextField } from '@mui/material';
-import { ErrorMessage, useField } from 'formik';
+import { Add, Remove } from '@mui/icons-material';
+import { IconButton, InputAdornment, TextField } from '@mui/material';
+import { useField } from 'formik';
 import { useCallback } from 'react';
 
 interface NumberInputProps {
@@ -31,14 +32,14 @@ export default function NumberInput({
     disabled,
     required,
 }: NumberInputProps) {
-    const [{ value }, , helpers] = useField<number>(name);
+    const [{ value }, meta, helpers] = useField<number>(name);
     const setValue = useCallback(
         (v: number) => {
             if (required && Number.isNaN(v)) return;
             if (!required && v !== undefined && Number.isNaN(v)) return;
             if (min !== undefined && v < min) return;
             if (max !== undefined && v > max) return;
-            helpers.setValue(v);
+            helpers.setValue(Number(v));
         },
         [min, max, helpers, required],
     );
@@ -50,66 +51,65 @@ export default function NumberInput({
     }, [value, setValue]);
 
     return (
-        <>
-            <Box
-                sx={{
-                    display: 'flex',
-                    height: 'max-content',
-                }}
-            >
-                <Button
-                    type="button"
-                    variant="contained"
-                    onClick={decrement}
-                    disabled={
-                        disabled || (min !== undefined ? value <= min : false)
-                    }
-                    sx={{
-                        borderTopRightRadius: 0,
-                        borderBottomRightRadius: 0,
-                        minWidth: 0,
-                    }}
-                >
-                    -
-                </Button>
-                <TextField
-                    id={id}
-                    label={label}
-                    inputMode="numeric"
-                    value={value}
-                    disabled={disabled}
-                    onChange={(e) => setValue(Number(e.target.value))}
-                    size="small"
-                    sx={{ flexGrow: 1 }}
-                    slotProps={{
-                        input: {
-                            slotProps: {
-                                root: { style: { borderRadius: 0 } },
-                            },
-                        },
+        <TextField
+            id={id}
+            label={label}
+            inputMode="numeric"
+            value={value}
+            disabled={disabled}
+            onChange={(e) => setValue(Number(e.target.value))}
+            sx={{ p: 0 }}
+            slotProps={{
+                input: {
+                    slotProps: {
+                        root: { style: { padding: 0 } },
+                    },
+                    startAdornment: (
+                        <InputAdornment position="start" sx={{ m: 0 }}>
+                            <IconButton
+                                type="button"
+                                onClick={decrement}
+                                disabled={
+                                    disabled ||
+                                    (min !== undefined ? value <= min : false)
+                                }
+                                sx={{
+                                    minWidth: 0,
+                                    p: 0.5,
+                                    m: 0.5,
+                                }}
+                            >
+                                <Remove />
+                            </IconButton>
+                        </InputAdornment>
+                    ),
+                    endAdornment: (
+                        <InputAdornment position="end" sx={{ m: 0 }}>
+                            <IconButton
+                                type="button"
+                                onClick={increment}
+                                disabled={
+                                    disabled ||
+                                    (max !== undefined ? value >= max : false)
+                                }
+                                sx={{
+                                    minWidth: 0,
+                                    p: 0.5,
+                                    m: 0.5,
+                                }}
+                            >
+                                <Add />
+                            </IconButton>
+                        </InputAdornment>
+                    ),
+                },
 
-                        htmlInput: {
-                            pattern: '[0-9]*',
-                        },
-                    }}
-                />
-                <Button
-                    type="button"
-                    variant="contained"
-                    onClick={increment}
-                    disabled={
-                        disabled || (max !== undefined ? value >= max : false)
-                    }
-                    sx={{
-                        borderTopLeftRadius: 0,
-                        borderBottomLeftRadius: 0,
-                        minWidth: 0,
-                    }}
-                >
-                    +
-                </Button>
-            </Box>
-            <ErrorMessage name={name} />
-        </>
+                htmlInput: {
+                    pattern: '[0-9]*',
+                },
+            }}
+            error={meta.touched && !!meta.error}
+            helperText={meta.touched && meta.error}
+        />
     );
 }

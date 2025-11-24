@@ -6,6 +6,7 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Footer from '../../components/footer/Footer';
 import Header from '../../components/header/Header';
+import { ConfirmProvider } from 'material-ui-confirm';
 
 export default function CoreLayout({
     children,
@@ -15,17 +16,25 @@ export default function CoreLayout({
     modal: ReactNode;
 }) {
     return (
-        <Box
-            sx={{
-                display: 'grid',
-                gridTemplateColumns: '1fr',
-                gridTemplateRows: 'auto 1fr auto',
-                height: '100%',
-                maxHeight: '100%',
-                overflow: 'auto',
-            }}
-        >
-            <Header />
+        <>
+            <ConfirmProvider>
+                <Box
+                    sx={{
+                        display: 'grid',
+                        gridTemplateColumns: '1fr',
+                        gridTemplateRows: 'auto 1fr auto',
+                        height: '100%',
+                        maxHeight: '100%',
+                        overflow: 'auto',
+                    }}
+                >
+                    <Header />
+                    {children}
+                    <Footer />
+                </Box>
+                <ToastContainer />
+                {modal}
+            </ConfirmProvider>
             <CookieConsent
                 location="bottom"
                 buttonText="I understand"
@@ -38,10 +47,6 @@ export default function CoreLayout({
                 This website uses cookies to provide some parts of its
                 functionality.
             </CookieConsent>
-            {children}
-            <Footer />
-            <ToastContainer />
-            {modal}
-        </Box>
+        </>
     );
 }

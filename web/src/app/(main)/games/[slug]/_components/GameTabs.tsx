@@ -19,7 +19,6 @@ export default function GameTabs({
         descriptionMd,
         setupMd,
         difficultyVariants,
-        difficultyVariantsEnabled,
     },
 }: Props) {
     const [isOwner, setIsOwner] = useState(false);
@@ -48,14 +47,13 @@ export default function GameTabs({
         tabs.push('overview');
     }
     tabs.push('goals');
+    tabs.push('variants');
     if (canModerate) {
         tabs.push('categories');
         tabs.push('translations');
     }
+
     if (isOwner) {
-        if (difficultyVariantsEnabled) {
-            tabs.push('variants');
-        }
         tabs.push('permissions');
         if (newGeneratorBeta) {
             tabs.push('generation');

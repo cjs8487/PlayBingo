@@ -1,14 +1,8 @@
+import { Category } from '@prisma/client';
 import {
-    Category,
-    GenerationBoardLayout,
-    GenerationGlobalAdjustments,
-    GenerationGoalRestriction,
-    GenerationGoalSelection,
-    GenerationListMode,
-    GenerationListTransform,
-    Goal,
-} from '@prisma/client';
-import BoardGenerator from '../../core/generation/BoardGenerator';
+    BoardGenerator,
+    LayoutCell,
+} from '../../core/generation/BoardGenerator';
 import { GeneratorGoal } from '../../core/generation/GeneratorCore';
 
 const categories: Category[] = Array.from({ length: 7 }).map((_, i) => ({
@@ -30,68 +24,127 @@ const goals: GeneratorGoal[] = Array.from({ length: 100 }).map((_, i) => ({
     difficulty: (i % 25) + 1,
 }));
 
-describe('BoardGenerator initialization', () => {
-    it('Throws for no layout and difficulty selection', () => {
-        expect(() => {
-            new BoardGenerator(
-                goals,
-                categories,
-                [],
-                GenerationListTransform.NONE,
-                GenerationBoardLayout.NONE,
-                GenerationGoalSelection.DIFFICULTY,
-                [],
-                [],
+describe('Goal Filters', () => {
+    describe('Difficulty', () => {
+        it('Filters out all goals with difficulty less than minimum', () => {
+            const generator = new BoardGenerator(goals, categories, {
+                goalFilters: [{ mode: 'difficulty', min: 5 }],
+                goalTransformation: [],
+                boardLayout: { mode: 'random' },
+                restrictions: [],
+                adjustments: [],
+            });
+            generator.pruneGoalList();
+            expect(generator.goals.length).toBeGreaterThan(0);
+            generator.goals.forEach((g) =>
+                expect(g.difficulty).toBeGreaterThanOrEqual(5),
             );
-        }).toThrow('Invalid configuration');
+        });
+
+        it('Filters out all goals with difficulty greater than maximum', () => {
+            const generator = new BoardGenerator(goals, categories, {
+                goalFilters: [{ mode: 'difficulty', max: 15 }],
+                goalTransformation: [],
+                boardLayout: { mode: 'random' },
+                restrictions: [],
+                adjustments: [],
+            });
+            generator.pruneGoalList();
+            expect(generator.goals.length).toBeGreaterThan(0);
+            generator.goals.forEach((g) =>
+                expect(g.difficulty).toBeLessThanOrEqual(15),
+            );
+        });
+
+        it('Filters out all goals with difficulty less than minimum and greater than maximum', () => {
+            const generator = new BoardGenerator(goals, categories, {
+                goalFilters: [{ mode: 'difficulty', min: 3, max: 17 }],
+                goalTransformation: [],
+                boardLayout: { mode: 'random' },
+                restrictions: [],
+                adjustments: [],
+            });
+            generator.pruneGoalList();
+            expect(generator.goals.length).toBeGreaterThan(0);
+            generator.goals.forEach((g) => {
+                expect(g.difficulty).toBeGreaterThanOrEqual(3);
+                expect(g.difficulty).toBeLessThanOrEqual(17);
+            });
+        });
+    });
+
+    describe('Categories', () => {
+        it('Filters out goals without at least one specified category', () => {
+            const generator = new BoardGenerator(goals, categories, {
+                goalFilters: [
+                    {
+                        mode: 'category',
+                        categories: ['Category 1', 'Category 4'],
+                    },
+                ],
+                goalTransformation: [],
+                boardLayout: { mode: 'random' },
+                restrictions: [],
+                adjustments: [],
+            });
+            generator.pruneGoalList();
+            expect(generator.goals.length).toBeGreaterThan(0);
+            generator.goals.forEach((g) => {
+                const hasCat =
+                    g.categories.includes('Category 1') ||
+                    g.categories.includes('Category 4');
+                expect(hasCat).toBeTruthy();
+            });
+        });
     });
 });
-
-describe('List Pruning', () => {});
 
 describe('Goal Transformation', () => {});
 
 describe('Board Layout', () => {
     describe('No Layout', () => {
-        const generator = new BoardGenerator(
-            goals,
-            categories,
-            [],
-            GenerationListTransform.NONE,
-            GenerationBoardLayout.NONE,
-            GenerationGoalSelection.RANDOM,
-            [],
-            [],
-        );
+        const generator = new BoardGenerator(goals, categories, {
+            goalFilters: [],
+            goalTransformation: [],
+            boardLayout: { mode: 'random' },
+            restrictions: [],
+            adjustments: [],
+        });
 
-        it('Generates a zero-filled array', () => {
+        it('Generates an full board of randomized selections', () => {
             generator.generateBoardLayout();
             const layout = generator.layout;
-            expect(layout).toHaveLength(25);
-            expect(layout).toContain(0);
+            expect(layout).toHaveLength(5);
             expect(layout).not.toContain(1);
-            layout.forEach((v) => {
-                expect(v).toBe(0);
+            layout.forEach((row) => {
+                row.forEach((cell) => {
+                    expect(cell.selectionCriteria).toBe('random');
+                });
             });
         });
     });
 
     describe('Magic Square', () => {
-        const generator = new BoardGenerator(
-            goals,
-            categories,
-            [],
-            GenerationListTransform.NONE,
-            GenerationBoardLayout.SRLv5,
-            GenerationGoalSelection.DIFFICULTY,
-            [],
-            [],
-        );
+        const generator = new BoardGenerator(goals, categories, {
+            goalFilters: [],
+            goalTransformation: [],
+            boardLayout: { mode: 'srlv5' },
+            restrictions: [],
+            adjustments: [],
+        });
 
         it('Generates 1-25', () => {
             generator.reset();
             generator.generateBoardLayout();
-            const layout = generator.layout;
+            const layout = generator.layout
+                .map((row) =>
+                    row.map((cell) =>
+                        cell.selectionCriteria === 'difficulty'
+                            ? cell.difficulty
+                            : 0,
+                    ),
+                )
+                .flat();
             expect(layout).toHaveLength(25);
             for (let i = 1; i <= 25; i++) {
                 expect(layout).toContain(i);
@@ -106,34 +159,65 @@ describe('Board Layout', () => {
             const magicNum = n * ((n ** 2 + 1) / 2);
 
             //rows
-            for (let i = 0; i < n; i++) {
-                const base = n * i;
-                expect(
-                    layout[base] +
-                        layout[base + 1] +
-                        layout[base + 2] +
-                        layout[base + 3] +
-                        layout[base + 4],
-                ).toBe(magicNum);
-            }
+            layout.forEach((row) => {
+                let sum = 0;
+                row.forEach((cell) => {
+                    expect(cell.selectionCriteria).toBe('difficulty');
+                    if (cell.selectionCriteria !== 'difficulty') {
+                        return;
+                    }
+                    sum += cell.difficulty;
+                });
+                expect(sum).toBe(magicNum);
+            });
 
             // columns
-            for (let i = 0; i < n; i++) {
-                expect(
-                    layout[i] +
-                        layout[i + n] +
-                        layout[i + 2 * n] +
-                        layout[i + 3 * n] +
-                        layout[i + 4 * n],
-                ).toBe(magicNum);
+            for (let c = 0; c < n; c++) {
+                let sum = 0;
+                for (let r = 0; r < n; r++) {
+                    const cell = layout[r][c];
+                    expect(cell.selectionCriteria).toBe('difficulty');
+                    if (cell.selectionCriteria !== 'difficulty') {
+                        return;
+                    }
+                    sum += cell.difficulty;
+                }
             }
 
             // diagonals
             expect(
-                layout[0] + layout[6] + layout[12] + layout[18] + layout[24],
+                (layout[0][0].selectionCriteria === 'difficulty'
+                    ? layout[0][0].difficulty
+                    : 0) +
+                    (layout[1][1].selectionCriteria === 'difficulty'
+                        ? layout[1][1].difficulty
+                        : 0) +
+                    (layout[2][2].selectionCriteria === 'difficulty'
+                        ? layout[2][2].difficulty
+                        : 0) +
+                    (layout[3][3].selectionCriteria === 'difficulty'
+                        ? layout[3][3].difficulty
+                        : 0) +
+                    (layout[4][4].selectionCriteria === 'difficulty'
+                        ? layout[4][4].difficulty
+                        : 0),
             ).toBe(magicNum);
             expect(
-                layout[4] + layout[8] + layout[12] + layout[16] + layout[20],
+                (layout[0][4].selectionCriteria === 'difficulty'
+                    ? layout[0][4].difficulty
+                    : 0) +
+                    (layout[1][3].selectionCriteria === 'difficulty'
+                        ? layout[1][3].difficulty
+                        : 0) +
+                    (layout[2][2].selectionCriteria === 'difficulty'
+                        ? layout[2][2].difficulty
+                        : 0) +
+                    (layout[3][1].selectionCriteria === 'difficulty'
+                        ? layout[3][1].difficulty
+                        : 0) +
+                    (layout[4][0].selectionCriteria === 'difficulty'
+                        ? layout[4][0].difficulty
+                        : 0),
             ).toBe(magicNum);
         });
 
@@ -142,32 +226,57 @@ describe('Board Layout', () => {
             generator.generateBoardLayout();
             const layout = generator.layout;
             const expected = [
-                19, 12, 1, 10, 23, 6, 25, 18, 14, 2, 13, 4, 7, 21, 20, 22, 16,
-                15, 3, 9, 5, 8, 24, 17, 11,
+                [19, 12, 1, 10, 23],
+                [6, 25, 18, 14, 2],
+                [13, 4, 7, 21, 20],
+                [22, 16, 15, 3, 9],
+                [5, 8, 24, 17, 11],
             ];
-            expect(layout).toEqual(expected);
+            for (let r = 0; r < expected.length; r++) {
+                for (let c = 0; c < expected[r].length; c++) {
+                    const cell = layout[r][c];
+                    expect(cell.selectionCriteria === 'difficulty');
+                    if (cell.selectionCriteria !== 'difficulty') {
+                        return;
+                    }
+                    expect(cell.difficulty).toEqual(expected[r][c]);
+                }
+            }
         });
     });
 
     describe('Static Placement (Isaac)', () => {
-        const generator = new BoardGenerator(
-            goals,
-            categories,
-            [],
-            GenerationListTransform.NONE,
-            GenerationBoardLayout.ISAAC,
-            GenerationGoalSelection.DIFFICULTY,
-            [],
-            [],
-        );
+        const generator = new BoardGenerator(goals, categories, {
+            goalFilters: [],
+            goalTransformation: [],
+            boardLayout: { mode: 'isaac' },
+            restrictions: [],
+            adjustments: [],
+        });
 
+        const one: LayoutCell = {
+            selectionCriteria: 'difficulty',
+            difficulty: 1,
+        };
+        const two: LayoutCell = {
+            selectionCriteria: 'difficulty',
+            difficulty: 2,
+        };
+        const three: LayoutCell = {
+            selectionCriteria: 'difficulty',
+            difficulty: 3,
+        };
+        const four: LayoutCell = {
+            selectionCriteria: 'difficulty',
+            difficulty: 4,
+        };
         const correctLayout = [
-            [2, 3, 1, 1, 2],
-            [3, 1, 2, 2, 1],
-            [1, 2, 4, 2, 1],
-            [2, 1, 2, 1, 3],
-            [1, 2, 1, 3, 2],
-        ].flat();
+            [two, three, one, one, two],
+            [three, one, two, two, one],
+            [one, two, four, two, one],
+            [two, one, two, one, three],
+            [one, two, one, three, two],
+        ];
 
         it('Generates the correct layout', () => {
             generator.reset();
@@ -183,85 +292,111 @@ describe('Board Layout', () => {
     });
 });
 
-describe('Goal Grouping', () => {
-    describe('Random Placement', () => {
-        const generator = new BoardGenerator(
-            goals,
-            categories,
-            [],
-            GenerationListTransform.NONE,
-            GenerationBoardLayout.SRLv5,
-            GenerationGoalSelection.RANDOM,
-            [],
-            [],
-        );
+describe('Goal Selection', () => {
+    const generator = new BoardGenerator(goals, categories, {
+        goalFilters: [],
+        goalTransformation: [],
+        boardLayout: { mode: 'srlv5' },
+        restrictions: [{ type: 'line-type-exclusion' }],
+        adjustments: [],
+    });
 
-        it('Puts all goals into group 0', () => {
-            generator.reset();
-            generator.groupGoals();
-            expect(generator.groupedGoals[0]).toEqual(generator.goals);
+    it('Selects correctly based on category', () => {
+        generator.reset();
+        generator.layout = [[{ selectionCriteria: 'category', category: '0' }]];
+        const goals = generator.validGoalsForCell(0, 0);
+        goals.forEach((goal) => {
+            expect(goal.categories).toContain('Category 1');
         });
     });
 
-    describe('Difficulty Placement', () => {
-        const generator = new BoardGenerator(
-            goals,
-            categories,
-            [],
-            GenerationListTransform.NONE,
-            GenerationBoardLayout.SRLv5,
-            GenerationGoalSelection.DIFFICULTY,
-            [],
-            [],
-        );
+    it('Selects correctly based on difficulty', () => {
+        generator.reset();
+        generator.layout = [
+            [
+                { selectionCriteria: 'difficulty', difficulty: 12 },
+                { selectionCriteria: 'difficulty', difficulty: 21 },
+                { selectionCriteria: 'difficulty', difficulty: 7 },
+            ],
+        ];
+        let goals = generator.validGoalsForCell(0, 0);
+        goals.forEach((goal) => {
+            expect(goal.difficulty).toBe(12);
+        });
+        goals = generator.validGoalsForCell(0, 1);
+        goals.forEach((goal) => {
+            expect(goal.difficulty).toBe(21);
+        });
+        goals = generator.validGoalsForCell(0, 2);
+        goals.forEach((goal) => {
+            expect(goal.difficulty).toBe(7);
+        });
+    });
 
-        it('Correctly groups goals with difficulties', () => {
-            generator.reset();
-            generator.groupGoals();
-            for (let i = 1; i <= 25; i++) {
-                expect(generator.groupedGoals).toHaveProperty(`${i}`);
-            }
+    it('Selects correctly based on mixed layout criteria', () => {
+        generator.reset();
+        generator.layout = [
+            [
+                { selectionCriteria: 'category', category: '2' },
+                { selectionCriteria: 'difficulty', difficulty: 21 },
+            ],
+            [
+                { selectionCriteria: 'difficulty', difficulty: 7 },
+                { selectionCriteria: 'category', category: '5' },
+            ],
+        ];
+        let goals = generator.validGoalsForCell(0, 0);
+        goals.forEach((goal) => {
+            expect(goal.categories).toContain('Category 3');
+        });
+        goals = generator.validGoalsForCell(0, 1);
+        goals.forEach((goal) => {
+            expect(goal.difficulty).toBe(21);
+        });
+        goals = generator.validGoalsForCell(1, 0);
+        goals.forEach((goal) => {
+            expect(goal.difficulty).toBe(7);
+        });
+        goals = generator.validGoalsForCell(1, 1);
+        goals.forEach((goal) => {
+            expect(goal.categories).toContain('Category 6');
         });
     });
 });
 
 describe('Goal Restriction', () => {
     describe('Line Type Exclusion', () => {
-        const generator = new BoardGenerator(
-            goals,
-            categories,
-            [],
-            GenerationListTransform.NONE,
-            GenerationBoardLayout.SRLv5,
-            GenerationGoalSelection.DIFFICULTY,
-            [GenerationGoalRestriction.LINE_TYPE_EXCLUSION],
-            [],
-        );
+        const generator = new BoardGenerator(goals, categories, {
+            goalFilters: [],
+            goalTransformation: [],
+            boardLayout: { mode: 'srlv5' },
+            restrictions: [{ type: 'line-type-exclusion' }],
+            adjustments: [],
+        });
 
         it('Prefers to place goals of differing types in the same row', () => {
             generator.reset();
             generator.generateBoardLayout();
-            generator.groupGoals();
-            let goals = generator.validGoalsForCell(0);
-            expect(goals).toEqual(generator.groupedGoals[generator.layout[0]]);
+            let goals = generator.validGoalsForCell(0, 0);
             const g = goals.pop();
             if (!g) {
                 return fail();
             }
-            generator.board[0] = g;
-            let restrictedGoals = generator.validGoalsForCell(1);
+            generator.board[0] = [];
+            generator.board[0][0] = g;
+            let restrictedGoals = generator.validGoalsForCell(0, 1);
             // the sample goals only have one category each so we can just
             // expect categories[0] to not equal
             restrictedGoals.forEach((r) => {
                 expect(r.categories[0]).not.toEqual(g.categories[0]);
             });
 
-            restrictedGoals = generator.validGoalsForCell(5);
+            restrictedGoals = generator.validGoalsForCell(1, 0);
             restrictedGoals.forEach((r) => {
                 expect(r.categories[0]).not.toEqual(g.categories[0]);
             });
 
-            restrictedGoals = generator.validGoalsForCell(12);
+            restrictedGoals = generator.validGoalsForCell(2, 2);
             restrictedGoals.forEach((r) => {
                 expect(r.categories[0]).not.toEqual(g.categories[0]);
             });
@@ -271,86 +406,70 @@ describe('Goal Restriction', () => {
 
 describe('Global Adjustments', () => {
     describe('Synergize', () => {
-        const generator = new BoardGenerator(
-            goals,
-            categories,
-            [],
-            GenerationListTransform.NONE,
-            GenerationBoardLayout.SRLv5,
-            GenerationGoalSelection.DIFFICULTY,
-            [],
-            [GenerationGlobalAdjustments.SYNERGIZE],
-        );
+        const generator = new BoardGenerator(goals, categories, {
+            goalFilters: [],
+            goalTransformation: [],
+            boardLayout: { mode: 'srlv5' },
+            restrictions: [],
+            adjustments: [{ type: 'synergize' }],
+        });
 
         it('Duplicates goals that share a category', () => {
             generator.reset();
-            generator.groupedGoals = [[goals[1]]];
             generator.adjustGoalList(goals[0]);
-            expect(generator.groupedGoals[0]).toHaveLength(2);
+            expect(generator.goalCopies[goals[1].id]).toBe(2);
         });
 
         it('Duplicates multiple goals in group', () => {
             generator.reset();
-            generator.groupedGoals = [
-                [goals[1], goals[8]],
-                [goals[2]],
-                [goals[15], goals[22], goals[29]],
-            ];
             generator.adjustGoalList(goals[0]);
-            expect(generator.groupedGoals[0]).toHaveLength(4);
-            expect(generator.groupedGoals[2]).toHaveLength(6);
+            expect(generator.goalCopies[goals[1].id]).toBe(2);
+            expect(generator.goalCopies[goals[8].id]).toBe(2);
+            expect(generator.goalCopies[goals[15].id]).toBe(2);
+            expect(generator.goalCopies[goals[22].id]).toBe(2);
+            expect(generator.goalCopies[goals[29].id]).toBe(2);
         });
 
         it('Duplicates a goal with multiple shared categories multiple times', () => {
             generator.reset();
-            generator.groupedGoals = [[goals[7]], [goals[14], goals[21]]];
             generator.adjustGoalList(goals[0]);
-            expect(generator.groupedGoals[0]).toHaveLength(3);
-            expect(generator.groupedGoals[1]).toHaveLength(6);
-        });
-
-        it('Duplicates a mixed group correctly', () => {
-            generator.reset();
-            generator.groupedGoals = [
-                [goals[1], goals[7]],
-                [goals[14], goals[15], goals[21]],
-            ];
-            generator.adjustGoalList(goals[0]);
-            expect(generator.groupedGoals[0]).toHaveLength(5);
-            expect(generator.groupedGoals[1]).toHaveLength(8);
+            expect(generator.goalCopies[goals[7].id]).toBe(3);
+            expect(generator.goalCopies[goals[14].id]).toBe(3);
+            expect(generator.goalCopies[goals[21].id]).toBe(3);
         });
 
         it('Does not duplicate goals that share no categories', () => {
             generator.reset();
-            generator.groupedGoals = [
-                [goals[2]],
-                [goals[1], goals[3]],
-                [goals[4], goals[7]],
-                [goals[5], goals[14], goals[8], goals[11]],
-            ];
             generator.adjustGoalList(goals[0]);
-            expect(generator.groupedGoals[0]).toHaveLength(1);
-            expect(generator.groupedGoals[1]).toHaveLength(3);
-            expect(generator.groupedGoals[2]).toHaveLength(4);
-            expect(generator.groupedGoals[3]).toHaveLength(7);
+            expect(generator.goalCopies[goals[2].id]).toBe(1);
+            expect(generator.goalCopies[goals[1].id]).toBe(2);
+            expect(generator.goalCopies[goals[3].id]).toBe(1);
+            expect(generator.goalCopies[goals[4].id]).toBe(1);
+            expect(generator.goalCopies[goals[7].id]).toBe(3);
+            expect(generator.goalCopies[goals[5].id]).toBe(1);
+            expect(generator.goalCopies[goals[14].id]).toBe(3);
+            expect(generator.goalCopies[goals[8].id]).toBe(2);
+            expect(generator.goalCopies[goals[11].id]).toBe(1);
+        });
+
+        it('Does not re-add the original goal to the list', () => {
+            generator.reset();
+            generator.adjustGoalList(goals[0]);
+            expect(generator.goalCopies[goals[0].id]).toBe(0);
         });
     });
 
     describe('Max Goals of Type in Board', () => {
-        const generator = new BoardGenerator(
-            goals,
-            categories,
-            [],
-            GenerationListTransform.NONE,
-            GenerationBoardLayout.SRLv5,
-            GenerationGoalSelection.DIFFICULTY,
-            [],
-            [GenerationGlobalAdjustments.BOARD_TYPE_MAX],
-        );
+        const generator = new BoardGenerator(goals, categories, {
+            goalFilters: [],
+            goalTransformation: [],
+            boardLayout: { mode: 'srlv5' },
+            restrictions: [],
+            adjustments: [{ type: 'board-type-max' }],
+        });
 
         it('Adjusts the maximums in global state', () => {
             generator.reset();
-            generator.groupedGoals = [[goals[1]]];
             const cat = categories[1].name;
             generator.categoryMaxes[cat] = 1;
             generator.adjustGoalList(goals[0]);
@@ -359,105 +478,79 @@ describe('Global Adjustments', () => {
 
         it('Removes all goals with a category after reaching 0', () => {
             generator.reset();
-            generator.groupedGoals = [[goals[1]], [goals[7], goals[8]]];
             const cat = categories[1].name;
             generator.categoryMaxes[cat] = 1;
             generator.adjustGoalList(goals[0]);
-            expect(generator.groupedGoals[0]).toHaveLength(0);
-            expect(generator.groupedGoals[1]).toHaveLength(0);
+            expect(generator.goalCopies[goals[0].id]).toBe(0);
+            expect(generator.goalCopies[goals[1].id]).toBe(0);
         });
 
         it('Does not remove goals with no matching category', () => {
             generator.reset();
-            generator.groupedGoals = [[goals[11], goals[19]]];
             const cat = categories[1].name;
             generator.categoryMaxes[cat] = 1;
             generator.adjustGoalList(goals[0]);
-            expect(generator.groupedGoals[0]).toHaveLength(2);
-            expect(generator.groupedGoals[0][0]).toStrictEqual(goals[11]);
-            expect(generator.groupedGoals[0][1]).toStrictEqual(goals[19]);
+            expect(generator.goalCopies[goals[11].id]).toBe(1);
+            expect(generator.goalCopies[goals[19].id]).toBe(1);
         });
 
-        it('Correctly handles a group containing both batching and non-matching categories', () => {
+        it('Does not re-add the original goal to the list', () => {
             generator.reset();
-            generator.groupedGoals = [[goals[7], goals[11], goals[8]]];
-            const cat = categories[1].name;
-            generator.categoryMaxes[cat] = 1;
             generator.adjustGoalList(goals[0]);
-            expect(generator.groupedGoals[0]).toHaveLength(1);
-            expect(generator.groupedGoals[0][0]).toStrictEqual(goals[11]);
-        });
-
-        it('Does not change the order of goals in the groups', () => {
-            generator.reset();
-            generator.groupedGoals = [
-                [goals[19], goals[12]],
-                [goals[1], goals[13], goals[7], goals[4], goals[20]],
-            ];
-            const cat = categories[1].name;
-            generator.categoryMaxes[cat] = 1;
-            generator.adjustGoalList(goals[0]);
-            expect(generator.groupedGoals[0]).toHaveLength(2);
-            expect(generator.groupedGoals[0][0]).toStrictEqual(goals[19]);
-            expect(generator.groupedGoals[0][1]).toStrictEqual(goals[12]);
-            expect(generator.groupedGoals[1]).toHaveLength(3);
-            expect(generator.groupedGoals[1][0]).toStrictEqual(goals[13]);
-            expect(generator.groupedGoals[1][1]).toStrictEqual(goals[4]);
-            expect(generator.groupedGoals[1][2]).toStrictEqual(goals[20]);
+            expect(generator.goalCopies[goals[0].id]).toBe(0);
         });
     });
 
-    it('removes the placed goal from the goal list', () => {
-        const generator = new BoardGenerator(
-            goals,
-            categories,
-            [],
-            GenerationListTransform.NONE,
-            GenerationBoardLayout.NONE,
-            GenerationGoalSelection.RANDOM,
-            [],
-            [],
-        );
+    it('Removes the placed goal from the goal list', () => {
+        const generator = new BoardGenerator(goals, categories, {
+            goalFilters: [],
+            goalTransformation: [],
+            boardLayout: { mode: 'random' },
+            restrictions: [],
+            adjustments: [],
+        });
         generator.reset();
         generator.adjustGoalList(goals[0]);
-        generator.groupedGoals.forEach((group) => {
-            expect(group).not.toContain(goals[0]);
-        });
+        expect(generator.goalCopies[goals[0].id]).toBe(0);
     });
 });
 
 describe('Full Generation', () => {
-    const generator = new BoardGenerator(
-        goals,
-        categories,
-        [],
-        GenerationListTransform.NONE,
-        GenerationBoardLayout.NONE,
-        GenerationGoalSelection.RANDOM,
-        [],
-        [],
-    );
+    const generator = new BoardGenerator(goals, categories, {
+        goalFilters: [],
+        goalTransformation: [],
+        boardLayout: { mode: 'random' },
+        restrictions: [],
+        adjustments: [],
+    });
 
     it('Successfully generates a fully random board', () => {
         generator.reset();
         expect(() => generator.generateBoard()).not.toThrow();
-        expect(generator.board).toHaveLength(25);
+        expect(generator.board).toHaveLength(5);
+        expect(generator.board[0]).toHaveLength(5);
+        expect(generator.board[1]).toHaveLength(5);
+        expect(generator.board[2]).toHaveLength(5);
+        expect(generator.board[3]).toHaveLength(5);
+        expect(generator.board[4]).toHaveLength(5);
     });
 
     it('Successfully generates an SRLv5 style board', () => {
-        const generator = new BoardGenerator(
-            goals,
-            categories,
-            [],
-            GenerationListTransform.NONE,
-            GenerationBoardLayout.SRLv5,
-            GenerationGoalSelection.DIFFICULTY,
-            [GenerationGoalRestriction.LINE_TYPE_EXCLUSION],
-            [],
-        );
+        const generator = new BoardGenerator(goals, categories, {
+            goalFilters: [],
+            goalTransformation: [],
+            boardLayout: { mode: 'srlv5' },
+            restrictions: [{ type: 'line-type-exclusion' }],
+            adjustments: [],
+        });
         generator.reset();
         expect(() => generator.generateBoard()).not.toThrow();
-        expect(generator.board).toHaveLength(25);
+        expect(generator.board).toHaveLength(5);
+        expect(generator.board[0]).toHaveLength(5);
+        expect(generator.board[1]).toHaveLength(5);
+        expect(generator.board[2]).toHaveLength(5);
+        expect(generator.board[3]).toHaveLength(5);
+        expect(generator.board[4]).toHaveLength(5);
     });
 
     it('Generates the same board given the same seed (Random)', () => {
@@ -471,16 +564,13 @@ describe('Full Generation', () => {
     });
 
     it('Generates the same board given the same seed (SRLv5)', () => {
-        const generator = new BoardGenerator(
-            goals,
-            categories,
-            [],
-            GenerationListTransform.NONE,
-            GenerationBoardLayout.SRLv5,
-            GenerationGoalSelection.DIFFICULTY,
-            [GenerationGoalRestriction.LINE_TYPE_EXCLUSION],
-            [],
-        );
+        const generator = new BoardGenerator(goals, categories, {
+            goalFilters: [],
+            goalTransformation: [],
+            boardLayout: { mode: 'srlv5' },
+            restrictions: [{ type: 'line-type-exclusion' }],
+            adjustments: [],
+        });
         generator.reset(12345);
         generator.generateBoard();
         const board1 = generator.board;
@@ -491,16 +581,13 @@ describe('Full Generation', () => {
     });
 
     it('Generates a board with maximum restrictions', () => {
-        const generator = new BoardGenerator(
-            goals,
-            categories,
-            [],
-            GenerationListTransform.NONE,
-            GenerationBoardLayout.SRLv5,
-            GenerationGoalSelection.DIFFICULTY,
-            [GenerationGoalRestriction.LINE_TYPE_EXCLUSION],
-            [GenerationGlobalAdjustments.BOARD_TYPE_MAX],
-        );
+        const generator = new BoardGenerator(goals, categories, {
+            goalFilters: [],
+            goalTransformation: [],
+            boardLayout: { mode: 'srlv5' },
+            restrictions: [{ type: 'line-type-exclusion' }],
+            adjustments: [{ type: 'board-type-max' }],
+        });
         generator.reset();
         expect(() => generator.generateBoard()).not.toThrow();
     });

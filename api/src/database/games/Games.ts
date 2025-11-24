@@ -9,6 +9,7 @@ import {
 } from '@prisma/client';
 import { logError } from '../../Logger';
 import { prisma } from '../Database';
+import { GeneratorSettings } from '@playbingo/shared/GeneratorSettings';
 
 export const allGames = async (user?: string) => {
     const games = await prisma.game.findMany({
@@ -52,6 +53,7 @@ export const gameForSlug = (slug: string) => {
             difficultyVariants: {
                 select: { id: true, name: true, goalAmounts: true },
             },
+            variants: true,
         },
     });
 };
@@ -94,9 +96,6 @@ export const createGame = async (
 
 export const deleteGame = (slug: string) => {
     return prisma.$transaction([
-        prisma.goalVariant.deleteMany({
-            where: { variant: { game: { slug } } },
-        }),
         prisma.variant.deleteMany({ where: { game: { slug } } }),
         prisma.goal.deleteMany({ where: { game: { slug } } }),
         prisma.difficultyVariant.deleteMany({ where: { game: { slug } } }),
@@ -230,11 +229,10 @@ export const removeModerator = (slug: string, user: string) => {
 };
 
 export const isOwner = async (slug: string, user: string) => {
-    return (
-        (await prisma.game.count({
-            where: { slug, owners: { some: { id: user } } },
-        })) > 0
-    );
+    const count = await prisma.game.count({
+        where: { AND: [{ slug }, { owners: { some: { id: user } } }] },
+    });
+    return count > 0;
 };
 
 /**
@@ -333,35 +331,14 @@ export const getGameCover = async (slug: string) => {
     return (await prisma.game.findUnique({ where: { slug } }))?.coverImage;
 };
 
-interface GeneratorUpdateInput {
-    generationListMode: GenerationListMode[];
-    generationListTransform: GenerationListTransform;
-    generationBoardLayout: GenerationBoardLayout;
-    generationGoalSelection: GenerationGoalSelection;
-    generationGoalRestrictions: GenerationGoalRestriction[];
-    generationGlobalAdjustments: GenerationGlobalAdjustments[];
-}
-
-export const updateGeneratorConfig = (
+export const updateGeneratorSettings = (
     slug: string,
-    {
-        generationListMode,
-        generationListTransform,
-        generationBoardLayout,
-        generationGoalSelection,
-        generationGoalRestrictions,
-        generationGlobalAdjustments,
-    }: GeneratorUpdateInput,
+    generatorSettings: GeneratorSettings,
 ) => {
     return prisma.game.update({
         where: { slug },
         data: {
-            generationListMode,
-            generationListTransform,
-            generationBoardLayout,
-            generationGoalSelection,
-            generationGoalRestrictions,
-            generationGlobalAdjustments,
+            generatorSettings,
         },
     });
 };

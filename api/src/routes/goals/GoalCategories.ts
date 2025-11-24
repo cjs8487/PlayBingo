@@ -20,7 +20,7 @@ goalCategories.post('/:id', async (req, res) => {
         res.sendStatus(404);
         return;
     }
-    if (!isModerator(cat.game.slug, req.session.user)) {
+    if (!(await isModerator(cat.game.slug, req.session.user))) {
         res.sendStatus(403);
         return;
     }
@@ -50,7 +50,7 @@ goalCategories.delete('/:id', async (req, res) => {
         res.sendStatus(404);
         return;
     }
-    if (!isModerator(cat.game.slug, req.session.user)) {
+    if (!(await isModerator(cat.game.slug, req.session.user))) {
         res.sendStatus(403);
         return;
     }
