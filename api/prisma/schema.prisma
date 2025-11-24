@@ -185,12 +185,13 @@ model ApiToken {
 }
 
 model Comment {
-  id      String @id @unique @default(cuid())
-  comment String
-  user    User?  @relation(fields: [userId], references: [id])
-  game    Game?  @relation(fields: [gameId], references: [id])
-  goal    Goal?  @relation(fields: [goalId], references: [id])
-  room    Room?  @relation(fields: [roomId], references: [id])
+  id        String   @id @unique @default(cuid())
+  comment   String
+  createdAt DateTime @default(now())
+  user      User?    @relation(fields: [userId], references: [id])
+  game      Game?    @relation(fields: [gameId], references: [id])
+  goal      Goal?    @relation(fields: [goalId], references: [id])
+  room      Room?    @relation(fields: [roomId], references: [id])
 
   gameId String?
   goalId String?

@@ -3,12 +3,16 @@ import useSWR, { SWRResponse } from 'swr';
 
 export const useApi = <T>(
     route: string,
-    immutable?: boolean,
+    {
+        immutable,
+        onSuccess,
+    }: { immutable?: boolean; onSuccess?: (data: T) => void } = {},
 ): SWRResponse<T> => {
     const options = {
         revalidateIfStale: !immutable,
         revalidateOnFocus: !immutable,
         revalidateOnReconnect: !immutable,
+        onSuccess,
     };
     return useSWR<T>(
         route,

@@ -21,6 +21,7 @@ export interface Goal {
   description: string | null;
   difficulty?: number | null;
   categories?: Category[];
+  comments?: Comment[];
 }
 /**
  * The full goal category definition.
@@ -30,6 +31,19 @@ export interface Category {
   name: string;
   gameId: string;
   max: number;
+}
+export interface Comment {
+  id: string;
+  comment: string;
+  user: User;
+}
+export interface User {
+  id: string;
+  username: string;
+  email?: string;
+  staff: boolean;
+  racetimeConnected?: boolean;
+  avatar?: string;
 }
 export interface HiddenCell {
   revealed: false;
