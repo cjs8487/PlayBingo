@@ -6,7 +6,7 @@ import {
 } from '@mui/material';
 import { OverridableStringUnion } from '@mui/types';
 import { FieldValidator, useField } from 'formik';
-import { HTMLInputTypeAttribute } from 'react';
+import { HTMLInputTypeAttribute, ReactNode } from 'react';
 
 interface FormikTextFieldProps {
     id?: string;
@@ -37,6 +37,8 @@ interface FormikTextFieldProps {
     validate?: FieldValidator;
     placeholder?: string;
     shrinkLabel?: boolean;
+    startAdornment?: ReactNode;
+    endAdornment?: ReactNode;
 }
 
 export default function FormikTextField({
@@ -57,6 +59,8 @@ export default function FormikTextField({
     validate,
     placeholder,
     shrinkLabel,
+    startAdornment,
+    endAdornment,
 }: FormikTextFieldProps) {
     const [field, meta] = useField<string>({ name, validate });
     return (
@@ -82,6 +86,10 @@ export default function FormikTextField({
             slotProps={{
                 htmlInput: { pattern, inputMode },
                 inputLabel: { shrink: shrinkLabel },
+                input: {
+                    startAdornment,
+                    endAdornment,
+                },
             }}
         />
     );

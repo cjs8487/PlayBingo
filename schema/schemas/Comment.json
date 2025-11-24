@@ -1,0 +1,11 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["id", "comment", "user"],
+    "properties": {
+        "id": {"type": "string"},
+        "comment": {"type": "string"},
+        "user": {"$ref": "./User.json" }
+    }
+}

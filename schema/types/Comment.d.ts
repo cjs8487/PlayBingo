@@ -5,26 +5,6 @@
  * and run json-schema-to-typescript to regenerate this file.
  */
 
-/**
- * A single objective for a bingo game.
- */
-export interface Goal {
-  id: string;
-  goal: string;
-  description: string | null;
-  difficulty?: number | null;
-  categories?: Category[];
-  comments?: Comment[];
-}
-/**
- * The full goal category definition.
- */
-export interface Category {
-  id: string;
-  name: string;
-  gameId: string;
-  max: number;
-}
 export interface Comment {
   id: string;
   comment: string;
