@@ -4,6 +4,7 @@ import { deleteGoal, editGoal, gameForGoal } from '../../database/games/Goals';
 import upload from './Upload';
 import goalCategories from './GoalCategories';
 import { Prisma } from '@prisma/client';
+import { addCommentToGoal, getCommentsForGoal } from '../../database/Comments';
 
 const goals = Router();
 
@@ -99,6 +100,39 @@ goals.delete('/:id', async (req, res) => {
     }
     res.sendStatus(200);
 });
+
+goals
+    .route('/:id/comments')
+    .get(async (req, res) => {
+        const { id } = req.params;
+
+        const comments = await getCommentsForGoal(id);
+        if (!comments) {
+            res.sendStatus(404);
+            return;
+        }
+        res.json(comments);
+    })
+    .post(async (req, res) => {
+        if (!req.session.user) {
+            res.sendStatus(401);
+            return;
+        }
+        const { id } = req.params;
+        const { comment } = req.body;
+
+        if (!comment || typeof comment !== 'string') {
+            res.status(400).send('Comment is required');
+            return;
+        }
+
+        const newComment = await addCommentToGoal(
+            id,
+            comment,
+            req.session.user,
+        );
+        res.status(201).json({ comment: newComment });
+    });
 
 goals.use('/upload', upload);
 goals.use('/categories', goalCategories);
