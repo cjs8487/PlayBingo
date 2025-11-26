@@ -1,11 +1,8 @@
 import request from 'supertest';
-import { app } from '../main';
-import http from 'http';
-import { mockFindToken } from './setup';
 import { prisma } from '../database/Database';
+import { app } from '../main';
+import { mockFindToken } from './setup';
 import { requiresApiToken } from './shared';
-
-let server: http.Server;
 
 const mockCreateUser = jest.spyOn(prisma.user, 'create').mockResolvedValue({
     id: 'validuser',
@@ -20,16 +17,6 @@ const mockCreateUser = jest.spyOn(prisma.user, 'create').mockResolvedValue({
 const mockFindUnique = jest
     .spyOn(prisma.user, 'findUnique')
     .mockResolvedValue(null);
-
-beforeAll(() => {
-    // Start the server on a random port
-    server = app.listen(0);
-});
-
-afterAll(async () => {
-    // Close the server after tests
-    await server.close();
-});
 
 describe('Basic Test to create a new user', () => {
     requiresApiToken((token) => {

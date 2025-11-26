@@ -87,6 +87,13 @@ app.use('/api/health', healthCheckRouter);
 app.use('/api/docs', express.static(path.join(__dirname, '..', '..', 'docs')));
 app.use('/media', express.static(path.resolve('media')));
 
+if (process.env.NODE_ENV === 'test') {
+    app.get('/test/login', (req, res) => {
+        req.session.user = 'test-user';
+        res.json({ ok: true });
+    });
+}
+
 const server = app.listen(port, () => {
     logInfo(`API application listening on port ${port}`);
 });
