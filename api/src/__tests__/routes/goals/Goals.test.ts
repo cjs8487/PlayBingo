@@ -10,12 +10,11 @@ import { getTestSessionCookie, requiresGameModerator } from '../../shared';
 let cookie = '';
 
 beforeAll(async () => {
-    cookie = await getTestSessionCookie();
+    cookie = await getTestSessionCookie('gameMod');
 });
 
 describe('POST /api/goals/:id', () => {
     it("404 when goal doesn't exist", async () => {
-        const cookie = await getTestSessionCookie();
         const res = await request(app)
             .post('/api/goals/10')
             .set('Cookie', cookie)
@@ -99,7 +98,6 @@ describe('POST /api/goals/:id', () => {
 describe('DELETE /api/goals/:id', () => {
     it("404 when goal doesn't exist", async () => {
         (gameForGoal as jest.Mock).mockReturnValueOnce(null);
-        const cookie = await getTestSessionCookie();
         const res = await request(app)
             .delete('/api/goals/10')
             .set('Cookie', cookie)
@@ -117,7 +115,6 @@ describe('DELETE /api/goals/:id', () => {
     });
 
     it('200 for normal operation', async () => {
-        const cookie = await getTestSessionCookie();
         const res = await request(app)
             .delete('/api/goals/10')
             .set('Cookie', cookie)

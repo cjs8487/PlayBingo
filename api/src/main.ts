@@ -92,8 +92,23 @@ app.use('/api/docs', express.static(path.join(__dirname, '..', '..', 'docs')));
 app.use('/media', express.static(path.resolve('media')));
 
 if (process.env.NODE_ENV === 'test') {
-    app.get('/test/login', (req, res) => {
+    app.get('/test/login/player', (req, res) => {
         req.session.user = 'test-user';
+        res.json({ ok: true });
+    });
+
+    app.get('/test/login/gameMod', (req, res) => {
+        req.session.user = 'test-user-mod';
+        res.json({ ok: true });
+    });
+
+    app.get('/test/login/gameOwner', (req, res) => {
+        req.session.user = 'test-user-owner';
+        res.json({ ok: true });
+    });
+
+    app.get('/test/login/staff', (req, res) => {
+        req.session.user = 'test-user-staff';
         res.json({ ok: true });
     });
 }

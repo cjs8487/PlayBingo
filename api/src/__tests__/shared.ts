@@ -6,8 +6,8 @@ import { ApiToken } from '@prisma/client';
 import { prismaMock } from './setup';
 import { validateToken } from '../database/auth/ApiTokens';
 
-export const getTestSessionCookie = async () => {
-    const res = await request(app).get('/test/login');
+export const getTestSessionCookie = async (path: string) => {
+    const res = await request(app).get(`/test/login/${path}`);
     const cookie = res.headers['set-cookie'];
     return cookie;
 };
@@ -34,7 +34,7 @@ export const requiresGameModerator = (
         });
 
         it('403 when normal user', async () => {
-            const cookie = await getTestSessionCookie();
+            const cookie = await getTestSessionCookie('player');
             const res = await makeRequest(cookie);
             expect(isModerator).toHaveBeenCalled();
             expect(isOwner).not.toHaveBeenCalled();
@@ -52,7 +52,7 @@ export const requiresGameOwner = (makeRequest: (cookie?: string) => Test) => {
     });
 
     it('403 when normal user', async () => {
-        const cookie = await getTestSessionCookie();
+        const cookie = await getTestSessionCookie('player');
         const res = await makeRequest(cookie);
         expect(isModerator).toHaveBeenCalled();
         expect(isOwner).not.toHaveBeenCalled();
@@ -60,7 +60,7 @@ export const requiresGameOwner = (makeRequest: (cookie?: string) => Test) => {
     });
 
     it('403 when moderator', async () => {
-        const cookie = await getTestSessionCookie();
+        const cookie = await getTestSessionCookie('gameMod');
         const res = await makeRequest(cookie);
         expect(isModerator).toHaveBeenCalled();
         expect(isOwner).not.toHaveBeenCalled();

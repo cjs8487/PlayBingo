@@ -46,8 +46,5 @@ jest.mock('../database/Users', () => {
                 .mockReturnValue(mockGame),
         };
     })
-    .mock('../database/games/Games', () => ({
-        isModerator: jest.fn().mockReturnValue(true),
-        isOwner: jest.fn().mockReturnValueOnce(false).mockReturnValue(true),
-    }))
+    .mock('../database/games/Games')
     .mock('../database/auth/ApiTokens');
