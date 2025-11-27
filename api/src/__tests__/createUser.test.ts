@@ -1,22 +1,11 @@
 import request from 'supertest';
-import { prisma } from '../database/Database';
 import { app } from '../main';
-import { mockFindToken } from './setup';
-import { requiresApiToken } from './shared';
-
-const mockCreateUser = jest.spyOn(prisma.user, 'create').mockResolvedValue({
-    id: 'validuser',
-    username: 'testuser',
-    email: 'test@test.com',
-    password: new Uint8Array(),
-    salt: new Uint8Array(),
-    avatar: null,
-    staff: false,
-});
-
-const mockFindUnique = jest
-    .spyOn(prisma.user, 'findUnique')
-    .mockResolvedValue(null);
+import { validateToken } from '../database/auth/ApiTokens';
+import { registerUser } from '../database/Users';
+import { prismaMock } from './setup';
+import { mockValidTokenPayload, requiresApiToken } from './shared';
+import { User } from '@prisma/client';
+import { mock } from 'jest-mock-extended';
 
 describe('Basic Test to create a new user', () => {
     requiresApiToken((token) => {
@@ -37,7 +26,10 @@ describe('Basic Test to create a new user', () => {
             });
         }
     });
+
     it('should create a new user when calling the corresponding route', async () => {
+        prismaMock.user.findUnique.mockResolvedValue(null);
+        prismaMock.user.create.mockResolvedValue(mock<User>());
         const res = await request(app)
             .post('/api/registration/register')
             .set('PlayBingo-Api-Key', 'token')
@@ -45,15 +37,15 @@ describe('Basic Test to create a new user', () => {
                 email: 'test@gmail.com',
                 username: 'Test',
                 password: 'password',
-            })
-            .expect(201);
-        expect(mockFindToken).toHaveBeenCalled();
-        expect(mockCreateUser).toHaveBeenCalled();
-        expect(mockFindUnique).toHaveBeenCalledWith({
+            });
+        expect(res.status).toBe(201);
+        expect(validateToken).toHaveBeenCalled();
+        expect(registerUser).toHaveBeenCalled();
+        expect(prismaMock.user.findUnique).toHaveBeenCalledWith({
             select: { id: true },
             where: { username: 'Test' },
         });
-        expect(mockFindUnique).toHaveBeenCalledWith({
+        expect(prismaMock.user.findUnique).toHaveBeenCalledWith({
             select: { id: true },
             where: { email: 'test@gmail.com' },
         });

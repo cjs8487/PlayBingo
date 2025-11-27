@@ -30,27 +30,33 @@ registration.post('/register', async (req, res, next) => {
 
     if (typeof email !== 'string') {
         res.status(400).send('Invalid email - unable to parse');
+        console.log('unable to parse email');
         return;
     }
     // Currently longest tld has 24 characters
     if (!email.match(/^[\w\-\.]+@([\w-]+\.)+[\w-]{2,24}$/)) {
         res.status(400).send('Invalid email - invalid format');
+        console.log('invalid email');
         return;
     }
     if (await emailUsed(email)) {
         res.status(400).send('Invalid email - already used');
+        console.log('email used');
         return;
     }
 
     if (typeof username !== 'string') {
         res.status(400).send('Invalid username - unable to parse');
+        console.log('unable to parse username');
         return;
     }
     if (!username.match(/^[a-zA-Z0-9]*$/)) {
         res.status(400).send('Invalid username - invalid format');
+        console.log('invalid username');
     }
     if (await usernameUsed(username)) {
         res.status(400).send('Invalid username - already used');
+        console.log('username used');
         return;
     }
 
