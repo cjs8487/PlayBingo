@@ -231,6 +231,7 @@ rooms.post('/', async (req, res) => {
             return;
         }
         res.status(500).send(`An unknown generation error occurred - ${e}`);
+        return;
     }
     allRooms.set(slug, room);
 
