@@ -33,23 +33,21 @@ jest.mock('../database/Users', () => {
         ...original,
         registerUser: jest.fn().mockReturnValue(mock<User>()),
     };
-});
-
-jest.mock('../database/games/Goals', () => {
-    const original = jest.requireActual('../database/games/Goals');
-    return {
-        ...original,
-        editGoal: jest.fn().mockReturnValue(true),
-        gameForGoal: jest
-            .fn()
-            .mockReturnValueOnce(null)
-            .mockReturnValue(mockGame),
-    };
-});
-
-jest.mock('../database/games/Games', () => ({
-    isModerator: jest.fn().mockReturnValueOnce(false).mockReturnValue(true),
-    isOwner: jest.fn().mockReturnValueOnce(false).mockReturnValue(true),
-}));
-
-jest.mock('../database/auth/ApiTokens');
+})
+    .mock('../database/games/Goals', () => {
+        const original = jest.requireActual('../database/games/Goals');
+        return {
+            ...original,
+            editGoal: jest.fn().mockReturnValue(true),
+            deleteGoal: jest.fn().mockReturnValue(true),
+            gameForGoal: jest
+                .fn()
+                .mockReturnValueOnce(null)
+                .mockReturnValue(mockGame),
+        };
+    })
+    .mock('../database/games/Games', () => ({
+        isModerator: jest.fn().mockReturnValue(true),
+        isOwner: jest.fn().mockReturnValueOnce(false).mockReturnValue(true),
+    }))
+    .mock('../database/auth/ApiTokens');

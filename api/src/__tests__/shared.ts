@@ -26,6 +26,7 @@ export const requiresGameModerator = (
 ) => {
     describe('Requires Game Moderator', () => {
         it('401 when no session', async () => {
+            (isModerator as jest.Mock).mockReturnValueOnce(false);
             const res = await makeRequest();
             expect(isModerator).not.toHaveBeenCalled();
             expect(isOwner).not.toHaveBeenCalled();

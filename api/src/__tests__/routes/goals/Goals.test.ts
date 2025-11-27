@@ -1,5 +1,9 @@
 import request from 'supertest';
-import { editGoal } from '../../../database/games/Goals';
+import {
+    deleteGoal,
+    editGoal,
+    gameForGoal,
+} from '../../../database/games/Goals';
 import { app } from '../../../main';
 import { getTestSessionCookie, requiresGameModerator } from '../../shared';
 
@@ -17,6 +21,7 @@ describe('POST /api/goals/:id', () => {
             .set('Cookie', cookie)
             .send({});
         expect(res.status).toBe(404);
+        expect(editGoal).not.toHaveBeenCalled();
     });
 
     requiresGameModerator((cookie) => {
@@ -24,7 +29,7 @@ describe('POST /api/goals/:id', () => {
         if (cookie) {
             req = req.set('Cookie', cookie);
         }
-        return req.send({});
+        return req.send();
     });
 
     it('400 without changes', async () => {
@@ -88,5 +93,36 @@ describe('POST /api/goals/:id', () => {
             },
         });
         expect(res.status).toBe(200);
+    });
+});
+
+describe('DELETE /api/goals/:id', () => {
+    it("404 when goal doesn't exist", async () => {
+        (gameForGoal as jest.Mock).mockReturnValueOnce(null);
+        const cookie = await getTestSessionCookie();
+        const res = await request(app)
+            .delete('/api/goals/10')
+            .set('Cookie', cookie)
+            .send();
+        expect(res.status).toBe(404);
+        expect(deleteGoal).not.toHaveBeenCalled();
+    });
+
+    requiresGameModerator((cookie) => {
+        let req = request(app).delete('/api/goals/1');
+        if (cookie) {
+            req = req.set('Cookie', cookie);
+        }
+        return req.send();
+    });
+
+    it('200 for normal operation', async () => {
+        const cookie = await getTestSessionCookie();
+        const res = await request(app)
+            .delete('/api/goals/10')
+            .set('Cookie', cookie)
+            .send();
+        expect(res.status).toBe(200);
+        expect(deleteGoal).toHaveBeenCalled();
     });
 });
