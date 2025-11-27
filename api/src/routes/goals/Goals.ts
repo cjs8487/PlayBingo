@@ -18,7 +18,6 @@ goals.post('/:id', async (req, res) => {
     }
 
     const game = await gameForGoal(req.params.id);
-    console.log(game);
 
     // If no game could be found, the goal probably doesn't exist
     if (!game) {

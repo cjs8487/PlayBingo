@@ -1,9 +1,8 @@
+import { ApiToken, Game } from '@prisma/client';
 import { mock } from 'jest-mock-extended';
-import { ApiToken, Game, Goal } from '@prisma/client';
-import { prisma } from '../database/Database';
 import { cleanupInterval } from '../core/RoomServer';
+import { prisma } from '../database/Database';
 import { closeSessionDatabase } from '../util/Session';
-import { gameForGoal } from '../database/games/Goals';
 
 beforeEach(() => {
     // mockReset(prismaMock);
@@ -26,11 +25,22 @@ export const mockFindToken = jest
     .mockResolvedValueOnce(revokedTokenPayload)
     .mockResolvedValue(mockValidTokenPayload);
 
-jest.mock('../database/games/Goals', () => ({
-    gameForGoal: jest.fn(() => mock<Game>()),
-}));
+const mockGame = mock<Game>();
+mockGame.id = '1';
+
+jest.mock('../database/games/Goals', () => {
+    const original = jest.requireActual('../database/games/Goals');
+    return {
+        ...original,
+        editGoal: jest.fn().mockReturnValue(true),
+        gameForGoal: jest
+            .fn()
+            .mockReturnValueOnce(null)
+            .mockReturnValue(mockGame),
+    };
+});
 
 jest.mock('../database/games/Games', () => ({
-    isModerator: jest.fn(() => false),
-    isOwner: jest.fn(() => false),
+    isModerator: jest.fn().mockReturnValueOnce(false).mockReturnValue(true),
+    isOwner: jest.fn().mockReturnValueOnce(false).mockReturnValue(true),
 }));

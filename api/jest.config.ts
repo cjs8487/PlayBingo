@@ -7,6 +7,7 @@ const config: Config = {
         '.[jt]sx?$': 'babel-jest',
     },
     setupFilesAfterEnv: ['<rootDir>/src/__tests__/setup.ts'],
+    clearMocks: true,
 };
 
 export default config;
