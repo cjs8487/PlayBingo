@@ -151,8 +151,7 @@ export class BoardGenerator {
                 const goal = goals.pop();
                 if (!goal) {
                     throw new GenerationFailedError(
-                        `No valid goals found to place in cell (${rowIndex + 1}, ${colIndex + 1}) with\
-                        selection criteria ${this.layout[rowIndex][colIndex].selectionCriteria}`,
+                        `No valid goals found to place in cell`,
                         this,
                         rowIndex,
                         colIndex,
@@ -190,6 +189,9 @@ export class BoardGenerator {
             case 'random':
                 goals = this.goals;
                 break;
+        }
+        if (!goals || !goals.length) {
+            goals = []
         }
         let finalList: GeneratorGoal[] = [];
         goals.forEach((goal) => {
