@@ -25,7 +25,7 @@ export const logger = createLogger({
     exitOnError: false,
 });
 
-if (testing) {
+if (testing && process.env.NODE_ENV !== 'test') {
     logger.level = 'silly';
     logger.add(
         new transports.Console({
