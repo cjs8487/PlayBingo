@@ -45,7 +45,6 @@ export class BoardGenerator {
     goalsByDifficulty: { [d: number]: GeneratorGoal[] } = {};
     goalsByCategoryId: { [id: string]: GeneratorGoal[] } = {};
     goalCopies: { [k: string]: number } = {};
-    categoriesByName: { [name: string]: Category } = {};
     categoriesById: { [id: string]: Category } = {};
 
     constructor(
@@ -72,7 +71,6 @@ export class BoardGenerator {
         this.seed = seed ?? Math.ceil(999999 * Math.random());
         categories.forEach((cat) => {
             this.categoryMaxes[cat.name] = cat.max <= 0 ? -1 : cat.max;
-            this.categoriesByName[cat.name] = cat;
             this.categoriesById[cat.id] = cat;
         });
 
@@ -84,9 +82,9 @@ export class BoardGenerator {
             goal.categories.forEach((cat) => {
                 const prev =
                     this.goalsByCategoryId[
-                        this.categoriesByName[cat.name].id
+                        cat.id
                     ] ?? [];
-                this.goalsByCategoryId[this.categoriesByName[cat.name].id] = [
+                this.goalsByCategoryId[cat.id] = [
                     ...prev,
                     goal,
                 ];
@@ -118,9 +116,9 @@ export class BoardGenerator {
             goal.categories.forEach((cat) => {
                 const prev =
                     this.goalsByCategoryId[
-                        this.categoriesByName[cat.name].id
+                        cat.id
                     ] ?? [];
-                this.goalsByCategoryId[this.categoriesByName[cat.name].id] = [
+                this.goalsByCategoryId[cat.id] = [
                     ...prev,
                     goal,
                 ];

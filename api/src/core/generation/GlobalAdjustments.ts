@@ -22,7 +22,7 @@ export const createGlobalAdjustment = (adjustment: Adjustment) => {
 
 const synergize: GlobalAdjustment = (generator, lastPlaced) => {
     lastPlaced.categories.forEach((cat) => {
-        generator.goalsByCategoryId[generator.categoriesByName[cat.name].id].forEach(
+        generator.goalsByCategoryId[cat.id].forEach(
             (goal) => {
                 // do not add more copies of a goal that has been excluded
                 if (generator.goalCopies[goal.id] > 0) {
@@ -38,7 +38,7 @@ const boardTypeMax: GlobalAdjustment = (generator, lastPlaced) => {
         generator.categoryMaxes[cat.name]--;
         if (generator.categoryMaxes[cat.name] === 0) {
             generator.goalsByCategoryId[
-                generator.categoriesByName[cat.name].id
+                cat.id
             ].forEach((goal) => {
                 generator.goalCopies[goal.id] = 0;
             });
