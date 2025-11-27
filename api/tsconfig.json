@@ -16,5 +16,6 @@
         "esm": true
     },
     "include": ["src/**/*.ts", "src/**/*.d.ts", "src/main.ts", "prisma/seed.ts", "prisma/migrations/**/data-migration.ts", "scripts/*.ts"],
-    "exclude": ["src/coverage/**/*"]
+    "exclude": ["src/coverage/**/*"],
+    "noEmit": ["src/**/__mocks__/*.ts"]
 }
