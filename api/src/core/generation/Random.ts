@@ -1,4 +1,4 @@
-import { Goal } from '@prisma/client';
+import { Category, Goal } from '@prisma/client';
 import { shuffle } from '../../util/Array';
 import { GeneratorGoal } from './GeneratorCore';
 
@@ -40,7 +40,7 @@ export const generateRandomTyped = (
     let goals = goalList;
     shuffle(goals, seed);
 
-    function checkLine(i: number, typesA: string[]) {
+    function checkLine(i: number, typesA: Category[]) {
         let synergy = 0;
         for (let j = 0; j < lineCheckList[i].length; j++) {
             const typesB = bingoBoard[lineCheckList[i][j] + 1]?.categories;

@@ -38,7 +38,7 @@ import {
     useTypedRandom,
 } from '../database/games/Games';
 import { getCategories } from '../database/games/GoalCategories';
-import { goalsForGame } from '../database/games/Goals';
+import { goalsForGame, goalsForGameFull } from '../database/games/Goals';
 import { shuffle } from '../util/Array';
 import {
     computeLineMasks,
@@ -236,7 +236,7 @@ export default class Room {
     async generateBoard(options: BoardGenerationOptions) {
         this.lastGenerationMode = options;
         const { mode, seed } = options;
-        const goals = await goalsForGame(this.gameSlug);
+        const goals = await goalsForGameFull(this.gameSlug);
         let goalList: GeneratorGoal[];
         const categories = await getCategories(this.gameSlug);
         const categoryMaxes: { [k: string]: number } = {};
