@@ -78,7 +78,7 @@ describe('Goal Filters', () => {
                 goalFilters: [
                     {
                         mode: 'category',
-                        categories: ['Category 1', 'Category 4'],
+                        categories: ['0', '3'],
                     },
                 ],
                 goalTransformation: [],
