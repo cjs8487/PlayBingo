@@ -35,8 +35,8 @@ const synergize: GlobalAdjustment = (generator, lastPlaced) => {
 
 const boardTypeMax: GlobalAdjustment = (generator, lastPlaced) => {
     lastPlaced.categories.forEach((cat) => {
-        generator.categoryMaxes[cat.name]--;
-        if (generator.categoryMaxes[cat.name] === 0) {
+        generator.categoryMaxes[cat.id]--;
+        if (generator.categoryMaxes[cat.id] === 0) {
             generator.goalsByCategoryId[
                 cat.id
             ].forEach((goal) => {

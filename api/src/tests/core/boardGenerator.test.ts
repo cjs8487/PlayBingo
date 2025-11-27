@@ -473,7 +473,7 @@ describe('Global Adjustments', () => {
 
         it('Adjusts the maximums in global state', () => {
             generator.reset();
-            const cat = categories[1].name;
+            const cat = categories[1].id;
             generator.categoryMaxes[cat] = 1;
             generator.adjustGoalList(goals[0]);
             expect(generator.categoryMaxes[cat]).toBe(0);
@@ -481,7 +481,7 @@ describe('Global Adjustments', () => {
 
         it('Removes all goals with a category after reaching 0', () => {
             generator.reset();
-            const cat = categories[1].name;
+            const cat = categories[1].id;
             generator.categoryMaxes[cat] = 1;
             generator.adjustGoalList(goals[0]);
             expect(generator.goalCopies[goals[0].id]).toBe(0);
@@ -490,7 +490,7 @@ describe('Global Adjustments', () => {
 
         it('Does not remove goals with no matching category', () => {
             generator.reset();
-            const cat = categories[1].name;
+            const cat = categories[1].id;
             generator.categoryMaxes[cat] = 1;
             generator.adjustGoalList(goals[0]);
             expect(generator.goalCopies[goals[11].id]).toBe(1);

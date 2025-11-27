@@ -1,5 +1,6 @@
 import prand from 'pure-rand';
 import { GeneratorGoal, GlobalGenerationState } from './GeneratorCore';
+import { Category } from '@prisma/client';
 
 const lineCheckList: number[][] = [];
 lineCheckList[1] = [1, 2, 3, 4, 5, 10, 15, 20, 6, 12, 18, 24];
@@ -101,14 +102,14 @@ export const generateSRLv5 = (
 
     const bingoBoard: GeneratorGoal[] = [];
 
-    function checkLine(i: number, typesA: string[]) {
+    function checkLine(i: number, typesA: Category[]) {
         let synergy = 0;
         for (let j = 0; j < lineCheckList[i].length; j++) {
-            const typesB = bingoBoard[lineCheckList[i][j] + 1]?.categories.map(cat => cat.name);
+            const typesB = bingoBoard[lineCheckList[i][j] + 1]?.categories;
             if (typeof typesA != 'undefined' && typeof typesB != 'undefined') {
                 for (let k = 0; k < typesA.length; k++) {
                     for (let l = 0; l < typesB.length; l++) {
-                        if (typesA[k] == typesB[l]) {
+                        if (typesA[k].id === typesB[l].id) {
                             synergy++;
                             if (k == 0) {
                                 synergy++;
@@ -142,7 +143,7 @@ export const generateSRLv5 = (
                 bingoList[getDifficulty][
                     (j + RNG) % bingoList[getDifficulty].length
                 ];
-            synergy = checkLine(i, currentObj.categories.map(cat => cat.name));
+            synergy = checkLine(i, currentObj.categories);
             if (minSynObj == null || synergy < minSynObj.synergy) {
                 minSynObj = {
                     synergy: synergy,

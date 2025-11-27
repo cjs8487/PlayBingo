@@ -70,7 +70,7 @@ export class BoardGenerator {
 
         this.seed = seed ?? Math.ceil(999999 * Math.random());
         categories.forEach((cat) => {
-            this.categoryMaxes[cat.name] = cat.max <= 0 ? -1 : cat.max;
+            this.categoryMaxes[cat.id] = cat.max <= 0 ? -1 : cat.max;
             this.categoriesById[cat.id] = cat;
         });
 

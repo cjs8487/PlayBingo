@@ -47,7 +47,7 @@ export const generateRandomTyped = (
             if (typeof typesA != 'undefined' && typeof typesB != 'undefined') {
                 for (let k = 0; k < typesA.length; k++) {
                     for (let l = 0; l < typesB.length; l++) {
-                        if (typesA[k] == typesB[l]) {
+                        if (typesA[k].id === typesB[l].id) {
                             synergy++;
                             if (k == 0) {
                                 synergy++;
