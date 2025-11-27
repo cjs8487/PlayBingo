@@ -1,7 +1,10 @@
 import request, { Test } from 'supertest';
-import { mockFindToken } from './setup';
 import { app } from '../main';
 import { isModerator, isOwner } from '../database/games/Games';
+import { mock } from 'jest-mock-extended';
+import { ApiToken } from '@prisma/client';
+import { prismaMock } from './setup';
+import { validateToken } from '../database/auth/ApiTokens';
 
 export const getTestSessionCookie = async () => {
     const res = await request(app).get('/test/login');
@@ -74,21 +77,29 @@ export const requiresStaff = (makeRequest: () => Test) => {
     });
 };
 
+const revokedTokenPayload = mock<ApiToken>();
+revokedTokenPayload.revokedOn = new Date();
+
+export const mockValidTokenPayload = mock<ApiToken>();
+mockValidTokenPayload.active = true;
+
 export const requiresApiToken = (makeRequest: (token?: string) => Test) => {
     describe('API Token', () => {
         it('401 when no token', async () => {
             const res = await makeRequest();
-            expect(mockFindToken).not.toHaveBeenCalled();
+            expect(validateToken).not.toHaveBeenCalled();
             expect(res.status).toBe(401);
         });
+
         it('401 when invalid token', async () => {
             const res = await makeRequest('invalid');
-            expect(mockFindToken).toHaveBeenCalled();
+            expect(validateToken).toHaveBeenCalled();
             expect(res.status).toBe(401);
         });
+
         it('401 when revoked token', async () => {
             const res = await makeRequest('revoked');
-            expect(mockFindToken).toHaveBeenCalled();
+            expect(validateToken).toHaveBeenCalled();
             expect(res.status).toBe(401);
         });
     });
