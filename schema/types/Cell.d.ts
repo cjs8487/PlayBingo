@@ -20,7 +20,16 @@ export interface Goal {
   goal: string;
   description: string | null;
   difficulty?: number | null;
-  categories?: string[];
+  categories?: Category[];
+}
+/**
+ * The full goal category definition.
+ */
+export interface Category {
+  id: string;
+  name: string;
+  gameId: string;
+  max: number;
 }
 export interface HiddenCell {
   revealed: false;

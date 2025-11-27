@@ -27,6 +27,7 @@ import { GeneratorSettings, makeGeneratorSchema } from '@playbingo/shared';
 import { getCategories } from '../../database/games/GoalCategories';
 import { getVariant } from '../../database/games/Variants';
 import { DifficultyVariant, Variant } from '@prisma/client';
+import { GenerationFailedError } from '../../core/generation/GenerationFailedError';
 
 const MIN_ROOM_GOALS_REQUIRED = 25;
 const rooms = Router();
@@ -222,7 +223,16 @@ rooms.post('/', async (req, res) => {
     }
 
     options.seed = seed;
-    await room.generateBoard(options);
+    try {
+        await room.generateBoard(options);
+    } catch (e) {
+        if (e instanceof GenerationFailedError) {
+            res.status(422).send(e.message);
+            return;
+        }
+        res.status(500).send(`An unknown generation error occurred - ${e}`);
+        return;
+    }
     allRooms.set(slug, room);
 
     const token = createRoomToken(

@@ -1,5 +1,6 @@
 import prand from 'pure-rand';
 import { GeneratorGoal, GlobalGenerationState } from './GeneratorCore';
+import { Category } from '@prisma/client';
 
 const lineCheckList: number[][] = [];
 lineCheckList[1] = [1, 2, 3, 4, 5, 10, 15, 20, 6, 12, 18, 24];
@@ -101,14 +102,14 @@ export const generateSRLv5 = (
 
     const bingoBoard: GeneratorGoal[] = [];
 
-    function checkLine(i: number, typesA: string[]) {
+    function checkLine(i: number, typesA: Category[]) {
         let synergy = 0;
         for (let j = 0; j < lineCheckList[i].length; j++) {
             const typesB = bingoBoard[lineCheckList[i][j] + 1]?.categories;
             if (typeof typesA != 'undefined' && typeof typesB != 'undefined') {
                 for (let k = 0; k < typesA.length; k++) {
                     for (let l = 0; l < typesB.length; l++) {
-                        if (typesA[k] == typesB[l]) {
+                        if (typesA[k].id === typesB[l].id) {
                             synergy++;
                             if (k == 0) {
                                 synergy++;
@@ -155,8 +156,8 @@ export const generateSRLv5 = (
         bingoBoard[i] = goal;
         if (globalState.useCategoryMaxes) {
             goal.categories.forEach((cat) => {
-                globalState.categoryMaxes[cat]--;
-                if (globalState.categoryMaxes[cat] === 0) {
+                globalState.categoryMaxes[cat.name]--;
+                if (globalState.categoryMaxes[cat.name] === 0) {
                     for (let k = 1; k <= 25; k++) {
                         bingoList[k] = bingoList[k].filter(
                             (g) => !g.categories.includes(cat),

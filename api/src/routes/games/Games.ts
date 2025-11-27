@@ -675,7 +675,7 @@ games.get('/:slug/sampleBoard', async (req, res) => {
         }
     }
 
-    const goals = await goalsForGame(slug);
+    const goals = await goalsForGameFull(slug);
     const categories = await getCategories(slug);
 
     let generator: BoardGenerator;
@@ -701,6 +701,7 @@ games.get('/:slug/sampleBoard', async (req, res) => {
             return;
         }
         res.status(500).send(`An unknown generation error occurred - ${e}`);
+        return;
     }
     res.status(200).send({
         board: generator.board.map((row) =>

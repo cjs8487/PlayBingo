@@ -20,11 +20,11 @@ export const createPruner = (filter: GoalFilter) => {
 };
 
 const categoryFilter =
-    (categories: string[]) => (generator: BoardGenerator) => {
+    (categoryIds: string[]) => (generator: BoardGenerator) => {
         generator.goals = generator.goals.filter(
             (goal) =>
                 goal.categories?.some((goalCat) =>
-                    categories.includes(goalCat),
+                    categoryIds.includes(goalCat.id),
                 ) ?? false,
         );
     };
