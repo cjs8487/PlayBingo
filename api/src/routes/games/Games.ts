@@ -675,7 +675,7 @@ games.get('/:slug/sampleBoard', async (req, res) => {
         }
     }
 
-    const goals = await goalsForGame(slug);
+    const goals = await goalsForGameFull(slug);
     const categories = await getCategories(slug);
 
     let generator: BoardGenerator;

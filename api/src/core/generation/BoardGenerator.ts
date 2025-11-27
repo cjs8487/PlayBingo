@@ -43,10 +43,10 @@ export class BoardGenerator {
     customBoardLayout?: LayoutCell[][];
 
     goalsByDifficulty: { [d: number]: GeneratorGoal[] } = {};
-    goalsByCategory: { [c: string]: GeneratorGoal[] } = {};
+    goalsByCategoryId: { [id: string]: GeneratorGoal[] } = {};
     goalCopies: { [k: string]: number } = {};
-    categoriesByName: { [k: string]: Category } = {};
-    categoriesById: { [k: string]: Category } = {};
+    categoriesByName: { [name: string]: Category } = {};
+    categoriesById: { [id: string]: Category } = {};
 
     constructor(
         goals: GeneratorGoal[],
@@ -83,8 +83,8 @@ export class BoardGenerator {
             }
             goal.categories.forEach((cat) => {
                 const prev =
-                    this.goalsByCategory[this.categoriesByName[cat].id] ?? [];
-                this.goalsByCategory[this.categoriesByName[cat].id] = [
+                    this.goalsByCategoryId[this.categoriesByName[cat.name].id] ?? [];
+                this.goalsByCategoryId[this.categoriesByName[cat.name].id] = [
                     ...prev,
                     goal,
                 ];
@@ -105,7 +105,7 @@ export class BoardGenerator {
         this.board = [];
         this.categoryMaxes = {};
         this.goalsByDifficulty = {};
-        this.goalsByCategory = {};
+        this.goalsByCategoryId = {};
         this.goalCopies = {};
 
         this.goals.forEach((goal) => {
@@ -115,8 +115,8 @@ export class BoardGenerator {
             }
             goal.categories.forEach((cat) => {
                 const prev =
-                    this.goalsByCategory[this.categoriesByName[cat].id] ?? [];
-                this.goalsByCategory[this.categoriesByName[cat].id] = [
+                    this.goalsByCategoryId[this.categoriesByName[cat.name].id] ?? [];
+                this.goalsByCategoryId[this.categoriesByName[cat.name].id] = [
                     ...prev,
                     goal,
                 ];
@@ -182,7 +182,7 @@ export class BoardGenerator {
                     this.goalsByDifficulty[this.layout[row][col].difficulty];
                 break;
             case 'category':
-                goals = this.goalsByCategory[this.layout[row][col].category];
+                goals = this.goalsByCategoryId[this.layout[row][col].category];
                 break;
             case 'random':
                 goals = this.goals;

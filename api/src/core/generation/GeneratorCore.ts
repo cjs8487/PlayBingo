@@ -1,8 +1,10 @@
+import { Category } from '@prisma/client';
+
 export interface GeneratorGoal {
     id: string;
     goal: string;
     description: string | null;
-    categories: string[];
+    categories: Category[];
     difficulty: number | null;
 }
 
