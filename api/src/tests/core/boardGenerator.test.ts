@@ -17,8 +17,8 @@ const goals: GeneratorGoal[] = Array.from({ length: 100 }).map((_, i) => ({
     goal: `Goal ${i + 1}`,
     description: `Description for Goal ${i + 1}`,
     categories: [
-        categories[i % categories.length].name,
-        categories[(i + 1) % categories.length].name,
+        categories[i % categories.length],
+        categories[(i + 1) % categories.length],
     ],
     difficulty: (i % 25) + 1,
 }));
@@ -89,9 +89,10 @@ describe('Goal Filters', () => {
             generator.pruneGoalList();
             expect(generator.goals.length).toBeGreaterThan(0);
             generator.goals.forEach((g) => {
-                const hasCat =
-                    g.categories.includes('Category 1') ||
-                    g.categories.includes('Category 4');
+                const validCatNames = ['Category 1', 'Category 4'];
+                const hasCat = g.categories.some((cat) =>
+                    validCatNames.includes(cat.name)
+                )
                 expect(hasCat).toBeTruthy();
             });
         });
@@ -305,7 +306,8 @@ describe('Goal Selection', () => {
         generator.layout = [[{ selectionCriteria: 'category', category: '0' }]];
         const goals = generator.validGoalsForCell(0, 0);
         goals.forEach((goal) => {
-            expect(goal.categories).toContain('Category 1');
+            const catNames = goal.categories.map(c => c.name)
+            expect(catNames).toContain('Category 1');
         });
     });
 
@@ -346,7 +348,8 @@ describe('Goal Selection', () => {
         ];
         let goals = generator.validGoalsForCell(0, 0);
         goals.forEach((goal) => {
-            expect(goal.categories).toContain('Category 3');
+            const catNames = goal.categories.map(c => c.name)
+            expect(catNames).toContain('Category 3');
         });
         goals = generator.validGoalsForCell(0, 1);
         goals.forEach((goal) => {
@@ -358,7 +361,8 @@ describe('Goal Selection', () => {
         });
         goals = generator.validGoalsForCell(1, 1);
         goals.forEach((goal) => {
-            expect(goal.categories).toContain('Category 6');
+            const catNames = goal.categories.map(c => c.name)
+            expect(catNames).toContain('Category 6');
         });
     });
 });
