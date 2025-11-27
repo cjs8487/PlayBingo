@@ -83,7 +83,9 @@ export class BoardGenerator {
             }
             goal.categories.forEach((cat) => {
                 const prev =
-                    this.goalsByCategoryId[this.categoriesByName[cat.name].id] ?? [];
+                    this.goalsByCategoryId[
+                        this.categoriesByName[cat.name].id
+                    ] ?? [];
                 this.goalsByCategoryId[this.categoriesByName[cat.name].id] = [
                     ...prev,
                     goal,
@@ -115,7 +117,9 @@ export class BoardGenerator {
             }
             goal.categories.forEach((cat) => {
                 const prev =
-                    this.goalsByCategoryId[this.categoriesByName[cat.name].id] ?? [];
+                    this.goalsByCategoryId[
+                        this.categoriesByName[cat.name].id
+                    ] ?? [];
                 this.goalsByCategoryId[this.categoriesByName[cat.name].id] = [
                     ...prev,
                     goal,
@@ -149,7 +153,8 @@ export class BoardGenerator {
                 const goal = goals.pop();
                 if (!goal) {
                     throw new GenerationFailedError(
-                        'No valid goals left to be placed in the current cell',
+                        `No valid goals found to place in cell (${rowIndex + 1}, ${colIndex + 1}) with\
+                        selection criteria ${this.layout[rowIndex][colIndex].selectionCriteria}`,
                         this,
                         rowIndex,
                         colIndex,
@@ -175,7 +180,7 @@ export class BoardGenerator {
     }
 
     validGoalsForCell(row: number, col: number) {
-        let goals: GeneratorGoal[];
+        let goals: GeneratorGoal[] = [];
         switch (this.layout[row][col].selectionCriteria) {
             case 'difficulty':
                 goals =
