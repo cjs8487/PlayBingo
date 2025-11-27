@@ -8,6 +8,7 @@ const config: Config = {
     },
     setupFilesAfterEnv: ['<rootDir>/src/__tests__/setup.ts'],
     clearMocks: true,
+    modulePathIgnorePatterns: ['<rootDir>/build'],
 };
 
 export default config;
