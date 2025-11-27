@@ -1,12 +1,12 @@
-import { Category } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 
-export interface GeneratorGoal {
-    id: string;
-    goal: string;
-    description: string | null;
-    categories: Category[];
-    difficulty: number | null;
-}
+export type GeneratorGoal = Omit<
+    Prisma.GoalGetPayload<{include: {categories: true}}>,
+    'createdAt' |
+    'updatedAt' |
+    'oldCategories' |
+    'gameId'
+>
 
 export interface GlobalGenerationState {
     useCategoryMaxes: boolean;
