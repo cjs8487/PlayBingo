@@ -31,7 +31,6 @@ export const requiresGameModerator = (
 
         it('403 when normal user', async () => {
             const cookie = await getTestSessionCookie();
-            console.log(cookie);
             const res = await makeRequest(cookie);
             expect(isModerator).toHaveBeenCalled();
             expect(isOwner).not.toHaveBeenCalled();
