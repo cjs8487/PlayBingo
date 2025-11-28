@@ -1,7 +1,11 @@
 import request from 'supertest';
-import { getTestSessionCookie, requiresGameOwner } from '../../shared';
+import {
+    getTestSessionCookie,
+    requiresGameModerator,
+    requiresGameOwner,
+} from '../../shared';
 import { app } from '../../../main';
-import { isOwner } from '../../../database/games/Games';
+import { isModerator, isOwner } from '../../../database/games/Games';
 import {
     createGoals,
     replaceAllGoalsForGame,
@@ -205,6 +209,7 @@ describe('POST /api/goals/upload/replace', () => {
         { goal: 'Goal 3', difficulty: 8, categories: ['Category 1'] },
         { goal: 'Goal 4', description: 'Goal description' },
     ];
+
     it('400 if body is empty', async () => {
         const res = await request(app)
             .post('/api/goals/upload/replace')
@@ -227,7 +232,7 @@ describe('POST /api/goals/upload/replace', () => {
         expect(createGoals).not.toHaveBeenCalled();
     });
 
-    requiresGameOwner((cookie) => {
+    requiresGameModerator((cookie) => {
         let req = request(app).post('/api/goals/upload/replace');
         if (cookie) {
             req = req.set('Cookie', cookie);
@@ -242,7 +247,7 @@ describe('POST /api/goals/upload/replace', () => {
             .send({ slug: 'game' });
         expect(res.status).toBe(400);
         expect(res.text).toBe('Invalid goal list format');
-        expect(isOwner).toHaveBeenCalled();
+        expect(isModerator).toHaveBeenCalled();
         expect(createGoals).not.toHaveBeenCalled();
     });
 
@@ -253,7 +258,7 @@ describe('POST /api/goals/upload/replace', () => {
             .send({ slug: 'game', goals: 'abc' });
         expect(res.status).toBe(400);
         expect(res.text).toBe('Invalid goal list format');
-        expect(isOwner).toHaveBeenCalled();
+        expect(isModerator).toHaveBeenCalled();
         expect(createGoals).not.toHaveBeenCalled();
     });
 
@@ -263,7 +268,7 @@ describe('POST /api/goals/upload/replace', () => {
             .set('Cookie', cookie)
             .send({ slug: 'game', goals: [] });
         expect(res.status).toBe(400);
-        expect(isOwner).toHaveBeenCalled();
+        expect(isModerator).toHaveBeenCalled();
         expect(createGoals).not.toHaveBeenCalled();
     });
 

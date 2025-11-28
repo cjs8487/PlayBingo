@@ -1,23 +1,26 @@
 import { Router } from 'express';
 import {
     gameForSlug,
-    isOwner,
     isModerator,
+    isOwner,
     updateSRLv5Enabled,
 } from '../../database/games/Games';
-import { getUser } from '../../database/Users';
 import {
     createGoals,
     GoalInput,
     replaceAllGoalsForGame,
 } from '../../database/games/Goals';
-import { Prisma } from '@prisma/client';
-import { requiresApiToken } from '../middleware';
+import { getUser } from '../../database/Users';
 
 const upload = Router();
 
 upload.post('/srlv5', async (req, res) => {
     const { slug, goals } = req.body;
+
+    if (!slug) {
+        res.status(400).send('Missing game slug');
+        return;
+    }
 
     if (!req.session.user) {
         res.sendStatus(401);
@@ -28,16 +31,17 @@ upload.post('/srlv5', async (req, res) => {
         return;
     }
 
-    if (!slug) {
-        res.status(400).send('Missing game slug');
-        return;
-    }
     if (!goals) {
         res.status(400).send('Missing goal list');
         return;
     }
     if (!Array.isArray(goals)) {
         res.status(400).send('Invalid goal list format');
+        return;
+    }
+    if (goals.length === 0) {
+        res.status(400).send('Missing goal list');
+        return;
     }
 
     if (!gameForSlug(slug)) {
@@ -52,25 +56,32 @@ upload.post('/srlv5', async (req, res) => {
 
 upload.post('/list', async (req, res) => {
     const { slug, goals }: { slug: string; goals: string[] } = req.body;
+    if (!slug) {
+        res.status(400).send('Missing game slug');
+        return;
+    }
+
     if (!req.session.user) {
         res.sendStatus(401);
         return;
     }
+
     if (!(await isOwner(slug, req.session.user))) {
         res.sendStatus(403);
         return;
     }
 
-    if (!slug) {
-        res.status(400).send('Missing game slug');
-        return;
-    }
     if (!goals) {
         res.status(400).send('Missing goal list');
         return;
     }
     if (!Array.isArray(goals)) {
         res.status(400).send('Invalid goal list format');
+        return;
+    }
+    if (goals.length === 0) {
+        res.status(400).send('Missing goal list');
+        return;
     }
 
     if (!gameForSlug(slug)) {
@@ -93,7 +104,6 @@ upload.post('/list', async (req, res) => {
     res.sendStatus(201);
 });
 
-// Replace all goals for a game with the provided list
 upload.post('/replace', async (req, res) => {
     const { slug, goals }: { slug: string; goals: GoalInput[] } = req.body;
 
@@ -102,17 +112,12 @@ upload.post('/replace', async (req, res) => {
         return;
     }
 
-    // Check if user is staff, owner, or moderator
-    const user = await getUser(req.session.user);
-    if (!user) {
+    if (!req.session.user) {
         res.sendStatus(403);
         return;
     }
 
-    const isGameOwner = await isOwner(slug, req.session.user);
-    const isGameModerator = await isModerator(slug, req.session.user);
-
-    if (!user.staff && !isGameOwner && !isGameModerator) {
+    if (!(await isModerator(slug, req.session.user))) {
         res.sendStatus(403);
         return;
     }
@@ -121,7 +126,7 @@ upload.post('/replace', async (req, res) => {
         res.status(400).send('Missing game slug');
         return;
     }
-    if (!goals || !Array.isArray(goals)) {
+    if (!goals || !Array.isArray(goals) || goals.length === 0) {
         res.status(400).send('Invalid goal list format');
         return;
     }
