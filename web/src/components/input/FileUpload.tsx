@@ -83,9 +83,7 @@ export default function FormikFileUpload({
     const [{ value }, , { setValue }] = useField<string>(name);
     const [file, setFile] = useState<{ preview: string } | undefined>(() => {
         if (value) {
-            return {
-                preview: getMediaForWorkflow(workflow, value),
-            };
+            return { preview: getMediaForWorkflow(workflow, value) };
         }
         return undefined;
     });
