@@ -4,7 +4,7 @@ import Close from '@mui/icons-material/Close';
 import FileUpload from '@mui/icons-material/FileUpload';
 import { Box, IconButton, Theme, Typography } from '@mui/material';
 import { useField } from 'formik';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import {
     alertError,
@@ -81,18 +81,15 @@ export default function FormikFileUpload({
     shortMessage: shortMessage,
 }: Props) {
     const [{ value }, , { setValue }] = useField<string>(name);
-    const [file, setFile] = useState<{ preview: string }>();
+    const [file, setFile] = useState<{ preview: string } | undefined>(() => {
+        if (value) {
+            return { preview: getMediaForWorkflow(workflow, value) };
+        }
+        return undefined;
+    });
     const [uploading, setUploading] = useState(false);
     const [changed, setChanged] = useState(false);
     const [message, setMessage] = useState('');
-
-    useEffect(() => {
-        if (value) {
-            setFile({ preview: getMediaForWorkflow(workflow, value) });
-        }
-        // this is a mount effect
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
 
     const {
         getRootProps,
