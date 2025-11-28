@@ -1,29 +1,21 @@
 'use client';
 
+import { createImage, deleteImage, updateImage } from '@/actions/GoalImages';
 import FormikFileUpload from '@/components/input/FileUpload';
 import FormikTextField from '@/components/input/FormikTextField';
-import { Check } from '@mui/icons-material';
+import { alertError } from '@/lib/Utils';
+import { Check, Close, Delete } from '@mui/icons-material';
 import { Box, IconButton } from '@mui/material';
 import { GoalImage } from '@playbingo/types';
 import { Form, Formik } from 'formik';
-import { createImage, updateImage } from '@/actions/GoalImages';
-import { alertError } from '@/lib/Utils';
 
-interface BaseProps {
+interface Props {
     slug: string;
-}
-interface EditProps extends BaseProps {
-    image: GoalImage;
-}
-
-interface NewProps extends BaseProps {
-    image?: never;
+    image?: GoalImage;
+    afterSubmit?: () => void;
 }
 
-type Props = NewProps | EditProps;
-
-export default function GoalImageForm({ slug, image }: Props) {
-    console.log(image);
+export default function GoalImageForm({ slug, image, afterSubmit }: Props) {
     return (
         <Formik
             initialValues={{
@@ -40,6 +32,9 @@ export default function GoalImageForm({ slug, image }: Props) {
                 if (!res.ok) {
                     alertError(`Unable to save image - ${res.message}`);
                     return;
+                }
+                if (afterSubmit) {
+                    afterSubmit();
                 }
             }}
         >
@@ -63,9 +58,32 @@ export default function GoalImageForm({ slug, image }: Props) {
                     />
                 </Box>
                 <FormikTextField name="name" label="Name" size="small" />
-                <IconButton type="submit" size="small" color="success">
-                    <Check />
-                </IconButton>
+                <Box sx={{ display: 'flex' }}>
+                    <IconButton type="submit" size="small" color="success">
+                        <Check />
+                    </IconButton>
+                    <IconButton
+                        type="button"
+                        size="small"
+                        color="error"
+                        onClick={async () => {
+                            if (image) {
+                                const res = await deleteImage(slug, image.id);
+                                if (!res.ok) {
+                                    alertError(
+                                        `Unable to delete goal image - ${res.message}`,
+                                    );
+                                    return;
+                                }
+                            }
+                            if (afterSubmit) {
+                                afterSubmit();
+                            }
+                        }}
+                    >
+                        {image ? <Delete /> : <Close />}
+                    </IconButton>
+                </Box>
             </Box>
         </Formik>
     );

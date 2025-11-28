@@ -4,10 +4,11 @@ import {
     createImage,
     deleteImage,
     gameSlugForImage,
+    getImage,
     getImages,
     updateImage,
 } from '../../database/games/GoalImages';
-import { saveFile } from '../../media/MediaServer';
+import { deleteFile, saveFile } from '../../media/MediaServer';
 
 const goalImages = Router();
 
@@ -104,6 +105,12 @@ goalImages
             return;
         }
 
+        const image = await getImage(id);
+        if (!image) {
+            res.sendStatus(404);
+            return;
+        }
+
         if (!req.session.user) {
             res.sendStatus(401);
             return;
@@ -113,6 +120,10 @@ goalImages
             return;
         }
 
+        if (!(await deleteFile('goalImage', image.mediaFile))) {
+            res.sendStatus(404);
+            return;
+        }
         const success = await deleteImage(id);
         if (!success) {
             res.sendStatus(404);

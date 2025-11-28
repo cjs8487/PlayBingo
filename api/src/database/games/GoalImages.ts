@@ -1,3 +1,4 @@
+import e from 'cors';
 import { prisma } from '../Database';
 
 export const gameSlugForImage = async (id: string) => {
@@ -35,4 +36,8 @@ export const updateImage = (
 
 export const getImages = (slug: string) => {
     return prisma.goalImage.findMany({ where: { game: { slug } } });
+};
+
+export const getImage = (id: string) => {
+    return prisma.goalImage.findUnique({ where: { id } });
 };

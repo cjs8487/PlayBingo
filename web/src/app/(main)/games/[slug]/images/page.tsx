@@ -26,8 +26,10 @@ export default async function ImagesPage({
                         <GoalImageForm slug={slug} image={image} />
                     </ListItem>
                 ))}
+                <ListItem>
+                    <NewImage slug={slug} />
+                </ListItem>
             </List>
-            <NewImage slug={slug} />
         </>
     );
 }
