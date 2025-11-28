@@ -13,6 +13,14 @@ const getPermissions = async (
     }
 };
 
+async function getImages(slug: string) {
+    const res = await serverGet(`/api/games/${slug}/images`);
+    if (!res.ok) {
+        return [];
+    }
+    return res.json();
+}
+
 interface Props {
     params: Promise<{ slug: string }>;
 }
@@ -21,9 +29,14 @@ export default async function GameGoals({ params }: Props) {
     const { slug } = await params;
 
     const { canModerate } = await getPermissions(slug);
+    const images = await getImages(slug);
 
     return (
-        <GoalManagerContextProvider slug={slug} canModerate={canModerate}>
+        <GoalManagerContextProvider
+            slug={slug}
+            canModerate={canModerate}
+            images={images}
+        >
             <GoalManagement />
         </GoalManagerContextProvider>
     );

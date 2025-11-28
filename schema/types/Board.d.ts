@@ -28,6 +28,20 @@ export interface Goal {
   description: string | null;
   difficulty?: number | null;
   categories?: string[];
+  image?: GoalImage;
+  secondaryImage?: GoalImage;
+  imageTag?: GoalImageTag;
+  count?: number;
+}
+export interface GoalImage {
+  id: string;
+  name: string;
+  mediaFile: string;
+}
+export interface GoalImageTag {
+  id: string;
+  label: string;
+  color: string;
 }
 export interface HiddenCell {
   revealed: false;
