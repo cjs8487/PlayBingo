@@ -1,34 +1,33 @@
-'use client';
-import { Box } from '@mui/material';
-import FormikFileUpload from '@/components/input/FileUpload';
-import { Form, Formik } from 'formik';
-import FormikTextField from '../../../../../components/input/FormikTextField';
+import { GoalImage } from '@playbingo/types';
+import { serverGet } from '../../../../ServerUtils';
+import { List, ListItem } from '@mui/material';
+import GoalImageForm from './_components/GoalImageForm';
+import NewImage from './_components/NewImage';
 
-export default function ImagesPage() {
+async function getImages(slug: string): Promise<GoalImage[]> {
+    const res = await serverGet(`/api/games/${slug}/images`);
+    if (!res.ok) {
+        return [];
+    }
+    return res.json();
+}
+
+export default async function ImagesPage({
+    params,
+}: PageProps<'/games/[slug]'>) {
+    const { slug } = await params;
+    const images = await getImages(slug);
+
     return (
         <>
-            <Formik initialValues={{}} onSubmit={() => {}}>
-                <Box
-                    component={Form}
-                    sx={{ display: 'flex', gap: 2, alignItems: 'center' }}
-                >
-                    <Box
-                        sx={{
-                            position: 'relative',
-                            width: '100px',
-                            height: '100px',
-                        }}
-                    >
-                        <FormikFileUpload
-                            name="image"
-                            workflow="goalImage"
-                            edit
-                            shortMessage
-                        />
-                    </Box>
-                    <FormikTextField name="name" label="Name" size="small" />
-                </Box>
-            </Formik>
+            <List sx={{ maxHeight: '100%', overflowY: 'auto' }}>
+                {images.map((image) => (
+                    <ListItem key={image.id}>
+                        <GoalImageForm slug={slug} image={image} />
+                    </ListItem>
+                ))}
+            </List>
+            <NewImage slug={slug} />
         </>
     );
 }
