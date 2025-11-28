@@ -1,4 +1,5 @@
 'use client';
+import { Category, Goal, GoalImage } from '@playbingo/types';
 import {
     Dispatch,
     ReactNode,
@@ -9,10 +10,9 @@ import {
     useEffect,
     useState,
 } from 'react';
-import { Category, Goal } from '@playbingo/types';
+import { KeyedMutator } from 'swr';
 import { useApi } from '../lib/Hooks';
 import { alertError } from '../lib/Utils';
-import { KeyedMutator } from 'swr';
 
 export enum SortOptions {
     DEFAULT,
@@ -50,6 +50,7 @@ interface GoalManagerContext {
     mutateGoals: KeyedMutator<Goal[]>;
     newGoal: boolean;
     setNewGoal: (newGoal: boolean) => void;
+    images: GoalImage[];
 }
 
 const GoalManagerContext = createContext<GoalManagerContext>({
@@ -75,17 +76,20 @@ const GoalManagerContext = createContext<GoalManagerContext>({
     },
     newGoal: false,
     setNewGoal() {},
+    images: [],
 });
 
 interface GoalManagerContextProps {
     slug: string;
     canModerate: boolean;
+    images: GoalImage[];
     children: ReactNode;
 }
 
 export function GoalManagerContextProvider({
     slug,
     canModerate,
+    images,
     children,
 }: GoalManagerContextProps) {
     // API
@@ -209,6 +213,7 @@ export function GoalManagerContextProvider({
                 mutateGoals,
                 newGoal,
                 setNewGoal,
+                images,
             }}
         >
             {children}

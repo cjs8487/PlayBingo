@@ -13,11 +13,13 @@ import {
 } from '@mui/material';
 import { Category, Goal } from '@playbingo/types';
 import { Form, Formik, useField } from 'formik';
+import Image from 'next/image';
 import { KeyedMutator } from 'swr';
-import FormikFileUpload from '../../../../../../components/input/FileUpload';
-import FormikTextField from '../../../../../../components/input/FormikTextField';
-import { alertError } from '../../../../../../lib/Utils';
 import FormikColorSelect from '../../../../../../components/input/FormikColorSelect';
+import { FormikSelectFieldAutocomplete } from '../../../../../../components/input/FormikSelectField';
+import FormikTextField from '../../../../../../components/input/FormikTextField';
+import { useGoalManagerContext } from '../../../../../../context/GoalManagerContext';
+import { alertError, getMediaForWorkflow } from '../../../../../../lib/Utils';
 
 const icon = <CheckBoxOutlineBlankIcon fontSize="small" />;
 const checkedIcon = <CheckBoxIcon fontSize="small" />;
@@ -104,6 +106,8 @@ export default function GoalEditor({
     categories,
     canModerate,
 }: GoalEditorProps) {
+    const { images } = useGoalManagerContext();
+
     return (
         <Formik
             initialValues={{
@@ -112,6 +116,8 @@ export default function GoalEditor({
                 categories: goal.categories?.map((c) => c.name) ?? [],
                 difficulty: goal.difficulty ?? 0,
                 image: goal.image ?? '',
+                secondaryImage: goal.secondaryImage ?? '',
+                imageTag: goal.imageTag ?? '',
                 imageAdditionalInfo: goal.imageAdditionalInfo ?? '',
                 imageCount: goal.imageCount ?? '',
                 imageChipColor: goal.imageChipColor ?? '',
@@ -185,7 +191,13 @@ export default function GoalEditor({
                 isSubmitting,
                 isValidating,
                 resetForm,
-                values: { imageAdditionalInfo, imageCount, imageChipColor },
+                values: {
+                    image,
+                    secondaryImage,
+                    imageAdditionalInfo,
+                    imageCount,
+                    imageChipColor,
+                },
             }) => (
                 <Form>
                     <Box
@@ -248,13 +260,45 @@ export default function GoalEditor({
                                 position: 'relative',
                                 width: '250px',
                                 height: '250px',
+                                border: 1,
+                                borderColor: 'divider',
+                                backgroundColor: 'background.default',
                             }}
                         >
-                            <FormikFileUpload
-                                name="image"
-                                workflow="goalImage"
-                                edit
-                            />
+                            {image && (
+                                <Image
+                                    src={getMediaForWorkflow(
+                                        'goalImage',
+                                        images.filter((i) => i.id === image)[0]
+                                            .mediaFile,
+                                    )}
+                                    alt=""
+                                    width={250}
+                                    height={250}
+                                    style={{
+                                        objectFit: 'contain',
+                                    }}
+                                />
+                            )}
+                            {secondaryImage && (
+                                <Image
+                                    src={getMediaForWorkflow(
+                                        'goalImage',
+                                        images.filter(
+                                            (i) => i.id === secondaryImage,
+                                        )[0].mediaFile,
+                                    )}
+                                    alt=""
+                                    width={25}
+                                    height={25}
+                                    style={{
+                                        objectFit: 'contain',
+                                        position: 'absolute',
+                                        top: '8px',
+                                        left: '8px',
+                                    }}
+                                />
+                            )}
                             {imageAdditionalInfo && (
                                 <Chip
                                     label={imageAdditionalInfo}
@@ -272,10 +316,13 @@ export default function GoalEditor({
                                 <Typography
                                     sx={{
                                         position: 'absolute',
-                                        top: '50%',
-                                        right: '50%',
-                                        transform: 'translate(50%, 50%)',
+                                        bottom: 0,
+                                        right: 0,
+                                        pr: 1,
+                                        filter: 'drop-shadow(2px 2px 2px rgba(0,0,0,0))',
+                                        textShadow: '2px 2px black',
                                     }}
+                                    fontSize={18}
                                 >
                                     {imageCount}
                                 </Typography>
@@ -288,6 +335,24 @@ export default function GoalEditor({
                                 gap: 2,
                             }}
                         >
+                            <FormikSelectFieldAutocomplete
+                                id="goal-image-primary"
+                                name="image"
+                                label="Primary Image"
+                                options={images.map((i) => ({
+                                    value: i.id,
+                                    label: i.name,
+                                }))}
+                            />
+                            <FormikSelectFieldAutocomplete
+                                id="goal-image-secondary"
+                                name="secondaryImage"
+                                label="Secondary Image"
+                                options={images.map((i) => ({
+                                    value: i.id,
+                                    label: i.name,
+                                }))}
+                            />
                             <FormikTextField
                                 name="imageAdditionalInfo"
                                 label="Image Label"

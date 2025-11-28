@@ -79,6 +79,10 @@ export interface Goal {
   description: string | null;
   difficulty?: number | null;
   categories?: Category[];
+  image?: GoalImage;
+  secondaryImage?: GoalImage;
+  imageTag?: GoalImageTag;
+  count?: number;
 }
 /**
  * The full goal category definition.
@@ -88,6 +92,16 @@ export interface Category {
   name: string;
   gameId: string;
   max: number;
+}
+export interface GoalImage {
+  id: string;
+  name: string;
+  mediaFile: string;
+}
+export interface GoalImageTag {
+  id: string;
+  label: string;
+  color: string;
 }
 export interface HiddenCell {
   revealed: false;
