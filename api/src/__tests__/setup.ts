@@ -32,6 +32,7 @@ jest.mock('../database/Users', () => {
     return {
         ...original,
         registerUser: jest.fn().mockReturnValue(mock<User>()),
+        getUser: jest.fn().mockReturnValue(mock<User>()),
     };
 })
     .mock('../database/games/Goals', () => {
@@ -44,6 +45,8 @@ jest.mock('../database/Users', () => {
                 .fn()
                 .mockReturnValueOnce(null)
                 .mockReturnValue(mockGame),
+            createGoals: jest.fn(),
+            replaceAllGoalsForGame: jest.fn().mockResolvedValue(true),
         };
     })
     .mock('../database/games/Games')

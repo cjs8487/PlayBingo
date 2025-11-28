@@ -28,17 +28,17 @@ export const requiresGameModerator = (
         it('401 when no session', async () => {
             (isModerator as jest.Mock).mockReturnValueOnce(false);
             const res = await makeRequest();
+            expect(res.status).toBe(401);
             expect(isModerator).not.toHaveBeenCalled();
             expect(isOwner).not.toHaveBeenCalled();
-            expect(res.status).toBe(401);
         });
 
         it('403 when normal user', async () => {
             const cookie = await getTestSessionCookie('player');
             const res = await makeRequest(cookie);
+            expect(res.status).toBe(403);
             expect(isModerator).toHaveBeenCalled();
             expect(isOwner).not.toHaveBeenCalled();
-            expect(res.status).toBe(403);
         });
     });
 };
@@ -54,17 +54,17 @@ export const requiresGameOwner = (makeRequest: (cookie?: string) => Test) => {
     it('403 when normal user', async () => {
         const cookie = await getTestSessionCookie('player');
         const res = await makeRequest(cookie);
-        expect(isModerator).toHaveBeenCalled();
-        expect(isOwner).not.toHaveBeenCalled();
         expect(res.status).toBe(403);
+        expect(isModerator).not.toHaveBeenCalled();
+        expect(isOwner).toHaveBeenCalled();
     });
 
     it('403 when moderator', async () => {
         const cookie = await getTestSessionCookie('gameMod');
         const res = await makeRequest(cookie);
-        expect(isModerator).toHaveBeenCalled();
-        expect(isOwner).not.toHaveBeenCalled();
         expect(res.status).toBe(403);
+        expect(isModerator).not.toHaveBeenCalled();
+        expect(isOwner).toHaveBeenCalled();
     });
 };
 
