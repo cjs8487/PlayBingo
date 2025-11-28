@@ -8,6 +8,14 @@ export const createImage = async (
     image: string,
     name: string,
 ) => {
+    if (!image || !name) {
+        return {
+            ok: false,
+            status: 400,
+            message: 'Form invalid',
+        };
+    }
+
     const res = await serverFetch(`/api/games/${slug}/images`, {
         method: 'POST',
         body: JSON.stringify({
