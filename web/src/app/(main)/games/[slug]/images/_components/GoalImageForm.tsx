@@ -59,6 +59,7 @@ export default function GoalImageForm({ slug, image }: Props) {
                         workflow="goalImage"
                         edit
                         shortMessage
+                        disableRemove
                     />
                 </Box>
                 <FormikTextField name="name" label="Name" size="small" />
