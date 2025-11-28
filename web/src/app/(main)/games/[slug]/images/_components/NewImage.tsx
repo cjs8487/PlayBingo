@@ -15,7 +15,10 @@ export default function NewImage({ slug }: Props) {
     return (
         <Box>
             {active ? (
-                <GoalImageForm slug={slug} />
+                <GoalImageForm
+                    slug={slug}
+                    afterSubmit={() => setIsActive(false)}
+                />
             ) : (
                 <Button onClick={() => setIsActive(true)} startIcon={<Add />}>
                     Add Image

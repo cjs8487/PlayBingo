@@ -58,7 +58,8 @@ export const deleteFile = async (workflow: string, id: string) => {
     try {
         await rm(path.resolve('media', workflow, id));
         return true;
-    } catch {
+    } catch (e) {
+        console.log(e);
         return false;
     }
 };
