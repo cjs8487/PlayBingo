@@ -266,6 +266,7 @@ export default function BoardCell({
                                         mt: 0.5,
                                         mr: 0.5,
                                         backgroundColor: goal.imageTag.color,
+                                        opacity: 0.8,
                                     }}
                                 />
                             )}
