@@ -17,7 +17,7 @@ export interface Goal {
   image?: GoalImage;
   secondaryImage?: GoalImage;
   imageTag?: GoalImageTag;
-  count?: number;
+  count?: number | null;
 }
 export interface GoalImage {
   id: string;
