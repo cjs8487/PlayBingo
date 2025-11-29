@@ -8,9 +8,10 @@ import { useClickAway } from 'react-use';
 interface Props {
     name: string;
     label: string;
+    size?: 'small' | 'medium';
 }
 
-export default function FormikColorSelect({ name, label }: Props) {
+export default function FormikColorSelect({ name, label, size }: Props) {
     const [{ value }, { touched, error }, { setValue }] = useField<string>({
         name,
     });
@@ -30,7 +31,7 @@ export default function FormikColorSelect({ name, label }: Props) {
     });
 
     return (
-        <Box sx={{ position: 'relative' }}>
+        <Box sx={{ position: 'relative', overflow: 'visible' }}>
             <TextField
                 name={name}
                 label={label}
@@ -43,8 +44,10 @@ export default function FormikColorSelect({ name, label }: Props) {
                             <InputAdornment position="start">
                                 <Box
                                     sx={{
-                                        width: '32px',
-                                        height: '32px',
+                                        width:
+                                            size === 'small' ? '24px' : '32px',
+                                        height:
+                                            size === 'small' ? '24px' : '32px',
                                         border: 1,
                                         borderColor: 'divider',
                                         borderRadius: 1,
@@ -62,6 +65,7 @@ export default function FormikColorSelect({ name, label }: Props) {
                         ),
                     },
                 }}
+                size={size}
             />
 
             {picker && (
@@ -73,6 +77,7 @@ export default function FormikColorSelect({ name, label }: Props) {
                         bottom: '100%',
                         left: '50%',
                         transform: 'translate(-50%, 0)',
+                        overflowY: 'visible',
                     }}
                 >
                     <SketchPicker color={value} onChange={changeColor} />
