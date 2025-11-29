@@ -108,23 +108,7 @@ export default function Board() {
                                             col={colIndex}
                                             goal={
                                                 cell.revealed
-                                                    ? cell.goal.goal
-                                                    : undefined
-                                            }
-                                            description={
-                                                cell.revealed
-                                                    ? cell.goal.description
-                                                    : undefined
-                                            }
-                                            difficulty={
-                                                cell.revealed
-                                                    ? (cell.goal.difficulty ??
-                                                      undefined)
-                                                    : undefined
-                                            }
-                                            categories={
-                                                cell.revealed
-                                                    ? cell.goal.categories
+                                                    ? cell.goal
                                                     : undefined
                                             }
                                             completedPlayers={
