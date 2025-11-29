@@ -48,13 +48,34 @@
             "additionalProperties": true
         },
         "image": {
-            "$ref": "./GoalImage.json"
+            "anyOf": [
+                {
+                    "$ref": "./GoalImage.json"
+                },
+                {
+                    "type": "null"
+                }
+            ]
         },
         "secondaryImage": {
-            "$ref": "./GoalImage.json"
+            "anyOf": [
+                {
+                    "$ref": "./GoalImage.json"
+                },
+                {
+                    "type": "null"
+                }
+            ]
         },
         "imageTag": {
-            "$ref": "./GoalImageTag.json"
+            "anyOf": [
+                {
+                    "$ref": "./GoalImageTag.json"
+                },
+                {
+                    "type": "null"
+                }
+            ]
         },
         "count": {
             "type": [

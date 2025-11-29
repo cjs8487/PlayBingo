@@ -22,6 +22,8 @@ export default function PlayerInfo() {
         toggleCounters,
         connectedPlayer,
         changeAuth,
+        showImages,
+        toggleImages,
     } = useRoomContext();
 
     return (
@@ -81,6 +83,15 @@ export default function PlayerInfo() {
                             />
                         }
                         label="Show All Goal Details"
+                    />
+                    <FormControlLabel
+                        control={
+                            <Switch
+                                checked={showImages}
+                                onChange={toggleImages}
+                            />
+                        }
+                        label="Show Images"
                     />
                 </Box>
             </CardContent>

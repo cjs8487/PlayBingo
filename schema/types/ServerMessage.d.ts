@@ -91,9 +91,9 @@ export interface Goal {
   meta?: {
     [k: string]: unknown;
   } | null;
-  image?: GoalImage;
-  secondaryImage?: GoalImage;
-  imageTag?: GoalImageTag;
+  image?: GoalImage | null;
+  secondaryImage?: GoalImage | null;
+  imageTag?: GoalImageTag | null;
   count?: number | null;
 }
 /**
