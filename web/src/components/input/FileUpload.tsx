@@ -8,6 +8,7 @@ import { useMemo, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import {
     alertError,
+    bytesToString,
     getFullUrl,
     getMediaForWorkflow,
     MediaWorkflow,
@@ -59,6 +60,7 @@ interface BaseProps {
     size?: string | number;
     shortMessage?: boolean;
     disableRemove?: boolean;
+    maxSize?: number;
 }
 
 interface CircleProps extends BaseProps {
@@ -81,6 +83,7 @@ export default function FormikFileUpload({
     size,
     shortMessage,
     disableRemove,
+    maxSize = 1024 * 1024,
 }: Props) {
     const [{ value }, , { setValue }] = useField<string>(name);
     const [file, setFile] = useState<{ preview: string } | undefined>(() => {
@@ -134,7 +137,7 @@ export default function FormikFileUpload({
             'image/jpeg': [],
             'image/png': [],
         },
-        maxSize: 1024 * 1024,
+        maxSize,
     });
 
     const borderRadius = circle ? '50%' : 2;
@@ -224,6 +227,11 @@ export default function FormikFileUpload({
                     </>
                 )}
             </Box>
+            {!value && (
+                <Typography variant="caption">
+                    Max size: {bytesToString(maxSize)}
+                </Typography>
+            )}
             {message && (
                 <Typography variant="body2" color="error">
                     {message}
