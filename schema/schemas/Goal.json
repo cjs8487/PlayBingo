@@ -13,6 +13,6 @@
         "image": {"$ref": "./GoalImage.json"},
         "secondaryImage": {"$ref": "./GoalImage.json"},
         "imageTag": {"$ref": "./GoalImageTag.json"},
-        "count": {"type": "number"}
+        "count": {"type": ["number", "null"]}
     }
 }

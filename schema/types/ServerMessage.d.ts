@@ -82,7 +82,7 @@ export interface Goal {
   image?: GoalImage;
   secondaryImage?: GoalImage;
   imageTag?: GoalImageTag;
-  count?: number;
+  count?: number | null;
 }
 /**
  * The full goal category definition.
