@@ -10,6 +10,9 @@ export const goalsForGame = async (slug: string) => {
         include: {
             categories: { orderBy: { name: 'asc' } },
             tags: { orderBy: { name: 'asc' } },
+            image: true,
+            secondaryImage: true,
+            imageTag: true,
         },
     });
 
@@ -26,6 +29,9 @@ export const goalsForGameFull = (slug: string) => {
         include: {
             categories: { orderBy: { name: 'asc' } },
             tags: { orderBy: { name: 'asc' } },
+            image: true,
+            secondaryImage: true,
+            imageTag: true,
         },
     });
 };

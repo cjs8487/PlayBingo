@@ -162,10 +162,10 @@ export default function GoalEditor({
                 difficulty: goal.difficulty ?? 0,
                 tags: goal.tags?.map((t) => t.id) ?? [],
                 meta: JSON.stringify(goal.meta) ?? '{}',
-                image: goal.image ?? '',
-                secondaryImage: goal.secondaryImage ?? '',
-                imageTag: goal.imageTag ?? '',
-                imageCount: goal.imageCount ?? '',
+                image: goal.image?.id ?? '',
+                secondaryImage: goal.secondaryImage?.id ?? '',
+                imageTag: goal.imageTag?.id ?? '',
+                count: goal.count ?? '',
             }}
             onSubmit={async ({
                 goal: goalText,
@@ -174,6 +174,10 @@ export default function GoalEditor({
                 difficulty,
                 tags,
                 meta,
+                image,
+                secondaryImage,
+                imageTag,
+                count,
             }) => {
                 if (isNew) {
                     const res = await fetch(`/api/games/${slug}/goals`, {
@@ -187,6 +191,10 @@ export default function GoalEditor({
                             categories,
                             difficulty,
                             meta,
+                            image,
+                            secondaryImage,
+                            imageTag,
+                            count,
                         }),
                     });
                     if (!res.ok) {
@@ -238,6 +246,16 @@ export default function GoalEditor({
                                     JSON.stringify(goal.meta)
                                     ? meta
                                     : undefined,
+                            image: image !== goal.image?.id ? image : undefined,
+                            secondaryImage:
+                                secondaryImage !== goal.secondaryImage?.id
+                                    ? secondaryImage
+                                    : undefined,
+                            imageTag:
+                                imageTag !== goal.imageTag?.id
+                                    ? imageTag
+                                    : undefined,
+                            count: count !== goal.count ? count : undefined,
                         }),
                     });
                     if (!res.ok) {
@@ -254,7 +272,7 @@ export default function GoalEditor({
                 isSubmitting,
                 isValidating,
                 resetForm,
-                values: { image, secondaryImage, imageTag, imageCount },
+                values: { image, secondaryImage, imageTag, count },
             }) => (
                 <Form>
                     <Box
@@ -383,7 +401,7 @@ export default function GoalEditor({
                                     }}
                                 />
                             )}
-                            {imageCount && (
+                            {count && (
                                 <Typography
                                     sx={{
                                         position: 'absolute',
@@ -392,10 +410,10 @@ export default function GoalEditor({
                                         pr: 1,
                                         filter: 'drop-shadow(2px 2px 2px rgba(0,0,0,0))',
                                         textShadow: '2px 2px black',
+                                        fontSize: 18,
                                     }}
-                                    fontSize={18}
                                 >
-                                    {imageCount}
+                                    {count}
                                 </Typography>
                             )}
                         </Box>
@@ -433,7 +451,7 @@ export default function GoalEditor({
                                     label: i.label,
                                 }))}
                             />
-                            <NumberInput name="imageCount" label="Count" />
+                            <NumberInput name="count" label="Count" />
                         </Box>
                     </Box>
                     {canModerate && (

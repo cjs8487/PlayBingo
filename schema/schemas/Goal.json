@@ -57,7 +57,10 @@
             "$ref": "./GoalImageTag.json"
         },
         "count": {
-            "type": "number"
+            "type": [
+                "number",
+                "null"
+            ]
         }
     }
 }
