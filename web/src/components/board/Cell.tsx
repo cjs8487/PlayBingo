@@ -360,6 +360,7 @@ export default function BoardCell({
                                             mr: 0.5,
                                             backgroundColor:
                                                 goal.imageTag.color,
+                                            opacity: 0.8,
                                         }}
                                     />
                                 )}
