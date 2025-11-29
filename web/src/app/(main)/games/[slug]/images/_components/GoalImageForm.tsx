@@ -55,6 +55,7 @@ export default function GoalImageForm({ slug, image, afterSubmit }: Props) {
                         edit
                         shortMessage
                         disableRemove
+                        maxSize={100 * 1024}
                     />
                 </Box>
                 <FormikTextField name="name" label="Name" size="small" />
