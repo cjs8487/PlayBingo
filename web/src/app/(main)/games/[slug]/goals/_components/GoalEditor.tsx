@@ -15,7 +15,6 @@ import { Category, Goal } from '@playbingo/types';
 import { Form, Formik, useField } from 'formik';
 import Image from 'next/image';
 import { KeyedMutator } from 'swr';
-import FormikColorSelect from '../../../../../../components/input/FormikColorSelect';
 import { FormikSelectFieldAutocomplete } from '../../../../../../components/input/FormikSelectField';
 import FormikTextField from '../../../../../../components/input/FormikTextField';
 import { useGoalManagerContext } from '../../../../../../context/GoalManagerContext';
@@ -106,7 +105,7 @@ export default function GoalEditor({
     categories,
     canModerate,
 }: GoalEditorProps) {
-    const { images } = useGoalManagerContext();
+    const { images, imageTags } = useGoalManagerContext();
 
     return (
         <Formik
@@ -118,9 +117,7 @@ export default function GoalEditor({
                 image: goal.image ?? '',
                 secondaryImage: goal.secondaryImage ?? '',
                 imageTag: goal.imageTag ?? '',
-                imageAdditionalInfo: goal.imageAdditionalInfo ?? '',
                 imageCount: goal.imageCount ?? '',
-                imageChipColor: goal.imageChipColor ?? '',
             }}
             onSubmit={async ({
                 goal: goalText,
@@ -191,13 +188,7 @@ export default function GoalEditor({
                 isSubmitting,
                 isValidating,
                 resetForm,
-                values: {
-                    image,
-                    secondaryImage,
-                    imageAdditionalInfo,
-                    imageCount,
-                    imageChipColor,
-                },
+                values: { image, secondaryImage, imageTag, imageCount },
             }) => (
                 <Form>
                     <Box
@@ -299,16 +290,22 @@ export default function GoalEditor({
                                     }}
                                 />
                             )}
-                            {imageAdditionalInfo && (
+                            {imageTag && (
                                 <Chip
-                                    label={imageAdditionalInfo}
+                                    label={
+                                        imageTags.filter(
+                                            (i) => i.id === imageTag,
+                                        )[0].label
+                                    }
                                     sx={{
                                         position: 'absolute',
                                         top: 0,
                                         right: 0,
                                         mt: 0.5,
                                         mr: 0.5,
-                                        backgroundColor: imageChipColor,
+                                        backgroundColor: imageTags.filter(
+                                            (i) => i.id === imageTag,
+                                        )[0].color,
                                     }}
                                 />
                             )}
@@ -353,13 +350,14 @@ export default function GoalEditor({
                                     label: i.name,
                                 }))}
                             />
-                            <FormikTextField
-                                name="imageAdditionalInfo"
-                                label="Image Label"
-                            />
-                            <FormikColorSelect
-                                name="imageChipColor"
-                                label="Background Color"
+                            <FormikSelectFieldAutocomplete
+                                id="goal-image-tag"
+                                name="imageTag"
+                                label="Image Tag"
+                                options={imageTags.map((i) => ({
+                                    value: i.id,
+                                    label: i.label,
+                                }))}
                             />
                             <NumberInput name="imageCount" label="Count" />
                         </Box>
