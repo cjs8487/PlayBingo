@@ -1,5 +1,11 @@
 'use client';
-import { Category, Goal, GoalImage, GoalTag } from '@playbingo/types';
+import {
+    Category,
+    Goal,
+    GoalImage,
+    GoalImageTag,
+    GoalTag,
+} from '@playbingo/types';
 import {
     Dispatch,
     ReactNode,
@@ -57,6 +63,7 @@ interface GoalManagerContext {
     setNewGoal: (newGoal: boolean) => void;
     tags: GoalTag[];
     images: GoalImage[];
+    imageTags: GoalImageTag[];
 }
 
 const GoalManagerContext = createContext<GoalManagerContext>({
@@ -84,6 +91,7 @@ const GoalManagerContext = createContext<GoalManagerContext>({
     setNewGoal() {},
     tags: [],
     images: [],
+    imageTags: [],
 });
 
 interface GoalManagerContextProps {
@@ -91,6 +99,7 @@ interface GoalManagerContextProps {
     canModerate: boolean;
     categories: Category[];
     images: GoalImage[];
+    imageTags: GoalImageTag[];
     children: ReactNode;
     tags: GoalTag[];
 }
@@ -100,6 +109,7 @@ export function GoalManagerContextProvider({
     canModerate,
     categories,
     images,
+    imageTags,
     children,
     tags,
 }: GoalManagerContextProps) {
@@ -213,6 +223,7 @@ export function GoalManagerContextProvider({
                 setNewGoal,
                 tags,
                 images,
+                imageTags,
             }}
         >
             {children}
