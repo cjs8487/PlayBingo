@@ -14,9 +14,9 @@ export interface Goal {
   description: string | null;
   difficulty?: number | null;
   categories?: Category[];
-  image?: GoalImage;
-  secondaryImage?: GoalImage;
-  imageTag?: GoalImageTag;
+  image?: GoalImage | null;
+  secondaryImage?: GoalImage | null;
+  imageTag?: GoalImageTag | null;
   count?: number | null;
 }
 /**

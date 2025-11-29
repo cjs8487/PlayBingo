@@ -60,6 +60,7 @@ interface RoomContext {
     showCounters: boolean;
     connectedPlayer?: Player;
     colorMap: { [k: string]: string };
+    showImages: boolean;
     connect: (
         nickname: string,
         password: string,
@@ -80,6 +81,7 @@ interface RoomContext {
     revealCard: () => void;
     toggleGoalDetails: () => void;
     toggleCounters: () => void;
+    toggleImages: () => void;
     changeAuth: (spectate: boolean) => void;
 }
 
@@ -94,6 +96,7 @@ export const RoomContext = createContext<RoomContext>({
     showGoalDetails: false,
     showCounters: false,
     colorMap: {},
+    showImages: false,
     async connect() {
         return { success: false };
     },
@@ -112,6 +115,7 @@ export const RoomContext = createContext<RoomContext>({
     revealCard() {},
     toggleGoalDetails() {},
     toggleCounters() {},
+    toggleImages() {},
     changeAuth() {},
 });
 
@@ -173,6 +177,11 @@ export function RoomContextProvider({
     const [showCounters, setShowCounters] = useState(false);
     const toggleCounters = useCallback(() => {
         setShowCounters((curr) => !curr);
+    }, []);
+
+    const [showImages, setShowImages] = useState(false);
+    const toggleImages = useCallback(() => {
+        setShowImages((curr) => !curr);
     }, []);
 
     // incoming messages
@@ -514,6 +523,7 @@ export function RoomContextProvider({
                 starredGoals,
                 showGoalDetails,
                 showCounters,
+                showImages,
                 connectedPlayer,
                 colorMap,
                 connect,
@@ -532,6 +542,7 @@ export function RoomContextProvider({
                 revealCard,
                 toggleGoalDetails,
                 toggleCounters,
+                toggleImages,
                 changeAuth,
             }}
         >
