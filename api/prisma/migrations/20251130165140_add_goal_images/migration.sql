@@ -1,5 +1,6 @@
 -- AlterTable
-ALTER TABLE "Goal" ADD COLUMN     "goalImageId" TEXT,
+ALTER TABLE "Goal" ADD COLUMN     "count" INTEGER,
+ADD COLUMN     "goalImageId" TEXT,
 ADD COLUMN     "goalImageTagId" TEXT,
 ADD COLUMN     "secondaryGoalImageId" TEXT;
 
