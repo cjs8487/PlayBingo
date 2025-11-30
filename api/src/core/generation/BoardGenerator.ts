@@ -13,6 +13,7 @@ import {
     createPlacementRestriction,
     GoalPlacementRestriction,
 } from './GoalPlacementRestriction';
+import { shuffle } from '../../util/Array';
 
 export type LayoutCell = Extract<
     GeneratorSettings['boardLayout'],
@@ -80,14 +81,8 @@ export class BoardGenerator {
                 this.goalsByDifficulty[goal.difficulty] = [...prev, goal];
             }
             goal.categories.forEach((cat) => {
-                const prev =
-                    this.goalsByCategoryId[
-                        cat.id
-                    ] ?? [];
-                this.goalsByCategoryId[cat.id] = [
-                    ...prev,
-                    goal,
-                ];
+                const prev = this.goalsByCategoryId[cat.id] ?? [];
+                this.goalsByCategoryId[cat.id] = [...prev, goal];
             });
             this.goalCopies[goal.id] = 1;
         });
@@ -114,14 +109,8 @@ export class BoardGenerator {
                 this.goalsByDifficulty[goal.difficulty] = [...prev, goal];
             }
             goal.categories.forEach((cat) => {
-                const prev =
-                    this.goalsByCategoryId[
-                        cat.id
-                    ] ?? [];
-                this.goalsByCategoryId[cat.id] = [
-                    ...prev,
-                    goal,
-                ];
+                const prev = this.goalsByCategoryId[cat.id] ?? [];
+                this.goalsByCategoryId[cat.id] = [...prev, goal];
             });
             this.goalCopies[goal.id] = 1;
         });
@@ -191,7 +180,7 @@ export class BoardGenerator {
                 break;
         }
         if (!goals || !goals.length) {
-            goals = []
+            goals = [];
         }
         let finalList: GeneratorGoal[] = [];
         goals.forEach((goal) => {
@@ -200,6 +189,7 @@ export class BoardGenerator {
         this.placementRestrictions.forEach(
             (f) => (finalList = f(this, row, col, finalList)),
         );
+        shuffle(finalList, this.seed);
         return finalList;
     }
 
