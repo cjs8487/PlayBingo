@@ -48,7 +48,7 @@ export default function GoalSearch() {
                 <Autocomplete
                     multiple
                     id="filter-categories"
-                    options={catList}
+                    options={catList.map((c) => c.name)}
                     onChange={(_, newValue) => {
                         setShownCats(newValue);
                     }}

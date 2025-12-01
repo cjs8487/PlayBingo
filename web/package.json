@@ -7,7 +7,7 @@
         "build": "next build",
         "start": "next start",
         "lint": "next lint",
-        "ts": "tsc --noEmit --incremental",
+        "ts": "tsc --noEmit --incremental -p .",
         "ts:watch": "npm run ts -- --watch"
     },
     "dependencies": {

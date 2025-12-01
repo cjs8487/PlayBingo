@@ -9,7 +9,7 @@ import {
     useEffect,
     useState,
 } from 'react';
-import { Goal } from '@playbingo/types';
+import { Category, Goal } from '@playbingo/types';
 import { useApi } from '../lib/Hooks';
 import { alertError } from '../lib/Utils';
 import { KeyedMutator } from 'swr';
@@ -37,7 +37,7 @@ interface GoalManagerContext {
     selectedGoal: Goal | undefined;
     goals: Goal[];
     shownGoals: Goal[];
-    catList: string[];
+    catList: Category[];
     searchParams: SearchParams;
     settings: GoalManagerSettings;
     setSelectedGoal: (goal: Goal) => void;
@@ -93,12 +93,12 @@ export function GoalManagerContextProvider({
         data: goals,
         isLoading: goalsLoading,
         mutate: mutateGoals,
-    } = useApi<Goal[]>(`/api/games/${slug}/goals`);
+    } = useApi<Goal[]>(`/api/games/${slug}/goals?includeFullCatData=1`);
 
     // state
     // core
     const [selectedGoal, setSelectedGoal] = useState<Goal>();
-    const [catList, setCatList] = useState<string[]>([]);
+    const [catList, setCatList] = useState<Category[]>([]);
     const [newGoal, setNewGoal] = useState(false);
     // search params
     const [sort, setSort] = useState<SortOptions | null>(SortOptions.DEFAULT);
@@ -131,11 +131,13 @@ export function GoalManagerContextProvider({
 
     /// effects
     useEffect(() => {
-        const cats: string[] = [];
+        const cats: Category[] = [];
         goals?.forEach((goal) => {
             if (goal.categories) {
                 cats.push(
-                    ...goal.categories.filter((cat) => !cats.includes(cat)),
+                    ...goal.categories.filter(
+                        (cat) => !cats.map((c) => c.id).includes(cat.id),
+                    ),
                 );
             }
         });
@@ -153,7 +155,9 @@ export function GoalManagerContextProvider({
         .filter((goal) => {
             let shown = true;
             if (shownCats.length > 0) {
-                shown = shownCats.some((cat) => goal.categories?.includes(cat));
+                shown = shownCats.some((cat) =>
+                    goal.categories?.map((cat) => cat.name).includes(cat),
+                );
             }
             if (!shown) {
                 return false;

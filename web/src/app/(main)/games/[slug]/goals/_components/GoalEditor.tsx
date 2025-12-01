@@ -1,5 +1,5 @@
 import NumberInput from '@/components/input/NumberInput';
-import { Goal } from '@playbingo/types';
+import { Category, Goal } from '@playbingo/types';
 import CheckBoxIcon from '@mui/icons-material/CheckBox';
 import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
 import {
@@ -18,22 +18,20 @@ import FormikTextField from '../../../../../../components/input/FormikTextField'
 const icon = <CheckBoxOutlineBlankIcon fontSize="small" />;
 const checkedIcon = <CheckBoxIcon fontSize="small" />;
 
-interface Category {
+const filter = createFilterOptions<{
     value: string;
     display: string;
-}
-
-const filter = createFilterOptions<Category>();
+}>();
 interface CategorySelectProps {
-    categories: string[];
+    categories: Category[];
 }
 
 function CategorySelect({ categories }: CategorySelectProps) {
     const [field, , helpers] = useField<string[]>('categories');
 
-    const catList = categories.map((c) => ({ value: c, display: c }));
+    const catList = categories.map((c) => ({ value: c.name, display: c.name }));
     return (
-        <Autocomplete<Category, true>
+        <Autocomplete
             multiple
             id="goal-cat-select"
             options={catList}
@@ -43,9 +41,9 @@ function CategorySelect({ categories }: CategorySelectProps) {
             }}
             disableCloseOnSelect
             getOptionLabel={(option) => option.display}
-            renderOption={(props, option, { selected }) => {
+            renderOption={({ key, ...rest }, option, { selected }) => {
                 return (
-                    <li {...props}>
+                    <li key={key} {...rest}>
                         <Checkbox
                             icon={icon}
                             checkedIcon={checkedIcon}
@@ -89,7 +87,7 @@ interface GoalEditorProps {
     isNew?: boolean;
     cancelNew?: () => void;
     mutateGoals: KeyedMutator<Goal[]>;
-    categories: string[];
+    categories: Category[];
     canModerate?: boolean;
 }
 
@@ -107,7 +105,7 @@ export default function GoalEditor({
             initialValues={{
                 goal: goal.goal,
                 description: goal.description ?? '',
-                categories: goal.categories ?? [],
+                categories: goal.categories?.map((c) => c.name) ?? [],
                 difficulty: goal.difficulty ?? 0,
             }}
             onSubmit={async ({
@@ -153,7 +151,9 @@ export default function GoalEditor({
                             categories:
                                 categories.length !== goal.categories?.length ||
                                 !categories.every((cat) =>
-                                    goal.categories?.includes(cat),
+                                    goal.categories
+                                        ?.map((cat) => cat.name)
+                                        .includes(cat),
                                 )
                                     ? categories
                                     : undefined,

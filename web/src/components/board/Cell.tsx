@@ -5,6 +5,7 @@ import TextFit from '../TextFit';
 import Star from '@mui/icons-material/Star';
 import { useRoomContext } from '../../context/RoomContext';
 import { Add, Remove } from '@mui/icons-material';
+import { Category } from '@playbingo/types';
 
 const fogSx: SxProps = {
     position: 'absolute',
@@ -30,7 +31,7 @@ interface BoardCellProps {
     goal?: string;
     description?: string | null;
     difficulty?: number;
-    categories?: string[];
+    categories?: Category[];
     completedPlayers: string[];
     revealed?: boolean;
     onReveal?: () => void;

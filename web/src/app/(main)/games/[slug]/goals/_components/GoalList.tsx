@@ -135,8 +135,8 @@ export default function GoalList() {
                             <Box>
                                 {goal.categories?.map((cat) => (
                                     <Chip
-                                        key={cat}
-                                        label={cat}
+                                        key={cat.id}
+                                        label={cat.name}
                                         size="small"
                                         sx={{ mr: 0.5 }}
                                     />
