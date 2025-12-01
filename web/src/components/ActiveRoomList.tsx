@@ -8,16 +8,20 @@ import {
 } from '@mui/material';
 import { RoomData } from '@playbingo/types';
 import Link from 'next/link';
-import { use } from 'react';
-import CacheBreaker from './CacheBreaker';
+import { serverGet } from '../app/ServerUtils';
+import { connection } from 'next/server';
 
 async function getRooms(): Promise<RoomData[]> {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_PATH}/api/rooms`);
+    const res = await serverGet('/api/rooms');
+    if (!res.ok) {
+        return [];
+    }
     return res.json();
 }
 
-export default function ActiveRoomList() {
-    const rooms = use(getRooms());
+export default async function ActiveRoomList() {
+    await connection();
+    const rooms = await getRooms();
 
     if (rooms.length === 0) {
         return (
@@ -53,7 +57,6 @@ export default function ActiveRoomList() {
                     </Card>
                 </ListItem>
             ))}
-            <CacheBreaker />
         </List>
     );
 }
