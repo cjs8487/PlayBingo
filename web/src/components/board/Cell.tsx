@@ -232,17 +232,34 @@ export default function BoardCell({
                                 height: '100%',
                             }}
                         >
-                            <Image
-                                src={getMediaForWorkflow(
-                                    'goalImage',
-                                    goal.image.mediaFile,
-                                )}
-                                alt=""
-                                fill
-                                style={{
-                                    objectFit: 'contain',
+                            <Box
+                                sx={{
+                                    p: 2,
+                                    width: '100%',
+                                    height: '100%',
+                                    boxSizing: 'border-box',
                                 }}
-                            />
+                            >
+                                <Box
+                                    sx={{
+                                        position: 'relative',
+                                        width: '100%',
+                                        height: '100%',
+                                    }}
+                                >
+                                    <Image
+                                        src={getMediaForWorkflow(
+                                            'goalImage',
+                                            goal.image.mediaFile,
+                                        )}
+                                        alt=""
+                                        fill
+                                        style={{
+                                            objectFit: 'contain',
+                                        }}
+                                    />
+                                </Box>
+                            </Box>
                             {goal.secondaryImage && (
                                 <Image
                                     src={getMediaForWorkflow(
@@ -255,8 +272,8 @@ export default function BoardCell({
                                     style={{
                                         objectFit: 'contain',
                                         position: 'absolute',
-                                        top: '8px',
-                                        left: '8px',
+                                        top: 0,
+                                        left: 0,
                                     }}
                                 />
                             )}
@@ -267,24 +284,22 @@ export default function BoardCell({
                                         position: 'absolute',
                                         top: 0,
                                         right: 0,
-                                        mt: 0.5,
-                                        mr: 0.5,
                                         backgroundColor: goal.imageTag.color,
-                                        opacity: 0.8,
+                                        opacity: 0.9,
                                     }}
+                                    size="small"
                                 />
                             )}
                             {goal.count && (
                                 <Typography
                                     sx={{
                                         position: 'absolute',
-                                        bottom: 0,
+                                        bottom: -8,
                                         right: 0,
-                                        pr: 1,
                                         filter: 'drop-shadow(2px 2px 2px rgba(0,0,0,0))',
                                         textShadow: '2px 2px black',
                                     }}
-                                    fontSize={18}
+                                    fontSize={24}
                                 >
                                     {goal.count}
                                 </Typography>
