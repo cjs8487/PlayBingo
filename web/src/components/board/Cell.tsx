@@ -126,7 +126,10 @@ export default function BoardCell({
                         <Box sx={{ pb: 1.5 }}>{description}</Box>
                         {difficulty && <Box>Difficulty: {difficulty}</Box>}
                         {categories && (
-                            <Box>Categories: {categories.join(', ')}</Box>
+                            <Box>
+                                Categories:{' '}
+                                {categories.map((c) => c.name).join(', ')}
+                            </Box>
                         )}
                     </>
                 ) : (
