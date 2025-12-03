@@ -52,6 +52,10 @@ function.
   access or existence of keys in the database. If there are no keys in the
   database, several API functions are completely unavailable without this
 
+### Shared
+1. cd into the shared directory
+2. Run `npm install` to install dependencies
+3. Run `npm run dev` to build this module in watch mode
 
 ### API
 1. cd to the api directory
