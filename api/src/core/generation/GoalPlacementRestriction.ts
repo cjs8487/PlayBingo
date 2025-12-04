@@ -91,7 +91,7 @@ const preferDistinctTypesInLine: GoalPlacementRestriction = (
             ) {
                 for (let k = 0; k < g.categories.length; k++) {
                     for (let l = 0; l < typesB.length; l++) {
-                        if (g.categories[k] == typesB[l]) {
+                        if (g.categories[k].id == typesB[l].id) {
                             synergy++;
                             if (k == 0) {
                                 synergy++;
