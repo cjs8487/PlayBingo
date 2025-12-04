@@ -203,9 +203,12 @@ export default function SidebarButtons({ slug, variants }: Props) {
                                                             0 && (
                                                             <Box>
                                                                 Categories:{' '}
-                                                                {goal.categories.join(
-                                                                    ', ',
-                                                                )}
+                                                                {goal.categories
+                                                                    .map(
+                                                                        (c) =>
+                                                                            c.name,
+                                                                    )
+                                                                    .join(', ')}
                                                             </Box>
                                                         )}
                                                 </>
