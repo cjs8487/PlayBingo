@@ -9,7 +9,7 @@ export default function Docs() {
                 bgcolor: 'white',
             }}
         >
-            <iframe src="doc.html" width="100%" height="100%" />
+            <iframe src="/doc.html" width="100%" height="100%" />
         </Box>
     );
 }
