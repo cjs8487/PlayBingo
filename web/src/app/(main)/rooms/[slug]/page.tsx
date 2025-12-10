@@ -4,9 +4,7 @@ import RoomChat from '@/components/room/RoomChat';
 import RoomInfo from '@/components/room/RoomInfo';
 import RoomLogin from '@/components/room/RoomLogin';
 import { ConnectionStatus, useRoomContext } from '@/context/RoomContext';
-import { Alert, Box, Dialog, DialogContent, Link } from '@mui/material';
-import NextLink from 'next/link';
-import { useState } from 'react';
+import { Box, Dialog, DialogContent } from '@mui/material';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import PlayerInfo from '../../../../components/room/PlayerInfo';
 import PlayerList from '../../../../components/room/PlayerList';
@@ -30,7 +28,6 @@ export default function Room() {
     return (
         <>
             <Box sx={{ width: '100%', height: '100%' }}>
-                {roomData?.newGenerator && <NewGeneratorBanner />}
                 <AutoSizer>
                     {({ width, height }) => (
                         <>
@@ -38,7 +35,7 @@ export default function Room() {
                                 sx={{
                                     display: { xs: 'flex', sm: 'none' },
                                     width: width,
-                                    height: height - 50,
+                                    height: height,
                                     overflowY: 'auto',
                                     flexDirection: 'column',
                                     rowGap: 1.5,
@@ -55,7 +52,7 @@ export default function Room() {
                                         md: 'none',
                                     },
                                     width: width,
-                                    height: height - 50,
+                                    height: height,
                                     overflowY: 'auto',
                                     flexDirection: 'column',
                                     rowGap: 1.5,
@@ -72,7 +69,7 @@ export default function Room() {
                                         lg: 'none',
                                     },
                                     width: width,
-                                    height: height - 50,
+                                    height: height,
                                     overflowY: 'auto',
                                     flexDirection: 'column',
                                     rowGap: 1.5,
@@ -89,7 +86,7 @@ export default function Room() {
                                         xl: 'none',
                                     },
                                     width: width,
-                                    height: height - 50,
+                                    height: height,
                                     overflowY: 'auto',
                                     columnGap: 1,
                                     p: 1,
@@ -101,7 +98,7 @@ export default function Room() {
                                 sx={{
                                     display: { xs: 'none', xl: 'flex' },
                                     width: width,
-                                    height: height - 50,
+                                    height: height,
                                     overflowY: 'auto',
                                     columnGap: 1,
                                     p: 1,
@@ -119,33 +116,6 @@ export default function Room() {
                 </DialogContent>
             </Dialog>
         </>
-    );
-}
-
-function NewGeneratorBanner() {
-    const [show, setShow] = useState(true);
-    if (!show) {
-        return null;
-    }
-    return (
-        <Alert
-            severity="info"
-            variant="filled"
-            onClose={() => {
-                setShow(false);
-            }}
-        >
-            This game is using PlayBingo&apos;s new generation system. Bugs may
-            occur. Report any issues you run into in the{' '}
-            <Link
-                component={NextLink}
-                color="inherit"
-                href="https://discord.gg/8sKNBaq8gu"
-            >
-                PlayBingo Discord server
-            </Link>
-            .
-        </Alert>
     );
 }
 
