@@ -85,6 +85,7 @@ export default async function Summary({ params }: Props) {
                         gridRow: hasDescription ? 2 : 1,
                         gridColumn: `1 / ${hasLinks ? 'span 1' : 'span 2'}`,
                     }}
+                    elevation={3}
                 >
                     <CardContent>
                         <Typography variant="h5">Setup</Typography>

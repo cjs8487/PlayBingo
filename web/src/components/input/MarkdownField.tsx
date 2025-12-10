@@ -13,7 +13,8 @@ export function MarkdownField({ name }: Props) {
             value={field.value}
             onChange={(value) => setValue(value ?? '')}
             onBlur={field.onBlur}
-            style={{ background: 'none' }}
+            style={{ background: 'inherit' }}
+            previewOptions={{ style: { background: 'inherit' } }}
             data-color-mode="dark"
         />
     );

@@ -1,5 +1,6 @@
 'use client';
 
+import { Box } from '@mui/material';
 import MDEditor from '@uiw/react-md-editor';
 
 interface Props {
@@ -8,10 +9,11 @@ interface Props {
 
 export default function MarkdownDisplay({ source }: Props) {
     return (
-        <MDEditor.Markdown
-            source={source}
-            data-color-mode="dark"
-            style={{ background: 'inherit' }}
-        />
+        <Box data-color-mode="dark">
+            <MDEditor.Markdown
+                source={source}
+                style={{ background: 'inherit' }}
+            />
+        </Box>
     );
 }
