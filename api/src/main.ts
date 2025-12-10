@@ -59,6 +59,10 @@ app.use((req, res, next) => {
 
 // request logger
 app.use((req, res, next) => {
+    // skip health and metrics
+    if (req.path === '/api/health' || req.path === '/api/metrics') {
+        return next();
+    }
     const profiler = logger.startTimer();
     const path = req.path;
     res.on('finish', () => {
