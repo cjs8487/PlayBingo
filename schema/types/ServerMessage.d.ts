@@ -51,6 +51,10 @@ export type ServerMessage = (
       action: "reauthenticate";
       authToken: string;
     }
+  | {
+      action: "startTimer";
+      startTime: string;
+    }
 ) & {
   players?: Player[];
   connectedPlayer?: Player;
@@ -136,6 +140,8 @@ export interface RoomData {
   variant: string;
   mode: string;
   seed: number;
+  startedAt?: string;
+  finishedAt?: string;
 }
 export interface RacetimeConnection {
   /**

@@ -6,6 +6,7 @@ import RacetimeCard from '@/components/room/racetime/RacetimeCard';
 import RoomChat from '@/components/room/RoomChat';
 import RoomInfo from '@/components/room/RoomInfo';
 import RoomLogin from '@/components/room/RoomLogin';
+import Timer from '@/components/room/Timer';
 import { ConnectionStatus, useRoomContext } from '@/context/RoomContext';
 import { Box, Dialog, DialogContent, Stack } from '@mui/material';
 
@@ -260,6 +261,7 @@ function RoomLg() {
             </Box>
             <Box sx={{ gridColumn: 2, overflow: 'hidden' }}>
                 <RacetimeCard />
+                <Timer />
             </Box>
             <Box
                 sx={{
@@ -311,6 +313,7 @@ function RoomXl() {
             </Box>
             <Box sx={{ gridColumn: 2, overflow: 'hidden' }}>
                 <RacetimeCard />
+                <Timer />
             </Box>
             <Box sx={{ gridRow: '4 / -1', gridColumn: 2, overflow: 'hidden' }}>
                 <PlayerList />

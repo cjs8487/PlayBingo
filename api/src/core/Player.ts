@@ -64,6 +64,8 @@ export default class Player {
     raceHandler: RaceHandler;
     raceId: string;
 
+    finishedAt?: string;
+
     constructor(
         room: Room,
         id: string,

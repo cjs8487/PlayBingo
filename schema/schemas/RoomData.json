@@ -44,6 +44,12 @@
         },
         "seed": {
             "type": "number"
+        },
+        "startedAt": {
+            "type": "string"
+        },
+        "finishedAt": {
+            "type": "string"
         }
     },
     "$defs": {

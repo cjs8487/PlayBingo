@@ -16,7 +16,8 @@
         {"$ref": "#/$defs/ChangeColorAction"},
         {"$ref": "#/$defs/NewCardAction"},
         {"$ref": "#/$defs/RevealCardAction"},
-        {"$ref": "#/$defs/ChangeAuthAction"}
+        {"$ref": "#/$defs/ChangeAuthAction"},
+        {"$ref": "#/$defs/StartTimerAction"}
     ],
     "$defs": {
         "JoinAction": {
@@ -133,6 +134,13 @@
                         "spectate": {"type": "boolean"}
                     }
                 }
+            }
+        },
+        "StartTimerAction": {
+            "required": ["action"],
+            "additionalProperties": false,
+            "properties": {
+                "action": "startTimer"
             }
         }
     }

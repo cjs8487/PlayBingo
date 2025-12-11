@@ -22,6 +22,8 @@ export interface RoomData {
   variant: string;
   mode: string;
   seed: number;
+  startedAt?: string;
+  finishedAt?: string;
 }
 export interface RacetimeConnection {
   /**
