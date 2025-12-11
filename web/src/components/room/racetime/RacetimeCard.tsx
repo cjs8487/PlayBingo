@@ -11,7 +11,7 @@ import {
 import NextLink from 'next/link';
 import { useRoomContext } from '../../../context/RoomContext';
 import { useUserContext } from '../../../context/UserContext';
-import Timer from './Timer';
+import Timer from './RacetimeTimer';
 
 export default function RacetimeCard() {
     const {

@@ -108,6 +108,9 @@ export default class Room {
     exploration: boolean = false;
     alwaysRevealedMask: bigint = 0n;
 
+    startedAt?: string;
+    finishedAt?: string;
+
     lastGenerationMode: BoardGenerationOptions;
 
     victoryMasks: bigint[];
@@ -445,6 +448,8 @@ export default class Room {
                 },
                 mode: getModeString(this.bingoMode, this.lineCount),
                 variant: this.variantName,
+                startedAt: this.startedAt,
+                finishedAt: this.finishedAt,
             },
             players: this.getPlayers(),
         };
@@ -598,6 +603,11 @@ export default class Room {
         }
     }
 
+    handleStartTimer() {
+        this.startedAt = new Date().toISOString();
+        this.sendRoomData();
+    }
+
     handleSocketClose(ws: WebSocket) {
         let player: Player | undefined;
         for (const p of this.players.values()) {
@@ -742,6 +752,26 @@ export default class Room {
         });
     }
 
+    sendRoomData() {
+        this.sendServerMessage({
+            action: 'updateRoomData',
+            roomData: {
+                game: this.game,
+                slug: this.slug,
+                name: this.name,
+                gameSlug: this.gameSlug,
+                racetimeConnection: {
+                    url: undefined,
+                },
+                newGenerator: this.newGenerator,
+                mode: getModeString(this.bingoMode, this.lineCount),
+                variant: this.variantName,
+                startedAt: this.startedAt,
+                finishedAt: this.finishedAt,
+            },
+        });
+    }
+
     private sendServerMessage(
         message: ServerMessage,
         updateInactivity: boolean = true,
@@ -770,6 +800,7 @@ export default class Room {
                         ' has achieved lockout!',
                     ]);
                     player.goalComplete = true;
+                    player.finishedAt = new Date().toISOString();
                 }
                 if (player.goalComplete && player.goalCount < 13) {
                     this.sendChat([
@@ -780,6 +811,7 @@ export default class Room {
                         ' no longer has lockout.',
                     ]);
                     player.goalComplete = false;
+                    player.finishedAt = undefined;
                 }
             } else {
                 if (this.bingoMode === BingoMode.LINES) {
@@ -802,6 +834,7 @@ export default class Room {
                         !player.goalComplete
                     ) {
                         player.goalComplete = true;
+                        player.finishedAt = new Date().toISOString();
                         this.sendChat([
                             {
                                 contents: player.nickname,
@@ -814,6 +847,7 @@ export default class Room {
                         player.goalComplete
                     ) {
                         player.goalComplete = false;
+                        player.finishedAt = undefined;
                         this.sendChat([
                             {
                                 contents: player.nickname,
@@ -829,6 +863,7 @@ export default class Room {
                     );
                     if (complete && !player.goalComplete) {
                         player.goalComplete = true;
+                        player.finishedAt = new Date().toISOString();
                         this.sendChat([
                             {
                                 contents: player.nickname,
@@ -838,6 +873,7 @@ export default class Room {
                         ]);
                     } else if (!complete && player.goalComplete) {
                         player.goalComplete = false;
+                        player.finishedAt = undefined;
                         this.sendChat([
                             {
                                 contents: player.nickname,
@@ -856,6 +892,15 @@ export default class Room {
             }
         });
         this.completed = allComplete;
+        if (this.completed) {
+            this.finishedAt = new Date().toISOString();
+            this.sendRoomData();
+        } else {
+            if (this.finishedAt) {
+                this.finishedAt = undefined;
+                this.sendRoomData();
+            }
+        }
     }
 
     /**

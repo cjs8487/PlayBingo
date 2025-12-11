@@ -75,6 +75,8 @@ export const hasPermission = (
             return payload.isMonitor;
         case 'changeColor':
             return !payload.isSpectating;
+        case 'startTimer':
+            return payload.isMonitor;
         default:
             return true;
     }
