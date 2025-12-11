@@ -161,6 +161,19 @@
                     "type": "string"
                 }
             }
+        },
+        {
+            "required": [
+                "action",
+                "startTime"
+            ],
+            "additionalProperties": false,
+            "properties": {
+                "action": "startTimer",
+                "startTime": {
+                    "type": "string"
+                }
+            }
         }
     ]
 }

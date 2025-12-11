@@ -21,6 +21,8 @@ export interface RoomData {
   token?: string;
   variant: string;
   mode: string;
+  startedAt?: string;
+  finishedAt?: string;
 }
 export interface RacetimeConnection {
   /**

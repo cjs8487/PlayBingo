@@ -81,6 +81,7 @@ interface RoomContext {
     toggleGoalDetails: () => void;
     toggleCounters: () => void;
     changeAuth: (spectate: boolean) => void;
+    startTimer: () => void;
 }
 
 export const RoomContext = createContext<RoomContext>({
@@ -113,6 +114,7 @@ export const RoomContext = createContext<RoomContext>({
     toggleGoalDetails() {},
     toggleCounters() {},
     changeAuth() {},
+    startTimer() {},
 });
 
 interface RoomContextProps {
@@ -500,6 +502,12 @@ export function RoomContextProvider({
         },
         [sendJsonMessage, authToken],
     );
+    const startTimer = useCallback(() => {
+        sendJsonMessage({
+            action: 'startTimer',
+            authToken,
+        } as RoomAction);
+    }, [sendJsonMessage, authToken]);
 
     return (
         <RoomContext.Provider
@@ -533,6 +541,7 @@ export function RoomContextProvider({
                 toggleGoalDetails,
                 toggleCounters,
                 changeAuth,
+                startTimer,
             }}
         >
             {children}

@@ -1,35 +1,36 @@
-import { Typography } from '@mui/material';
+import { Button, Card, CardContent, Typography } from '@mui/material';
 import { DateTime, Duration } from 'luxon';
 import { useContext, useEffect, useState } from 'react';
 import { useInterval } from 'react-use';
-import { RoomContext } from '../../../context/RoomContext';
+import { RoomContext } from '@/context/RoomContext';
 
 export default function Timer() {
-    const { roomData } = useContext(RoomContext);
+    const { roomData, startTimer } = useContext(RoomContext);
 
-    if (!roomData || !roomData.racetimeConnection) {
+    if (!roomData) {
         return null;
     }
 
-    const {
-        racetimeConnection: { startDelay, started, ended },
-    } = roomData;
-
-    if (!startDelay) {
-        return null;
-    }
+    const { startedAt, finishedAt } = roomData;
 
     let startDt: DateTime | undefined;
-    if (started) {
-        startDt = DateTime.fromISO(started);
+    if (startedAt) {
+        startDt = DateTime.fromISO(startedAt);
     }
     let endDt: DateTime | undefined;
-    if (ended) {
-        endDt = DateTime.fromISO(ended);
+    if (finishedAt) {
+        endDt = DateTime.fromISO(finishedAt);
     }
-    const offset = Duration.fromISO(startDelay);
+    const offset = Duration.fromDurationLike(0);
 
-    return <TimerDisplay start={startDt} end={endDt} offset={offset} />;
+    return (
+        <Card>
+            <CardContent>
+                <TimerDisplay start={startDt} end={endDt} offset={offset} />
+                <Button onClick={startTimer}>Start</Button>
+            </CardContent>
+        </Card>
+    );
 }
 
 function TimerDisplay({

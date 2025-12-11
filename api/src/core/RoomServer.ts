@@ -151,6 +151,10 @@ roomWebSocketServer.on('connection', (ws, req) => {
                     }
                 }
                 break;
+            case 'startTimer': {
+                room.handleStartTimer();
+                break;
+            }
         }
     });
     ws.on('close', (code, reason) => {
