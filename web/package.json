@@ -35,7 +35,7 @@
     "marked": "^16.0.0",
     "material-ui-confirm": "^4.0.0",
     "mdi-material-ui": "^7.9.4",
-    "next": "15.5.7",
+    "next": "15.5.9",
     "react": "^19.1.1",
     "react-color": "^2.19.3",
     "react-cookie-consent": "^9.0.0",
