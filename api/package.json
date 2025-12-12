@@ -1,6 +1,6 @@
 {
     "name": "api",
-    "version": "0.9.2",
+    "version": "0.9.3",
     "description": "",
     "main": "index.js",
     "prisma": {
@@ -15,7 +15,8 @@
         "db:generate-client": "prisma generate",
         "docker:up": "docker compose up -d",
         "docker:down": "docker compose down",
-        "test": "jest --forceExit"
+        "test": "jest --forceExit",
+        "prod:start": "node ./build/src/main.js"
     },
     "author": "",
     "license": "ISC",
