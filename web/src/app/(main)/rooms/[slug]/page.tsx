@@ -11,7 +11,7 @@ import AutoSizer from 'react-virtualized-auto-sizer';
 import PlayerInfo from '../../../../components/room/PlayerInfo';
 import PlayerList from '../../../../components/room/PlayerList';
 import RacetimeCard from '../../../../components/room/racetime/RacetimeCard';
-import Timer from '../../../../components/room/Timer';
+import Timer from '../../../../components/room/timer/Timer';
 
 export default function Room() {
     const { connectionStatus, roomData } = useRoomContext();
@@ -301,7 +301,6 @@ function RoomLg() {
                 <PlayerInfo />
             </Box>
             <Box>
-                <RacetimeCard />
                 <Timer />
             </Box>
             <Box sx={{ gridRow: '4 / span 2' }}>
@@ -342,8 +341,7 @@ function RoomXl() {
                 <PlayerInfo />
             </Box>
             <Box>
-                <RacetimeCard />
-                {/* <Timer /> */}
+                <Timer />
             </Box>
             <Box sx={{ gridRow: '4 / -1', gridColumn: 2 }}>
                 <PlayerList />

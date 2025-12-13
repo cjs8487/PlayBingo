@@ -748,11 +748,10 @@ export default class Room {
                 gameActive: this.racetimeEligible,
                 url: (this.raceHandler as RacetimeHandler).url,
                 startDelay: data.start_delay ?? undefined,
-                started: data.started_at ?? undefined,
-                ended: data.ended_at ?? undefined,
                 status: data.status.verbose_value,
             },
         });
+        this.sendRoomData();
     }
 
     sendRoomData() {
@@ -763,9 +762,18 @@ export default class Room {
                 slug: this.slug,
                 name: this.name,
                 gameSlug: this.gameSlug,
-                racetimeConnection: {
-                    url: undefined,
-                },
+                racetimeConnection:
+                    'url' in this.raceHandler
+                        ? {
+                              gameActive: this.racetimeEligible,
+                              url: (this.raceHandler as RacetimeHandler).url,
+                              startDelay:
+                                  (this.raceHandler as RacetimeHandler).data
+                                      ?.start_delay ?? undefined,
+                              status: (this.raceHandler as RacetimeHandler).data
+                                  ?.status.verbose_value,
+                          }
+                        : undefined,
                 newGenerator: this.newGenerator,
                 mode: getModeString(this.bingoMode, this.lineCount),
                 variant: this.variantName,

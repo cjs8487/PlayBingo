@@ -425,12 +425,6 @@ rooms.get('/:slug', async (req, res) => {
             gameActive: room.racetimeEligible,
             url: (room.raceHandler as RacetimeHandler).url,
             startDelay: (room.raceHandler as RacetimeHandler).data?.start_delay,
-            started:
-                (room.raceHandler as RacetimeHandler).data?.started_at ??
-                undefined,
-            ended:
-                (room.raceHandler as RacetimeHandler).data?.ended_at ??
-                undefined,
             status: (room.raceHandler as RacetimeHandler).data?.status
                 .verbose_value,
         },

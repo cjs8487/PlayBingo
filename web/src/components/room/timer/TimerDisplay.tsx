@@ -1,47 +1,23 @@
-import { Button, Card, CardContent, Typography } from '@mui/material';
+import { Typography } from '@mui/material';
 import { DateTime, Duration } from 'luxon';
-import { useContext, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useInterval } from 'react-use';
-import { RoomContext } from '@/context/RoomContext';
+import { useRoomContext } from '../../../context/RoomContext';
 
-export default function Timer() {
-    const { roomData, startTimer } = useContext(RoomContext);
+export default function TimerDisplay({ offset }: { offset: Duration }) {
+    const { roomData } = useRoomContext();
 
-    if (!roomData) {
-        return null;
-    }
+    const { startedAt, finishedAt } = roomData!;
 
-    const { startedAt, finishedAt } = roomData;
-
-    let startDt: DateTime | undefined;
+    let start: DateTime | undefined;
     if (startedAt) {
-        startDt = DateTime.fromISO(startedAt);
+        start = DateTime.fromISO(startedAt);
     }
-    let endDt: DateTime | undefined;
+    let end: DateTime | undefined;
     if (finishedAt) {
-        endDt = DateTime.fromISO(finishedAt);
+        end = DateTime.fromISO(finishedAt);
     }
-    const offset = Duration.fromDurationLike(0);
 
-    return (
-        <Card>
-            <CardContent>
-                <TimerDisplay start={startDt} end={endDt} offset={offset} />
-                <Button onClick={startTimer}>Start</Button>
-            </CardContent>
-        </Card>
-    );
-}
-
-function TimerDisplay({
-    start,
-    offset,
-    end,
-}: {
-    start?: DateTime;
-    end?: DateTime;
-    offset: Duration;
-}) {
     const [updateTimer, setUpdateTimer] = useState(true);
     const [dur, setDur] = useState<Duration>(
         start && end ? end.diff(start) : offset,
