@@ -313,7 +313,7 @@ function RoomXl() {
             </Box>
             <Box sx={{ gridColumn: 2, overflow: 'hidden' }}>
                 <RacetimeCard />
-                <Timer />
+                {/* <Timer /> */}
             </Box>
             <Box sx={{ gridRow: '4 / -1', gridColumn: 2, overflow: 'hidden' }}>
                 <PlayerList />
