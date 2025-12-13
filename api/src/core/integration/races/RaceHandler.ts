@@ -1,4 +1,5 @@
 import { RaceStatusConnected } from '@playbingo/types';
+import Player from '../../Player';
 
 /**
  * Represents an arbitrary connection to a service that tracks racing status.
@@ -59,4 +60,43 @@ export default interface RaceHandler {
      * @param id The service id of the player
      */
     getPlayer(id: string): Omit<RaceStatusConnected, 'connected'> | undefined;
+
+    /**
+     * Returns the start time of the race
+     */
+    getStartTime(): string | undefined;
+
+    /**
+     * Returns the end time of the race
+     */
+    getEndTime(): string | undefined;
+
+    /**
+     * Starts the race timer
+     */
+    startTimer(): void;
+
+    /**
+     * Signals to the race platform that a player has completed the bingo goal
+     *
+     * @param player The player that completed the goal
+     */
+    playerFinished(player: Player): Promise<void>;
+
+    /**
+     * Signals to the race platform that a player has no longer completed the bingo goal
+     *
+     * @param player The player who's completion needs to be undone
+     */
+    playerUnfinshed(player: Player): Promise<void>;
+
+    /**
+     * Signals to the race platform that all players have completed the bingo goal
+     */
+    allPlayersFinished(): Promise<void>;
+
+    /**
+     * Signals to the race platform that all players have no longer completed the bingo goal
+     */
+    allPlayersNotFinished(): Promise<void>;
 }
