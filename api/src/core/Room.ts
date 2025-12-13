@@ -1,3 +1,4 @@
+import { GeneratorSettings } from '@playbingo/shared';
 import {
     ChangeColorAction,
     ChatAction,
@@ -38,7 +39,7 @@ import {
     useTypedRandom,
 } from '../database/games/Games';
 import { getCategories } from '../database/games/GoalCategories';
-import { goalsForGame, goalsForGameFull } from '../database/games/Goals';
+import { goalsForGameFull } from '../database/games/Goals';
 import { shuffle } from '../util/Array';
 import {
     computeLineMasks,
@@ -55,8 +56,9 @@ import {
 } from './generation/GeneratorCore';
 import { generateFullRandom, generateRandomTyped } from './generation/Random';
 import { generateSRLv5 } from './generation/SRLv5';
-import RaceHandler, { RaceData } from './integration/races/RacetimeHandler';
-import { GeneratorSettings } from '@playbingo/shared';
+import RacetimeHandler, { RaceData } from './integration/races/RacetimeHandler';
+import LocalTimer from './integration/races/LocalTimer';
+import RaceHandler from './integration/races/RaceHandler';
 
 export enum BoardGenerationMode {
     RANDOM = 'Random',
@@ -108,9 +110,6 @@ export default class Room {
     exploration: boolean = false;
     alwaysRevealedMask: bigint = 0n;
 
-    startedAt?: string;
-    finishedAt?: string;
-
     lastGenerationMode: BoardGenerationOptions;
 
     victoryMasks: bigint[];
@@ -159,7 +158,11 @@ export default class Room {
         this.lastGenerationMode = { mode: BoardGenerationMode.RANDOM };
 
         this.racetimeEligible = !!racetimeEligible;
-        this.raceHandler = new RaceHandler(this);
+        if (this.racetimeEligible) {
+            this.raceHandler = new RacetimeHandler(this);
+        } else {
+            this.raceHandler = new LocalTimer();
+        }
 
         this.board = [];
 
@@ -440,16 +443,16 @@ export default class Room {
                 newGenerator: this.newGenerator,
                 racetimeConnection: {
                     gameActive: this.racetimeEligible,
-                    url: this.raceHandler.url,
-                    startDelay: this.raceHandler.data?.start_delay,
-                    started: this.raceHandler.data?.started_at ?? undefined,
-                    ended: this.raceHandler.data?.ended_at ?? undefined,
-                    status: this.raceHandler.data?.status.verbose_value,
+                    url: (this.raceHandler as RacetimeHandler).url,
+                    startDelay: (this.raceHandler as RacetimeHandler).data
+                        ?.start_delay,
+                    status: (this.raceHandler as RacetimeHandler).data?.status
+                        .verbose_value,
                 },
                 mode: getModeString(this.bingoMode, this.lineCount),
                 variant: this.variantName,
-                startedAt: this.startedAt,
-                finishedAt: this.finishedAt,
+                startedAt: this.raceHandler?.getStartTime(),
+                finishedAt: this.raceHandler?.getEndTime(),
             },
             players: this.getPlayers(),
         };
@@ -604,7 +607,7 @@ export default class Room {
     }
 
     handleStartTimer() {
-        this.startedAt = new Date().toISOString();
+        this.raceHandler?.startTimer();
         this.sendRoomData();
     }
 
@@ -649,7 +652,7 @@ export default class Room {
         });
         this.sendChat(`Racetime.gg room created ${url}`);
         this.raceHandler.connect(url);
-        this.raceHandler.connectWebsocket();
+        (this.raceHandler as RacetimeHandler).connectWebsocket();
     }
 
     handleRacetimeRoomDisconnected() {
@@ -743,7 +746,7 @@ export default class Room {
             players: this.getPlayers(),
             racetimeConnection: {
                 gameActive: this.racetimeEligible,
-                url: this.raceHandler.url,
+                url: (this.raceHandler as RacetimeHandler).url,
                 startDelay: data.start_delay ?? undefined,
                 started: data.started_at ?? undefined,
                 ended: data.ended_at ?? undefined,
@@ -766,8 +769,8 @@ export default class Room {
                 newGenerator: this.newGenerator,
                 mode: getModeString(this.bingoMode, this.lineCount),
                 variant: this.variantName,
-                startedAt: this.startedAt,
-                finishedAt: this.finishedAt,
+                startedAt: this.raceHandler?.getStartTime(),
+                finishedAt: this.raceHandler?.getEndTime(),
             },
         });
     }
@@ -800,7 +803,7 @@ export default class Room {
                         ' has achieved lockout!',
                     ]);
                     player.goalComplete = true;
-                    player.finishedAt = new Date().toISOString();
+                    this.raceHandler?.playerFinished(player);
                 }
                 if (player.goalComplete && player.goalCount < 13) {
                     this.sendChat([
@@ -811,7 +814,7 @@ export default class Room {
                         ' no longer has lockout.',
                     ]);
                     player.goalComplete = false;
-                    player.finishedAt = undefined;
+                    this.raceHandler?.playerUnfinshed(player);
                 }
             } else {
                 if (this.bingoMode === BingoMode.LINES) {
@@ -834,7 +837,7 @@ export default class Room {
                         !player.goalComplete
                     ) {
                         player.goalComplete = true;
-                        player.finishedAt = new Date().toISOString();
+                        this.raceHandler?.playerFinished(player);
                         this.sendChat([
                             {
                                 contents: player.nickname,
@@ -847,7 +850,7 @@ export default class Room {
                         player.goalComplete
                     ) {
                         player.goalComplete = false;
-                        player.finishedAt = undefined;
+                        this.raceHandler?.playerUnfinshed(player);
                         this.sendChat([
                             {
                                 contents: player.nickname,
@@ -863,7 +866,7 @@ export default class Room {
                     );
                     if (complete && !player.goalComplete) {
                         player.goalComplete = true;
-                        player.finishedAt = new Date().toISOString();
+                        this.raceHandler?.playerFinished(player);
                         this.sendChat([
                             {
                                 contents: player.nickname,
@@ -873,7 +876,7 @@ export default class Room {
                         ]);
                     } else if (!complete && player.goalComplete) {
                         player.goalComplete = false;
-                        player.finishedAt = undefined;
+                        this.raceHandler?.playerUnfinshed(player);
                         this.sendChat([
                             {
                                 contents: player.nickname,
@@ -893,11 +896,11 @@ export default class Room {
         });
         this.completed = allComplete;
         if (this.completed) {
-            this.finishedAt = new Date().toISOString();
+            this.raceHandler?.allPlayersFinished();
             this.sendRoomData();
         } else {
-            if (this.finishedAt) {
-                this.finishedAt = undefined;
+            if (this.raceHandler?.getEndTime()) {
+                this.raceHandler?.allPlayersNotFinished();
                 this.sendRoomData();
             }
         }
@@ -955,7 +958,7 @@ export default class Room {
 
     //#region Racetime Integration
     async connectRacetimeWebSocket() {
-        this.raceHandler.connectWebsocket();
+        (this.raceHandler as RacetimeHandler).connectWebsocket();
     }
 
     joinRaceRoom(racetimeId: string, authToken: RoomTokenPayload) {

@@ -28,6 +28,7 @@ import { getCategories } from '../../database/games/GoalCategories';
 import { getVariant } from '../../database/games/Variants';
 import { DifficultyVariant, Variant } from '@prisma/client';
 import { GenerationFailedError } from '../../core/generation/GenerationFailedError';
+import RacetimeHandler from '../../core/integration/races/RacetimeHandler';
 
 const MIN_ROOM_GOALS_REQUIRED = 25;
 const rooms = Router();
@@ -422,11 +423,16 @@ rooms.get('/:slug', async (req, res) => {
         newGenerator: room.newGenerator,
         racetimeConnection: {
             gameActive: room.racetimeEligible,
-            url: room.raceHandler.url,
-            startDelay: room.raceHandler.data?.start_delay,
-            started: room.raceHandler.data?.started_at ?? undefined,
-            ended: room.raceHandler.data?.ended_at ?? undefined,
-            status: room.raceHandler.data?.status.verbose_value,
+            url: (room.raceHandler as RacetimeHandler).url,
+            startDelay: (room.raceHandler as RacetimeHandler).data?.start_delay,
+            started:
+                (room.raceHandler as RacetimeHandler).data?.started_at ??
+                undefined,
+            ended:
+                (room.raceHandler as RacetimeHandler).data?.ended_at ??
+                undefined,
+            status: (room.raceHandler as RacetimeHandler).data?.status
+                .verbose_value,
         },
         mode: room.bingoMode,
         variant: room.variantName,

@@ -4,6 +4,7 @@ import { disconnectRoomFromRacetime } from '../../../database/Rooms';
 import Room from '../../Room';
 import { logInfo } from '../../../Logger';
 import RaceHandler from './RaceHandler';
+import Player from '../../Player';
 
 interface User {
     id: string;
@@ -366,4 +367,29 @@ export default class RacetimeHandler implements RaceHandler {
             return false;
         }
     }
+
+    getStartTime(): string | undefined {
+        return this.data?.started_at ?? undefined;
+    }
+
+    getEndTime(): string | undefined {
+        return this.data?.ended_at ?? undefined;
+    }
+
+    startTimer(): void {
+        throw new Error('Method not implemented.');
+    }
+
+    async playerFinished(player: Player): Promise<void> {
+        throw new Error('Method not implemented.');
+    }
+
+    async playerUnfinshed(player: Player): Promise<void> {
+        throw new Error('Method not implemented.');
+    }
+
+    // no implementation - this is handled by racetime and synced back
+    // automatically via the websocket
+    async allPlayersFinished(): Promise<void> {}
+    async allPlayersNotFinished(): Promise<void> {}
 }
