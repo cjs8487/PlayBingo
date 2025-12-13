@@ -62,7 +62,6 @@ export default class Player {
     connections: Map<string, WebSocket>;
 
     raceHandler: RaceHandler;
-    raceId: string;
 
     finishedAt?: string;
 
@@ -91,7 +90,6 @@ export default class Player {
         this.connections = new Map<string, WebSocket>();
 
         this.raceHandler = room.raceHandler;
-        this.raceId = '';
     }
 
     doesTokenMatch(token: RoomTokenPayload) {
@@ -155,7 +153,7 @@ export default class Player {
      * @returns Client representation of this player's data
      */
     toClientData(): PlayerClientData {
-        const raceUser = this.raceHandler.getPlayer(this.raceId);
+        const raceUser = this.raceHandler.getPlayer(this);
         return {
             id: this.id,
             nickname: this.nickname,
@@ -302,48 +300,19 @@ export default class Player {
     //#endregion
 
     //#region Races
-    private async tryRaceAction(
-        action: (token: string) => Promise<boolean>,
-        failMsg: string,
-    ) {
-        if (this.userId) {
-            const token = await getAccessToken(this.userId);
-            if (token) {
-                return action(token);
-            } else {
-                this.room.logInfo(`${failMsg} - failed to generate token`);
-                return false;
-            }
-        } else {
-            this.room.logInfo(`${failMsg} - player is anonymous`);
-            return false;
-        }
-    }
     async joinRace() {
-        return this.tryRaceAction(
-            this.raceHandler.joinPlayer.bind(this.raceHandler),
-            'Unable to join race room',
-        );
+        return this.raceHandler.joinPlayer(this);
     }
 
     async leaveRace() {
-        return this.tryRaceAction(
-            this.raceHandler.leavePlayer.bind(this.raceHandler),
-            'Unable to leave race room',
-        );
+        return this.raceHandler.leavePlayer(this);
     }
 
     async ready() {
-        return this.tryRaceAction(
-            this.raceHandler.readyPlayer.bind(this.raceHandler),
-            'Unable to ready in race room',
-        );
+        return this.raceHandler.readyPlayer(this);
     }
     async unready() {
-        return this.tryRaceAction(
-            this.raceHandler.unreadyPlayer.bind(this.raceHandler),
-            'Unable to unready in race room',
-        );
+        return this.raceHandler.unreadyPlayer(this);
     }
     //#endregion
 }

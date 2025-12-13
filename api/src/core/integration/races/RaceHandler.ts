@@ -6,12 +6,19 @@ import Player from '../../Player';
  * Provides a uniform interface for the bingo room to interact with that
  * service, regardless of the specifics of how that service may be implemented.
  *
- * The only requirement that this interface asserts is that the interface
- * exposed by the service is either a local service on PlayBingo or operates
- * via some identifier that uniquely identifies what player an action is
- * targeted at. All player level actions take that identifier as a parameter.
- * Generally, it is expected that this will be an OAuth token, but that is
- * not a requirement to satisfy this interface.
+ * This interface asserts no requirement of the data storage, format, or other
+ * implementation details of the underling service that an instance of this
+ * interface represents. However, it does require that if the implementation
+ * represents and interface with an external service that the implementation be
+ * able to translate from the internal PlayBingo representation of data in order
+ * to interface with the service and vice versa. The most prominent example of
+ * of this is in the translation of player identities to their race
+ * counterparts, which will be different in each implementation.
+ *
+ * Authentication is considered to be an implementation detail of the service
+ * and is not specified as part of this interface, however, implementations of
+ * this interface will usually want to implement authentication as appropriate
+ * within their implementation.
  *
  * This interface is an implementation of the adapter design pattern.
  */
@@ -31,22 +38,22 @@ export default interface RaceHandler {
     /**
      * Join a player into the race room
      */
-    joinPlayer(token: string): Promise<boolean>;
+    joinPlayer(player: Player): Promise<boolean>;
 
     /**
      * Leave a player from the race room
      */
-    leavePlayer(token: string): Promise<boolean>;
+    leavePlayer(player: Player): Promise<boolean>;
 
     /**
      * Marks a player as ready in the race room
      */
-    readyPlayer(token: string): Promise<boolean>;
+    readyPlayer(player: Player): Promise<boolean>;
 
     /**
      * Marks a player as not ready in the race room
      */
-    unreadyPlayer(token: string): Promise<boolean>;
+    unreadyPlayer(player: Player): Promise<boolean>;
 
     /**
      * Refreshes the local cache of data
@@ -59,7 +66,9 @@ export default interface RaceHandler {
      *
      * @param id The service id of the player
      */
-    getPlayer(id: string): Omit<RaceStatusConnected, 'connected'> | undefined;
+    getPlayer(
+        player: Player,
+    ): Omit<RaceStatusConnected, 'connected'> | undefined;
 
     /**
      * Returns the start time of the race

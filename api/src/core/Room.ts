@@ -968,7 +968,6 @@ export default class Room {
             return false;
         }
         this.logInfo(`Connecting ${player.nickname} to racetime`);
-        player.raceId = racetimeId;
         return player.joinRace();
     }
 

@@ -12,27 +12,29 @@ export default class LocalTimer implements RaceHandler {
 
     disconnect(): void {}
 
-    async joinPlayer(token: string): Promise<boolean> {
+    async joinPlayer(player: Player): Promise<boolean> {
         return true;
     }
 
-    async leavePlayer(token: string): Promise<boolean> {
+    async leavePlayer(player: Player): Promise<boolean> {
         return true;
     }
 
-    async readyPlayer(token: string): Promise<boolean> {
+    async readyPlayer(player: Player): Promise<boolean> {
         return true;
     }
 
-    async unreadyPlayer(token: string): Promise<boolean> {
+    async unreadyPlayer(player: Player): Promise<boolean> {
         throw new Error('Method not implemented.');
     }
 
     async refresh(): Promise<void> {}
 
-    getPlayer(id: string): Omit<RaceStatusConnected, 'connected'> | undefined {
+    getPlayer(
+        player: Player,
+    ): Omit<RaceStatusConnected, 'connected'> | undefined {
         return {
-            username: id,
+            username: player.id,
         };
     }
 

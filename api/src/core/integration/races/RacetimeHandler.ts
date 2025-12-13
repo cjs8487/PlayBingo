@@ -5,6 +5,7 @@ import Room from '../../Room';
 import { logInfo } from '../../../Logger';
 import RaceHandler from './RaceHandler';
 import Player from '../../Player';
+import { getAccessToken } from '../../../lib/RacetimeConnector';
 
 interface User {
     id: string;
@@ -104,6 +105,7 @@ export default class RacetimeHandler implements RaceHandler {
     websocketConnected = false;
     /** Current version of the race rooms data*/
     data?: RaceData;
+    playersToRacers: Map<string, string> = new Map<string, string>();
 
     //#region Synchronous Websocket
     nextAuthenticatedCallback?: SynchronousSocketCallback<
@@ -141,31 +143,46 @@ export default class RacetimeHandler implements RaceHandler {
         });
     }
 
-    async authenticate(token: string) {
-        return new Promise<AuthenticatedMessage>((resolve, reject) => {
-            if (!this.connected || !this.websocketConnected || !this.socket) {
-                reject(new Error('Invalid websocket state'));
-                return;
-            }
-            if (this.nextAuthenticatedCallback) {
-                reject(
-                    new Error('Multiple entities awaiting the same response'),
+    async authenticate(player: Player) {
+        return new Promise<AuthenticatedMessage>(async (resolve, reject) => {
+            if (player.userId) {
+                const token = await getAccessToken(player.userId);
+                if (!token) {
+                    reject(new Error('Failed to generate token'));
+                }
+
+                if (
+                    !this.connected ||
+                    !this.websocketConnected ||
+                    !this.socket
+                ) {
+                    reject(new Error('Invalid websocket state'));
+                    return;
+                }
+                if (this.nextAuthenticatedCallback) {
+                    reject(
+                        new Error(
+                            'Multiple entities awaiting the same response',
+                        ),
+                    );
+                } else {
+                    this.nextAuthenticatedCallback = (value) => {
+                        if ('errors' in value) {
+                            reject(new Error(value.errors.join()));
+                        } else {
+                            resolve(value);
+                        }
+                    };
+                }
+                this.socket.send(
+                    JSON.stringify({
+                        action: 'authenticate',
+                        data: { oauth_token: `${token}` },
+                    }),
                 );
             } else {
-                this.nextAuthenticatedCallback = (value) => {
-                    if ('errors' in value) {
-                        reject(new Error(value.errors.join()));
-                    } else {
-                        resolve(value);
-                    }
-                };
+                reject(new Error('Player is anonymous'));
             }
-            this.socket.send(
-                JSON.stringify({
-                    action: 'authenticate',
-                    data: { oauth_token: `${token}` },
-                }),
-            );
         });
     }
     //#endregion
@@ -250,8 +267,12 @@ export default class RacetimeHandler implements RaceHandler {
         }
     }
 
-    getPlayer(id: string) {
-        const user = this.data?.entrants.find((u) => u.user.id === id);
+    getPlayer(player: Player) {
+        const userId = this.playersToRacers.get(player.id);
+        if (!userId) {
+            return undefined;
+        }
+        const user = this.data?.entrants.find((u) => u.user.id === userId);
         if (user) {
             return {
                 username: user.user.full_name,
@@ -262,14 +283,15 @@ export default class RacetimeHandler implements RaceHandler {
         return undefined;
     }
 
-    async joinPlayer(token: string) {
+    async joinPlayer(player: Player) {
         if (!this.connected || !this.websocketConnected || !this.socket) {
             logInfo('Unable to join user - room is not connected to racetime');
             return false;
         }
         try {
-            const { user } = await this.authenticate(token);
-            if (this.getPlayer(user.id)) {
+            const { user } = await this.authenticate(player);
+            this.playersToRacers.set(player.id, user.id);
+            if (this.getPlayer(player)) {
                 this.room.sendRaceData(this.data as RaceData);
                 return true;
             }
@@ -283,7 +305,7 @@ export default class RacetimeHandler implements RaceHandler {
         }
     }
 
-    async leavePlayer(token: string): Promise<boolean> {
+    async leavePlayer(player: Player): Promise<boolean> {
         throw new Error('Not implemented');
     }
 
@@ -330,7 +352,7 @@ export default class RacetimeHandler implements RaceHandler {
         this.room.sendRaceData(this.data);
     }
 
-    async readyPlayer(token: string) {
+    async readyPlayer(player: Player) {
         if (!this.connected || !this.websocketConnected || !this.socket) {
             this.room.logInfo(
                 'Unable to ready - room is not connected to racetime',
@@ -338,7 +360,7 @@ export default class RacetimeHandler implements RaceHandler {
             return false;
         }
         try {
-            await this.authenticate(token);
+            await this.authenticate(player);
             this.socket.send(JSON.stringify({ action: 'ready' }));
             return true;
         } catch (e) {
@@ -349,7 +371,7 @@ export default class RacetimeHandler implements RaceHandler {
         }
     }
 
-    async unreadyPlayer(token: string) {
+    async unreadyPlayer(player: Player) {
         if (!this.connected || !this.websocketConnected || !this.socket) {
             this.room.logInfo(
                 'Unable to unready - room is not connected to racetime',
@@ -357,7 +379,7 @@ export default class RacetimeHandler implements RaceHandler {
             return false;
         }
         try {
-            await this.authenticate(token);
+            await this.authenticate(player);
             this.socket.send(JSON.stringify({ action: 'unready' }));
             return true;
         } catch (e) {
