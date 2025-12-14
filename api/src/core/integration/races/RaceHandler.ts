@@ -24,6 +24,10 @@ import Player from '../../Player';
  */
 export default interface RaceHandler {
     /**
+     * Returns a unique key for the race handler
+     */
+    key(): 'local' | 'racetime';
+    /**
      * Connects the bingo room to the race room
      *
      * @param url The base url for the race room
