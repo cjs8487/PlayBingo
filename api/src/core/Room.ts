@@ -1,6 +1,7 @@
 import { GeneratorSettings } from '@playbingo/shared';
 import {
     ChangeColorAction,
+    ChangeRaceHandlerAction,
     ChatAction,
     ChatMessage,
     JoinAction,
@@ -453,6 +454,7 @@ export default class Room {
                 variant: this.variantName,
                 startedAt: this.raceHandler?.getStartTime(),
                 finishedAt: this.raceHandler?.getEndTime(),
+                raceHandler: this.raceHandler?.key(),
             },
             players: this.getPlayers(),
         };
@@ -611,6 +613,21 @@ export default class Room {
         this.sendRoomData();
     }
 
+    handleChangeRaceHandler(action: ChangeRaceHandlerAction) {
+        if (this.raceHandler) {
+            this.raceHandler.disconnect();
+        }
+        switch (action.raceHandler) {
+            case 'local':
+                this.raceHandler = new LocalTimer();
+                break;
+            case 'racetime':
+                this.raceHandler = new RacetimeHandler(this);
+                break;
+        }
+        this.sendRoomData();
+    }
+
     handleSocketClose(ws: WebSocket) {
         let player: Player | undefined;
         for (const p of this.players.values()) {
@@ -648,6 +665,7 @@ export default class Room {
                 newGenerator: this.newGenerator,
                 mode: getModeString(this.bingoMode, this.lineCount),
                 variant: this.variantName,
+                raceHandler: this.raceHandler?.key(),
             },
         });
         this.sendChat(`Racetime.gg room created ${url}`);
@@ -670,6 +688,7 @@ export default class Room {
                 newGenerator: this.newGenerator,
                 mode: getModeString(this.bingoMode, this.lineCount),
                 variant: this.variantName,
+                raceHandler: this.raceHandler?.key(),
             },
         });
     }
@@ -779,6 +798,7 @@ export default class Room {
                 variant: this.variantName,
                 startedAt: this.raceHandler?.getStartTime(),
                 finishedAt: this.raceHandler?.getEndTime(),
+                raceHandler: this.raceHandler?.key(),
             },
         });
     }

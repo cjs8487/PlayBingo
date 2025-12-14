@@ -17,7 +17,9 @@
         {"$ref": "#/$defs/NewCardAction"},
         {"$ref": "#/$defs/RevealCardAction"},
         {"$ref": "#/$defs/ChangeAuthAction"},
-        {"$ref": "#/$defs/StartTimerAction"}
+        {"$ref": "#/$defs/StartTimerAction"},
+        {"$ref": "#/$defs/ChangeRaceHandlerAction"}
+        
     ],
     "$defs": {
         "JoinAction": {
@@ -141,6 +143,14 @@
             "additionalProperties": false,
             "properties": {
                 "action": "startTimer"
+            }
+        },
+        "ChangeRaceHandlerAction": {
+            "required": ["action", "raceHandler"],
+            "additionalProperties": false,
+            "properties": {
+                "action": "changeRaceHandler",
+                "raceHandler": {"enum": ["racetime", "local"]}
             }
         }
     }

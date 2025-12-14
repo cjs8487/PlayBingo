@@ -8,6 +8,10 @@ export default class LocalTimer implements RaceHandler {
 
     constructor() {}
 
+    key(): 'local' | 'racetime' {
+        return 'local';
+    }
+
     connect(url: string): void {}
 
     disconnect(): void {}

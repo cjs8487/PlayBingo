@@ -19,6 +19,7 @@ export type RoomAction = (
   | RevealCardAction
   | ChangeAuthAction
   | StartTimerAction
+  | ChangeRaceHandlerAction
 ) & {
   /**
    * JWT for the room obtained from the server
@@ -80,4 +81,8 @@ export interface ChangeAuthAction {
 }
 export interface StartTimerAction {
   action: "startTimer";
+}
+export interface ChangeRaceHandlerAction {
+  action: "changeRaceHandler";
+  raceHandler: "racetime" | "local";
 }

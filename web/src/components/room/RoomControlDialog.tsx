@@ -1,3 +1,4 @@
+import { Timer } from '@mui/icons-material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import {
     Accordion,
@@ -12,14 +13,18 @@ import {
     InputLabel,
     MenuItem,
     Select,
+    ToggleButton,
+    ToggleButtonGroup,
     Typography,
 } from '@mui/material';
 import { Game } from '@playbingo/types';
 import { Form, Formik } from 'formik';
+import Image from 'next/image';
 import { useContext } from 'react';
 import { useAsync } from 'react-use';
 import { RoomContext } from '../../context/RoomContext';
 import FormikTextField from '../input/FormikTextField';
+import rtLogo from '/public/rtgg128.png';
 
 interface RoomControlDialogProps {
     show: boolean;
@@ -30,7 +35,15 @@ export default function RoomControlDialog({
     show,
     close,
 }: RoomControlDialogProps) {
-    const { roomData, regenerateCard } = useContext(RoomContext);
+    const { roomData, regenerateCard, changeRaceHandler, connectedPlayer } =
+        useContext(RoomContext);
+
+    const handleRaceHandlerChange = (
+        event: React.MouseEvent<HTMLElement>,
+        handler: string | null,
+    ) => {
+        changeRaceHandler(handler ?? '');
+    };
 
     const modes = useAsync(async () => {
         if (!roomData) {
@@ -58,8 +71,48 @@ export default function RoomControlDialog({
         <Dialog onClose={close} open={show}>
             <DialogTitle variant="h5">Room Controls</DialogTitle>
             <DialogContent>
+                {connectedPlayer?.monitor && (
+                    <Box sx={{ mb: 2 }}>
+                        <Typography variant="h6">Monitor Actions</Typography>
+                        <Typography sx={{ mb: 0.5 }}>Timing Method</Typography>
+                        <ToggleButtonGroup
+                            value={roomData?.raceHandler}
+                            exclusive
+                            onChange={handleRaceHandlerChange}
+                            aria-label="race handler"
+                            size="small"
+                        >
+                            <ToggleButton
+                                value="local"
+                                aria-label="left aligned"
+                            >
+                                <Timer />
+                                <Typography
+                                    sx={{ ml: 1, textTransform: 'none' }}
+                                >
+                                    Basic Timer
+                                </Typography>
+                            </ToggleButton>
+                            <ToggleButton
+                                value="racetime"
+                                aria-label="centered"
+                            >
+                                <Image
+                                    src={rtLogo}
+                                    width={32}
+                                    height={32}
+                                    alt=""
+                                />
+                                <Typography
+                                    sx={{ ml: 1, textTransform: 'none' }}
+                                >
+                                    racetime.gg
+                                </Typography>
+                            </ToggleButton>
+                        </ToggleButtonGroup>
+                    </Box>
+                )}
                 <Typography variant="h6">Card Controls</Typography>
-
                 <Formik
                     initialValues={{
                         seed: undefined,
