@@ -162,7 +162,7 @@ export default class Room {
         if (this.racetimeEligible) {
             this.raceHandler = new RacetimeHandler(this);
         } else {
-            this.raceHandler = new LocalTimer();
+            this.raceHandler = new LocalTimer(this);
         }
 
         this.board = [];
@@ -619,7 +619,7 @@ export default class Room {
         }
         switch (action.raceHandler) {
             case 'local':
-                this.raceHandler = new LocalTimer();
+                this.raceHandler = new LocalTimer(this);
                 break;
             case 'racetime':
                 this.raceHandler = new RacetimeHandler(this);
@@ -698,22 +698,7 @@ export default class Room {
         if (!player) {
             return null;
         }
-        this.sendChat([
-            {
-                contents: player.nickname,
-                color: player.color,
-            },
-            ' has revealed the card.',
-        ]);
-        player.sendMessage({
-            action: 'syncBoard',
-            board: {
-                hidden: false,
-                board: this.board,
-                width: this.board[0].length,
-                height: this.board.length,
-            },
-        });
+        this.revealCardForPlayer(player);
     }
     //#endregion
 
@@ -1078,6 +1063,31 @@ export default class Room {
             });
         });
         allRooms.delete(this.slug);
+    }
+
+    revealCardForPlayer(player: Player) {
+        this.sendChat([
+            {
+                contents: player.nickname,
+                color: player.color,
+            },
+            ' has revealed the card.',
+        ]);
+        player.sendMessage({
+            action: 'syncBoard',
+            board: {
+                hidden: false,
+                board: this.board,
+                width: this.board[0].length,
+                height: this.board.length,
+            },
+        });
+    }
+
+    revealCardForAllPlayers() {
+        this.players.forEach((player) => {
+            this.revealCardForPlayer(player);
+        });
     }
     //#endregion
 }
