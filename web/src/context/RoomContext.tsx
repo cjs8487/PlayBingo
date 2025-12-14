@@ -74,6 +74,7 @@ interface RoomContext {
     createRacetimeRoom: () => void;
     updateRacetimeRoom: () => void;
     joinRacetimeRoom: () => void;
+    leaveRacetimeRoom: () => void;
     racetimeReady: () => void;
     racetimeUnready: () => void;
     toggleGoalStar: (row: number, col: number) => void;
@@ -108,6 +109,7 @@ export const RoomContext = createContext<RoomContext>({
     createRacetimeRoom() {},
     updateRacetimeRoom() {},
     joinRacetimeRoom() {},
+    leaveRacetimeRoom() {},
     racetimeReady() {},
     racetimeUnready() {},
     toggleGoalStar() {},
@@ -444,6 +446,23 @@ export function RoomContextProvider({
             return;
         }
     }, [roomData, authToken, connectedPlayer]);
+    const leaveRacetimeRoom = useCallback(async () => {
+        if (connectedPlayer?.spectator) {
+            return;
+        }
+        const res = await fetch(`/api/rooms/${roomData.slug}/actions`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                action: 'racetime/leave',
+                authToken,
+            }),
+        });
+        if (!res.ok) {
+            alertError(await res.text());
+            return;
+        }
+    }, [roomData, authToken, connectedPlayer]);
     const racetimeReady = useCallback(async () => {
         if (connectedPlayer?.spectator) {
             return;
@@ -546,6 +565,7 @@ export function RoomContextProvider({
                 createRacetimeRoom,
                 updateRacetimeRoom,
                 joinRacetimeRoom,
+                leaveRacetimeRoom,
                 racetimeReady,
                 racetimeUnready,
                 toggleGoalStar,

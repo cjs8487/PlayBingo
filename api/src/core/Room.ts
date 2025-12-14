@@ -984,6 +984,16 @@ export default class Room {
         return player.joinRace();
     }
 
+    leaveRaceRoom(authToken: RoomTokenPayload) {
+        const player = this.players.get(authToken.playerId);
+        if (!player) {
+            this.logWarn('Unable to find a player for a verified room token');
+            return false;
+        }
+        this.logInfo(`Leaving ${player.nickname} from racetime`);
+        return player.leaveRace();
+    }
+
     async refreshRacetimeHandler() {
         this.raceHandler.refresh();
     }
