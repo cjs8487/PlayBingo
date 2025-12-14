@@ -23,6 +23,7 @@ export default function RacetimeCard() {
         racetimeReady,
         racetimeUnready,
         connectedPlayer,
+        leaveRacetimeRoom,
     } = useRoomContext();
     const { loggedIn, user } = useUserContext();
 
@@ -105,6 +106,11 @@ export default function RacetimeCard() {
                                                         Ready
                                                     </Button>
                                                 )}
+                                                <Button
+                                                    onClick={leaveRacetimeRoom}
+                                                >
+                                                    Leave
+                                                </Button>
                                             </>
                                         )}
                                     </>

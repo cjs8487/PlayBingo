@@ -272,6 +272,7 @@ export default class RacetimeHandler implements RaceHandler {
                 }
                 break;
             case 'error':
+                this.room.logError(message.errors.join());
                 if (this.nextAuthenticatedCallback) {
                     this.nextAuthenticatedCallback(message);
                     this.nextAuthenticatedCallback = undefined;
@@ -322,7 +323,26 @@ export default class RacetimeHandler implements RaceHandler {
     }
 
     async leavePlayer(player: Player): Promise<boolean> {
-        throw new Error('Not implemented');
+        if (!this.connected || !this.websocketConnected || !this.socket) {
+            logInfo(
+                'Unable to leave player - room is not connected to racetime',
+            );
+            return false;
+        }
+        if (!this.playersToRacers.has(player.id)) {
+            return false;
+        }
+        try {
+            await this.authenticate(player);
+            this.playersToRacers.delete(player.id);
+            this.socket.send(JSON.stringify({ action: 'leave' }));
+            return true;
+        } catch (e) {
+            this.room.logInfo(
+                `Failed to join racetime room - ${JSON.stringify(e)}`,
+            );
+            return false;
+        }
     }
 
     async refresh() {
