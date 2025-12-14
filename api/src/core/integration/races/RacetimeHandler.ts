@@ -119,6 +119,10 @@ export default class RacetimeHandler implements RaceHandler {
         this.room = room;
     }
 
+    key(): 'local' | 'racetime' {
+        return 'racetime';
+    }
+
     //#region Synchronous Websocket Functions
     async ping() {
         return new Promise<void>((resolve, reject) => {

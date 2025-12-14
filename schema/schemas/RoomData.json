@@ -50,6 +50,9 @@
         },
         "finishedAt": {
             "type": "string"
+        },
+        "raceHandler": {
+            "enum": ["local", "racetime"]
         }
     },
     "$defs": {
