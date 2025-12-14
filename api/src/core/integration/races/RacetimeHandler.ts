@@ -232,6 +232,17 @@ export default class RacetimeHandler implements RaceHandler {
 
     private updateData(data: RaceData) {
         if (!this.data || this.data.version < data.version) {
+            if (this.data) {
+                // updating data, compare current and next and dispatch events as needed
+                if (
+                    this.data.status.value !== 'in_progress' &&
+                    data.status.value === 'in_progress'
+                ) {
+                    // race has started
+                    this.room.revealCardForAllPlayers();
+                }
+            }
+
             this.data = data;
             this.room.sendRaceData(data);
         }
