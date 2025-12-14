@@ -1,12 +1,16 @@
 import { RaceStatusConnected } from '@playbingo/types';
 import RaceHandler from './RaceHandler';
 import Player from '../../Player';
+import Room from '../../Room';
 
 export default class LocalTimer implements RaceHandler {
     startedAt?: string;
     finishedAt?: string;
+    room: Room;
 
-    constructor() {}
+    constructor(room: Room) {
+        this.room = room;
+    }
 
     key(): 'local' | 'racetime' {
         return 'local';
@@ -52,6 +56,7 @@ export default class LocalTimer implements RaceHandler {
 
     startTimer(): void {
         this.startedAt = new Date().toISOString();
+        this.room.revealCardForAllPlayers();
     }
 
     async playerFinished(player: Player): Promise<void> {
