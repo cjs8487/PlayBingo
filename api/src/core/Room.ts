@@ -16,7 +16,7 @@ import {
 import { BingoMode } from '@prisma/client';
 import { WebSocket } from 'ws';
 import { roomCleanupInactive } from '../Environment';
-import { logError, logInfo, logWarn } from '../Logger';
+import { logDebug, logError, logInfo, logWarn } from '../Logger';
 import {
     invalidateToken,
     Permissions,
@@ -1027,6 +1027,10 @@ export default class Room {
     //#endregion
 
     //#region Logging
+    logDebug(message: string, metadata?: { [k: string]: string }) {
+        logDebug(message, { room: this.slug, ...metadata });
+    }
+
     logInfo(message: string, metadata?: { [k: string]: string }) {
         logInfo(message, { room: this.slug, ...metadata });
     }

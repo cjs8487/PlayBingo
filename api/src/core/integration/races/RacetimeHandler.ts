@@ -243,6 +243,7 @@ export default class RacetimeHandler implements RaceHandler {
 
     handleWebsocketMessage(data: RawData) {
         const message: WebSocketMessage = JSON.parse(data.toString());
+        this.room.logDebug(`racetime.gg ws message: ${message.type}`);
         switch (message.type) {
             case 'pong':
                 if (this.nextPongCallback) {
@@ -407,11 +408,37 @@ export default class RacetimeHandler implements RaceHandler {
     }
 
     async playerFinished(player: Player): Promise<void> {
-        throw new Error('Method not implemented.');
+        if (!this.connected || !this.websocketConnected || !this.socket) {
+            logInfo(
+                'Unable to finish player in racetime - room is not connected to racetime',
+            );
+            return;
+        }
+        try {
+            await this.authenticate(player);
+            this.socket.send(JSON.stringify({ action: 'done' }));
+        } catch (e) {
+            this.room.logInfo(
+                `Failed to join racetime room - ${JSON.stringify(e)}`,
+            );
+        }
     }
 
     async playerUnfinshed(player: Player): Promise<void> {
-        throw new Error('Method not implemented.');
+        if (!this.connected || !this.websocketConnected || !this.socket) {
+            logInfo(
+                'Unable to unfinish player in racetime - room is not connected to racetime',
+            );
+            return;
+        }
+        try {
+            await this.authenticate(player);
+            this.socket.send(JSON.stringify({ action: 'undone' }));
+        } catch (e) {
+            this.room.logInfo(
+                `Failed to join racetime room - ${JSON.stringify(e)}`,
+            );
+        }
     }
 
     // no implementation - this is handled by racetime and synced back
