@@ -323,6 +323,7 @@ async function getOrLoadRoom(slug: string): Promise<Room | null> {
             5,
         );
     }
+    newRoom.computeVictoryMasks();
 
     dbRoom.players.forEach((dbPlayer) => {
         const player = new Player(
