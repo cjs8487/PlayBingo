@@ -171,17 +171,7 @@ export default class Room {
             this.raceHandler.connect(racetimeUrl);
         }
 
-        if (bingoMode === BingoMode.LINES) {
-            this.victoryMasks = computeLineMasks(5, 5);
-        } else if (bingoMode === BingoMode.BLACKOUT) {
-            let mask = 0n;
-            for (let i = 0; i < 25; i++) {
-                mask |= 1n << BigInt(i);
-            }
-            this.victoryMasks = [mask];
-        } else {
-            this.victoryMasks = [];
-        }
+        this.victoryMasks = [];
 
         this.hideCard = hideCard;
         this.completed = false;
@@ -269,6 +259,7 @@ export default class Room {
                     revealed: true,
                 })),
             );
+            this.computeVictoryMasks();
         } else {
             const globalState: GlobalGenerationState = {
                 useCategoryMaxes: categories.some((cat) => cat.max > 0),
@@ -807,7 +798,10 @@ export default class Room {
     private checkWinConditions() {
         this.players.forEach((player) => {
             if (this.bingoMode === BingoMode.LOCKOUT) {
-                if (!player.goalComplete && player.goalCount >= 13) {
+                const goalsNeeded = Math.ceil(
+                    (this.board.length * this.board[0].length) / 2,
+                );
+                if (!player.goalComplete && player.goalCount >= goalsNeeded) {
                     this.sendChat([
                         {
                             contents: player.nickname,
@@ -818,7 +812,7 @@ export default class Room {
                     player.goalComplete = true;
                     this.raceHandler?.playerFinished(player);
                 }
-                if (player.goalComplete && player.goalCount < 13) {
+                if (player.goalComplete && player.goalCount < goalsNeeded) {
                     this.sendChat([
                         {
                             contents: player.nickname,
@@ -1098,6 +1092,22 @@ export default class Room {
         this.players.forEach((player) => {
             this.revealCardForPlayer(player);
         });
+    }
+
+    computeVictoryMasks() {
+        const width = this.board[0].length;
+        const height = this.board.length;
+        if (this.bingoMode === BingoMode.LINES) {
+            this.victoryMasks = computeLineMasks(height, width);
+        } else if (this.bingoMode === BingoMode.BLACKOUT) {
+            let mask = 0n;
+            for (let i = 0; i < width * height; i++) {
+                mask |= 1n << BigInt(i);
+            }
+            this.victoryMasks = [mask];
+        } else {
+            this.victoryMasks = [];
+        }
     }
     //#endregion
 }

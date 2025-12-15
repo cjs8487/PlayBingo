@@ -224,7 +224,7 @@ export default class Player {
 
     //#region Goal Tracking
     mark(row: number, col: number) {
-        const mask = rowColToMask(row, col, 5);
+        const mask = rowColToMask(row, col, this.room.board[0].length);
         if ((this.markedGoals & mask) === 0n) {
             this.markedGoals |= mask;
             this.goalCount++;
@@ -235,7 +235,7 @@ export default class Player {
     }
 
     unmark(row: number, col: number) {
-        const mask = rowColToMask(row, col, 5);
+        const mask = rowColToMask(row, col, this.room.board[0].length);
         if ((this.markedGoals & mask) !== 0n) {
             this.markedGoals &= ~mask;
             this.goalCount--;
@@ -246,19 +246,22 @@ export default class Player {
     }
 
     hasMarked(row: number, col: number): boolean {
-        const mask = rowColToMask(row, col, 5);
+        const mask = rowColToMask(row, col, this.room.board[0].length);
         return (this.markedGoals & mask) !== 0n;
     }
 
     hasRevealed(row: number, col: number): boolean {
-        const mask = rowColToMask(row, col, 5);
+        const mask = rowColToMask(row, col, this.room.board[0].length);
         return (this.exploredGoals & mask) !== 0n;
     }
 
     getRevealedMask(): bigint {
         return (
-            computeRevealedMask(this.markedGoals, 5, 5) |
-            this.room.alwaysRevealedMask
+            computeRevealedMask(
+                this.markedGoals,
+                this.room.board[0].length,
+                this.room.board.length,
+            ) | this.room.alwaysRevealedMask
         );
     }
 
