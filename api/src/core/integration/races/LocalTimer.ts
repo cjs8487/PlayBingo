@@ -43,6 +43,7 @@ export default class LocalTimer implements RaceHandler {
     ): Omit<RaceStatusConnected, 'connected'> | undefined {
         return {
             username: player.id,
+            finishTime: player.finishedAt,
         };
     }
 
