@@ -854,7 +854,7 @@ export default class Room {
                         !player.goalComplete
                     ) {
                         player.goalComplete = true;
-                        this.raceHandler?.playerFinished(player);
+                        this.raceHandler?.playerFinished(player).then();
                         this.sendChat([
                             {
                                 contents: player.nickname,

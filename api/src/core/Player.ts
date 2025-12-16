@@ -6,14 +6,8 @@ import {
 } from '@playbingo/types';
 import { OPEN, WebSocket } from 'ws';
 import { RoomTokenPayload } from '../auth/RoomAuth';
-import { getAccessToken } from '../lib/RacetimeConnector';
-import RaceHandler from './integration/races/RaceHandler';
+import { computeRevealedMask, rowColToMask } from '../util/RoomUtils';
 import Room from './Room';
-import {
-    computeRevealedMask,
-    rowColToBitIndex,
-    rowColToMask,
-} from '../util/RoomUtils';
 
 /**
  * Represents a player connected to a room. While largely just a data class, this
@@ -61,8 +55,6 @@ export default class Player {
      * is authorized for the connection */
     connections: Map<string, WebSocket>;
 
-    raceHandler: RaceHandler;
-
     finishedAt?: string;
 
     constructor(
@@ -88,8 +80,6 @@ export default class Player {
         this.exploredGoals = 0n;
 
         this.connections = new Map<string, WebSocket>();
-
-        this.raceHandler = room.raceHandler;
     }
 
     doesTokenMatch(token: RoomTokenPayload) {
@@ -153,7 +143,7 @@ export default class Player {
      * @returns Client representation of this player's data
      */
     toClientData(): PlayerClientData {
-        const raceUser = this.raceHandler.getPlayer(this);
+        const raceUser = this.room.raceHandler.getPlayer(this);
         return {
             id: this.id,
             nickname: this.nickname,
@@ -304,18 +294,18 @@ export default class Player {
 
     //#region Races
     async joinRace() {
-        return this.raceHandler.joinPlayer(this);
+        return this.room.raceHandler.joinPlayer(this);
     }
 
     async leaveRace() {
-        return this.raceHandler.leavePlayer(this);
+        return this.room.raceHandler.leavePlayer(this);
     }
 
     async ready() {
-        return this.raceHandler.readyPlayer(this);
+        return this.room.raceHandler.readyPlayer(this);
     }
     async unready() {
-        return this.raceHandler.unreadyPlayer(this);
+        return this.room.raceHandler.unreadyPlayer(this);
     }
     //#endregion
 }
