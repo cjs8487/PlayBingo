@@ -9,8 +9,6 @@ export default function PlayerList() {
     const players = allPlayers.filter((p) => !p.spectator);
     const spectators = allPlayers.filter((p) => p.spectator);
 
-    console.log(players);
-
     return (
         <Paper
             sx={{
