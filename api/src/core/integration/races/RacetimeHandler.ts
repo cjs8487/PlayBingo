@@ -434,9 +434,9 @@ export default class RacetimeHandler implements RaceHandler {
         return this.data?.ended_at ?? undefined;
     }
 
-    startTimer(): void {
-        throw new Error('Method not implemented.');
-    }
+    // racetime player websocket doesn't support these actions
+    resetTimer(): void {}
+    startTimer(): void {}
 
     async playerFinished(player: Player): Promise<void> {
         if (!this.connected || !this.websocketConnected || !this.socket) {
