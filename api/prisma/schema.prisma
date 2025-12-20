@@ -146,19 +146,23 @@ model Room {
   variantId        String?
   exploration      Boolean      @default(false)
   explorationStart String?
+  raceHandler      RaceHandler?
+  startedAt        DateTime?
+  finishedAt       DateTime?
 }
 
 model Player {
-  id        String  @id @unique @default(cuid())
-  key       String
-  user      User?   @relation(fields: [userId], references: [id])
-  room      Room    @relation(fields: [roomId], references: [id])
-  nickname  String
-  color     String  @default("blue")
-  spectator Boolean
-  monitor   Boolean @default(false)
-  roomId    String
-  userId    String?
+  id         String    @id @unique @default(cuid())
+  key        String
+  user       User?     @relation(fields: [userId], references: [id])
+  room       Room      @relation(fields: [roomId], references: [id])
+  nickname   String
+  color      String    @default("blue")
+  spectator  Boolean
+  monitor    Boolean   @default(false)
+  roomId     String
+  userId     String?
+  finishedAt DateTime?
 
   @@unique([key, roomId])
 }
@@ -228,4 +232,9 @@ enum GenerationGoalRestriction {
 enum GenerationGlobalAdjustments {
   SYNERGIZE // add an additional copy of each goal sharing a type to increase final synergy
   BOARD_TYPE_MAX // enforce a maximum number of goals of a specific type in the board
+}
+
+enum RaceHandler {
+  LOCAL
+  RACETIME
 }

@@ -126,7 +126,7 @@ export interface RoomData {
   mode: string;
   startedAt?: string;
   finishedAt?: string;
-  raceHandler?: "local" | "racetime";
+  raceHandler?: "LOCAL" | "RACETIME";
 }
 export interface RacetimeConnection {
   /**

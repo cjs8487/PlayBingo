@@ -6,6 +6,7 @@ import { logInfo } from '../../../Logger';
 import RaceHandler from './RaceHandler';
 import Player from '../../Player';
 import { getAccessToken } from '../../../lib/RacetimeConnector';
+import { RaceHandler as RaceHandlers } from '@prisma/client';
 
 interface User {
     id: string;
@@ -119,8 +120,8 @@ export default class RacetimeHandler implements RaceHandler {
         this.room = room;
     }
 
-    key(): 'local' | 'racetime' {
-        return 'racetime';
+    key() {
+        return RaceHandlers.RACETIME;
     }
 
     //#region Synchronous Websocket Functions

@@ -14,9 +14,9 @@ export default function PlayerRaceSummary({ raceHandler, player }: Props) {
     }
 
     switch (raceHandler) {
-        case 'racetime':
+        case 'RACETIME':
             return <PlayerSummaryRacetime player={player} />;
-        case 'local':
+        case 'LOCAL':
             return <PlayerSummaryLocal player={player} />;
     }
 }

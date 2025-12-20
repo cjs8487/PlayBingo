@@ -31,6 +31,7 @@ import {
     addUnmarkAction,
     createUpdatePlayer,
     setRoomBoard,
+    updateRaceHandler,
 } from '../database/Rooms';
 import { isStaff } from '../database/Users';
 import {
@@ -433,14 +434,18 @@ export default class Room {
                 name: this.name,
                 gameSlug: this.gameSlug,
                 newGenerator: this.newGenerator,
-                racetimeConnection: {
-                    gameActive: this.racetimeEligible,
-                    url: (this.raceHandler as RacetimeHandler).url,
-                    startDelay: (this.raceHandler as RacetimeHandler).data
-                        ?.start_delay,
-                    status: (this.raceHandler as RacetimeHandler).data?.status
-                        .verbose_value,
-                },
+                racetimeConnection: this.raceHandler
+                    ? 'url' in this.raceHandler
+                        ? {
+                              gameActive: this.racetimeEligible,
+                              url: (this.raceHandler as RacetimeHandler).url,
+                              startDelay: (this.raceHandler as RacetimeHandler)
+                                  .data?.start_delay,
+                              status: (this.raceHandler as RacetimeHandler).data
+                                  ?.status.verbose_value,
+                          }
+                        : undefined
+                    : { gameActive: this.racetimeEligible, url: undefined },
                 mode: getModeString(this.bingoMode, this.lineCount),
                 variant: this.variantName,
                 startedAt: this.raceHandler?.getStartTime(),
@@ -617,6 +622,7 @@ export default class Room {
                 break;
         }
         this.sendRoomData();
+        updateRaceHandler(this.id, this.raceHandler.key()).then();
     }
 
     handleResetTimer() {

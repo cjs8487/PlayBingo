@@ -1,5 +1,6 @@
 import { RaceStatusConnected } from '@playbingo/types';
 import Player from '../../Player';
+import { RaceHandler as RaceHandlers } from '@prisma/client';
 
 /**
  * Represents an arbitrary connection to a service that tracks racing status.
@@ -26,7 +27,7 @@ export default interface RaceHandler {
     /**
      * Returns a unique key for the race handler
      */
-    key(): 'local' | 'racetime';
+    key(): RaceHandlers;
     /**
      * Connects the bingo room to the race room
      *
