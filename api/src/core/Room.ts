@@ -31,6 +31,7 @@ import {
     addUnmarkAction,
     createUpdatePlayer,
     setRoomBoard,
+    updateRaceHandler,
 } from '../database/Rooms';
 import { isStaff } from '../database/Users';
 import {
@@ -57,9 +58,9 @@ import {
 } from './generation/GeneratorCore';
 import { generateFullRandom, generateRandomTyped } from './generation/Random';
 import { generateSRLv5 } from './generation/SRLv5';
-import RacetimeHandler, { RaceData } from './integration/races/RacetimeHandler';
 import LocalTimer from './integration/races/LocalTimer';
 import RaceHandler from './integration/races/RaceHandler';
+import RacetimeHandler, { RaceData } from './integration/races/RacetimeHandler';
 
 export enum BoardGenerationMode {
     RANDOM = 'Random',
@@ -440,14 +441,18 @@ export default class Room {
                 gameSlug: this.gameSlug,
                 newGenerator: this.newGenerator,
                 seed: this.seed,
-                racetimeConnection: {
-                    gameActive: this.racetimeEligible,
-                    url: (this.raceHandler as RacetimeHandler).url,
-                    startDelay: (this.raceHandler as RacetimeHandler).data
-                        ?.start_delay,
-                    status: (this.raceHandler as RacetimeHandler).data?.status
-                        .verbose_value,
-                },
+                racetimeConnection: this.raceHandler
+                    ? 'url' in this.raceHandler
+                        ? {
+                              gameActive: this.racetimeEligible,
+                              url: (this.raceHandler as RacetimeHandler).url,
+                              startDelay: (this.raceHandler as RacetimeHandler)
+                                  .data?.start_delay,
+                              status: (this.raceHandler as RacetimeHandler).data
+                                  ?.status.verbose_value,
+                          }
+                        : undefined
+                    : { gameActive: this.racetimeEligible, url: undefined },
                 mode: getModeString(this.bingoMode, this.lineCount),
                 variant: this.variantName,
                 startedAt: this.raceHandler?.getStartTime(),
@@ -624,6 +629,7 @@ export default class Room {
                 break;
         }
         this.sendRoomData();
+        updateRaceHandler(this.id, this.raceHandler.key()).then();
     }
 
     handleResetTimer() {

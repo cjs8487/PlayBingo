@@ -52,7 +52,7 @@
             "type": "string"
         },
         "raceHandler": {
-            "enum": ["local", "racetime"]
+            "enum": ["LOCAL", "RACETIME"]
         }
     },
     "$defs": {

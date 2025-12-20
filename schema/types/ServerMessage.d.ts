@@ -142,7 +142,7 @@ export interface RoomData {
   seed: number;
   startedAt?: string;
   finishedAt?: string;
-  raceHandler?: "local" | "racetime";
+  raceHandler?: "LOCAL" | "RACETIME";
 }
 export interface RacetimeConnection {
   /**
