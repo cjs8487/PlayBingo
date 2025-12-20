@@ -57,8 +57,9 @@ export default function TimerDisplay({ offset }: { offset: Duration }) {
     }, []);
 
     return (
-        <Typography variant="h6">
-            {dur.toFormat('h:mm:ss')}.{dur.milliseconds % 10}
+        <Typography sx={{ fontFamily: 'monospace', fontSize: 28 }}>
+            {dur.shiftToAll().toFormat('h:mm:ss')}.
+            {Math.floor((dur.milliseconds % 1000) / 100)}
         </Typography>
     );
 }
