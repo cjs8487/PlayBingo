@@ -55,6 +55,14 @@ export default class LocalTimer implements RaceHandler {
         return this.finishedAt;
     }
 
+    resetTimer(): void {
+        this.startedAt = undefined;
+        this.finishedAt = undefined;
+        this.room.players.forEach((player) => {
+            player.finishedAt = undefined;
+        });
+    }
+
     startTimer(): void {
         this.startedAt = new Date().toISOString();
         this.room.revealCardForAllPlayers();

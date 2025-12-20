@@ -41,6 +41,8 @@ export default function TimerDisplay({ offset }: { offset: Duration }) {
             setDur(end.diff(start));
         } else if (start) {
             setDur(DateTime.now().diff(start).normalize());
+        } else {
+            setDur(offset);
         }
     }, interval);
 
