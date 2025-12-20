@@ -90,6 +90,11 @@ export default interface RaceHandler {
     startTimer(): void;
 
     /**
+     * Resets the race timer
+     */
+    resetTimer(): void;
+
+    /**
      * Signals to the race platform that a player has completed the bingo goal
      *
      * @param player The player that completed the goal

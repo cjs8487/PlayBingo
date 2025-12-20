@@ -7,7 +7,8 @@ import RacetimeCard from '../racetime/RacetimeCard';
 import TimerDisplay from './TimerDisplay';
 
 export default function Timer() {
-    const { roomData, startTimer } = useContext(RoomContext);
+    const { roomData, startTimer, resetTimer, connectedPlayer } =
+        useContext(RoomContext);
 
     if (!roomData) {
         return null;
@@ -33,7 +34,10 @@ export default function Timer() {
                     color="inherit"
                     sx={{ mt: 0.5 }}
                 >
-                    <Button disabled={!started}>
+                    <Button
+                        disabled={!started || !connectedPlayer?.monitor}
+                        onClick={resetTimer}
+                    >
                         <FastRewind />
                     </Button>
                     {started ? (

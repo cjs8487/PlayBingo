@@ -619,6 +619,11 @@ export default class Room {
         this.sendRoomData();
     }
 
+    handleResetTimer() {
+        this.raceHandler?.resetTimer();
+        this.sendRoomData();
+    }
+
     handleSocketClose(ws: WebSocket) {
         let player: Player | undefined;
         for (const p of this.players.values()) {

@@ -157,6 +157,9 @@ roomWebSocketServer.on('connection', (ws, req) => {
             case 'changeRaceHandler':
                 room.handleChangeRaceHandler(action);
                 break;
+            case 'resetTimer':
+                room.handleResetTimer();
+                break;
         }
     });
     ws.on('close', (code, reason) => {

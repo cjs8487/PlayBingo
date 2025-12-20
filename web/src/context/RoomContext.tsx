@@ -84,6 +84,7 @@ interface RoomContext {
     changeAuth: (spectate: boolean) => void;
     startTimer: () => void;
     changeRaceHandler: (handler: string) => void;
+    resetTimer: () => void;
 }
 
 export const RoomContext = createContext<RoomContext>({
@@ -119,6 +120,7 @@ export const RoomContext = createContext<RoomContext>({
     changeAuth() {},
     startTimer() {},
     changeRaceHandler() {},
+    resetTimer() {},
 });
 
 interface RoomContextProps {
@@ -539,6 +541,12 @@ export function RoomContextProvider({
         },
         [authToken, sendJsonMessage],
     );
+    const resetTimer = useCallback(() => {
+        sendJsonMessage({
+            action: 'resetTimer',
+            authToken,
+        } as RoomAction);
+    }, [authToken, sendJsonMessage]);
 
     return (
         <RoomContext.Provider
@@ -575,6 +583,7 @@ export function RoomContextProvider({
                 changeAuth,
                 startTimer,
                 changeRaceHandler,
+                resetTimer,
             }}
         >
             {children}

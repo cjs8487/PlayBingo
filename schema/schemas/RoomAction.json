@@ -18,7 +18,8 @@
         {"$ref": "#/$defs/RevealCardAction"},
         {"$ref": "#/$defs/ChangeAuthAction"},
         {"$ref": "#/$defs/StartTimerAction"},
-        {"$ref": "#/$defs/ChangeRaceHandlerAction"}
+        {"$ref": "#/$defs/ChangeRaceHandlerAction"},
+        {"$ref": "#/$defs/ResetTimerAction"}
         
     ],
     "$defs": {
@@ -151,6 +152,13 @@
             "properties": {
                 "action": "changeRaceHandler",
                 "raceHandler": {"enum": ["racetime", "local"]}
+            }
+        },
+        "ResetTimerAction": {
+            "required": ["action", "raceHandler"],
+            "additionalProperties": false,
+            "properties": {
+                "action": "resetTimer"
             }
         }
     }
