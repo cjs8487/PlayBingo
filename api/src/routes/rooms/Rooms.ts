@@ -26,9 +26,11 @@ import Player from '../../core/Player';
 import { GeneratorSettings, makeGeneratorSchema } from '@playbingo/shared';
 import { getCategories } from '../../database/games/GoalCategories';
 import { getVariant } from '../../database/games/Variants';
-import { DifficultyVariant, Variant } from '@prisma/client';
+import { DifficultyVariant, RaceHandler, Variant } from '@prisma/client';
 import { GenerationFailedError } from '../../core/generation/GenerationFailedError';
 import RacetimeHandler from '../../core/integration/races/RacetimeHandler';
+import LocalTimer from '../../core/integration/races/LocalTimer';
+import { error } from 'console';
 
 const MIN_ROOM_GOALS_REQUIRED = 25;
 const rooms = Router();
@@ -336,6 +338,7 @@ async function getOrLoadRoom(slug: string): Promise<Room | null> {
             dbPlayer.monitor,
             dbPlayer.userId ?? undefined,
         );
+        player.finishedAt = dbPlayer.finishedAt?.toISOString();
         newRoom.players.set(player.id, player);
     });
 
@@ -402,6 +405,21 @@ async function getOrLoadRoom(slug: string): Promise<Room | null> {
                 break;
         }
     });
+    switch (dbRoom.raceHandler) {
+        case RaceHandler.RACETIME:
+            newRoom.raceHandler = new RacetimeHandler(newRoom);
+            if (dbRoom.racetimeRoom) {
+                newRoom.raceHandler.connect(dbRoom.racetimeRoom);
+                await newRoom.connectRacetimeWebSocket();
+            }
+            break;
+        case RaceHandler.LOCAL:
+            const handler = new LocalTimer(newRoom);
+            handler.startedAt = dbRoom.startedAt?.toISOString();
+            handler.finishedAt = dbRoom.finishedAt?.toISOString();
+            newRoom.raceHandler = handler;
+            break;
+    }
 
     allRooms.set(slug, newRoom);
     return newRoom;

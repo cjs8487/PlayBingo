@@ -2,6 +2,12 @@ import { RaceStatusConnected } from '@playbingo/types';
 import RaceHandler from './RaceHandler';
 import Player from '../../Player';
 import Room from '../../Room';
+import {
+    createUpdatePlayer,
+    updateFinishTime,
+    updateStartTime,
+} from '../../../database/Rooms';
+import { RaceHandler as RaceHandlers } from '@prisma/client';
 
 export default class LocalTimer implements RaceHandler {
     startedAt?: string;
@@ -12,8 +18,8 @@ export default class LocalTimer implements RaceHandler {
         this.room = room;
     }
 
-    key(): 'local' | 'racetime' {
-        return 'local';
+    key() {
+        return RaceHandlers.LOCAL;
     }
 
     connect(url: string): void {}
@@ -58,29 +64,38 @@ export default class LocalTimer implements RaceHandler {
     resetTimer(): void {
         this.startedAt = undefined;
         this.finishedAt = undefined;
+        updateStartTime(this.room.id, null).then();
+        updateFinishTime(this.room.id, null).then();
         this.room.players.forEach((player) => {
             player.finishedAt = undefined;
+            createUpdatePlayer(this.room.id, player).then();
         });
     }
 
     startTimer(): void {
         this.startedAt = new Date().toISOString();
         this.room.revealCardForAllPlayers();
+        updateStartTime(this.room.id, new Date()).then();
     }
 
     async playerFinished(player: Player): Promise<void> {
         player.finishedAt = new Date().toISOString();
+        createUpdatePlayer(this.room.id, player).then();
     }
 
     async playerUnfinshed(player: Player): Promise<void> {
         player.finishedAt = undefined;
+        createUpdatePlayer(this.room.id, player).then();
     }
 
     async allPlayersFinished(): Promise<void> {
-        this.finishedAt = new Date().toISOString();
+        const now = new Date();
+        this.finishedAt = now.toISOString();
+        updateFinishTime(this.room.id, now).then();
     }
 
     async allPlayersNotFinished(): Promise<void> {
         this.finishedAt = undefined;
+        updateFinishTime(this.room.id, null).then();
     }
 }

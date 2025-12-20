@@ -83,7 +83,7 @@ export default function RoomControlDialog({
                             size="small"
                         >
                             <ToggleButton
-                                value="local"
+                                value="LOCAL"
                                 aria-label="left aligned"
                             >
                                 <Timer />
@@ -94,7 +94,7 @@ export default function RoomControlDialog({
                                 </Typography>
                             </ToggleButton>
                             <ToggleButton
-                                value="racetime"
+                                value="RACETIME"
                                 aria-label="centered"
                             >
                                 <Image
