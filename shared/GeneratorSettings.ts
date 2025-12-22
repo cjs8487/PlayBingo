@@ -1,4 +1,4 @@
-import { GoalCategory } from '@playbingo/types';
+import { Goal, GoalCategory } from '@playbingo/types';
 import * as z from 'zod';
 
 declare module 'zod' {
@@ -10,10 +10,14 @@ declare module 'zod' {
     }
 }
 
-export const makeGeneratorSchema = (categories: GoalCategory[]) => {
+export const makeGeneratorSchema = (
+    categories: GoalCategory[],
+    goals: Goal[],
+) => {
     z.globalRegistry.clear();
 
     const catIds = categories.map((c) => c.id);
+    const goalIds = goals.map((g) => g.id);
 
     const GoalFilterSchema = z.discriminatedUnion('mode', [
         z
@@ -131,6 +135,22 @@ export const makeGeneratorSchema = (categories: GoalCategory[]) => {
                                             }),
                                         })
                                         .meta({ title: 'Category' }),
+                                    z
+                                        .object({
+                                            selectionCriteria:
+                                                z.literal('fixed'),
+                                            goal: z.enum(goalIds).meta({
+                                                enumMeta: Object.fromEntries(
+                                                    goals.map((goal) => [
+                                                        goal.id,
+                                                        { label: goal.goal },
+                                                    ]),
+                                                ),
+                                            }),
+                                        })
+                                        .meta({
+                                            title: 'Fixed',
+                                        }),
                                     z
                                         .object({
                                             selectionCriteria:

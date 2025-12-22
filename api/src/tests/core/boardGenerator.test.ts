@@ -91,8 +91,8 @@ describe('Goal Filters', () => {
             generator.goals.forEach((g) => {
                 const validCatNames = ['Category 1', 'Category 4'];
                 const hasCat = g.categories.some((cat) =>
-                    validCatNames.includes(cat.name)
-                )
+                    validCatNames.includes(cat.name),
+                );
                 expect(hasCat).toBeTruthy();
             });
         });
@@ -306,7 +306,7 @@ describe('Goal Selection', () => {
         generator.layout = [[{ selectionCriteria: 'category', category: '0' }]];
         const goals = generator.validGoalsForCell(0, 0);
         goals.forEach((goal) => {
-            const catNames = goal.categories.map(c => c.name)
+            const catNames = goal.categories.map((c) => c.name);
             expect(catNames).toContain('Category 1');
         });
     });
@@ -334,6 +334,29 @@ describe('Goal Selection', () => {
         });
     });
 
+    it('Selects correctly based on fixed', () => {
+        generator.reset();
+        generator.layout = [
+            [
+                { selectionCriteria: 'fixed', goal: '10' },
+                { selectionCriteria: 'fixed', goal: '11' },
+                { selectionCriteria: 'fixed', goal: '12' },
+            ],
+        ];
+        let goals = generator.validGoalsForCell(0, 0);
+        goals.forEach((goal) => {
+            expect(goal.id).toBe('10');
+        });
+        goals = generator.validGoalsForCell(0, 1);
+        goals.forEach((goal) => {
+            expect(goal.id).toBe('11');
+        });
+        goals = generator.validGoalsForCell(0, 2);
+        goals.forEach((goal) => {
+            expect(goal.id).toBe('12');
+        });
+    });
+
     it('Selects correctly based on mixed layout criteria', () => {
         generator.reset();
         generator.layout = [
@@ -348,7 +371,7 @@ describe('Goal Selection', () => {
         ];
         let goals = generator.validGoalsForCell(0, 0);
         goals.forEach((goal) => {
-            const catNames = goal.categories.map(c => c.name)
+            const catNames = goal.categories.map((c) => c.name);
             expect(catNames).toContain('Category 3');
         });
         goals = generator.validGoalsForCell(0, 1);
@@ -361,7 +384,7 @@ describe('Goal Selection', () => {
         });
         goals = generator.validGoalsForCell(1, 1);
         goals.forEach((goal) => {
-            const catNames = goal.categories.map(c => c.name)
+            const catNames = goal.categories.map((c) => c.name);
             expect(catNames).toContain('Category 6');
         });
     });

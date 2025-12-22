@@ -178,6 +178,9 @@ export class BoardGenerator {
             case 'random':
                 goals = this.goals;
                 break;
+            case 'fixed':
+                goals = [this.getGoal(this.layout[row][col].goal)];
+                break;
         }
         if (!goals || !goals.length) {
             goals = [];
@@ -196,5 +199,16 @@ export class BoardGenerator {
     adjustGoalList(lastPlaced: GeneratorGoal) {
         this.goalCopies[lastPlaced.id] = 0;
         this.globalAdjustments.forEach((f) => f(this, lastPlaced));
+    }
+
+    private getGoal(id: string) {
+        const goal = this.goals.find((g) => g.id === id);
+        if (!goal) {
+            throw new GenerationFailedError(
+                `Unable to find goal with id ${id}`,
+                this,
+            );
+        }
+        return goal;
     }
 }

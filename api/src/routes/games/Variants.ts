@@ -9,6 +9,7 @@ import {
 } from '../../database/games/Variants';
 import { Prisma } from '@prisma/client';
 import { logError } from '../../Logger';
+import { goalsForGameFull } from '../../database/games/Goals';
 
 const variants = Router();
 
@@ -37,6 +38,7 @@ variants.post('/:slug/variants', async (req, res) => {
 
     try {
         const categories = await getCategories(slug);
+        const goals = await goalsForGameFull(slug);
         const { schema } = makeGeneratorSchema(
             categories.map((c) => ({
                 name: c.name,
@@ -44,6 +46,7 @@ variants.post('/:slug/variants', async (req, res) => {
                 max: c.max,
                 goalCount: c._count.goals,
             })),
+            goals,
         );
         const result = schema.safeParse(config);
         if (!result.success) {
@@ -92,6 +95,7 @@ variants
 
         try {
             const categories = await getCategories(slug);
+            const goals = await goalsForGameFull(slug);
             const { schema } = makeGeneratorSchema(
                 categories.map((c) => ({
                     name: c.name,
@@ -99,6 +103,7 @@ variants
                     max: c.max,
                     goalCount: c._count.goals,
                 })),
+                goals,
             );
             const result = schema.safeParse(config);
             if (!result.success) {
