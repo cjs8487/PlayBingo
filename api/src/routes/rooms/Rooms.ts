@@ -20,7 +20,7 @@ import {
 import { chunk } from '../../util/Array';
 import { randomWord, slugAdjectives, slugNouns } from '../../util/Words';
 import { handleAction } from './actions/Actions';
-import { getGoalList } from '../../database/games/Goals';
+import { getGoalList, goalsForGameFull } from '../../database/games/Goals';
 import { RoomData } from '@playbingo/types';
 import Player from '../../core/Player';
 import { GeneratorSettings, makeGeneratorSchema } from '@playbingo/shared';
@@ -101,6 +101,7 @@ rooms.post('/', async (req, res) => {
     let generatorSettings: GeneratorSettings | undefined = undefined;
     let isDifficultyVariant = false;
     let variantName = '';
+    const goals = await goalsForGameFull(game);
     if (gameData.newGeneratorBeta) {
         const { schema } = makeGeneratorSchema(
             ((await getCategories(gameData.slug)) ?? []).map((cat) => ({
@@ -109,6 +110,7 @@ rooms.post('/', async (req, res) => {
                 max: cat.max,
                 goalCount: cat._count.goals,
             })),
+            goals,
         );
         let result = undefined;
         if (variant) {
