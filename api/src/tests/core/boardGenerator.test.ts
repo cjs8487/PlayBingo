@@ -292,6 +292,30 @@ describe('Board Layout', () => {
     });
 });
 
+describe('Preprocessing', () => {
+    const generator = new BoardGenerator(goals, categories, {
+        goalFilters: [],
+        goalTransformation: [],
+        boardLayout: { mode: 'srlv5' },
+        restrictions: [{ type: 'line-type-exclusion' }],
+        adjustments: [],
+    });
+    it("Set's fixed goals to unavailable in goalCopies", () => {
+        generator.reset();
+        generator.layout = [
+            [
+                { selectionCriteria: 'fixed', goal: '10' },
+                { selectionCriteria: 'fixed', goal: '11' },
+                { selectionCriteria: 'fixed', goal: '12' },
+            ],
+        ];
+        generator.preprocessFixedGoals();
+        expect(generator.goalCopies['10']).toBe(0);
+        expect(generator.goalCopies['11']).toBe(0);
+        expect(generator.goalCopies['12']).toBe(0);
+    });
+});
+
 describe('Goal Selection', () => {
     const generator = new BoardGenerator(goals, categories, {
         goalFilters: [],

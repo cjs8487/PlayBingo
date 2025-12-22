@@ -131,6 +131,7 @@ export class BoardGenerator {
         }
 
         // preprocessing
+        this.preprocessFixedGoals();
 
         // goal placement
         this.layout.forEach((row, rowIndex) => {
@@ -180,6 +181,7 @@ export class BoardGenerator {
                 break;
             case 'fixed':
                 goals = [this.getGoal(this.layout[row][col].goal)];
+                this.goalCopies[goals[0].id] = 1; // ensure fixed goals are always available
                 break;
         }
         if (!goals || !goals.length) {
@@ -199,6 +201,23 @@ export class BoardGenerator {
     adjustGoalList(lastPlaced: GeneratorGoal) {
         this.goalCopies[lastPlaced.id] = 0;
         this.globalAdjustments.forEach((f) => f(this, lastPlaced));
+    }
+
+    /**
+     * Processes fixed goals in the layout to ensure they aren't consumed while
+     * generating a different cell in the board. Sets their available copies to
+     * 0 so that they remain in the goal list, but don't get returned as a valid
+     * goal for any cell besides their fixed location.
+     */
+    preprocessFixedGoals() {
+        this.layout.forEach((row) => {
+            row.forEach((cell) => {
+                if (cell.selectionCriteria === 'fixed') {
+                    const goal = this.getGoal(cell.goal);
+                    this.goalCopies[goal.id] = this.goalCopies[goal.id] = 0;
+                }
+            });
+        });
     }
 
     private getGoal(id: string) {
