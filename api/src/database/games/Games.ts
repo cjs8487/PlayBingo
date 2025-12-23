@@ -367,7 +367,7 @@ export const updateTag = (id: string, name: string) => {
 
 export const tagBelongsToGame = async (tagId: string, slug: string) => {
     const count = await prisma.goalTag.count({
-        where: { id: tagId, game: { slug } },
+        where: { AND: [{ id: tagId }, { game: { slug } }] },
     });
     return count > 0;
 };
