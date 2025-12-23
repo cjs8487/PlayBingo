@@ -1,5 +1,11 @@
 import { Add, Remove } from '@mui/icons-material';
-import { IconButton, InputAdornment, TextField } from '@mui/material';
+import {
+    IconButton,
+    InputAdornment,
+    TextField,
+    TextFieldPropsSizeOverrides,
+} from '@mui/material';
+import { OverridableStringUnion } from '@mui/types';
 import { useField } from 'formik';
 import { useCallback } from 'react';
 
@@ -11,6 +17,10 @@ interface NumberInputProps {
     max?: number;
     disabled?: boolean;
     required?: boolean;
+    size?: OverridableStringUnion<
+        'small' | 'medium',
+        TextFieldPropsSizeOverrides
+    >;
 }
 
 /**
@@ -31,6 +41,7 @@ export default function NumberInput({
     max,
     disabled,
     required,
+    size,
 }: NumberInputProps) {
     const [{ value }, meta, helpers] = useField<number>(name);
     const setValue = useCallback(
@@ -59,6 +70,7 @@ export default function NumberInput({
             disabled={disabled}
             onChange={(e) => setValue(Number(e.target.value))}
             sx={{ p: 0 }}
+            size={size}
             slotProps={{
                 input: {
                     slotProps: {
