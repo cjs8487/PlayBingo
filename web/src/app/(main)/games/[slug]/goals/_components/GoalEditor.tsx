@@ -1,5 +1,4 @@
 import NumberInput from '@/components/input/NumberInput';
-import { Category, Goal } from '@playbingo/types';
 import CheckBoxIcon from '@mui/icons-material/CheckBox';
 import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
 import {
@@ -10,10 +9,12 @@ import {
     TextField,
     createFilterOptions,
 } from '@mui/material';
+import { Category, Goal, GoalTag } from '@playbingo/types';
 import { Form, Formik, useField } from 'formik';
 import { KeyedMutator } from 'swr';
-import { alertError } from '../../../../../../lib/Utils';
 import FormikTextField from '../../../../../../components/input/FormikTextField';
+import { useGoalManagerContext } from '../../../../../../context/GoalManagerContext';
+import { alertError } from '../../../../../../lib/Utils';
 
 const icon = <CheckBoxOutlineBlankIcon fontSize="small" />;
 const checkedIcon = <CheckBoxIcon fontSize="small" />;
@@ -81,6 +82,52 @@ function CategorySelect({ categories }: CategorySelectProps) {
         />
     );
 }
+
+interface TagSelectProps {
+    tags: GoalTag[];
+}
+
+function TagSelect({ tags }: TagSelectProps) {
+    const [field, , helpers] = useField<string[]>('tags');
+
+    const tagList = tags.map((t) => ({ value: t.id, display: t.name }));
+    console.log(tags);
+    return (
+        <Autocomplete
+            multiple
+            id="goal-tag-select"
+            options={tagList}
+            value={field.value.map((v) => ({
+                value: v,
+                display: tags.find((t) => t.id === v)?.name ?? v,
+            }))}
+            onChange={(_, newValue) => {
+                helpers.setValue(newValue.map((v) => v.value));
+            }}
+            disableCloseOnSelect
+            getOptionLabel={(option) => option.display}
+            renderOption={({ key, ...rest }, option, { selected }) => {
+                return (
+                    <li key={key} {...rest}>
+                        <Checkbox
+                            icon={icon}
+                            checkedIcon={checkedIcon}
+                            style={{ marginRight: 8 }}
+                            checked={selected}
+                        />
+                        {option.display}
+                    </li>
+                );
+            }}
+            renderInput={(params) => <TextField {...params} label="Tags" />}
+            fullWidth
+            isOptionEqualToValue={(option, value) =>
+                option.value === value.value
+            }
+        />
+    );
+}
+
 interface GoalEditorProps {
     slug: string;
     goal: Goal;
@@ -100,6 +147,7 @@ export default function GoalEditor({
     categories,
     canModerate,
 }: GoalEditorProps) {
+    const { tags } = useGoalManagerContext();
     return (
         <Formik
             initialValues={{
@@ -107,12 +155,14 @@ export default function GoalEditor({
                 description: goal.description ?? '',
                 categories: goal.categories?.map((c) => c.name) ?? [],
                 difficulty: goal.difficulty ?? 0,
+                tags: goal.tags?.map((t) => t.id) ?? [],
             }}
             onSubmit={async ({
                 goal: goalText,
                 description,
                 categories,
                 difficulty,
+                tags,
             }) => {
                 if (isNew) {
                     const res = await fetch(`/api/games/${slug}/goals`, {
@@ -160,6 +210,15 @@ export default function GoalEditor({
                             difficulty:
                                 difficulty !== goal.difficulty
                                     ? difficulty
+                                    : undefined,
+                            tags:
+                                tags.length !== goal.tags?.length ||
+                                !tags.every((tag) =>
+                                    goal.tags
+                                        ?.map((tag) => tag.id)
+                                        .includes(tag),
+                                )
+                                    ? tags
                                     : undefined,
                         }),
                     });
@@ -212,6 +271,13 @@ export default function GoalEditor({
                                 }}
                             >
                                 <CategorySelect categories={categories} />
+                            </Box>
+                            <Box
+                                sx={{
+                                    flexGrow: 3,
+                                }}
+                            >
+                                <TagSelect tags={tags} />
                             </Box>
                             <Box
                                 sx={{

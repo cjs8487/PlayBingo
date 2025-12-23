@@ -9,7 +9,7 @@ import {
     useEffect,
     useState,
 } from 'react';
-import { Category, Goal } from '@playbingo/types';
+import { Category, Goal, GoalTag } from '@playbingo/types';
 import { useApi } from '../lib/Hooks';
 import { alertError } from '../lib/Utils';
 import { KeyedMutator } from 'swr';
@@ -50,6 +50,7 @@ interface GoalManagerContext {
     mutateGoals: KeyedMutator<Goal[]>;
     newGoal: boolean;
     setNewGoal: (newGoal: boolean) => void;
+    tags: GoalTag[];
 }
 
 const GoalManagerContext = createContext<GoalManagerContext>({
@@ -75,18 +76,21 @@ const GoalManagerContext = createContext<GoalManagerContext>({
     },
     newGoal: false,
     setNewGoal() {},
+    tags: [],
 });
 
 interface GoalManagerContextProps {
     slug: string;
     canModerate: boolean;
     children: ReactNode;
+    tags: GoalTag[];
 }
 
 export function GoalManagerContextProvider({
     slug,
     canModerate,
     children,
+    tags,
 }: GoalManagerContextProps) {
     // API
     const {
@@ -209,6 +213,7 @@ export function GoalManagerContextProvider({
                 mutateGoals,
                 newGoal,
                 setNewGoal,
+                tags,
             }}
         >
             {children}

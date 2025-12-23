@@ -20,6 +20,7 @@ model Goal {
   description   String?
   oldCategories String[]
   categories    Category[] @relation("GoalCategories")
+  tags          GoalTag[]  @relation("GoalTags")
   difficulty    Int?
   game          Game       @relation(fields: [gameId], references: [id])
   createdAt     DateTime   @default(now())
@@ -33,6 +34,16 @@ model Category {
   name   String
   goals  Goal[] @relation("GoalCategories")
   max    Int    @default(0)
+  gameId String
+
+  @@unique([gameId, name])
+}
+
+model GoalTag {
+  id     String @id @unique @default(cuid())
+  name   String
+  game   Game   @relation(fields: [gameId], references: [id])
+  goals  Goal[] @relation("GoalTags")
   gameId String
 
   @@unique([gameId, name])
@@ -84,6 +95,7 @@ model Game {
   descriptionMd               String?
   setupMd                     String?
   linksMd                     String?
+  goalTags                    GoalTag[]
 }
 
 model DifficultyVariant {

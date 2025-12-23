@@ -15,3 +15,16 @@ export async function deleteCategory(slug: string, categoryId: string) {
         status: res.status,
     };
 }
+
+export async function deleteTag(slug: string, tagId: string) {
+    const res = await serverFetch(`/api/goals/tags/${tagId}`, {
+        method: 'DELETE',
+    });
+
+    revalidatePath(`/api/goals/${slug}/tags`);
+
+    return {
+        ok: res.ok,
+        status: res.status,
+    };
+}
