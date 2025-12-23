@@ -17,7 +17,7 @@ export async function deleteCategory(slug: string, categoryId: string) {
 }
 
 export async function deleteTag(slug: string, tagId: string) {
-    const res = await serverFetch(`/api/goals/tags/${tagId}`, {
+    const res = await serverFetch(`/api/games/${slug}/tags/${tagId}`, {
         method: 'DELETE',
     });
 
