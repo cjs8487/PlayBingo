@@ -40,7 +40,7 @@ interface GoalManagerContext {
     catList: Category[];
     searchParams: SearchParams;
     settings: GoalManagerSettings;
-    setSelectedGoal: (goal: Goal) => void;
+    setSelectedGoal: (goal: string) => void;
     deleteGoal: (id: string) => void;
     setShownCats: (cats: string[]) => void;
     setSort: (sort: SortOptions) => void;
@@ -97,7 +97,7 @@ export function GoalManagerContextProvider({
 
     // state
     // core
-    const [selectedGoal, setSelectedGoal] = useState<Goal>();
+    const [selectedGoal, setSelectedGoal] = useState<string>();
     const [catList, setCatList] = useState<Category[]>([]);
     const [newGoal, setNewGoal] = useState(false);
     // search params
@@ -193,7 +193,7 @@ export function GoalManagerContextProvider({
             value={{
                 slug,
                 canModerate,
-                selectedGoal,
+                selectedGoal: goals.find((g) => g.id === selectedGoal),
                 goals,
                 shownGoals,
                 catList,

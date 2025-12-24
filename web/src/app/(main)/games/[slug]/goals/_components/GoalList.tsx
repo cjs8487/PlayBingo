@@ -119,7 +119,7 @@ export default function GoalList() {
             itemContent={(index, goal) => (
                 <>
                     <ListItemButton
-                        onClick={() => setSelectedGoal(goal)}
+                        onClick={() => setSelectedGoal(goal.id)}
                         selected={selectedGoal === goal}
                         divider
                     >
