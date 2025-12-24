@@ -1,4 +1,4 @@
-import { Goal, GoalCategory } from '@playbingo/types';
+import { Goal, GoalCategory, GoalTag } from '@playbingo/types';
 import * as z from 'zod';
 
 declare module 'zod' {
@@ -13,11 +13,13 @@ declare module 'zod' {
 export const makeGeneratorSchema = (
     categories: GoalCategory[],
     goals: Goal[],
+    tags: GoalTag[],
 ) => {
     z.globalRegistry.clear();
 
     const catIds = categories.map((c) => c.id);
     const goalIds = goals.map((g) => g.id);
+    const tagIds = tags.map((t) => t.id);
 
     const GoalFilterSchema = z.discriminatedUnion('mode', [
         z
@@ -67,6 +69,44 @@ export const makeGeneratorSchema = (
                     error: 'Duplicate categories are not allowed',
                 })
                 .meta({ title: 'Categories' }),
+        }),
+        z.object({
+            mode: z.literal('tags-inclusion').meta({
+                title: 'Include Tags',
+                description:
+                    'Filters goals based on tags. Only goals that have at least one of the tags in this filter are included. Goals with no tags will always fail this filter.',
+            }),
+            tags: z
+                .array(
+                    z.enum(tagIds).meta({
+                        enumMeta: Object.fromEntries(
+                            tags.map((tag) => [tag.id, { label: tag.name }]),
+                        ),
+                    }),
+                )
+                .refine((arr) => new Set(arr).size === arr.length, {
+                    error: 'Duplicate tags are not allowed',
+                })
+                .meta({ title: 'Tags' }),
+        }),
+        z.object({
+            mode: z.literal('tags-exclusion').meta({
+                title: 'Exclude Tags',
+                description:
+                    'Filters goals based on tags. Goals that have at least one of the tags in this filter are filtered out. Goals with no tags will always pass this filter.',
+            }),
+            tags: z
+                .array(
+                    z.enum(tagIds).meta({
+                        enumMeta: Object.fromEntries(
+                            tags.map((tag) => [tag.id, { label: tag.name }]),
+                        ),
+                    }),
+                )
+                .refine((arr) => new Set(arr).size === arr.length, {
+                    error: 'Duplicate tags are not allowed',
+                })
+                .meta({ title: 'Tags' }),
         }),
     ]);
 
