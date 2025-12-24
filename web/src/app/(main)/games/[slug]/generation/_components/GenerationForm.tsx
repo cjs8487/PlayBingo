@@ -6,7 +6,7 @@ import {
 } from '@/components/input/JsonSchemaRenderer';
 import { Box, Button, Tooltip, Typography } from '@mui/material';
 import { GeneratorSettings, makeGeneratorSchema } from '@playbingo/shared';
-import { Goal, GoalCategory } from '@playbingo/types';
+import { Goal, GoalCategory, GoalTag } from '@playbingo/types';
 import { useCallback } from 'react';
 import * as z from 'zod';
 import { alertError, notifyMessage } from '../../../../../../lib/Utils';
@@ -20,6 +20,7 @@ interface Props {
     categories: GoalCategory[];
     goals: Goal[];
     initialValues?: GeneratorSettings;
+    tags: GoalTag[];
 }
 
 export default function GenerationForm({
@@ -27,8 +28,9 @@ export default function GenerationForm({
     categories,
     goals,
     initialValues,
+    tags,
 }: Props) {
-    const { schema, metadata } = makeGeneratorSchema(categories, goals);
+    const { schema, metadata } = makeGeneratorSchema(categories, goals, tags);
     const schemaJson = z.toJSONSchema(schema, { metadata });
 
     const { values, setValues, errors, isValid, handleSubmit } = useJSONForm(

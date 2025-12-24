@@ -20,7 +20,7 @@ import {
     Typography,
 } from '@mui/material';
 import { makeGeneratorSchema } from '@playbingo/shared';
-import { GoalCategory, Variant } from '@playbingo/types';
+import { Goal, GoalCategory, GoalTag, Variant } from '@playbingo/types';
 import { useCallback, useState } from 'react';
 import z from 'zod';
 
@@ -28,6 +28,8 @@ interface BaseProps {
     slug: string;
     categories: GoalCategory[];
     closeModal: () => void;
+    goals: Goal[];
+    tags: GoalTag[];
 }
 
 interface EditProps {
@@ -48,8 +50,10 @@ export default function VariantForm({
     closeModal,
     isNew,
     editVariant,
+    goals,
+    tags,
 }: Props) {
-    const { schema, metadata } = makeGeneratorSchema(categories);
+    const { schema, metadata } = makeGeneratorSchema(categories, goals, tags);
     const schemaJson = z.toJSONSchema(schema, { metadata });
 
     const [name, setName] = useState(editVariant?.name ?? '');

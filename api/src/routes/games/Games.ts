@@ -627,6 +627,7 @@ games.post('/:slug/generation', async (req, res) => {
 
     const categories = await getCategories(slug);
     const goals = await goalsForGameFull(slug);
+    const tags = await getTags(slug);
     const { schema } = makeGeneratorSchema(
         categories.map((cat) => ({
             id: cat.id,
@@ -635,6 +636,7 @@ games.post('/:slug/generation', async (req, res) => {
             goalCount: cat._count.goals,
         })) ?? [],
         goals,
+        tags,
     );
 
     const parseResult = schema.safeParse(req.body);

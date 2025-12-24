@@ -15,6 +15,7 @@ import {
 import {
     gameForSlug,
     getDifficultyVariant,
+    getTags,
     goalCount,
 } from '../../database/games/Games';
 import { chunk } from '../../util/Array';
@@ -101,6 +102,7 @@ rooms.post('/', async (req, res) => {
     let generatorSettings: GeneratorSettings | undefined = undefined;
     let isDifficultyVariant = false;
     let variantName = '';
+    const tags = await getTags(game);
     const goals = await goalsForGameFull(game);
     if (gameData.newGeneratorBeta) {
         const { schema } = makeGeneratorSchema(
@@ -111,6 +113,7 @@ rooms.post('/', async (req, res) => {
                 goalCount: cat._count.goals,
             })),
             goals,
+            tags,
         );
         let result = undefined;
         if (variant) {
