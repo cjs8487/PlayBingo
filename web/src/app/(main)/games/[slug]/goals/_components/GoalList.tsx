@@ -1,3 +1,4 @@
+import { Sell } from '@mui/icons-material';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import {
@@ -9,6 +10,7 @@ import {
     ListItemButton,
     ListItemIcon,
     ListItemText,
+    Tooltip,
     Typography,
     styled,
 } from '@mui/material';
@@ -140,6 +142,17 @@ export default function GoalList() {
                                         size="small"
                                         sx={{ mr: 0.5 }}
                                     />
+                                ))}
+                                {goal.tags?.map((tag) => (
+                                    <Tooltip title="Tag" key={tag.id}>
+                                        <Chip
+                                            key={tag.id}
+                                            label={tag.name}
+                                            size="small"
+                                            sx={{ mr: 0.5 }}
+                                            icon={<Sell />}
+                                        />
+                                    </Tooltip>
                                 ))}
                             </Box>
                         </Box>

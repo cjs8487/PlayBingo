@@ -20,11 +20,17 @@ export enum SortOptions {
     DIFFICULTY,
 }
 
+interface CategorySearchOption {
+    value: string;
+    display: string;
+    isTag: boolean;
+}
+
 interface SearchParams {
     sort: SortOptions | null;
     reverse: boolean;
     search: string;
-    shownCats: string[];
+    shownCats: CategorySearchOption[];
 }
 
 interface GoalManagerSettings {
@@ -42,7 +48,7 @@ interface GoalManagerContext {
     settings: GoalManagerSettings;
     setSelectedGoal: (goal: Goal) => void;
     deleteGoal: (id: string) => void;
-    setShownCats: (cats: string[]) => void;
+    setShownCats: (cats: CategorySearchOption[]) => void;
     setSort: (sort: SortOptions) => void;
     setReverse: Dispatch<SetStateAction<boolean>>;
     setSearch: (search: string) => void;
@@ -106,7 +112,7 @@ export function GoalManagerContextProvider({
     const [newGoal, setNewGoal] = useState(false);
     // search params
     const [sort, setSort] = useState<SortOptions | null>(SortOptions.DEFAULT);
-    const [shownCats, setShownCats] = useState<string[]>([]);
+    const [shownCats, setShownCats] = useState<CategorySearchOption[]>([]);
     const [reverse, setReverse] = useState(false);
     const [search, setSearch] = useState('');
     //settings
@@ -159,8 +165,12 @@ export function GoalManagerContextProvider({
         .filter((goal) => {
             let shown = true;
             if (shownCats.length > 0) {
-                shown = shownCats.some((cat) =>
-                    goal.categories?.map((cat) => cat.name).includes(cat),
+                shown = shownCats.some((searchOpt) =>
+                    searchOpt.isTag
+                        ? goal.tags?.map((t) => t.id).includes(searchOpt.value)
+                        : goal.categories
+                              ?.map((c) => c.id)
+                              .includes(searchOpt.value),
                 );
             }
             if (!shown) {
