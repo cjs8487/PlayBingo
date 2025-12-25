@@ -338,3 +338,42 @@ export const updateGeneratorSettings = (
         },
     });
 };
+
+export const getTags = (slug: string) => {
+    return prisma.goalTag.findMany({
+        where: { game: { slug } },
+        include: { _count: { select: { goals: true } } },
+        orderBy: { name: 'asc' },
+    });
+};
+
+export const createTag = (slug: string, name: string) => {
+    return prisma.goalTag.create({
+        data: {
+            name,
+            game: { connect: { slug } },
+        },
+    });
+};
+
+export const updateTag = (id: string, name: string) => {
+    return prisma.goalTag.update({
+        where: { id },
+        data: {
+            name,
+        },
+    });
+};
+
+export const tagBelongsToGame = async (tagId: string, slug: string) => {
+    const count = await prisma.goalTag.count({
+        where: { AND: [{ id: tagId }, { game: { slug } }] },
+    });
+    return count > 0;
+};
+
+export const deleteTag = (id: string) => {
+    return prisma.goalTag.delete({
+        where: { id },
+    });
+};

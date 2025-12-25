@@ -9,15 +9,19 @@ import {
     allGames,
     createDifficultyVariant,
     createGame,
+    createTag,
     deleteDifficultyVariant,
     deleteGame,
+    deleteTag,
     favoriteGame,
     gameForSlug,
     getGameCover,
+    getTags,
     isModerator,
     isOwner,
     removeModerator,
     removeOwner,
+    tagBelongsToGame,
     unfavoriteGame,
     updateDescription,
     updateDifficultyGroups,
@@ -32,6 +36,7 @@ import {
     updateSetup,
     updateSlugWords,
     updateSRLv5Enabled,
+    updateTag,
     updateUseTypedRandom,
 } from '../../database/games/Games';
 import {
@@ -621,6 +626,8 @@ games.post('/:slug/generation', async (req, res) => {
     }
 
     const categories = await getCategories(slug);
+    const goals = await goalsForGameFull(slug);
+    const tags = await getTags(slug);
     const { schema } = makeGeneratorSchema(
         categories.map((cat) => ({
             id: cat.id,
@@ -628,6 +635,8 @@ games.post('/:slug/generation', async (req, res) => {
             max: cat.max,
             goalCount: cat._count.goals,
         })) ?? [],
+        goals,
+        tags,
     );
 
     const parseResult = schema.safeParse(req.body);
@@ -719,6 +728,95 @@ games.get('/:slug/sampleBoard', async (req, res) => {
         variant: variantData ? variantData.name : undefined,
     });
 });
+
+games
+    .route('/:slug/tags')
+    .post(async (req, res) => {
+        const { slug } = req.params;
+        const { name } = req.body;
+
+        if (!req.session.user) {
+            res.sendStatus(401);
+            return;
+        }
+
+        if (!name) {
+            res.status(400).send('Missing tag name');
+            return;
+        }
+
+        if (!(await isModerator(slug, req.session.user))) {
+            res.sendStatus(403);
+            return;
+        }
+
+        const tag = await createTag(slug, name);
+        res.status(200).json(tag);
+    })
+    .get(async (req, res) => {
+        const { slug } = req.params;
+
+        const tags = await getTags(slug);
+        tags.sort((a, b) => (a.name > b.name ? 1 : -1));
+        res.status(200).json(
+            tags.map((tag) => ({
+                id: tag.id,
+                name: tag.name,
+                goalCount: tag._count.goals,
+            })),
+        );
+    });
+
+games
+    .route('/:slug/tags/:id')
+    .post(async (req, res) => {
+        const { slug, id } = req.params;
+
+        if (!req.session.user) {
+            res.sendStatus(401);
+            return;
+        }
+
+        const { name } = req.body;
+        if (!name) {
+            res.status(400).send('Missing tag name');
+            return;
+        }
+
+        if (!(await isModerator(slug, req.session.user))) {
+            res.sendStatus(403);
+            return;
+        }
+
+        if (!(await tagBelongsToGame(id, slug))) {
+            res.sendStatus(404);
+            return;
+        }
+
+        const tag = await updateTag(id, name);
+        res.status(200).json(tag);
+    })
+    .delete(async (req, res) => {
+        const { slug, id } = req.params;
+
+        if (!req.session.user) {
+            res.sendStatus(401);
+            return;
+        }
+
+        if (!(await isModerator(slug, req.session.user))) {
+            res.sendStatus(403);
+            return;
+        }
+
+        if (!(await tagBelongsToGame(id, slug))) {
+            res.sendStatus(404);
+            return;
+        }
+
+        await deleteTag(id);
+        res.sendStatus(200);
+    });
 
 games.use(variants);
 

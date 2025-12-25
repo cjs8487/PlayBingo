@@ -6,9 +6,11 @@ import {
     Autocomplete,
     Box,
     Checkbox,
+    Chip,
     FormControl,
     IconButton,
     InputLabel,
+    ListItemIcon,
     ListItemText,
     MenuItem,
     Select,
@@ -19,6 +21,7 @@ import {
     SortOptions,
     useGoalManagerContext,
 } from '../../../../../../context/GoalManagerContext';
+import { Sell } from '@mui/icons-material';
 
 const sortOptions = [
     { label: 'Default', value: SortOptions.DEFAULT },
@@ -37,7 +40,22 @@ export default function GoalSearch() {
         setSort,
         setReverse,
         setSearch,
+        tags,
     } = useGoalManagerContext();
+
+    const searchOptions = [
+        ...catList.map((cat) => ({
+            value: cat.id,
+            display: cat.name,
+            isTag: false,
+        })),
+        ...tags.map((tag) => ({
+            value: tag.id,
+            display: tag.name,
+            isTag: true,
+        })),
+    ];
+
     return (
         <>
             <Box
@@ -48,7 +66,7 @@ export default function GoalSearch() {
                 <Autocomplete
                     multiple
                     id="filter-categories"
-                    options={catList.map((c) => c.name)}
+                    options={searchOptions}
                     onChange={(_, newValue) => {
                         setShownCats(newValue);
                     }}
@@ -63,7 +81,12 @@ export default function GoalSearch() {
                                     style={{ marginRight: 8 }}
                                     checked={selected}
                                 />
-                                <ListItemText>{option}</ListItemText>
+                                {option.isTag ? (
+                                    <ListItemIcon>
+                                        <Sell sx={{ mr: 1 }} />
+                                    </ListItemIcon>
+                                ) : null}
+                                <ListItemText>{option.display}</ListItemText>
                             </MenuItem>
                         );
                     }}
@@ -71,6 +94,25 @@ export default function GoalSearch() {
                         <TextField {...params} label="Categories" />
                     )}
                     fullWidth
+                    getOptionLabel={(option) => option.display}
+                    isOptionEqualToValue={(option, value) =>
+                        option.value === value.value
+                    }
+                    renderValue={(value, getItemProps) =>
+                        value.map((option, index: number) => {
+                            const { key, ...itemProps } = getItemProps({
+                                index,
+                            });
+                            return (
+                                <Chip
+                                    key={key}
+                                    label={option.display}
+                                    icon={option.isTag ? <Sell /> : undefined}
+                                    {...itemProps}
+                                />
+                            );
+                        })
+                    }
                 />
             </Box>
             <Box

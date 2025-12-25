@@ -5,6 +5,7 @@ export * from './types/Game';
 export * from './types/GeneratorOptions';
 export * from './types/Goal';
 export * from './types/GoalCategory';
+export * from './types/GoalTag';
 export * from './types/Player';
 export * from './types/RoomAction';
 export * from './types/RoomData';

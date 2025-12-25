@@ -1,0 +1,12 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["id", "name"],
+    "description": "A grouper for goals, used during some board generation mechanics.",
+    "properties": {
+        "id": {"type": "string"},
+        "name": {"type": "string"},
+        "goalCount": {"type": "number"}
+    }
+}

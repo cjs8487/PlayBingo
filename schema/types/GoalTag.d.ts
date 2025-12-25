@@ -6,26 +6,6 @@
  */
 
 /**
- * A single objective for a bingo game.
- */
-export interface Goal {
-  id: string;
-  goal: string;
-  description: string | null;
-  difficulty?: number | null;
-  categories?: Category[];
-  tags?: GoalTag[];
-}
-/**
- * The full goal category definition.
- */
-export interface Category {
-  id: string;
-  name: string;
-  gameId: string;
-  max: number;
-}
-/**
  * A grouper for goals, used during some board generation mechanics.
  */
 export interface GoalTag {

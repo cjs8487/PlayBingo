@@ -1,4 +1,4 @@
-import { Category } from '@prisma/client';
+import { Category, GoalTag } from '@prisma/client';
 import {
     BoardGenerator,
     LayoutCell,
@@ -12,6 +12,12 @@ const categories: Category[] = Array.from({ length: 7 }).map((_, i) => ({
     name: `Category ${i + 1}`,
 }));
 
+const tags: GoalTag[] = Array.from({ length: 5 }).map((_, i) => ({
+    gameId: '1',
+    id: `${i}`,
+    name: `Tag ${i + 1}`,
+}));
+
 const goals: GeneratorGoal[] = Array.from({ length: 100 }).map((_, i) => ({
     id: `${i}`,
     goal: `Goal ${i + 1}`,
@@ -20,6 +26,7 @@ const goals: GeneratorGoal[] = Array.from({ length: 100 }).map((_, i) => ({
         categories[i % categories.length],
         categories[(i + 1) % categories.length],
     ],
+    tags: i % 5 === 0 ? [] : [tags[i % tags.length]],
     difficulty: (i % 25) + 1,
 }));
 
@@ -91,9 +98,86 @@ describe('Goal Filters', () => {
             generator.goals.forEach((g) => {
                 const validCatNames = ['Category 1', 'Category 4'];
                 const hasCat = g.categories.some((cat) =>
-                    validCatNames.includes(cat.name)
-                )
+                    validCatNames.includes(cat.name),
+                );
                 expect(hasCat).toBeTruthy();
+            });
+        });
+    });
+
+    describe('Include Tags', () => {
+        const generator = new BoardGenerator(goals, categories, {
+            goalFilters: [
+                {
+                    mode: 'tags-inclusion',
+                    tags: ['0', '2'],
+                },
+            ],
+            goalTransformation: [],
+            boardLayout: { mode: 'random' },
+            restrictions: [],
+            adjustments: [],
+        });
+        it('Filters out goals without at least one specified tag', () => {
+            generator.reset();
+            generator.pruneGoalList();
+            expect(generator.goals.length).toBeGreaterThan(0);
+            generator.goals.forEach((g) => {
+                const validTagNames = ['Tag 1', 'Tag 3'];
+                const hasTag = g.tags.some((tag) =>
+                    validTagNames.includes(tag.name),
+                );
+                expect(hasTag).toBeTruthy();
+            });
+        });
+
+        it('Filters out goals without the specified tags', () => {
+            generator.reset();
+            generator.pruneGoalList();
+            expect(generator.goals.length).toBeGreaterThan(0);
+            generator.goals.forEach((g) => {
+                const validTagNames = ['Tag 1', 'Tag 3'];
+                const hasTag = g.tags.some((tag) =>
+                    validTagNames.includes(tag.name),
+                );
+                expect(hasTag).toBeTruthy();
+            });
+        });
+    });
+
+    describe('Exclude Tags', () => {
+        const generator = new BoardGenerator(goals, categories, {
+            goalFilters: [
+                {
+                    mode: 'tags-exclusion',
+                    tags: ['0', '2'],
+                },
+            ],
+            goalTransformation: [],
+            boardLayout: { mode: 'random' },
+            restrictions: [],
+            adjustments: [],
+        });
+        it("Doesn't filter out goals without at least one tag", () => {
+            generator.reset();
+            generator.pruneGoalList();
+            goals.forEach((g) => {
+                if (g.tags.length === 0) {
+                    expect(generator.goals).toContain(g);
+                }
+            });
+        });
+
+        it('Filters out goals without the specified tags', () => {
+            generator.reset();
+            generator.pruneGoalList();
+            expect(generator.goals.length).toBeGreaterThan(0);
+            generator.goals.forEach((g) => {
+                const validTagNames = ['Tag 1', 'Tag 3'];
+                const hasTag = g.tags.some((tag) =>
+                    validTagNames.includes(tag.name),
+                );
+                expect(hasTag).toBeFalsy();
             });
         });
     });
@@ -292,6 +376,30 @@ describe('Board Layout', () => {
     });
 });
 
+describe('Preprocessing', () => {
+    const generator = new BoardGenerator(goals, categories, {
+        goalFilters: [],
+        goalTransformation: [],
+        boardLayout: { mode: 'srlv5' },
+        restrictions: [{ type: 'line-type-exclusion' }],
+        adjustments: [],
+    });
+    it("Set's fixed goals to unavailable in goalCopies", () => {
+        generator.reset();
+        generator.layout = [
+            [
+                { selectionCriteria: 'fixed', goal: '10' },
+                { selectionCriteria: 'fixed', goal: '11' },
+                { selectionCriteria: 'fixed', goal: '12' },
+            ],
+        ];
+        generator.preprocessFixedGoals();
+        expect(generator.goalCopies['10']).toBe(0);
+        expect(generator.goalCopies['11']).toBe(0);
+        expect(generator.goalCopies['12']).toBe(0);
+    });
+});
+
 describe('Goal Selection', () => {
     const generator = new BoardGenerator(goals, categories, {
         goalFilters: [],
@@ -306,7 +414,7 @@ describe('Goal Selection', () => {
         generator.layout = [[{ selectionCriteria: 'category', category: '0' }]];
         const goals = generator.validGoalsForCell(0, 0);
         goals.forEach((goal) => {
-            const catNames = goal.categories.map(c => c.name)
+            const catNames = goal.categories.map((c) => c.name);
             expect(catNames).toContain('Category 1');
         });
     });
@@ -334,6 +442,29 @@ describe('Goal Selection', () => {
         });
     });
 
+    it('Selects correctly based on fixed', () => {
+        generator.reset();
+        generator.layout = [
+            [
+                { selectionCriteria: 'fixed', goal: '10' },
+                { selectionCriteria: 'fixed', goal: '11' },
+                { selectionCriteria: 'fixed', goal: '12' },
+            ],
+        ];
+        let goals = generator.validGoalsForCell(0, 0);
+        goals.forEach((goal) => {
+            expect(goal.id).toBe('10');
+        });
+        goals = generator.validGoalsForCell(0, 1);
+        goals.forEach((goal) => {
+            expect(goal.id).toBe('11');
+        });
+        goals = generator.validGoalsForCell(0, 2);
+        goals.forEach((goal) => {
+            expect(goal.id).toBe('12');
+        });
+    });
+
     it('Selects correctly based on mixed layout criteria', () => {
         generator.reset();
         generator.layout = [
@@ -348,7 +479,7 @@ describe('Goal Selection', () => {
         ];
         let goals = generator.validGoalsForCell(0, 0);
         goals.forEach((goal) => {
-            const catNames = goal.categories.map(c => c.name)
+            const catNames = goal.categories.map((c) => c.name);
             expect(catNames).toContain('Category 3');
         });
         goals = generator.validGoalsForCell(0, 1);
@@ -361,7 +492,7 @@ describe('Goal Selection', () => {
         });
         goals = generator.validGoalsForCell(1, 1);
         goals.forEach((goal) => {
-            const catNames = goal.categories.map(c => c.name)
+            const catNames = goal.categories.map((c) => c.name);
             expect(catNames).toContain('Category 6');
         });
     });

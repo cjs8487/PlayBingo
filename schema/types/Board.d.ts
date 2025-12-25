@@ -28,6 +28,7 @@ export interface Goal {
   description: string | null;
   difficulty?: number | null;
   categories?: Category[];
+  tags?: GoalTag[];
 }
 /**
  * The full goal category definition.
@@ -37,6 +38,14 @@ export interface Category {
   name: string;
   gameId: string;
   max: number;
+}
+/**
+ * A grouper for goals, used during some board generation mechanics.
+ */
+export interface GoalTag {
+  id: string;
+  name: string;
+  goalCount?: number;
 }
 export interface HiddenCell {
   revealed: false;
