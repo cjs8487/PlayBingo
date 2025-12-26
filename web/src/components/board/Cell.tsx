@@ -1,21 +1,32 @@
 'use client';
+import {
+    arrow,
+    autoUpdate,
+    flip,
+    FloatingArrow,
+    offset,
+    shift,
+    useDismiss,
+    useFloating,
+    useInteractions,
+    useRole,
+} from '@floating-ui/react';
 import { Add, Remove } from '@mui/icons-material';
 import Star from '@mui/icons-material/Star';
 import {
     Box,
     ClickAwayListener,
-    Grow,
     IconButton,
     ListItemIcon,
     ListItemText,
     MenuItem,
     MenuList,
     Paper,
-    Popper,
     SxProps,
     Tooltip,
     Typography,
 } from '@mui/material';
+import { grey } from '@mui/material/colors';
 import { Category } from '@playbingo/types';
 import { MouseLeftClickOutline, MouseRightClickOutline } from 'mdi-material-ui';
 import { MouseEvent, useCallback, useEffect, useRef, useState } from 'react';
@@ -78,10 +89,7 @@ export default function BoardCell({
 
     const [wasRevealed, setWasRevealed] = useState(false);
     const [animating, setAnimating] = useState(false);
-    const [contextMenu, setContextMenu] = useState<{
-        mouseX: number;
-        mouseY: number;
-    } | null>(null);
+    const [menuOpen, setMenuOpen] = useState(false);
 
     const toggleSpace = useCallback(() => {
         if (!connectedPlayer) {
@@ -122,7 +130,31 @@ export default function BoardCell({
         }
     }, [revealed, wasRevealed, onReveal]);
 
-    const cellRef = useRef<HTMLDivElement>(null);
+    const arrowRef = useRef<SVGSVGElement>(null);
+    const { refs, floatingStyles, context } = useFloating({
+        open: menuOpen,
+        onOpenChange: setMenuOpen,
+        middleware: [
+            offset({ mainAxis: 5, alignmentAxis: 4 }),
+            flip({
+                fallbackPlacements: ['bottom-start', 'top-end', 'top-start'],
+            }),
+            shift({ padding: 10 }),
+            arrow({
+                element: arrowRef,
+            }),
+        ],
+        placement: 'bottom-end',
+        strategy: 'fixed',
+        whileElementsMounted: autoUpdate,
+    });
+    const role = useRole(context, { role: 'menu' });
+    const dismiss = useDismiss(context);
+
+    const { getReferenceProps, getFloatingProps } = useInteractions([
+        role,
+        dismiss,
+    ]);
 
     // calculations
     const colorPortion = 360 / completedPlayers.length;
@@ -140,20 +172,22 @@ export default function BoardCell({
     }, []);
 
     const handleClose = () => {
-        setContextMenu(null);
+        setMenuOpen(false);
     };
 
     const handleListKeyDown = (event: React.KeyboardEvent) => {
         if (event.key === 'Tab') {
             event.preventDefault();
-            setContextMenu(null);
+            setMenuOpen(false);
         } else if (event.key === 'Escape') {
-            setContextMenu(null);
+            setMenuOpen(false);
         }
     };
 
     const handleCellClick = (e: MouseEvent<HTMLDivElement>) => {
-        setContextMenu(null);
+        setMenuOpen(false);
+
+        console.log(e);
 
         if (e.button === 0) {
             // left click
@@ -171,14 +205,7 @@ export default function BoardCell({
             if (e.ctrlKey) {
                 toggleGoalStar(row, col);
             } else {
-                setContextMenu(
-                    contextMenu === null
-                        ? {
-                              mouseX: e.clientX + 2,
-                              mouseY: e.clientY - 6,
-                          }
-                        : null,
-                );
+                setMenuOpen(true);
             }
         }
     };
@@ -213,7 +240,7 @@ export default function BoardCell({
                                 },
                             },
                         ],
-                        hidden: contextMenu !== null,
+                        hidden: menuOpen,
                     },
                 }}
                 enterDelay={1000}
@@ -239,14 +266,16 @@ export default function BoardCell({
                         width: '100%',
                         height: '100%',
                     }}
-                    onMouseDown={handleCellClick}
-                    onContextMenu={(e) => {
-                        e.preventDefault();
-                    }}
-                    onWheel={(e) => {
-                        updateProgress(e.deltaY < 0 ? +1 : -1);
-                    }}
-                    ref={cellRef}
+                    ref={refs.setReference}
+                    {...getReferenceProps({
+                        onMouseDown: handleCellClick,
+                        onContextMenu: (e) => {
+                            e.preventDefault();
+                        },
+                        onWheel: (e) => {
+                            updateProgress(e.deltaY < 0 ? +1 : -1);
+                        },
+                    })}
                 >
                     <Box
                         sx={{
@@ -342,135 +371,129 @@ export default function BoardCell({
                     )}
                 </Box>
             </Tooltip>
-            <Popper
-                open={contextMenu !== null}
-                anchorEl={cellRef.current}
-                role={undefined}
-                placement="bottom-start"
-                transition
-                disablePortal
-                sx={{ zIndex: 1000 }}
-            >
-                {({ TransitionProps, placement }) => (
-                    <Grow
-                        {...TransitionProps}
-                        style={{
-                            transformOrigin:
-                                placement === 'bottom-start'
-                                    ? 'left top'
-                                    : 'left bottom',
-                        }}
-                    >
-                        <Paper>
-                            <ClickAwayListener onClickAway={handleClose}>
-                                <MenuList
-                                    autoFocusItem={contextMenu !== null}
-                                    id="composition-menu"
-                                    aria-labelledby={`cell-${row}-${col}`}
-                                    onKeyDown={handleListKeyDown}
-                                    dense
+            {menuOpen && (
+                <div
+                    ref={refs.setFloating}
+                    {...getFloatingProps({
+                        style: { ...floatingStyles, zIndex: 100 },
+                    })}
+                >
+                    <FloatingArrow
+                        ref={arrowRef}
+                        context={context}
+                        fill={grey[900]}
+                        stroke={grey[700]}
+                        strokeWidth={1}
+                    />
+                    <Paper>
+                        <ClickAwayListener onClickAway={handleClose}>
+                            <MenuList
+                                autoFocusItem={menuOpen}
+                                id="composition-menu"
+                                aria-labelledby={`cell-${row}-${col}`}
+                                onKeyDown={handleListKeyDown}
+                                dense
+                            >
+                                <MenuItem
+                                    onClick={() => {
+                                        toggleGoalStar(row, col);
+                                        handleClose();
+                                    }}
+                                    divider
                                 >
-                                    <MenuItem
-                                        onClick={() => {
-                                            toggleGoalStar(row, col);
-                                            handleClose();
-                                        }}
-                                        divider
-                                    >
-                                        <ListItemIcon>
-                                            <Star />
-                                        </ListItemIcon>
-                                        <ListItemText
-                                            sx={{
-                                                textAlign: 'left',
-                                            }}
-                                        >
-                                            Star
-                                        </ListItemText>
-                                        <ListItemText>
-                                            <Typography
-                                                variant="body2"
-                                                sx={{
-                                                    color: 'text.secondary',
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    justifyContent: 'flex-end',
-                                                    ml: 4,
-                                                }}
-                                            >
-                                                Ctrl+
-                                                <MouseRightClickOutline />
-                                            </Typography>
-                                        </ListItemText>
-                                    </MenuItem>
-                                    <MenuItem
-                                        onClick={() => {
-                                            updateProgress(1);
+                                    <ListItemIcon>
+                                        <Star />
+                                    </ListItemIcon>
+                                    <ListItemText
+                                        sx={{
+                                            textAlign: 'left',
                                         }}
                                     >
-                                        <ListItemIcon>
-                                            <Add />
-                                        </ListItemIcon>
-                                        <ListItemText
+                                        Star
+                                    </ListItemText>
+                                    <ListItemText>
+                                        <Typography
+                                            variant="body2"
                                             sx={{
-                                                textAlign: 'left',
+                                                color: 'text.secondary',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'flex-end',
+                                                ml: 4,
                                             }}
                                         >
-                                            Increment
-                                        </ListItemText>
-                                        <ListItemText>
-                                            <Typography
-                                                variant="body2"
-                                                sx={{
-                                                    color: 'text.secondary',
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    justifyContent: 'flex-end',
-                                                    ml: 4,
-                                                }}
-                                            >
-                                                Ctrl+
-                                                <MouseLeftClickOutline />
-                                            </Typography>
-                                        </ListItemText>
-                                    </MenuItem>
-                                    <MenuItem
-                                        onClick={() => {
-                                            updateProgress(-1);
+                                            Ctrl+
+                                            <MouseRightClickOutline />
+                                        </Typography>
+                                    </ListItemText>
+                                </MenuItem>
+                                <MenuItem
+                                    onClick={() => {
+                                        updateProgress(1);
+                                    }}
+                                >
+                                    <ListItemIcon>
+                                        <Add />
+                                    </ListItemIcon>
+                                    <ListItemText
+                                        sx={{
+                                            textAlign: 'left',
                                         }}
                                     >
-                                        <ListItemIcon>
-                                            <Remove />
-                                        </ListItemIcon>
-                                        <ListItemText
+                                        Increment
+                                    </ListItemText>
+                                    <ListItemText>
+                                        <Typography
+                                            variant="body2"
                                             sx={{
-                                                textAlign: 'left',
+                                                color: 'text.secondary',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'flex-end',
+                                                ml: 4,
                                             }}
                                         >
-                                            Decrement
-                                        </ListItemText>
-                                        <ListItemText>
-                                            <Typography
-                                                variant="body2"
-                                                sx={{
-                                                    color: 'text.secondary',
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    justifyContent: 'flex-end',
-                                                    ml: 4,
-                                                }}
-                                            >
-                                                Ctrl+Shift+
-                                                <MouseLeftClickOutline />
-                                            </Typography>
-                                        </ListItemText>
-                                    </MenuItem>
-                                </MenuList>
-                            </ClickAwayListener>
-                        </Paper>
-                    </Grow>
-                )}
-            </Popper>
+                                            Ctrl+
+                                            <MouseLeftClickOutline />
+                                        </Typography>
+                                    </ListItemText>
+                                </MenuItem>
+                                <MenuItem
+                                    onClick={() => {
+                                        updateProgress(-1);
+                                    }}
+                                >
+                                    <ListItemIcon>
+                                        <Remove />
+                                    </ListItemIcon>
+                                    <ListItemText
+                                        sx={{
+                                            textAlign: 'left',
+                                        }}
+                                    >
+                                        Decrement
+                                    </ListItemText>
+                                    <ListItemText>
+                                        <Typography
+                                            variant="body2"
+                                            sx={{
+                                                color: 'text.secondary',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'flex-end',
+                                                ml: 4,
+                                            }}
+                                        >
+                                            Ctrl+Shift+
+                                            <MouseLeftClickOutline />
+                                        </Typography>
+                                    </ListItemText>
+                                </MenuItem>
+                            </MenuList>
+                        </ClickAwayListener>
+                    </Paper>
+                </div>
+            )}
         </>
     );
 }
