@@ -361,7 +361,7 @@ export default function BoardCell({
                                     : 'left bottom',
                         }}
                     >
-                        <Paper sx={{ maxWidth: '100%' }}>
+                        <Paper>
                             <ClickAwayListener onClickAway={handleClose}>
                                 <MenuList
                                     autoFocusItem={contextMenu !== null}
