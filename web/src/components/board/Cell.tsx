@@ -1,11 +1,26 @@
 'use client';
-import { Box, IconButton, SxProps, Tooltip, Typography } from '@mui/material';
-import { useCallback, useEffect, useState } from 'react';
-import TextFit from '../TextFit';
-import Star from '@mui/icons-material/Star';
-import { useRoomContext } from '../../context/RoomContext';
 import { Add, Remove } from '@mui/icons-material';
+import Star from '@mui/icons-material/Star';
+import {
+    Box,
+    ClickAwayListener,
+    Grow,
+    IconButton,
+    ListItemIcon,
+    ListItemText,
+    MenuItem,
+    MenuList,
+    Paper,
+    Popper,
+    SxProps,
+    Tooltip,
+    Typography,
+} from '@mui/material';
 import { Category } from '@playbingo/types';
+import { MouseLeftClickOutline, MouseRightClickOutline } from 'mdi-material-ui';
+import { MouseEvent, useCallback, useEffect, useRef, useState } from 'react';
+import { useRoomContext } from '../../context/RoomContext';
+import TextFit from '../TextFit';
 
 const fogSx: SxProps = {
     position: 'absolute',
@@ -63,6 +78,10 @@ export default function BoardCell({
 
     const [wasRevealed, setWasRevealed] = useState(false);
     const [animating, setAnimating] = useState(false);
+    const [contextMenu, setContextMenu] = useState<{
+        mouseX: number;
+        mouseY: number;
+    } | null>(null);
 
     const toggleSpace = useCallback(() => {
         if (!connectedPlayer) {
@@ -103,6 +122,8 @@ export default function BoardCell({
         }
     }, [revealed, wasRevealed, onReveal]);
 
+    const cellRef = useRef<HTMLDivElement>(null);
+
     // calculations
     const colorPortion = 360 / completedPlayers.length;
     const isStarred = starredGoals.includes(row * 5 + col);
@@ -118,161 +139,338 @@ export default function BoardCell({
         });
     }, []);
 
-    return (
-        <Tooltip
-            title={
-                showGoalDetails ? (
-                    <>
-                        <Box sx={{ pb: 1.5 }}>{description}</Box>
-                        {difficulty && <Box>Difficulty: {difficulty}</Box>}
-                        {categories && (
-                            <Box>
-                                Categories:{' '}
-                                {categories.map((c) => c.name).join(', ')}
-                            </Box>
-                        )}
-                    </>
-                ) : (
-                    description
-                )
+    const handleClose = () => {
+        setContextMenu(null);
+    };
+
+    const handleListKeyDown = (event: React.KeyboardEvent) => {
+        if (event.key === 'Tab') {
+            event.preventDefault();
+            setContextMenu(null);
+        } else if (event.key === 'Escape') {
+            setContextMenu(null);
+        }
+    };
+
+    const handleCellClick = (e: MouseEvent<HTMLDivElement>) => {
+        setContextMenu(null);
+
+        if (e.button === 0) {
+            // left click
+            if (e.ctrlKey) {
+                if (e.shiftKey) {
+                    updateProgress(-1);
+                } else {
+                    updateProgress(1);
+                }
+            } else {
+                toggleSpace();
             }
-            arrow
-            slotProps={{
-                popper: {
-                    modifiers: [
-                        {
-                            name: 'offset',
-                            options: {
-                                offset: [0, -14],
+        } else if (e.button === 2) {
+            // right click
+            if (e.ctrlKey) {
+                toggleGoalStar(row, col);
+            } else {
+                setContextMenu(
+                    contextMenu === null
+                        ? {
+                              mouseX: e.clientX + 2,
+                              mouseY: e.clientY - 6,
+                          }
+                        : null,
+                );
+            }
+        }
+    };
+
+    return (
+        <>
+            <Tooltip
+                title={
+                    showGoalDetails ? (
+                        <>
+                            <Box sx={{ pb: 1.5 }}>{description}</Box>
+                            {difficulty && <Box>Difficulty: {difficulty}</Box>}
+                            {categories && (
+                                <Box>
+                                    Categories:{' '}
+                                    {categories.map((c) => c.name).join(', ')}
+                                </Box>
+                            )}
+                        </>
+                    ) : (
+                        description
+                    )
+                }
+                arrow
+                slotProps={{
+                    popper: {
+                        modifiers: [
+                            {
+                                name: 'offset',
+                                options: {
+                                    offset: [0, -14],
+                                },
                             },
-                        },
-                    ],
-                },
-            }}
-            enterDelay={1000}
-        >
-            <Box
-                sx={{
-                    position: 'relative',
-                    aspectRatio: '1 / 1',
-                    flexGrow: 1,
-                    cursor: revealed ? 'pointer' : 'default',
-                    overflow: 'hidden',
-                    border: 1,
-                    borderColor: 'divider',
-                    transition: 'all 0.3s ease',
-                    background: (theme) => theme.palette.background.default,
-                    ':hover': {
-                        zIndex: 100,
-                        scale: revealed ? '110%' : '100%',
+                        ],
+                        hidden: contextMenu !== null,
                     },
-                    display: 'flex',
-                    flexDirection: 'column',
-                    width: '100%',
-                    height: '100%',
                 }}
-                onClick={toggleSpace}
-                onContextMenu={(e) => {
-                    toggleGoalStar(row, col);
-                    e.preventDefault();
-                }}
-                onWheel={(e) => {
-                    updateProgress(e.deltaY < 0 ? +1 : -1);
-                }}
+                enterDelay={1000}
             >
                 <Box
+                    id={`cell-${row}-${col}`}
                     sx={{
-                        zIndex: 2,
+                        position: 'relative',
+                        aspectRatio: '1 / 1',
+                        flexGrow: 1,
+                        cursor: revealed ? 'pointer' : 'default',
+                        overflow: 'hidden',
+                        border: 1,
+                        borderColor: 'divider',
+                        transition: 'all 0.3s ease',
+                        background: (theme) => theme.palette.background.default,
+                        ':hover': {
+                            zIndex: 100,
+                            scale: revealed ? '110%' : '100%',
+                        },
                         display: 'flex',
-                        height: showCounters ? 'calc(100% - 24px)' : '100%',
+                        flexDirection: 'column',
                         width: '100%',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        p: 1,
+                        height: '100%',
                     }}
+                    onMouseDown={handleCellClick}
+                    onContextMenu={(e) => {
+                        e.preventDefault();
+                    }}
+                    onWheel={(e) => {
+                        updateProgress(e.deltaY < 0 ? +1 : -1);
+                    }}
+                    ref={cellRef}
                 >
-                    <TextFit
-                        text={goal}
-                        sx={{
-                            p: 1,
-                            filter: 'drop-shadow(2px 2px 2px rgba(0,0,0,0))',
-                        }}
-                    />
-                </Box>
-                {colors.map((color, index) => (
-                    <Box
-                        key={`${color}-${index}`}
-                        sx={{
-                            position: 'absolute',
-                            width: '100%',
-                            height: '100%',
-                        }}
-                        style={{
-                            backgroundImage: `conic-gradient(from ${
-                                colorPortion * index
-                            }deg, ${color} 0deg, ${color} ${colorPortion}deg, rgba(0,0,0,0) ${colorPortion}deg)`,
-                        }}
-                    />
-                ))}
-                {revealed && showCounters && (
                     <Box
                         sx={{
-                            position: 'absolute',
-                            bottom: 0,
+                            zIndex: 2,
                             display: 'flex',
-                            backgroundColor: 'rgba(0,0,0,0.7)',
-                            px: 0.5,
+                            height: showCounters ? 'calc(100% - 24px)' : '100%',
                             width: '100%',
-                            zIndex: 30,
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            p: 1,
                         }}
                     >
-                        <IconButton
-                            size="small"
-                            onClick={(e) => {
-                                updateProgress(-1);
-                                e.stopPropagation();
-                            }}
-                            sx={{ padding: 0.25 }}
-                        >
-                            <Remove fontSize="small" />
-                        </IconButton>
-                        <Typography
+                        <TextFit
+                            text={goal}
                             sx={{
-                                textAlign: 'center',
-                                color: 'white',
-                                pointerEvents: 'none',
-                                flexGrow: 1,
+                                p: 1,
+                                filter: 'drop-shadow(2px 2px 2px rgba(0,0,0,0))',
+                            }}
+                        />
+                    </Box>
+                    {colors.map((color, index) => (
+                        <Box
+                            key={`${color}-${index}`}
+                            sx={{
+                                position: 'absolute',
+                                width: '100%',
+                                height: '100%',
+                            }}
+                            style={{
+                                backgroundImage: `conic-gradient(from ${
+                                    colorPortion * index
+                                }deg, ${color} 0deg, ${color} ${colorPortion}deg, rgba(0,0,0,0) ${colorPortion}deg)`,
+                            }}
+                        />
+                    ))}
+                    {revealed && showCounters && (
+                        <Box
+                            sx={{
+                                position: 'absolute',
+                                bottom: 0,
+                                display: 'flex',
+                                backgroundColor: 'rgba(0,0,0,0.7)',
+                                px: 0.5,
+                                width: '100%',
+                                zIndex: 30,
                             }}
                         >
-                            {counter}
-                        </Typography>
-                        <IconButton
-                            size="small"
-                            onClick={(e) => {
-                                updateProgress(+1);
-                                e.stopPropagation();
+                            <IconButton
+                                size="small"
+                                onClick={(e) => {
+                                    updateProgress(-1);
+                                    e.stopPropagation();
+                                }}
+                                sx={{ padding: 0.25 }}
+                            >
+                                <Remove fontSize="small" />
+                            </IconButton>
+                            <Typography
+                                sx={{
+                                    textAlign: 'center',
+                                    color: 'white',
+                                    pointerEvents: 'none',
+                                    flexGrow: 1,
+                                }}
+                            >
+                                {counter}
+                            </Typography>
+                            <IconButton
+                                size="small"
+                                onClick={(e) => {
+                                    updateProgress(+1);
+                                    e.stopPropagation();
+                                }}
+                                sx={{ padding: 0.25 }}
+                            >
+                                <Add fontSize="small" />
+                            </IconButton>
+                        </Box>
+                    )}
+                    {isStarred && (
+                        <Box sx={{ position: 'absolute', right: 0 }}>
+                            <Star />
+                        </Box>
+                    )}
+                    {!revealed && <Box sx={fogSx} />}
+                    {animating && (
+                        <Box
+                            sx={{
+                                ...fogSx,
+                                animation: 'fogReveal 1s ease-in forwards',
                             }}
-                            sx={{ padding: 0.25 }}
-                        >
-                            <Add fontSize="small" />
-                        </IconButton>
-                    </Box>
-                )}
-                {isStarred && (
-                    <Box sx={{ position: 'absolute', right: 0 }}>
-                        <Star />
-                    </Box>
-                )}
-                {!revealed && <Box sx={fogSx} />}
-                {animating && (
-                    <Box
-                        sx={{
-                            ...fogSx,
-                            animation: 'fogReveal 1s ease-in forwards',
+                        />
+                    )}
+                </Box>
+            </Tooltip>
+            <Popper
+                open={contextMenu !== null}
+                anchorEl={cellRef.current}
+                role={undefined}
+                placement="bottom-start"
+                transition
+                disablePortal
+                sx={{ zIndex: 1000 }}
+            >
+                {({ TransitionProps, placement }) => (
+                    <Grow
+                        {...TransitionProps}
+                        style={{
+                            transformOrigin:
+                                placement === 'bottom-start'
+                                    ? 'left top'
+                                    : 'left bottom',
                         }}
-                    />
+                    >
+                        <Paper sx={{ maxWidth: '100%' }}>
+                            <ClickAwayListener onClickAway={handleClose}>
+                                <MenuList
+                                    autoFocusItem={contextMenu !== null}
+                                    id="composition-menu"
+                                    aria-labelledby={`cell-${row}-${col}`}
+                                    onKeyDown={handleListKeyDown}
+                                    dense
+                                >
+                                    <MenuItem
+                                        onClick={() => {
+                                            toggleGoalStar(row, col);
+                                            handleClose();
+                                        }}
+                                        divider
+                                    >
+                                        <ListItemIcon>
+                                            <Star />
+                                        </ListItemIcon>
+                                        <ListItemText
+                                            sx={{
+                                                textAlign: 'left',
+                                            }}
+                                        >
+                                            Star
+                                        </ListItemText>
+                                        <ListItemText>
+                                            <Typography
+                                                variant="body2"
+                                                sx={{
+                                                    color: 'text.secondary',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'flex-end',
+                                                    ml: 4,
+                                                }}
+                                            >
+                                                Ctrl+
+                                                <MouseRightClickOutline />
+                                            </Typography>
+                                        </ListItemText>
+                                    </MenuItem>
+                                    <MenuItem
+                                        onClick={() => {
+                                            updateProgress(1);
+                                        }}
+                                    >
+                                        <ListItemIcon>
+                                            <Add />
+                                        </ListItemIcon>
+                                        <ListItemText
+                                            sx={{
+                                                textAlign: 'left',
+                                            }}
+                                        >
+                                            Increment
+                                        </ListItemText>
+                                        <ListItemText>
+                                            <Typography
+                                                variant="body2"
+                                                sx={{
+                                                    color: 'text.secondary',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'flex-end',
+                                                    ml: 4,
+                                                }}
+                                            >
+                                                Ctrl+
+                                                <MouseLeftClickOutline />
+                                            </Typography>
+                                        </ListItemText>
+                                    </MenuItem>
+                                    <MenuItem
+                                        onClick={() => {
+                                            updateProgress(-1);
+                                        }}
+                                    >
+                                        <ListItemIcon>
+                                            <Remove />
+                                        </ListItemIcon>
+                                        <ListItemText
+                                            sx={{
+                                                textAlign: 'left',
+                                            }}
+                                        >
+                                            Decrement
+                                        </ListItemText>
+                                        <ListItemText>
+                                            <Typography
+                                                variant="body2"
+                                                sx={{
+                                                    color: 'text.secondary',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'flex-end',
+                                                    ml: 4,
+                                                }}
+                                            >
+                                                Ctrl+Shift+
+                                                <MouseLeftClickOutline />
+                                            </Typography>
+                                        </ListItemText>
+                                    </MenuItem>
+                                </MenuList>
+                            </ClickAwayListener>
+                        </Paper>
+                    </Grow>
                 )}
-            </Box>
-        </Tooltip>
+            </Popper>
+        </>
     );
 }
