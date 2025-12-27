@@ -1,13 +1,16 @@
 import { mock, mockReset } from 'jest-mock-extended';
 import Room from '../../core/Room';
-import { JoinAction, RevealedCell } from '@playbingo/types';
+import { JoinAction, LeaveAction, RevealedCell } from '@playbingo/types';
 import { RoomTokenPayload } from '../../auth/RoomAuth';
 import WebSocket from 'ws';
 import { mockCreateRoomAction, mockPlayerUpsert } from '../setup';
+import Player from '../../core/Player';
 
 let room: Room;
 
 const mockJoinAction = mock<JoinAction>();
+const mockLeaveAction = mock<LeaveAction>();
+
 const mockTokenPayload = mock<RoomTokenPayload>();
 mockTokenPayload.playerId = 'test';
 mockTokenPayload.isSpectating = false;
@@ -119,4 +122,43 @@ describe('handleJoin', () => {
         room.handleJoin(mockJoinAction, mockTokenPayload2, mockSocket2);
         expect(sendChatSpy).toHaveBeenCalledTimes(1);
     });
+});
+
+describe('handleLeave', () => {
+    it('Removes a player from the room if it is their last connection', () => {
+        const player = new Player(
+            room,
+            'test',
+            'Test Player',
+            'blue',
+            false,
+            false,
+        );
+        player.addConnection(mockTokenPayload.uuid, mockSocket);
+        room.players.set(mockTokenPayload.playerId, player);
+        expect(room.players.has(mockTokenPayload.playerId)).toBe(true);
+        room.handleLeave(mockLeaveAction, mockTokenPayload, 'test');
+        expect(player.connections.size).toBe(0);
+        expect(player.showInRoom()).toBe(false);
+    });
+
+    it('Removes the connection from the player', () => {
+        const player = new Player(
+            room,
+            'test',
+            'Test Player',
+            'blue',
+            false,
+            false,
+        );
+        player.addConnection(mockTokenPayload.uuid, mockSocket);
+        player.addConnection(mockTokenPayload2.uuid, mockSocket);
+        room.players.set(mockTokenPayload.playerId, player);
+        expect(room.players.has(mockTokenPayload.playerId)).toBe(true);
+        room.handleLeave(mockLeaveAction, mockTokenPayload2, 'test');
+        expect(player.connections.size).toBe(1);
+        expect(player.showInRoom()).toBe(true);
+    });
+    // TODO: POST REFACTOR CHECK FOR UNAUTHORIZED RESPONSE SINCE THE RETURN TYPE
+    // OF ACTION HANDLERS WILL LIKELY CHANGE
 });
