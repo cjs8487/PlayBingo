@@ -5,6 +5,7 @@ import { RoomTokenPayload } from '../../auth/RoomAuth';
 import WebSocket from 'ws';
 import { mockCreateRoomAction, mockPlayerUpsert } from '../setup';
 import Player from '../../core/Player';
+import e from 'cors';
 
 let room: Room;
 
@@ -126,6 +127,7 @@ describe('handleJoin', () => {
 
 describe('handleLeave', () => {
     it('Removes a player from the room if it is their last connection', () => {
+        const sendChatSpy = jest.spyOn(room, 'sendChat');
         const player = new Player(
             room,
             'test',
@@ -140,9 +142,16 @@ describe('handleLeave', () => {
         room.handleLeave(mockLeaveAction, mockTokenPayload, 'test');
         expect(player.connections.size).toBe(0);
         expect(player.showInRoom()).toBe(false);
+        expect(mockCreateRoomAction).toHaveBeenCalledTimes(1);
+        expect(sendChatSpy).toHaveBeenCalledTimes(1);
+        expect(sendChatSpy).toHaveBeenCalledWith([
+            { contents: 'Test Player', color: 'blue' },
+            ' has left.',
+        ]);
     });
 
-    it('Removes the connection from the player', () => {
+    it('Removes the connection from the player if it is not their last one', () => {
+        const sendChatSpy = jest.spyOn(room, 'sendChat');
         const player = new Player(
             room,
             'test',
@@ -158,6 +167,8 @@ describe('handleLeave', () => {
         room.handleLeave(mockLeaveAction, mockTokenPayload2, 'test');
         expect(player.connections.size).toBe(1);
         expect(player.showInRoom()).toBe(true);
+        expect(mockCreateRoomAction).not.toHaveBeenCalled();
+        expect(sendChatSpy).not.toHaveBeenCalled();
     });
     // TODO: POST REFACTOR CHECK FOR UNAUTHORIZED RESPONSE SINCE THE RETURN TYPE
     // OF ACTION HANDLERS WILL LIKELY CHANGE
