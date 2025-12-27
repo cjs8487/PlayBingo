@@ -146,16 +146,29 @@ describe('handleJoin', () => {
 
 describe('handleLeave', () => {
     it('Removes a player from the room if it is their last connection', () => {
+        const sendChatSpy = jest.spyOn(room, 'sendChat');
         const player = new Player(room, 'test', 'Test Player', false);
         player.addConnection(mockTokenPayload.uuid, mockSocket);
         room.createTeamForPlayer(player);
         expect(room.getPlayerById(mockTokenPayload.playerId)).toBe(player);
+        jest.spyOn(room, 'close').mockImplementation(() => {});
         room.handleLeave(mockLeaveAction, mockTokenPayload, 'test');
         expect(player.connections.size).toBe(0);
         expect(player.showInRoom()).toBe(false);
+        expect(mockCreateRoomAction).toHaveBeenCalledTimes(1);
+        expect(sendChatSpy).toHaveBeenCalledTimes(1);
+        expect(sendChatSpy).toHaveBeenCalledWith(
+            [
+                '[0:00:00] ',
+                { contents: 'Test Player', color: 'blue' },
+                ' has left.',
+            ],
+            expect.any(Date),
+        );
     });
 
-    it('Removes the connection from the player', () => {
+    it('Removes the connection from the player if it is not their last one', () => {
+        const sendChatSpy = jest.spyOn(room, 'sendChat');
         const player = new Player(room, 'test', 'Test Player', false);
         player.addConnection(mockTokenPayload.uuid, mockSocket);
         player.addConnection(mockTokenPayload2.uuid, mockSocket);
@@ -164,6 +177,8 @@ describe('handleLeave', () => {
         room.handleLeave(mockLeaveAction, mockTokenPayload2, 'test');
         expect(player.connections.size).toBe(1);
         expect(player.showInRoom()).toBe(true);
+        expect(mockCreateRoomAction).not.toHaveBeenCalled();
+        expect(sendChatSpy).not.toHaveBeenCalled();
     });
     // TODO: POST REFACTOR CHECK FOR UNAUTHORIZED RESPONSE SINCE THE RETURN TYPE
     // OF ACTION HANDLERS WILL LIKELY CHANGE
