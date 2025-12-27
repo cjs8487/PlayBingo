@@ -58,7 +58,8 @@ export const deleteFile = async (workflow: string, id: string) => {
     try {
         await rm(path.resolve('media', workflow, id));
         return true;
-    } catch {
+    } catch (e) {
+        console.log(e);
         return false;
     }
 };
@@ -82,7 +83,8 @@ mediaServer.post('/', (req, res) => {
         res.status(400).send('Too many files uploaded');
         return;
     }
-    if (file.size > 1024 * 1024) {
+    const maxSize = workflow === 'goalImage' ? 100 * 2014 : 1024 * 1024;
+    if (file.size > maxSize) {
         res.sendStatus(400);
     }
 

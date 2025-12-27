@@ -1,11 +1,21 @@
 'use client';
-import { Box, IconButton, SxProps, Tooltip, Typography } from '@mui/material';
+import {
+    Box,
+    Chip,
+    IconButton,
+    SxProps,
+    Tooltip,
+    Typography,
+} from '@mui/material';
 import { useCallback, useEffect, useState } from 'react';
 import TextFit from '../TextFit';
 import Star from '@mui/icons-material/Star';
 import { useRoomContext } from '../../context/RoomContext';
 import { Add, Remove } from '@mui/icons-material';
 import { Category } from '@playbingo/types';
+import { Goal } from '@playbingo/types';
+import Image from 'next/image';
+import { getMediaForWorkflow } from '../../lib/Utils';
 
 const fogSx: SxProps = {
     position: 'absolute',
@@ -28,10 +38,7 @@ radial-gradient(circle at 40% 30%, rgba(147, 137, 137, 0.13) 0%, rgba(0,0,0,0) 9
     },
 };
 interface BoardCellProps {
-    goal?: string;
-    description?: string | null;
-    difficulty?: number;
-    categories?: Category[];
+    goal?: Goal;
     completedPlayers: string[];
     revealed?: boolean;
     onReveal?: () => void;
@@ -40,10 +47,7 @@ interface BoardCellProps {
 }
 
 export default function BoardCell({
-    goal = '',
-    description,
-    difficulty,
-    categories,
+    goal,
     completedPlayers,
     revealed = false,
     onReveal,
@@ -59,6 +63,7 @@ export default function BoardCell({
         showCounters,
         connectedPlayer,
         colorMap,
+        showImages,
     } = useRoomContext();
 
     const [wasRevealed, setWasRevealed] = useState(false);
@@ -118,22 +123,50 @@ export default function BoardCell({
         });
     }, []);
 
+    console.log(goal);
+
     return (
         <Tooltip
             title={
                 showGoalDetails ? (
                     <>
-                        <Box sx={{ pb: 1.5 }}>{description}</Box>
-                        {difficulty && <Box>Difficulty: {difficulty}</Box>}
-                        {categories && (
+                        {showImages && goal?.image && (
+                            <Box
+                                sx={{
+                                    pb: 1,
+                                    fontSize: 18,
+                                    fontWeight: 'bold',
+                                }}
+                            >
+                                {goal?.goal}
+                            </Box>
+                        )}
+                        <Box sx={{ pb: 1.5 }}>{goal?.description}</Box>
+                        {goal?.difficulty && (
+                            <Box>Difficulty: {goal.difficulty}</Box>
+                        )}
+                        {goal?.categories && (
                             <Box>
                                 Categories:{' '}
-                                {categories.map((c) => c.name).join(', ')}
+                                {goal.categories.map((c) => c.name).join(', ')}
                             </Box>
                         )}
                     </>
                 ) : (
-                    description
+                    <>
+                        {showImages && goal?.image && (
+                            <Box
+                                sx={{
+                                    pb: 1,
+                                    fontSize: 18,
+                                    fontWeight: 'bold',
+                                }}
+                            >
+                                {goal?.goal}
+                            </Box>
+                        )}
+                        <Box>{goal?.description}</Box>
+                    </>
                 )
             }
             arrow
@@ -191,13 +224,96 @@ export default function BoardCell({
                         p: 1,
                     }}
                 >
-                    <TextFit
-                        text={goal}
-                        sx={{
-                            p: 1,
-                            filter: 'drop-shadow(2px 2px 2px rgba(0,0,0,0))',
-                        }}
-                    />
+                    {showImages && goal && goal.image ? (
+                        <Box
+                            sx={{
+                                position: 'relative',
+                                width: '100%',
+                                height: '100%',
+                            }}
+                        >
+                            <Box
+                                sx={{
+                                    p: 2,
+                                    width: '100%',
+                                    height: '100%',
+                                    boxSizing: 'border-box',
+                                }}
+                            >
+                                <Box
+                                    sx={{
+                                        position: 'relative',
+                                        width: '100%',
+                                        height: '100%',
+                                    }}
+                                >
+                                    <Image
+                                        src={getMediaForWorkflow(
+                                            'goalImage',
+                                            goal.image.mediaFile,
+                                        )}
+                                        alt=""
+                                        fill
+                                        style={{
+                                            objectFit: 'contain',
+                                        }}
+                                    />
+                                </Box>
+                            </Box>
+                            {goal.secondaryImage && (
+                                <Image
+                                    src={getMediaForWorkflow(
+                                        'goalImage',
+                                        goal.secondaryImage.mediaFile,
+                                    )}
+                                    alt=""
+                                    width={25}
+                                    height={25}
+                                    style={{
+                                        objectFit: 'contain',
+                                        position: 'absolute',
+                                        top: 0,
+                                        left: 0,
+                                    }}
+                                />
+                            )}
+                            {goal.imageTag && (
+                                <Chip
+                                    label={goal.imageTag.label}
+                                    sx={{
+                                        position: 'absolute',
+                                        top: 0,
+                                        right: 0,
+                                        backgroundColor: goal.imageTag.color,
+                                        opacity: 0.9,
+                                    }}
+                                    size="small"
+                                />
+                            )}
+                            {goal.count && (
+                                <Typography
+                                    sx={{
+                                        position: 'absolute',
+                                        bottom: -8,
+                                        right: 0,
+                                        filter: 'drop-shadow(2px 2px 2px rgba(0,0,0,0))',
+                                        textShadow: '2px 2px black',
+                                    }}
+                                    fontSize={24}
+                                >
+                                    {goal.count}
+                                </Typography>
+                            )}
+                        </Box>
+                    ) : (
+                        <TextFit
+                            text={goal?.goal ?? ''}
+                            sx={{
+                                p: 1,
+                                filter: 'drop-shadow(2px 2px 2px rgba(0,0,0,0))',
+                            }}
+                        />
+                    )}
                 </Box>
                 {colors.map((color, index) => (
                     <Box

@@ -50,6 +50,7 @@ export default function GameTabs({
     tabs.push('variants');
     if (canModerate) {
         tabs.push('categories');
+        tabs.push('images');
     }
 
     if (isOwner) {

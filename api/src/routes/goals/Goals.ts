@@ -31,9 +31,27 @@ goals.post('/:id', async (req, res) => {
     }
 
     const { id } = req.params;
-    const { goal, description, categories, difficulty } = req.body;
+    const {
+        goal,
+        description,
+        categories,
+        difficulty,
+        image,
+        secondaryImage,
+        imageTag,
+        count,
+    } = req.body;
 
-    if (!goal && description === undefined && !categories && !difficulty) {
+    if (
+        !goal &&
+        description === undefined &&
+        !categories &&
+        !difficulty &&
+        !image &&
+        !secondaryImage &&
+        !imageTag &&
+        count === undefined
+    ) {
         res.status(400).send('No changes submitted');
         return;
     }
@@ -49,6 +67,12 @@ goals.post('/:id', async (req, res) => {
         input.difficulty = difficulty;
     }
 
+    if (count === 0) {
+        input.count = null;
+    } else if (count > 0) {
+        input.count = count;
+    }
+
     if (categories) {
         input.categories = {
             set: [],
@@ -61,6 +85,42 @@ goals.post('/:id', async (req, res) => {
                     },
                 },
             })),
+        };
+    }
+
+    if (image) {
+        input.image = {
+            connect: {
+                id: image,
+            },
+        };
+    } else {
+        input.image = {
+            disconnect: true,
+        };
+    }
+
+    if (secondaryImage) {
+        input.secondaryImage = {
+            connect: {
+                id: secondaryImage,
+            },
+        };
+    } else {
+        input.secondaryImage = {
+            disconnect: true,
+        };
+    }
+
+    if (imageTag) {
+        input.imageTag = {
+            connect: {
+                id: imageTag,
+            },
+        };
+    } else {
+        input.imageTag = {
+            disconnect: true,
         };
     }
 

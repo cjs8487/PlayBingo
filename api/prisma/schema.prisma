@@ -15,16 +15,23 @@ datasource db {
 }
 
 model Goal {
-  id            String     @id @unique @default(cuid())
-  goal          String
-  description   String?
-  oldCategories String[]
-  categories    Category[] @relation("GoalCategories")
-  difficulty    Int?
-  game          Game       @relation(fields: [gameId], references: [id])
-  createdAt     DateTime   @default(now())
-  updatedAt     DateTime   @updatedAt
-  gameId        String
+  id                   String        @id @unique @default(cuid())
+  goal                 String
+  description          String?
+  oldCategories        String[]
+  categories           Category[]    @relation("GoalCategories")
+  difficulty           Int?
+  game                 Game          @relation(fields: [gameId], references: [id])
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+  gameId               String
+  image                GoalImage?    @relation("GoalPrimaryImages", fields: [goalImageId], references: [id])
+  secondaryImage       GoalImage?    @relation("GoalSecondaryImages", fields: [secondaryGoalImageId], references: [id])
+  imageTag             GoalImageTag? @relation(fields: [goalImageTagId], references: [id])
+  goalImageId          String?
+  secondaryGoalImageId String?
+  goalImageTagId       String?
+  count                Int?
 }
 
 model Category {
@@ -84,6 +91,27 @@ model Game {
   descriptionMd               String?
   setupMd                     String?
   linksMd                     String?
+  goalImages                  GoalImage[]
+  goalImageTags               GoalImageTag[]
+}
+
+model GoalImage {
+  id             String @id @unique @default(cuid())
+  game           Game   @relation(fields: [gameId], references: [id])
+  name           String
+  mediaFile      String
+  gameId         String
+  primaryGoals   Goal[] @relation("GoalPrimaryImages")
+  secondaryGoals Goal[] @relation("GoalSecondaryImages")
+}
+
+model GoalImageTag {
+  id     String @id @unique @default(cuid())
+  game   Game   @relation(fields: [gameId], references: [id])
+  label  String
+  color  String
+  goals  Goal[]
+  gameId String
 }
 
 model DifficultyVariant {

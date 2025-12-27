@@ -31,6 +31,8 @@ export interface Game {
   setupMd?: string;
   linksMd?: string;
   variants?: Variant[];
+  images?: GoalImage[];
+  imageTags?: GoalImageTag[];
 }
 export interface User {
   id: string;
@@ -52,4 +54,14 @@ export interface Variant {
   generatorSettings?: {
     [k: string]: unknown;
   };
+}
+export interface GoalImage {
+  id: string;
+  name: string;
+  mediaFile: string;
+}
+export interface GoalImageTag {
+  id: string;
+  label: string;
+  color: string;
 }

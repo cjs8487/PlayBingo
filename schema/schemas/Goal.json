@@ -9,6 +9,10 @@
         "goal": {"type": "string"},
         "description": {"type": ["string", "null"]},
         "difficulty": {"type": ["number", "null"]},
-        "categories": {"type": "array", "items": {"$ref": "./Category.json"}}
+        "categories": {"type": "array", "items": {"$ref": "./Category.json"}},
+        "image": {"anyOf": [{"$ref": "./GoalImage.json"}, {"type": "null"}]},
+        "secondaryImage": {"anyOf": [{"$ref": "./GoalImage.json"}, {"type": "null"}]},
+        "imageTag": {"anyOf": [{"$ref": "./GoalImageTag.json"}, {"type": "null"}]},
+        "count": {"type": ["number", "null"]}
     }
 }

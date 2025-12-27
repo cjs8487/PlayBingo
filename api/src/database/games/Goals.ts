@@ -7,7 +7,12 @@ export const goalsForGame = async (slug: string) => {
     const goals = await prisma.goal.findMany({
         where: { game: { slug } },
         orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
-        include: { categories: { orderBy: { name: 'asc' } } },
+        include: {
+            categories: { orderBy: { name: 'asc' } },
+            image: true,
+            secondaryImage: true,
+            imageTag: true,
+        },
     });
 
     return goals.map((g) => ({
@@ -20,7 +25,12 @@ export const goalsForGameFull = (slug: string) => {
     return prisma.goal.findMany({
         where: { game: { slug } },
         orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
-        include: { categories: { orderBy: { name: 'asc' } } },
+        include: {
+            categories: { orderBy: { name: 'asc' } },
+            image: true,
+            secondaryImage: true,
+            imageTag: true,
+        },
     });
 };
 
@@ -218,7 +228,20 @@ export const getGoalList = async (ids: string[]) => {
     if (ids.length === 0) {
         return [];
     }
-    const goals = await prisma.goal.findMany({ where: { id: { in: ids } } });
+    const goals = (
+        await prisma.goal.findMany({
+            where: { id: { in: ids } },
+            include: {
+                categories: true,
+                image: true,
+                secondaryImage: true,
+                imageTag: true,
+            },
+        })
+    ).map((goal) => ({
+        ...goal,
+        categories: goal.categories.map((cat) => cat.name),
+    }));
     const map = new Map(goals.map((goal) => [goal.id, goal]));
     return ids.map((id) => map.get(id)).filter((v) => !!v);
 };

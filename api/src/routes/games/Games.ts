@@ -48,6 +48,8 @@ import { getVariant } from '../../database/games/Variants';
 import { getUser, getUsersEligibleToModerateGame } from '../../database/Users';
 import { deleteFile, saveFile } from '../../media/MediaServer';
 import variants from './Variants';
+import goalImages from './GoalImages';
+import imageTags from './ImageTags';
 
 const games = Router();
 
@@ -721,5 +723,7 @@ games.get('/:slug/sampleBoard', async (req, res) => {
 });
 
 games.use(variants);
+games.use(goalImages);
+games.use(imageTags);
 
 export default games;
