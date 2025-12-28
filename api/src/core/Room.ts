@@ -1,5 +1,6 @@
 import { GeneratorSettings } from '@playbingo/shared';
 import {
+    Cell,
     ChangeColorAction,
     ChangeRaceHandlerAction,
     ChatAction,
@@ -11,10 +12,11 @@ import {
     Player as PlayerData,
     RevealedCell,
     ServerMessage,
-    UnmarkAction,
     SetChatEnabledAction,
+    UnmarkAction,
 } from '@playbingo/types';
 import { BingoMode } from '@prisma/client';
+import EventEmitter from 'events';
 import { DateTime } from 'luxon';
 import { WebSocket } from 'ws';
 import { roomCleanupInactive } from '../Environment';
@@ -93,12 +95,32 @@ export type BoardGenerationOptions =
     | BoardGenerationOptionsSRLv5
     | BoardGenerationOptionsDifficulty;
 
+interface RoomEvents {
+    'players:join': (player: Player) => void;
+    'players:leave': (player: Player) => void;
+    'board:cellUpdate': (cell: Cell, row: number, col: number) => void;
+    'board:goalMarked': (
+        cell: Cell,
+        row: number,
+        col: number,
+        player: Player,
+    ) => void;
+    'board:goalUnmarked': (
+        cell: Cell,
+        row: number,
+        col: number,
+        player: Player,
+    ) => void;
+    chatSent: (message: ChatMessage) => void;
+    'system:message': (message: ChatMessage) => void;
+}
+
 /**
  * Represents a room in the PlayBingo service. A room is container for a single
  * "game" of bingo, containing the board, game state, history, and all other
  * game level data.
  */
-export default class Room {
+export default class Room extends EventEmitter {
     name: string;
     game: string;
     gameSlug: string;
@@ -151,6 +173,8 @@ export default class Room {
         racetimeUrl?: string,
         generatorSettings?: GeneratorSettings,
     ) {
+        super();
+
         this.name = name;
         this.game = game;
         this.gameSlug = gameSlug;
@@ -237,6 +261,43 @@ export default class Room {
             }
         }
     }
+
+    //#region EventEmitter
+    on<Event extends keyof RoomEvents>(
+        event: Event,
+        listener: RoomEvents[Event],
+    ): this {
+        return super.on(event, listener);
+    }
+
+    once<Event extends keyof RoomEvents>(
+        event: Event,
+        listener: RoomEvents[Event],
+    ): this {
+        return super.once(event, listener);
+    }
+
+    off<Event extends keyof RoomEvents>(
+        event: Event,
+        listener: RoomEvents[Event],
+    ): this {
+        return super.off(event, listener);
+    }
+
+    addListener<Event extends keyof RoomEvents>(
+        event: Event,
+        listener: RoomEvents[Event],
+    ): this {
+        return super.addListener(event, listener);
+    }
+
+    removeListener<Event extends keyof RoomEvents>(
+        event: Event,
+        listener: RoomEvents[Event],
+    ): this {
+        return super.removeListener(event, listener);
+    }
+    //#endregion
 
     async generateBoard(options: BoardGenerationOptions) {
         this.lastGenerationMode = options;
@@ -447,11 +508,11 @@ export default class Room {
                 ...(this.hideCard
                     ? { hidden: true }
                     : {
-                        hidden: false,
-                        board: this.exploration
-                            ? player.obfuscateBoard()
-                            : this.board,
-                    }),
+                          hidden: false,
+                          board: this.exploration
+                              ? player.obfuscateBoard()
+                              : this.board,
+                      }),
             },
             chatHistory: this.chatHistory,
             connectedPlayer: player.toClientData(),
@@ -465,13 +526,13 @@ export default class Room {
                 racetimeConnection: this.raceHandler
                     ? 'url' in this.raceHandler
                         ? {
-                            gameActive: this.racetimeEligible,
-                            url: (this.raceHandler as RacetimeHandler).url,
-                            startDelay: (this.raceHandler as RacetimeHandler)
-                                .data?.start_delay,
-                            status: (this.raceHandler as RacetimeHandler).data
-                                ?.status.verbose_value,
-                        }
+                              gameActive: this.racetimeEligible,
+                              url: (this.raceHandler as RacetimeHandler).url,
+                              startDelay: (this.raceHandler as RacetimeHandler)
+                                  .data?.start_delay,
+                              status: (this.raceHandler as RacetimeHandler).data
+                                  ?.status.verbose_value,
+                          }
                         : undefined
                     : { gameActive: this.racetimeEligible, url: undefined },
                 mode: getModeString(this.bingoMode, this.lineCount),
@@ -875,14 +936,14 @@ export default class Room {
                 racetimeConnection:
                     'url' in this.raceHandler
                         ? {
-                            gameActive: this.racetimeEligible,
-                            url: (this.raceHandler as RacetimeHandler).url,
-                            startDelay:
-                                (this.raceHandler as RacetimeHandler).data
-                                    ?.start_delay ?? undefined,
-                            status: (this.raceHandler as RacetimeHandler).data
-                                ?.status.verbose_value,
-                        }
+                              gameActive: this.racetimeEligible,
+                              url: (this.raceHandler as RacetimeHandler).url,
+                              startDelay:
+                                  (this.raceHandler as RacetimeHandler).data
+                                      ?.start_delay ?? undefined,
+                              status: (this.raceHandler as RacetimeHandler).data
+                                  ?.status.verbose_value,
+                          }
                         : undefined,
                 newGenerator: this.newGenerator,
                 mode: getModeString(this.bingoMode, this.lineCount),
