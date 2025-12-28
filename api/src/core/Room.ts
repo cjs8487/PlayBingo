@@ -1,27 +1,28 @@
 import { GeneratorSettings } from '@playbingo/shared';
-import { randomUUID } from 'node:crypto';
 import {
+    Cell,
     ChangeColorAction,
     ChangeRaceHandlerAction,
     ChatAction,
     ChatMessage,
     JoinAction,
+    JoinTeamAction,
     LeaveAction,
     MarkAction,
     NewCardAction,
-    Cell,
     Player as PlayerData,
-    Team as TeamData,
     RevealedCell,
     RoomData,
     ServerMessage,
-    UnmarkAction,
     SetChatEnabledAction,
-    JoinTeamAction,
     SetTeamsEnabledAction,
+    Team as TeamData,
+    UnmarkAction,
 } from '@playbingo/types';
 import { BingoMode } from '@prisma/client';
+import EventEmitter from 'events';
 import { DateTime } from 'luxon';
+import { randomUUID } from 'node:crypto';
 import { WebSocket } from 'ws';
 import { roomCleanupInactive } from '../Environment';
 import { logDebug, logError, logInfo, logWarn } from '../Logger';
@@ -61,6 +62,7 @@ import {
 } from '../util/RoomUtils';
 import Player from './Player';
 import { allRooms } from './RoomServer';
+import Team from './Team';
 import { BoardGenerator } from './generation/BoardGenerator';
 import { GenerationFailedError } from './generation/GenerationFailedError';
 import {
@@ -72,7 +74,6 @@ import { generateSRLv5 } from './generation/SRLv5';
 import LocalTimer from './integration/races/LocalTimer';
 import RaceHandler from './integration/races/RaceHandler';
 import RacetimeHandler, { RaceData } from './integration/races/RacetimeHandler';
-import Team from './Team';
 
 export enum BoardGenerationMode {
     RANDOM = 'Random',
@@ -103,12 +104,32 @@ export type BoardGenerationOptions =
     | BoardGenerationOptionsSRLv5
     | BoardGenerationOptionsDifficulty;
 
+interface RoomEvents {
+    'players:join': (player: Player) => void;
+    'players:leave': (player: Player) => void;
+    'board:cellUpdate': (cell: Cell, row: number, col: number) => void;
+    'board:goalMarked': (
+        cell: Cell,
+        row: number,
+        col: number,
+        player: Player,
+    ) => void;
+    'board:goalUnmarked': (
+        cell: Cell,
+        row: number,
+        col: number,
+        player: Player,
+    ) => void;
+    chatSent: (message: ChatMessage) => void;
+    'system:message': (message: ChatMessage) => void;
+}
+
 /**
  * Represents a room in the PlayBingo service. A room is container for a single
  * "game" of bingo, containing the board, game state, history, and all other
  * game level data.
  */
-export default class Room {
+export default class Room extends EventEmitter {
     name: string;
     game: string;
     gameSlug: string;
@@ -166,6 +187,8 @@ export default class Room {
         public boardHeight: number = 5,
         teamsEnabled: boolean = false,
     ) {
+        super();
+
         this.name = name;
         this.game = game;
         this.gameSlug = gameSlug;
@@ -280,6 +303,43 @@ export default class Room {
             }
         }
     }
+
+    //#region EventEmitter
+    on<Event extends keyof RoomEvents>(
+        event: Event,
+        listener: RoomEvents[Event],
+    ): this {
+        return super.on(event, listener);
+    }
+
+    once<Event extends keyof RoomEvents>(
+        event: Event,
+        listener: RoomEvents[Event],
+    ): this {
+        return super.once(event, listener);
+    }
+
+    off<Event extends keyof RoomEvents>(
+        event: Event,
+        listener: RoomEvents[Event],
+    ): this {
+        return super.off(event, listener);
+    }
+
+    addListener<Event extends keyof RoomEvents>(
+        event: Event,
+        listener: RoomEvents[Event],
+    ): this {
+        return super.addListener(event, listener);
+    }
+
+    removeListener<Event extends keyof RoomEvents>(
+        event: Event,
+        listener: RoomEvents[Event],
+    ): this {
+        return super.removeListener(event, listener);
+    }
+    //#endregion
 
     getAllPlayers(): Player[] {
         const players: Player[] = [...this.spectators.values()];
