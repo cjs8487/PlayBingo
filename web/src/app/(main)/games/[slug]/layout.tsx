@@ -3,12 +3,11 @@ import { grey } from '@mui/material/colors';
 import { Game } from '@playbingo/types';
 import { Metadata, ResolvingMetadata } from 'next';
 import Image from 'next/image';
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { cache } from 'react';
-import ReactMarkdown from 'react-markdown';
 import { gameCoverUrl, getFullUrl, userAvatarUrl } from '../../../../lib/Utils';
 import GameTabs from './_components/GameTabs';
+import LinkList from './_components/LinkList';
 import SidebarButtons from './_components/SidebarButtons';
 
 const getGame = cache(async (slug: string): Promise<Game | undefined> => {
@@ -201,45 +200,23 @@ export default async function GameLayout({
                         ))}
                     </Box>
                 )}
-                <Box
-                    sx={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: 1,
-                        alignSelf: 'flex-start',
-                        mt: 2,
-                    }}
-                >
-                    <Typography variant="h6">Links</Typography>
-                    {game.linksMd && (
-                        <ReactMarkdown
-                            components={{
-                                p({ children, ...props }) {
-                                    return (
-                                        <Typography
-                                            {...props}
-                                            sx={{
-                                                mb: 1,
-                                            }}
-                                        >
-                                            {children}
-                                        </Typography>
-                                    );
-                                },
-                                a({ children, ...props }) {
-                                    const { href, ...restProps } = props;
-                                    return (
-                                        <Link href={href ?? ''} {...restProps}>
-                                            {children}
-                                        </Link>
-                                    );
-                                },
-                            }}
-                        >
-                            {game.linksMd}
-                        </ReactMarkdown>
-                    )}
-                </Box>
+                {game.linksMd && (
+                    <Box
+                        sx={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: 1,
+                            alignSelf: 'flex-start',
+                            mt: 2,
+                            width: '100%',
+                        }}
+                    >
+                        <Typography variant="h6">Links</Typography>
+                        {game.linksMd && (
+                            <LinkList linksMarkdown={game.linksMd} />
+                        )}
+                    </Box>
+                )}
                 <Box sx={{ flexGrow: 1 }} />
                 <Box
                     sx={{
