@@ -47,6 +47,8 @@ mockTokenPayloadSpectator.isSpectating = true;
 const mockSocket = mockDeep<WebSocket>();
 const mockSocket2 = mockDeep<WebSocket>();
 
+let emitSpy: jest.SpyInstance;
+
 beforeEach(() => {
     room = new Room(
         'Test Room',
@@ -63,6 +65,7 @@ beforeEach(() => {
         1,
     );
     room.board = mockDeep<RevealedCell[][]>();
+    emitSpy = jest.spyOn(room, 'emit');
 
     mockReset(mockJoinAction);
     mockReset(mockTokenPayload);
@@ -90,26 +93,35 @@ describe('handleJoin', () => {
         expect(
             room.getPlayerById(mockTokenPayload.playerId)?.connections.size,
         ).toBe(1);
+        expect(emitSpy).toHaveBeenCalledTimes(1);
+        expect(emitSpy.mock.calls[0][0]).toBe('players:join');
     });
 
     it('Adds a new connection to an existing player', () => {
-        room.handleJoin(mockJoinAction, mockTokenPayload, mockSocket);
+        const player = new Player(room, 'test', 'Test Player', false);
+        player.addConnection(mockTokenPayload.uuid, mockSocket);
+        room.createTeamForPlayer(player);
         room.handleJoin(mockJoinAction, mockTokenPayload2, mockSocket2);
         expect(
             room.getPlayerById(mockTokenPayload.playerId)?.connections.size,
         ).toBe(2);
         expect(room.getPlayerById(mockTokenPayload.playerId)).toBeDefined();
         expect(room.getAllPlayers().length).toBe(1);
+        expect(emitSpy).not.toHaveBeenCalled();
     });
 
     it('Creates two new players when two new players join', async () => {
         room.handleJoin(mockJoinAction, mockTokenPayload, mockSocket);
+        expect(emitSpy).toHaveBeenCalledTimes(1);
+        expect(emitSpy.mock.calls[0][0]).toBe('players:join');
         room.handleJoin(mockJoinAction, mockTokenPayloadPlayer2, mockSocket2);
         expect(room.getPlayerById(mockTokenPayload.playerId)).toBeDefined();
         expect(
             room.getPlayerById(mockTokenPayloadPlayer2.playerId),
         ).toBeDefined();
         expect(room.getAllPlayers().length).toBe(2);
+        expect(emitSpy).toHaveBeenCalledTimes(2);
+        expect(emitSpy.mock.calls[1][0]).toBe('players:join');
         expect(
             room.getPlayerById(mockTokenPayload.playerId)?.connections.size,
         ).toBe(1);
