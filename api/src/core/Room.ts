@@ -296,6 +296,13 @@ export default class Room extends EventEmitter {
     ): this {
         return super.removeListener(event, listener);
     }
+
+    emit<Event extends keyof RoomEvents>(
+        event: Event,
+        ...args: Parameters<RoomEvents[Event]>
+    ): boolean {
+        return super.emit(event, ...args);
+    }
     //#endregion
 
     async generateBoard(options: BoardGenerationOptions) {
@@ -476,6 +483,7 @@ export default class Room extends EventEmitter {
                     ' has joined.',
                 ]);
             }
+            this.emit('players:join', player);
         }
 
         player.addConnection(auth.uuid, socket);
