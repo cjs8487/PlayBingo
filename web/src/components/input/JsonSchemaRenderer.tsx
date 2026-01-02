@@ -301,6 +301,7 @@ function OneOfAnyOfRenderer({
             discrKey,
             value as Record<string, unknown>,
         );
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         if (idx >= 0 && idx !== activeIdx) setActiveIdx(idx);
     }, [value, options, discrKey, activeIdx]);
 

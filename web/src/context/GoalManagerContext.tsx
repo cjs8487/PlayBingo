@@ -1,4 +1,5 @@
 'use client';
+import { Category, Goal } from '@playbingo/types';
 import {
     Dispatch,
     ReactNode,
@@ -6,13 +7,11 @@ import {
     createContext,
     useCallback,
     useContext,
-    useEffect,
     useState,
 } from 'react';
-import { Category, Goal } from '@playbingo/types';
+import { KeyedMutator } from 'swr';
 import { useApi } from '../lib/Hooks';
 import { alertError } from '../lib/Utils';
-import { KeyedMutator } from 'swr';
 
 export enum SortOptions {
     DEFAULT,
@@ -80,12 +79,14 @@ const GoalManagerContext = createContext<GoalManagerContext>({
 interface GoalManagerContextProps {
     slug: string;
     canModerate: boolean;
+    categories: Category[];
     children: ReactNode;
 }
 
 export function GoalManagerContextProvider({
     slug,
     canModerate,
+    categories,
     children,
 }: GoalManagerContextProps) {
     // API
@@ -98,7 +99,6 @@ export function GoalManagerContextProvider({
     // state
     // core
     const [selectedGoal, setSelectedGoal] = useState<string>();
-    const [catList, setCatList] = useState<Category[]>([]);
     const [newGoal, setNewGoal] = useState(false);
     // search params
     const [sort, setSort] = useState<SortOptions | null>(SortOptions.DEFAULT);
@@ -128,22 +128,6 @@ export function GoalManagerContextProvider({
         },
         [mutateGoals],
     );
-
-    /// effects
-    useEffect(() => {
-        const cats: Category[] = [];
-        goals?.forEach((goal) => {
-            if (goal.categories) {
-                cats.push(
-                    ...goal.categories.filter(
-                        (cat) => !cats.map((c) => c.id).includes(cat.id),
-                    ),
-                );
-            }
-        });
-        cats.sort();
-        setCatList(cats);
-    }, [goals]);
 
     // base case
     if (!goals || goalsLoading) {
@@ -196,7 +180,7 @@ export function GoalManagerContextProvider({
                 selectedGoal: goals.find((g) => g.id === selectedGoal),
                 goals,
                 shownGoals,
-                catList,
+                catList: categories,
                 searchParams: { sort, search, reverse, shownCats },
                 settings,
                 setSelectedGoal,

@@ -1,13 +1,8 @@
 'use client';
 
 import { Box, Link, Typography } from '@mui/material';
-import Image from 'next/image';
 import NextLink from 'next/link';
-import logo from '../../public/logo.png';
-import Board from '../components/board/Board';
-import Footer from '../components/footer/Footer';
-import { ConnectionStatus, RoomContext } from '../context/RoomContext';
-import theme from '../theme';
+import TextFit from '../components/TextFit';
 
 const mockBoard = {
     hidden: false,
@@ -26,7 +21,6 @@ const mockBoard = {
                 goal: text,
                 description: '',
             },
-            description: '',
             completedPlayers: text === '404' ? ['1'] : [],
             revealed: true,
         })),
@@ -90,132 +84,168 @@ const titles = [
     },
 ];
 
-export default function NotFound() {
-    const mockRoomContext = {
-        connectionStatus: ConnectionStatus.CONNECTED,
-        board: mockBoard,
-        messages: [],
-        color: '#000000',
-        roomData: undefined,
-        nickname: 'Guest',
-        players: [],
-        starredGoals: [],
-        showGoalDetails: false,
-        showCounters: false,
-        colorMap: { '1': theme.palette.primary.dark },
-        connect: async () => ({ success: true }),
-        sendChatMessage: () => {},
-        markGoal: () => {},
-        unmarkGoal: () => {},
-        changeColor: () => {},
-        regenerateCard: () => {},
-        disconnect: () => {},
-        createRacetimeRoom: () => {},
-        updateRacetimeRoom: () => {},
-        joinRacetimeRoom: () => {},
-        racetimeReady: () => {},
-        racetimeUnready: () => {},
-        toggleGoalStar: () => {},
-        revealCard: () => {},
-        toggleGoalDetails: () => {},
-        toggleCounters: () => {},
-        changeAuth: () => {},
-        spectator: false,
-        monitor: false,
-    };
+const randomIndex = Math.floor(Math.random() * titles.length);
 
-    const { title, subtitle } =
-        titles[Math.floor(Math.random() * titles.length)];
+export default function NotFound() {
+    const { title, subtitle } = titles[randomIndex];
 
     return (
-        <RoomContext.Provider value={mockRoomContext}>
+        <Box
+            sx={{
+                display: 'grid',
+                gridTemplateColumns: '1fr',
+                gridTemplateRows: 'auto 1fr auto',
+                height: '100%',
+                maxHeight: '100%',
+                overflow: 'auto',
+            }}
+        >
             <Box
                 sx={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    minHeight: '100vh',
+                    textAlign: 'center',
+                    p: 5,
                 }}
             >
-                <Box
+                <Typography
+                    variant="h4"
                     sx={{
-                        textAlign: 'center',
-                        p: 5,
+                        pt: 1,
                     }}
                 >
-                    <NextLink href="/">
-                        <Image src={logo} alt="PlayBingo logo" height={125} />
-                    </NextLink>
-                    <Typography
-                        variant="h4"
-                        sx={{
-                            pt: 1,
-                        }}
+                    {title}
+                </Typography>
+                <Typography
+                    variant="subtitle1"
+                    sx={{
+                        pb: 2,
+                    }}
+                >
+                    {subtitle}
+                </Typography>
+                <Typography
+                    variant="body1"
+                    sx={{
+                        pb: 2,
+                    }}
+                >
+                    We couldn&#39;t find the page you are looking for. Take this
+                    bingo with you for the journey home!
+                </Typography>
+                <Box
+                    sx={{
+                        width: '400px',
+                        margin: '0 auto',
+                    }}
+                >
+                    <Link
+                        component={NextLink}
+                        href="/"
+                        passHref
+                        underline="none"
                     >
-                        {title}
-                    </Typography>
-                    <Typography
-                        variant="subtitle1"
-                        sx={{
-                            pb: 2,
-                        }}
-                    >
-                        {subtitle}
-                    </Typography>
-                    <Typography
-                        variant="body1"
-                        sx={{
-                            pb: 2,
-                        }}
-                    >
-                        We couldn&#39;t find the page you are looking for. Take
-                        this bingo with you for the journey home!
-                    </Typography>
-                    <Box
-                        sx={{
-                            width: '400px',
-                            margin: '0 auto',
-                        }}
-                    >
-                        <NextLink href="/" passHref>
-                            <Box
-                                sx={{
-                                    display: 'flex',
-                                    flexDirection: 'column',
-                                    width: '100%',
-                                    height: '100%',
-                                    cursor: 'pointer',
-                                    textDecoration: 'none',
-                                    color: '#fff',
-                                }}
-                            >
-                                <Board />
-                            </Box>
-                        </NextLink>
-                    </Box>
-                    <Box
-                        sx={{
-                            pt: 2,
-                        }}
-                    >
-                        <Link
-                            href="/"
-                            component={NextLink}
-                            underline="none"
+                        <Box
                             sx={{
+                                width: `400px`,
+                                maxWidth: '100%',
+                                height: `400px`,
+                                minHeight: '400px',
+                                maxHeight: '100%',
+                                border: 1,
+                                borderColor: 'divider',
+                                display: 'grid',
+                                gridTemplateRows: 'repeat(5, 1fr)',
+                                gridTemplateColumns: 'repeat(5, 1fr)',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                textAlign: 'center',
                                 color: '#fff',
                             }}
                         >
-                            ← Return Home
-                        </Link>
-                    </Box>
+                            {mockBoard.board.map((row) =>
+                                row.map((cell) => (
+                                    <Box
+                                        key={cell.goal.id}
+                                        sx={{
+                                            position: 'relative',
+                                            aspectRatio: '1 / 1',
+                                            cursor: 'pointer',
+                                            overflow: 'hidden',
+                                            border: 1,
+                                            borderColor: 'divider',
+                                            transition: 'all',
+                                            transitionDuration: 300,
+                                            background: (theme) =>
+                                                theme.palette.background
+                                                    .default,
+                                            ':hover': {
+                                                zIndex: 10,
+                                                scale: '110%',
+                                            },
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            width: '100%',
+                                            height: '100%',
+                                        }}
+                                    >
+                                        <Box
+                                            sx={{
+                                                zIndex: 10,
+                                                display: 'flex',
+                                                height: '100%',
+                                                width: '100%',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                p: 1,
+                                            }}
+                                        >
+                                            <TextFit
+                                                text={cell.goal.goal}
+                                                sx={{
+                                                    p: 1,
+                                                    filter: 'drop-shadow(2px 2px 2px rgba(0,0,0,0))',
+                                                }}
+                                            />
+                                        </Box>
+                                        {cell.goal.goal === '404' && (
+                                            <Box
+                                                sx={{
+                                                    position: 'absolute',
+                                                    width: '100%',
+                                                    height: '100%',
+                                                    backgroundColor:
+                                                        'primary.dark',
+                                                }}
+                                            />
+                                        )}
+                                    </Box>
+                                )),
+                            )}
+                        </Box>
+                    </Link>
                 </Box>
                 <Box
                     sx={{
-                        flexGrow: 1,
+                        pt: 2,
                     }}
-                />
-                <Footer />
+                >
+                    <Link
+                        href="/"
+                        component={NextLink}
+                        sx={{
+                            color: '#fff',
+                        }}
+                    >
+                        ← Return Home
+                    </Link>
+                </Box>
             </Box>
-        </RoomContext.Provider>
+            <Box
+                sx={{
+                    flexGrow: 1,
+                }}
+            />
+        </Box>
     );
 }

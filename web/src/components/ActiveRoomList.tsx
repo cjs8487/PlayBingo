@@ -7,9 +7,8 @@ import {
     Typography,
 } from '@mui/material';
 import { RoomData } from '@playbingo/types';
-import Link from 'next/link';
-import { serverGet } from '../app/ServerUtils';
 import { connection } from 'next/server';
+import { serverGet } from '../app/ServerUtils';
 
 async function getRooms(): Promise<RoomData[]> {
     const res = await serverGet('/api/rooms');
@@ -40,10 +39,7 @@ export default async function ActiveRoomList() {
             {rooms.map((room) => (
                 <ListItem key={room.slug}>
                     <Card variant="outlined">
-                        <CardActionArea
-                            href={`/rooms/${room.slug}`}
-                            LinkComponent={Link}
-                        >
+                        <CardActionArea href={`/rooms/${room.slug}`}>
                             <CardContent>
                                 <Typography variant="h5">
                                     {room.name}

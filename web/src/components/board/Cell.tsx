@@ -91,6 +91,7 @@ export default function BoardCell({
 
     useEffect(() => {
         if (revealed && !wasRevealed) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setWasRevealed(true);
             setAnimating(true);
             const timer = setTimeout(() => {

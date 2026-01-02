@@ -100,7 +100,16 @@ export default function VariantForm({
             notifyMessage('Variant saved.');
             closeModal();
         });
-    }, [handleSubmit, slug, name, description, isNew, editVariant, closeModal]);
+    }, [
+        handleSubmit,
+        slug,
+        name,
+        description,
+        isNew,
+        editVariant,
+        closeModal,
+        setNameError,
+    ]);
 
     const topError = errors[''];
 
