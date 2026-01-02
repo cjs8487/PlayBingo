@@ -96,6 +96,16 @@ model Game {
   setupMd                     String?
   linksMd                     String?
   goalTags                    GoalTag[]
+  resources                   GameResource[]
+}
+
+model GameResource {
+  id          String  @id @unique @default(cuid())
+  name        String
+  url         String
+  description String?
+  game        Game    @relation(fields: [gameId], references: [id])
+  gameId      String
 }
 
 model DifficultyVariant {
