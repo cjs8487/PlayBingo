@@ -83,6 +83,8 @@ export default async function GameLayout({
                     flexDirection: 'column',
                     alignItems: 'center',
                     gap: 1,
+                    maxHeight: '100%',
+                    overflowY: 'auto',
                 }}
             >
                 <Box
