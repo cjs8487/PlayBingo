@@ -202,7 +202,7 @@ export default async function GameLayout({
                         ))}
                     </Box>
                 )}
-                {game.resources && (
+                {game.resources && game.resources.length > 0 && (
                     <Box
                         sx={{
                             display: 'flex',
