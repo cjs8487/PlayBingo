@@ -241,6 +241,33 @@ games.post('/:slug', async (req, res) => {
         result = await updateSetup(slug, setupMd);
     }
     if (links !== undefined) {
+        if (!Array.isArray(links)) {
+            res.status(400).send('Incorrect links format');
+            return;
+        }
+
+        if (
+            !links.every((link) => {
+                const valid =
+                    'name' in link &&
+                    'url' in link &&
+                    typeof link.name === 'string' &&
+                    typeof link.url === 'string';
+
+                if (!valid) {
+                    return false;
+                }
+                try {
+                    new URL(link.url);
+                } catch {
+                    return false;
+                }
+                return true;
+            })
+        ) {
+            res.status(400).send('Incorrect links format');
+            return;
+        }
         result = await updateLinks(slug, links);
     }
 
