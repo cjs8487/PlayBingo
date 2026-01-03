@@ -1,17 +1,17 @@
 'use client';
 
 import { CopyAll } from '@mui/icons-material';
-import { Typography, Button, Link, IconButton, Box } from '@mui/material';
+import { Box, Button, IconButton, Link, Tooltip } from '@mui/material';
+import { GameResource } from '@playbingo/types';
 import { useEffect } from 'react';
-import ReactMarkdown from 'react-markdown';
 import { useCopyToClipboard } from 'react-use';
 import { alertError } from '../../../../../lib/Utils';
 
 interface Props {
-    linksMarkdown: string;
+    links: GameResource[];
 }
 
-export default function LinkList({ linksMarkdown }: Props) {
+export default function LinkList({ links }: Props) {
     const [state, copyToClipboard] = useCopyToClipboard();
 
     useEffect(() => {
@@ -23,56 +23,44 @@ export default function LinkList({ linksMarkdown }: Props) {
     }, [state]);
 
     return (
-        <ReactMarkdown
-            components={{
-                p({ children, ...props }) {
-                    return (
-                        <Typography
-                            {...props}
-                            sx={{
-                                mb: 1,
-                            }}
-                        >
-                            {children}
-                        </Typography>
-                    );
-                },
-                a({ children, ...props }) {
-                    const { href, key } = props;
-                    return (
-                        <Button
-                            key={key}
-                            component={Link}
-                            href={href ?? ''}
-                            sx={{
-                                width: '100%',
-                                '.MuiIconButton-root': {
-                                    visibility: 'hidden',
-                                },
-                                '&:hover .MuiIconButton-root': {
-                                    visibility: 'inherit',
-                                },
-                            }}
-                        >
-                            <Box component="span" sx={{ flexGrow: 1 }}>
-                                {children}
-                            </Box>
-                            <IconButton
-                                size="small"
-                                onClick={(e) => {
-                                    copyToClipboard(href ?? '');
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                }}
-                            >
-                                <CopyAll />
-                            </IconButton>
-                        </Button>
-                    );
-                },
+        <Box
+            sx={{
+                display: 'flex',
+                flexDirection: 'column',
             }}
         >
-            {linksMarkdown}
-        </ReactMarkdown>
+            {links.map(({ id, name, url, description }) => (
+                <Tooltip key={id} title={description} arrow>
+                    <Button
+                        component={Link}
+                        href={url}
+                        sx={{
+                            py: 0.5,
+                            width: '100%',
+                            '.MuiIconButton-root': {
+                                visibility: 'hidden',
+                            },
+                            '&:hover .MuiIconButton-root': {
+                                visibility: 'inherit',
+                            },
+                        }}
+                    >
+                        <Box component="span" sx={{ flexGrow: 1 }}>
+                            {name}
+                        </Box>
+                        <IconButton
+                            size="small"
+                            onClick={(e) => {
+                                copyToClipboard(url);
+                                e.preventDefault();
+                                e.stopPropagation();
+                            }}
+                        >
+                            <CopyAll />
+                        </IconButton>
+                    </Button>
+                </Tooltip>
+            ))}
+        </Box>
     );
 }

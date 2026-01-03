@@ -84,13 +84,16 @@
         "setupMd": {
             "type": "string"
         },
-        "linksMd": {
-            "type": "string"
-        },
         "variants": {
             "type": "array",
             "items": {
                 "$ref": "./Variant.json"
+            }
+        },
+        "resources": {
+            "type": "array",
+            "items": {
+                "$ref": "#/$defs/GameResource"
             }
         }
     },
@@ -113,6 +116,25 @@
                     "items": {
                         "type": "number"
                     }
+                }
+            }
+        },
+        "GameResource": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id","name", "url"],
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "url": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
                 }
             }
         }

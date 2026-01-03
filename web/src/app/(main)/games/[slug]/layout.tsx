@@ -200,7 +200,7 @@ export default async function GameLayout({
                         ))}
                     </Box>
                 )}
-                {game.linksMd && (
+                {game.resources && (
                     <Box
                         sx={{
                             display: 'flex',
@@ -212,9 +212,7 @@ export default async function GameLayout({
                         }}
                     >
                         <Typography variant="h6">Links</Typography>
-                        {game.linksMd && (
-                            <LinkList linksMarkdown={game.linksMd} />
-                        )}
+                        <LinkList links={game.resources} />
                     </Box>
                 )}
                 <Box sx={{ flexGrow: 1 }} />

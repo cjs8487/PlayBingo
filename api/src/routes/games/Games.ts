@@ -92,7 +92,13 @@ games.get('/:slug', async (req, res) => {
         newGeneratorBeta: game.newGeneratorBeta,
         descriptionMd: game.descriptionMd ?? undefined,
         setupMd: game.setupMd ?? undefined,
-        linksMd: game.linksMd ?? undefined,
+        resources:
+            game.resources.map((resource) => ({
+                id: resource.id,
+                name: resource.name,
+                url: resource.url,
+                description: resource.description ?? '',
+            })) ?? [],
         isMod: await isModerator(slug, req.session.user ?? ''),
     };
     if (game.newGeneratorBeta) {
@@ -169,7 +175,7 @@ games.post('/:slug', async (req, res) => {
         shouldDeleteCover,
         descriptionMd,
         setupMd,
-        linksMd,
+        links,
     } = req.body;
 
     let result = undefined;
@@ -234,8 +240,8 @@ games.post('/:slug', async (req, res) => {
     if (setupMd !== undefined) {
         result = await updateSetup(slug, setupMd);
     }
-    if (linksMd !== undefined) {
-        result = await updateLinks(slug, linksMd);
+    if (links !== undefined) {
+        result = await updateLinks(slug, links);
     }
 
     if (!result) {
