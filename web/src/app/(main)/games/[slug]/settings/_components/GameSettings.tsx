@@ -136,12 +136,17 @@ function LinkRow({ index }: LinkRowProps) {
                     if (!value) {
                         return 'URL is required';
                     }
+                    try {
+                        new URL(value);
+                    } catch {
+                        return `Invalid URL`;
+                    }
                 }}
             />
             <FormikTextField
                 name={`links.${index}.name`}
                 label="Label"
-                // sx={{ flexGrow: 1 }}
+                sx={{ flexGrow: 1 }}
                 validate={(value) => {
                     if (!value) {
                         return 'Name is required';
