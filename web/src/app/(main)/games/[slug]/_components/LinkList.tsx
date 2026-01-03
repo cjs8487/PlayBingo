@@ -27,6 +27,8 @@ export default function LinkList({ links }: Props) {
             sx={{
                 display: 'flex',
                 flexDirection: 'column',
+                maxHeight: '150px',
+                overflowY: 'auto',
             }}
         >
             {links.map(({ id, name, url, description }) => (
