@@ -12,7 +12,7 @@ export const useApi = <T>(
         revalidateIfStale: !immutable,
         revalidateOnFocus: !immutable,
         revalidateOnReconnect: !immutable,
-        onSuccess,
+        onSuccess: onSuccess ?? (() => {}),
     };
     return useSWR<T>(
         route,
