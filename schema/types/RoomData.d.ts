@@ -21,6 +21,9 @@ export interface RoomData {
   token?: string;
   variant: string;
   mode: string;
+  startedAt?: string;
+  finishedAt?: string;
+  raceHandler?: "LOCAL" | "RACETIME";
 }
 export interface RacetimeConnection {
   /**
@@ -43,12 +46,4 @@ export interface RacetimeConnection {
    * ISO 8601 duration string representing the amount of time between ready and start
    */
   startDelay?: string;
-  /**
-   * ISO 8601 date when the race started
-   */
-  started?: string;
-  /**
-   * ISO 8601 date when the race ended
-   */
-  ended?: string;
 }

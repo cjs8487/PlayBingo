@@ -16,7 +16,11 @@
         {"$ref": "#/$defs/ChangeColorAction"},
         {"$ref": "#/$defs/NewCardAction"},
         {"$ref": "#/$defs/RevealCardAction"},
-        {"$ref": "#/$defs/ChangeAuthAction"}
+        {"$ref": "#/$defs/ChangeAuthAction"},
+        {"$ref": "#/$defs/StartTimerAction"},
+        {"$ref": "#/$defs/ChangeRaceHandlerAction"},
+        {"$ref": "#/$defs/ResetTimerAction"}
+        
     ],
     "$defs": {
         "JoinAction": {
@@ -133,6 +137,28 @@
                         "spectate": {"type": "boolean"}
                     }
                 }
+            }
+        },
+        "StartTimerAction": {
+            "required": ["action"],
+            "additionalProperties": false,
+            "properties": {
+                "action": "startTimer"
+            }
+        },
+        "ChangeRaceHandlerAction": {
+            "required": ["action", "raceHandler"],
+            "additionalProperties": false,
+            "properties": {
+                "action": "changeRaceHandler",
+                "raceHandler": {"enum": ["racetime", "local"]}
+            }
+        },
+        "ResetTimerAction": {
+            "required": ["action", "raceHandler"],
+            "additionalProperties": false,
+            "properties": {
+                "action": "resetTimer"
             }
         }
     }

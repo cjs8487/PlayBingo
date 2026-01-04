@@ -74,6 +74,7 @@ interface RoomContext {
     createRacetimeRoom: () => void;
     updateRacetimeRoom: () => void;
     joinRacetimeRoom: () => void;
+    leaveRacetimeRoom: () => void;
     racetimeReady: () => void;
     racetimeUnready: () => void;
     toggleGoalStar: (row: number, col: number) => void;
@@ -81,6 +82,9 @@ interface RoomContext {
     toggleGoalDetails: () => void;
     toggleCounters: () => void;
     changeAuth: (spectate: boolean) => void;
+    startTimer: () => void;
+    changeRaceHandler: (handler: string) => void;
+    resetTimer: () => void;
 }
 
 export const RoomContext = createContext<RoomContext>({
@@ -106,6 +110,7 @@ export const RoomContext = createContext<RoomContext>({
     createRacetimeRoom() {},
     updateRacetimeRoom() {},
     joinRacetimeRoom() {},
+    leaveRacetimeRoom() {},
     racetimeReady() {},
     racetimeUnready() {},
     toggleGoalStar() {},
@@ -113,6 +118,9 @@ export const RoomContext = createContext<RoomContext>({
     toggleGoalDetails() {},
     toggleCounters() {},
     changeAuth() {},
+    startTimer() {},
+    changeRaceHandler() {},
+    resetTimer() {},
 });
 
 interface RoomContextProps {
@@ -440,6 +448,23 @@ export function RoomContextProvider({
             return;
         }
     }, [roomData, authToken, connectedPlayer]);
+    const leaveRacetimeRoom = useCallback(async () => {
+        if (connectedPlayer?.spectator) {
+            return;
+        }
+        const res = await fetch(`/api/rooms/${roomData.slug}/actions`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                action: 'racetime/leave',
+                authToken,
+            }),
+        });
+        if (!res.ok) {
+            alertError(await res.text());
+            return;
+        }
+    }, [roomData, authToken, connectedPlayer]);
     const racetimeReady = useCallback(async () => {
         if (connectedPlayer?.spectator) {
             return;
@@ -500,6 +525,28 @@ export function RoomContextProvider({
         },
         [sendJsonMessage, authToken],
     );
+    const startTimer = useCallback(() => {
+        sendJsonMessage({
+            action: 'startTimer',
+            authToken,
+        } as RoomAction);
+    }, [sendJsonMessage, authToken]);
+    const changeRaceHandler = useCallback(
+        (handler: string) => {
+            sendJsonMessage({
+                action: 'changeRaceHandler',
+                authToken,
+                raceHandler: handler,
+            } as RoomAction);
+        },
+        [authToken, sendJsonMessage],
+    );
+    const resetTimer = useCallback(() => {
+        sendJsonMessage({
+            action: 'resetTimer',
+            authToken,
+        } as RoomAction);
+    }, [authToken, sendJsonMessage]);
 
     return (
         <RoomContext.Provider
@@ -526,6 +573,7 @@ export function RoomContextProvider({
                 createRacetimeRoom,
                 updateRacetimeRoom,
                 joinRacetimeRoom,
+                leaveRacetimeRoom,
                 racetimeReady,
                 racetimeUnready,
                 toggleGoalStar,
@@ -533,6 +581,9 @@ export function RoomContextProvider({
                 toggleGoalDetails,
                 toggleCounters,
                 changeAuth,
+                startTimer,
+                changeRaceHandler,
+                resetTimer,
             }}
         >
             {children}

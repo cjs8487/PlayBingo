@@ -8,10 +8,11 @@ import {
     Link,
     Typography,
 } from '@mui/material';
+import { Duration } from 'luxon';
 import NextLink from 'next/link';
 import { useRoomContext } from '../../../context/RoomContext';
 import { useUserContext } from '../../../context/UserContext';
-import Timer from './Timer';
+import TimerDisplay from '../timer/TimerDisplay';
 
 export default function RacetimeCard() {
     const {
@@ -22,6 +23,7 @@ export default function RacetimeCard() {
         racetimeReady,
         racetimeUnready,
         connectedPlayer,
+        leaveRacetimeRoom,
     } = useRoomContext();
     const { loggedIn, user } = useUserContext();
 
@@ -34,10 +36,11 @@ export default function RacetimeCard() {
         return null;
     }
 
-    const { gameActive, url, status } = racetimeConnection;
+    const { gameActive, url, status, startDelay } = racetimeConnection;
     if (!gameActive) {
         return null;
     }
+    const offset = Duration.fromISO(startDelay ?? '');
 
     return (
         <Card>
@@ -103,6 +106,11 @@ export default function RacetimeCard() {
                                                         Ready
                                                     </Button>
                                                 )}
+                                                <Button
+                                                    onClick={leaveRacetimeRoom}
+                                                >
+                                                    Leave
+                                                </Button>
                                             </>
                                         )}
                                     </>
@@ -113,7 +121,7 @@ export default function RacetimeCard() {
                 {status && (
                     <>
                         <Typography>{status}</Typography>
-                        <Timer />
+                        <TimerDisplay offset={offset} />
                     </>
                 )}
             </CardContent>

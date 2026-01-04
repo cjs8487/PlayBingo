@@ -1,14 +1,14 @@
 import { Box, Paper, Typography } from '@mui/material';
-import { Duration } from 'luxon';
 import { Sword } from 'mdi-material-ui';
 import { useContext } from 'react';
 import { RoomContext } from '../../context/RoomContext';
+import PlayerRaceSummary from './PlayerRaceSummary';
 export default function PlayerList() {
     const { players: allPlayers, roomData } = useContext(RoomContext);
-    const racetimeConnected = !!roomData?.racetimeConnection?.url;
 
     const players = allPlayers.filter((p) => !p.spectator);
     const spectators = allPlayers.filter((p) => p.spectator);
+
     return (
         <Paper
             sx={{
@@ -60,22 +60,11 @@ export default function PlayerList() {
                                 )}
                                 <Typography>{player.nickname}</Typography>
                             </Box>
-                            {racetimeConnected && (
-                                <>
-                                    {!player.raceStatus.connected && (
-                                        <Typography>Not connected</Typography>
-                                    )}
-                                    {player.raceStatus.connected && (
-                                        <Typography>
-                                            {player.raceStatus.username} -{' '}
-                                            {player.raceStatus.ready
-                                                ? 'Ready'
-                                                : 'Not ready'}
-                                            {player.raceStatus.finishTime &&
-                                                ` - ${Duration.fromISO(player.raceStatus.finishTime).toFormat('h:mm:ss')}`}
-                                        </Typography>
-                                    )}
-                                </>
+                            {roomData?.raceHandler && (
+                                <PlayerRaceSummary
+                                    raceHandler={roomData.raceHandler}
+                                    player={player}
+                                />
                             )}
                         </Box>
                     ))}

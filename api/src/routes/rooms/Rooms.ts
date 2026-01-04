@@ -26,8 +26,11 @@ import Player from '../../core/Player';
 import { GeneratorSettings, makeGeneratorSchema } from '@playbingo/shared';
 import { getCategories } from '../../database/games/GoalCategories';
 import { getVariant } from '../../database/games/Variants';
-import { DifficultyVariant, Variant } from '@prisma/client';
+import { DifficultyVariant, RaceHandler, Variant } from '@prisma/client';
 import { GenerationFailedError } from '../../core/generation/GenerationFailedError';
+import RacetimeHandler from '../../core/integration/races/RacetimeHandler';
+import LocalTimer from '../../core/integration/races/LocalTimer';
+import { error } from 'console';
 
 const MIN_ROOM_GOALS_REQUIRED = 25;
 const rooms = Router();
@@ -323,6 +326,7 @@ async function getOrLoadRoom(slug: string): Promise<Room | null> {
             5,
         );
     }
+    newRoom.computeVictoryMasks();
 
     dbRoom.players.forEach((dbPlayer) => {
         const player = new Player(
@@ -334,6 +338,7 @@ async function getOrLoadRoom(slug: string): Promise<Room | null> {
             dbPlayer.monitor,
             dbPlayer.userId ?? undefined,
         );
+        player.finishedAt = dbPlayer.finishedAt?.toISOString();
         newRoom.players.set(player.id, player);
     });
 
@@ -400,6 +405,21 @@ async function getOrLoadRoom(slug: string): Promise<Room | null> {
                 break;
         }
     });
+    switch (dbRoom.raceHandler) {
+        case RaceHandler.RACETIME:
+            newRoom.raceHandler = new RacetimeHandler(newRoom);
+            if (dbRoom.racetimeRoom) {
+                newRoom.raceHandler.connect(dbRoom.racetimeRoom);
+                await newRoom.connectRacetimeWebSocket();
+            }
+            break;
+        case RaceHandler.LOCAL:
+            const handler = new LocalTimer(newRoom);
+            handler.startedAt = dbRoom.startedAt?.toISOString();
+            handler.finishedAt = dbRoom.finishedAt?.toISOString();
+            newRoom.raceHandler = handler;
+            break;
+    }
 
     allRooms.set(slug, newRoom);
     return newRoom;
@@ -422,11 +442,10 @@ rooms.get('/:slug', async (req, res) => {
         newGenerator: room.newGenerator,
         racetimeConnection: {
             gameActive: room.racetimeEligible,
-            url: room.raceHandler.url,
-            startDelay: room.raceHandler.data?.start_delay,
-            started: room.raceHandler.data?.started_at ?? undefined,
-            ended: room.raceHandler.data?.ended_at ?? undefined,
-            status: room.raceHandler.data?.status.verbose_value,
+            url: (room.raceHandler as RacetimeHandler).url,
+            startDelay: (room.raceHandler as RacetimeHandler).data?.start_delay,
+            status: (room.raceHandler as RacetimeHandler).data?.status
+                .verbose_value,
         },
         mode: room.bingoMode,
         variant: room.variantName,
