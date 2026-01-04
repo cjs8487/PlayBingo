@@ -47,6 +47,14 @@ export const handleRacetimeAction = async (
                 };
             }
             return joinPlayer(room, roomToken, rtConnection.serviceId);
+        case 'leave':
+            if (roomToken.isSpectating) {
+                return {
+                    code: 403,
+                    message: 'Forbidden',
+                };
+            }
+            return leavePlayer(room, roomToken);
         case 'ready':
             if (roomToken.isSpectating) {
                 return {
@@ -156,6 +164,22 @@ const joinPlayer = async (
     racetimeId: string,
 ): Promise<ActionResult> => {
     if (!room.joinRaceRoom(racetimeId, roomToken)) {
+        return {
+            code: 403,
+            message: 'Forbidden',
+        };
+    }
+    return {
+        code: 200,
+        value: {},
+    };
+};
+
+const leavePlayer = async (
+    room: Room,
+    roomToken: RoomTokenPayload,
+): Promise<ActionResult> => {
+    if (!room.leaveRaceRoom(roomToken)) {
         return {
             code: 403,
             message: 'Forbidden',

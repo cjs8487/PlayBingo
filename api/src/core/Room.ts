@@ -1,5 +1,7 @@
+import { GeneratorSettings } from '@playbingo/shared';
 import {
     ChangeColorAction,
+    ChangeRaceHandlerAction,
     ChatAction,
     ChatMessage,
     JoinAction,
@@ -14,7 +16,7 @@ import {
 import { BingoMode } from '@prisma/client';
 import { WebSocket } from 'ws';
 import { roomCleanupInactive } from '../Environment';
-import { logError, logInfo, logWarn } from '../Logger';
+import { logDebug, logError, logInfo, logWarn } from '../Logger';
 import {
     invalidateToken,
     Permissions,
@@ -29,6 +31,7 @@ import {
     addUnmarkAction,
     createUpdatePlayer,
     setRoomBoard,
+    updateRaceHandler,
 } from '../database/Rooms';
 import { isStaff } from '../database/Users';
 import {
@@ -38,7 +41,7 @@ import {
     useTypedRandom,
 } from '../database/games/Games';
 import { getCategories } from '../database/games/GoalCategories';
-import { goalsForGame, goalsForGameFull } from '../database/games/Goals';
+import { goalsForGameFull } from '../database/games/Goals';
 import { shuffle } from '../util/Array';
 import {
     computeLineMasks,
@@ -55,8 +58,9 @@ import {
 } from './generation/GeneratorCore';
 import { generateFullRandom, generateRandomTyped } from './generation/Random';
 import { generateSRLv5 } from './generation/SRLv5';
-import RaceHandler, { RaceData } from './integration/races/RacetimeHandler';
-import { GeneratorSettings } from '@playbingo/shared';
+import RacetimeHandler, { RaceData } from './integration/races/RacetimeHandler';
+import LocalTimer from './integration/races/LocalTimer';
+import RaceHandler from './integration/races/RaceHandler';
 
 export enum BoardGenerationMode {
     RANDOM = 'Random',
@@ -156,7 +160,11 @@ export default class Room {
         this.lastGenerationMode = { mode: BoardGenerationMode.RANDOM };
 
         this.racetimeEligible = !!racetimeEligible;
-        this.raceHandler = new RaceHandler(this);
+        if (this.racetimeEligible) {
+            this.raceHandler = new RacetimeHandler(this);
+        } else {
+            this.raceHandler = new LocalTimer(this);
+        }
 
         this.board = [];
 
@@ -164,17 +172,7 @@ export default class Room {
             this.raceHandler.connect(racetimeUrl);
         }
 
-        if (bingoMode === BingoMode.LINES) {
-            this.victoryMasks = computeLineMasks(5, 5);
-        } else if (bingoMode === BingoMode.BLACKOUT) {
-            let mask = 0n;
-            for (let i = 0; i < 25; i++) {
-                mask |= 1n << BigInt(i);
-            }
-            this.victoryMasks = [mask];
-        } else {
-            this.victoryMasks = [];
-        }
+        this.victoryMasks = [];
 
         this.hideCard = hideCard;
         this.completed = false;
@@ -262,6 +260,7 @@ export default class Room {
                     revealed: true,
                 })),
             );
+            this.computeVictoryMasks();
         } else {
             const globalState: GlobalGenerationState = {
                 useCategoryMaxes: categories.some((cat) => cat.max > 0),
@@ -435,16 +434,23 @@ export default class Room {
                 name: this.name,
                 gameSlug: this.gameSlug,
                 newGenerator: this.newGenerator,
-                racetimeConnection: {
-                    gameActive: this.racetimeEligible,
-                    url: this.raceHandler.url,
-                    startDelay: this.raceHandler.data?.start_delay,
-                    started: this.raceHandler.data?.started_at ?? undefined,
-                    ended: this.raceHandler.data?.ended_at ?? undefined,
-                    status: this.raceHandler.data?.status.verbose_value,
-                },
+                racetimeConnection: this.raceHandler
+                    ? 'url' in this.raceHandler
+                        ? {
+                              gameActive: this.racetimeEligible,
+                              url: (this.raceHandler as RacetimeHandler).url,
+                              startDelay: (this.raceHandler as RacetimeHandler)
+                                  .data?.start_delay,
+                              status: (this.raceHandler as RacetimeHandler).data
+                                  ?.status.verbose_value,
+                          }
+                        : undefined
+                    : { gameActive: this.racetimeEligible, url: undefined },
                 mode: getModeString(this.bingoMode, this.lineCount),
                 variant: this.variantName,
+                startedAt: this.raceHandler?.getStartTime(),
+                finishedAt: this.raceHandler?.getEndTime(),
+                raceHandler: this.raceHandler?.key(),
             },
             players: this.getPlayers(),
         };
@@ -598,6 +604,32 @@ export default class Room {
         }
     }
 
+    handleStartTimer() {
+        this.raceHandler?.startTimer();
+        this.sendRoomData();
+    }
+
+    handleChangeRaceHandler(action: ChangeRaceHandlerAction) {
+        if (this.raceHandler) {
+            this.raceHandler.disconnect();
+        }
+        switch (action.raceHandler) {
+            case 'local':
+                this.raceHandler = new LocalTimer(this);
+                break;
+            case 'racetime':
+                this.raceHandler = new RacetimeHandler(this);
+                break;
+        }
+        this.sendRoomData();
+        updateRaceHandler(this.id, this.raceHandler.key()).then();
+    }
+
+    handleResetTimer() {
+        this.raceHandler?.resetTimer();
+        this.sendRoomData();
+    }
+
     handleSocketClose(ws: WebSocket) {
         let player: Player | undefined;
         for (const p of this.players.values()) {
@@ -635,11 +667,12 @@ export default class Room {
                 newGenerator: this.newGenerator,
                 mode: getModeString(this.bingoMode, this.lineCount),
                 variant: this.variantName,
+                raceHandler: this.raceHandler?.key(),
             },
         });
         this.sendChat(`Racetime.gg room created ${url}`);
         this.raceHandler.connect(url);
-        this.raceHandler.connectWebsocket();
+        (this.raceHandler as RacetimeHandler).connectWebsocket();
     }
 
     handleRacetimeRoomDisconnected() {
@@ -657,6 +690,7 @@ export default class Room {
                 newGenerator: this.newGenerator,
                 mode: getModeString(this.bingoMode, this.lineCount),
                 variant: this.variantName,
+                raceHandler: this.raceHandler?.key(),
             },
         });
     }
@@ -666,22 +700,7 @@ export default class Room {
         if (!player) {
             return null;
         }
-        this.sendChat([
-            {
-                contents: player.nickname,
-                color: player.color,
-            },
-            ' has revealed the card.',
-        ]);
-        player.sendMessage({
-            action: 'syncBoard',
-            board: {
-                hidden: false,
-                board: this.board,
-                width: this.board[0].length,
-                height: this.board.length,
-            },
-        });
+        this.revealCardForPlayer(player);
     }
     //#endregion
 
@@ -733,11 +752,40 @@ export default class Room {
             players: this.getPlayers(),
             racetimeConnection: {
                 gameActive: this.racetimeEligible,
-                url: this.raceHandler.url,
+                url: (this.raceHandler as RacetimeHandler).url,
                 startDelay: data.start_delay ?? undefined,
-                started: data.started_at ?? undefined,
-                ended: data.ended_at ?? undefined,
                 status: data.status.verbose_value,
+            },
+        });
+        this.sendRoomData();
+    }
+
+    sendRoomData() {
+        this.sendServerMessage({
+            action: 'updateRoomData',
+            roomData: {
+                game: this.game,
+                slug: this.slug,
+                name: this.name,
+                gameSlug: this.gameSlug,
+                racetimeConnection:
+                    'url' in this.raceHandler
+                        ? {
+                              gameActive: this.racetimeEligible,
+                              url: (this.raceHandler as RacetimeHandler).url,
+                              startDelay:
+                                  (this.raceHandler as RacetimeHandler).data
+                                      ?.start_delay ?? undefined,
+                              status: (this.raceHandler as RacetimeHandler).data
+                                  ?.status.verbose_value,
+                          }
+                        : undefined,
+                newGenerator: this.newGenerator,
+                mode: getModeString(this.bingoMode, this.lineCount),
+                variant: this.variantName,
+                startedAt: this.raceHandler?.getStartTime(),
+                finishedAt: this.raceHandler?.getEndTime(),
+                raceHandler: this.raceHandler?.key(),
             },
         });
     }
@@ -761,7 +809,10 @@ export default class Room {
     private checkWinConditions() {
         this.players.forEach((player) => {
             if (this.bingoMode === BingoMode.LOCKOUT) {
-                if (!player.goalComplete && player.goalCount >= 13) {
+                const goalsNeeded = Math.ceil(
+                    (this.board.length * this.board[0].length) / 2,
+                );
+                if (!player.goalComplete && player.goalCount >= goalsNeeded) {
                     this.sendChat([
                         {
                             contents: player.nickname,
@@ -770,8 +821,9 @@ export default class Room {
                         ' has achieved lockout!',
                     ]);
                     player.goalComplete = true;
+                    this.raceHandler?.playerFinished(player);
                 }
-                if (player.goalComplete && player.goalCount < 13) {
+                if (player.goalComplete && player.goalCount < goalsNeeded) {
                     this.sendChat([
                         {
                             contents: player.nickname,
@@ -780,6 +832,7 @@ export default class Room {
                         ' no longer has lockout.',
                     ]);
                     player.goalComplete = false;
+                    this.raceHandler?.playerUnfinshed(player);
                 }
             } else {
                 if (this.bingoMode === BingoMode.LINES) {
@@ -802,6 +855,7 @@ export default class Room {
                         !player.goalComplete
                     ) {
                         player.goalComplete = true;
+                        this.raceHandler?.playerFinished(player).then();
                         this.sendChat([
                             {
                                 contents: player.nickname,
@@ -814,6 +868,7 @@ export default class Room {
                         player.goalComplete
                     ) {
                         player.goalComplete = false;
+                        this.raceHandler?.playerUnfinshed(player);
                         this.sendChat([
                             {
                                 contents: player.nickname,
@@ -829,6 +884,7 @@ export default class Room {
                     );
                     if (complete && !player.goalComplete) {
                         player.goalComplete = true;
+                        this.raceHandler?.playerFinished(player);
                         this.sendChat([
                             {
                                 contents: player.nickname,
@@ -838,6 +894,7 @@ export default class Room {
                         ]);
                     } else if (!complete && player.goalComplete) {
                         player.goalComplete = false;
+                        this.raceHandler?.playerUnfinshed(player);
                         this.sendChat([
                             {
                                 contents: player.nickname,
@@ -856,6 +913,15 @@ export default class Room {
             }
         });
         this.completed = allComplete;
+        if (this.completed) {
+            this.raceHandler?.allPlayersFinished();
+            this.sendRoomData();
+        } else {
+            if (this.raceHandler?.getEndTime()) {
+                this.raceHandler?.allPlayersNotFinished();
+                this.sendRoomData();
+            }
+        }
     }
 
     /**
@@ -910,7 +976,7 @@ export default class Room {
 
     //#region Racetime Integration
     async connectRacetimeWebSocket() {
-        this.raceHandler.connectWebsocket();
+        (this.raceHandler as RacetimeHandler).connectWebsocket();
     }
 
     joinRaceRoom(racetimeId: string, authToken: RoomTokenPayload) {
@@ -920,8 +986,17 @@ export default class Room {
             return false;
         }
         this.logInfo(`Connecting ${player.nickname} to racetime`);
-        player.raceId = racetimeId;
         return player.joinRace();
+    }
+
+    leaveRaceRoom(authToken: RoomTokenPayload) {
+        const player = this.players.get(authToken.playerId);
+        if (!player) {
+            this.logWarn('Unable to find a player for a verified room token');
+            return false;
+        }
+        this.logInfo(`Leaving ${player.nickname} from racetime`);
+        return player.leaveRace();
     }
 
     async refreshRacetimeHandler() {
@@ -952,6 +1027,10 @@ export default class Room {
     //#endregion
 
     //#region Logging
+    logDebug(message: string, metadata?: { [k: string]: string }) {
+        logDebug(message, { room: this.slug, ...metadata });
+    }
+
     logInfo(message: string, metadata?: { [k: string]: string }) {
         logInfo(message, { room: this.slug, ...metadata });
     }
@@ -999,6 +1078,47 @@ export default class Room {
             });
         });
         allRooms.delete(this.slug);
+    }
+
+    revealCardForPlayer(player: Player) {
+        this.sendChat([
+            {
+                contents: player.nickname,
+                color: player.color,
+            },
+            ' has revealed the card.',
+        ]);
+        player.sendMessage({
+            action: 'syncBoard',
+            board: {
+                hidden: false,
+                board: this.board,
+                width: this.board[0].length,
+                height: this.board.length,
+            },
+        });
+    }
+
+    revealCardForAllPlayers() {
+        this.players.forEach((player) => {
+            this.revealCardForPlayer(player);
+        });
+    }
+
+    computeVictoryMasks() {
+        const width = this.board[0].length;
+        const height = this.board.length;
+        if (this.bingoMode === BingoMode.LINES) {
+            this.victoryMasks = computeLineMasks(height, width);
+        } else if (this.bingoMode === BingoMode.BLACKOUT) {
+            let mask = 0n;
+            for (let i = 0; i < width * height; i++) {
+                mask |= 1n << BigInt(i);
+            }
+            this.victoryMasks = [mask];
+        } else {
+            this.victoryMasks = [];
+        }
     }
     //#endregion
 }

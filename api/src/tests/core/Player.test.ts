@@ -1,8 +1,10 @@
 import { mock } from 'jest-mock-extended';
 import Player from '../../core/Player';
 import Room from '../../core/Room';
+import { RevealedCell } from '@playbingo/types';
 
 const room = mock<Room>();
+room.board = [Array(5).fill(mock<RevealedCell>()), [], [], [], []];
 
 const createPlayer = () =>
     new Player(room, 'test', 'Test Player', 'blue', false, false);

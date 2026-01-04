@@ -18,6 +18,9 @@ export type RoomAction = (
   | NewCardAction
   | RevealCardAction
   | ChangeAuthAction
+  | StartTimerAction
+  | ChangeRaceHandlerAction
+  | ResetTimerAction
 ) & {
   /**
    * JWT for the room obtained from the server
@@ -76,4 +79,14 @@ export interface ChangeAuthAction {
   payload: {
     spectate: boolean;
   };
+}
+export interface StartTimerAction {
+  action: "startTimer";
+}
+export interface ChangeRaceHandlerAction {
+  action: "changeRaceHandler";
+  raceHandler: "racetime" | "local";
+}
+export interface ResetTimerAction {
+  action: "resetTimer";
 }

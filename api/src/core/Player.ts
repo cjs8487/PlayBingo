@@ -6,14 +6,8 @@ import {
 } from '@playbingo/types';
 import { OPEN, WebSocket } from 'ws';
 import { RoomTokenPayload } from '../auth/RoomAuth';
-import { getAccessToken } from '../lib/RacetimeConnector';
-import RaceHandler from './integration/races/RaceHandler';
+import { computeRevealedMask, rowColToMask } from '../util/RoomUtils';
 import Room from './Room';
-import {
-    computeRevealedMask,
-    rowColToBitIndex,
-    rowColToMask,
-} from '../util/RoomUtils';
 
 /**
  * Represents a player connected to a room. While largely just a data class, this
@@ -61,8 +55,7 @@ export default class Player {
      * is authorized for the connection */
     connections: Map<string, WebSocket>;
 
-    raceHandler: RaceHandler;
-    raceId: string;
+    finishedAt?: string;
 
     constructor(
         room: Room,
@@ -87,9 +80,6 @@ export default class Player {
         this.exploredGoals = 0n;
 
         this.connections = new Map<string, WebSocket>();
-
-        this.raceHandler = room.raceHandler;
-        this.raceId = '';
     }
 
     doesTokenMatch(token: RoomTokenPayload) {
@@ -153,7 +143,7 @@ export default class Player {
      * @returns Client representation of this player's data
      */
     toClientData(): PlayerClientData {
-        const raceUser = this.raceHandler.getPlayer(this.raceId);
+        const raceUser = this.room.raceHandler.getPlayer(this);
         return {
             id: this.id,
             nickname: this.nickname,
@@ -224,7 +214,7 @@ export default class Player {
 
     //#region Goal Tracking
     mark(row: number, col: number) {
-        const mask = rowColToMask(row, col, 5);
+        const mask = rowColToMask(row, col, this.room.board[0].length);
         if ((this.markedGoals & mask) === 0n) {
             this.markedGoals |= mask;
             this.goalCount++;
@@ -235,7 +225,7 @@ export default class Player {
     }
 
     unmark(row: number, col: number) {
-        const mask = rowColToMask(row, col, 5);
+        const mask = rowColToMask(row, col, this.room.board[0].length);
         if ((this.markedGoals & mask) !== 0n) {
             this.markedGoals &= ~mask;
             this.goalCount--;
@@ -246,19 +236,22 @@ export default class Player {
     }
 
     hasMarked(row: number, col: number): boolean {
-        const mask = rowColToMask(row, col, 5);
+        const mask = rowColToMask(row, col, this.room.board[0].length);
         return (this.markedGoals & mask) !== 0n;
     }
 
     hasRevealed(row: number, col: number): boolean {
-        const mask = rowColToMask(row, col, 5);
+        const mask = rowColToMask(row, col, this.room.board[0].length);
         return (this.exploredGoals & mask) !== 0n;
     }
 
     getRevealedMask(): bigint {
         return (
-            computeRevealedMask(this.markedGoals, 5, 5) |
-            this.room.alwaysRevealedMask
+            computeRevealedMask(
+                this.markedGoals,
+                this.room.board[0].length,
+                this.room.board.length,
+            ) | this.room.alwaysRevealedMask
         );
     }
 
@@ -300,48 +293,19 @@ export default class Player {
     //#endregion
 
     //#region Races
-    private async tryRaceAction(
-        action: (token: string) => Promise<boolean>,
-        failMsg: string,
-    ) {
-        if (this.userId) {
-            const token = await getAccessToken(this.userId);
-            if (token) {
-                return action(token);
-            } else {
-                this.room.logInfo(`${failMsg} - failed to generate token`);
-                return false;
-            }
-        } else {
-            this.room.logInfo(`${failMsg} - player is anonymous`);
-            return false;
-        }
-    }
     async joinRace() {
-        return this.tryRaceAction(
-            this.raceHandler.joinPlayer.bind(this.raceHandler),
-            'Unable to join race room',
-        );
+        return this.room.raceHandler.joinPlayer(this);
     }
 
     async leaveRace() {
-        return this.tryRaceAction(
-            this.raceHandler.leavePlayer.bind(this.raceHandler),
-            'Unable to leave race room',
-        );
+        return this.room.raceHandler.leavePlayer(this);
     }
 
     async ready() {
-        return this.tryRaceAction(
-            this.raceHandler.readyPlayer.bind(this.raceHandler),
-            'Unable to ready in race room',
-        );
+        return this.room.raceHandler.readyPlayer(this);
     }
     async unready() {
-        return this.tryRaceAction(
-            this.raceHandler.unreadyPlayer.bind(this.raceHandler),
-            'Unable to unready in race room',
-        );
+        return this.room.raceHandler.unreadyPlayer(this);
     }
     //#endregion
 }
