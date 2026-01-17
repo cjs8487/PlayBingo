@@ -1,14 +1,13 @@
 'use client';
 import Board from '@/components/board/Board';
+import PlayerInfo from '@/components/room/PlayerInfo';
+import PlayerList from '@/components/room/PlayerList';
+import RacetimeCard from '@/components/room/racetime/RacetimeCard';
 import RoomChat from '@/components/room/RoomChat';
 import RoomInfo from '@/components/room/RoomInfo';
 import RoomLogin from '@/components/room/RoomLogin';
 import { ConnectionStatus, useRoomContext } from '@/context/RoomContext';
-import { Box, Dialog, DialogContent } from '@mui/material';
-import AutoSizer from 'react-virtualized-auto-sizer';
-import PlayerInfo from '../../../../components/room/PlayerInfo';
-import PlayerList from '../../../../components/room/PlayerList';
-import RacetimeCard from '../../../../components/room/racetime/RacetimeCard';
+import { Box, Dialog, DialogContent, Stack } from '@mui/material';
 
 export default function Room() {
     const { connectionStatus, roomData } = useRoomContext();
@@ -28,87 +27,81 @@ export default function Room() {
     return (
         <>
             <Box sx={{ width: '100%', height: '100%' }}>
-                <AutoSizer>
-                    {({ width, height }) => (
-                        <>
-                            <Box
-                                sx={{
-                                    display: { xs: 'flex', sm: 'none' },
-                                    width: width,
-                                    height: height,
-                                    overflowY: 'auto',
-                                    flexDirection: 'column',
-                                    rowGap: 1.5,
-                                    p: 1,
-                                }}
-                            >
-                                <RoomXs />
-                            </Box>
-                            <Box
-                                sx={{
-                                    display: {
-                                        xs: 'none',
-                                        sm: 'flex',
-                                        md: 'none',
-                                    },
-                                    width: width,
-                                    height: height,
-                                    overflowY: 'auto',
-                                    flexDirection: 'column',
-                                    rowGap: 1.5,
-                                    p: 1,
-                                }}
-                            >
-                                <RoomSm />
-                            </Box>
-                            <Box
-                                sx={{
-                                    display: {
-                                        xs: 'none',
-                                        md: 'flex',
-                                        lg: 'none',
-                                    },
-                                    width: width,
-                                    height: height,
-                                    overflowY: 'auto',
-                                    flexDirection: 'column',
-                                    rowGap: 1.5,
-                                    p: 1,
-                                }}
-                            >
-                                <RoomMd />
-                            </Box>
-                            <Box
-                                sx={{
-                                    display: {
-                                        xs: 'none',
-                                        lg: 'flex',
-                                        xl: 'none',
-                                    },
-                                    width: width,
-                                    height: height,
-                                    overflowY: 'auto',
-                                    columnGap: 1,
-                                    p: 1,
-                                }}
-                            >
-                                <RoomLg />
-                            </Box>
-                            <Box
-                                sx={{
-                                    display: { xs: 'none', xl: 'flex' },
-                                    width: width,
-                                    height: height,
-                                    overflowY: 'auto',
-                                    columnGap: 1,
-                                    p: 1,
-                                }}
-                            >
-                                <RoomXl />
-                            </Box>
-                        </>
-                    )}
-                </AutoSizer>
+                <Box
+                    sx={{
+                        display: { xs: 'flex', sm: 'none' },
+                        width: '100%',
+                        height: '100%',
+                        overflowY: 'auto',
+                        flexDirection: 'column',
+                        rowGap: 1.5,
+                        p: 1,
+                    }}
+                >
+                    <RoomXs />
+                </Box>
+                <Box
+                    sx={{
+                        display: {
+                            xs: 'none',
+                            sm: 'flex',
+                            md: 'none',
+                        },
+                        width: '100%',
+                        height: '100%',
+                        overflowY: 'auto',
+                        flexDirection: 'column',
+                        rowGap: 1.5,
+                        p: 1,
+                    }}
+                >
+                    <RoomSm />
+                </Box>
+                <Box
+                    sx={{
+                        display: {
+                            xs: 'none',
+                            md: 'flex',
+                            lg: 'none',
+                        },
+                        width: '100%',
+                        height: '100%',
+                        overflowY: 'auto',
+                        flexDirection: 'column',
+                        rowGap: 1.5,
+                        p: 1,
+                    }}
+                >
+                    <RoomMd />
+                </Box>
+                <Box
+                    sx={{
+                        display: {
+                            xs: 'none',
+                            lg: 'flex',
+                            xl: 'none',
+                        },
+                        width: '100%',
+                        height: '100%',
+                        overflowY: 'auto',
+                        columnGap: 1,
+                        p: 1,
+                    }}
+                >
+                    <RoomLg />
+                </Box>
+                <Box
+                    sx={{
+                        display: { xs: 'none', xl: 'flex' },
+                        width: '100%',
+                        height: '100%',
+                        overflowY: 'auto',
+                        columnGap: 1,
+                        p: 1,
+                    }}
+                >
+                    <RoomXl />
+                </Box>
             </Box>
             <Dialog open={showLogin}>
                 <DialogContent>
@@ -121,130 +114,124 @@ export default function Room() {
 
 function RoomXs() {
     return (
-        <>
-            <Box>
-                <RoomInfo />
-            </Box>
-            <Box>
-                <RacetimeCard />
-            </Box>
-            <Box>
-                <PlayerInfo />
-            </Box>
+        <Stack spacing={2} sx={{ height: '100%', overflow: 'hidden' }}>
+            <RoomInfo />
+            <RacetimeCard />
+            <PlayerInfo />
             <Box
                 sx={{
-                    maxWidth: '100%',
-                    maxHeight: '100%',
+                    width: '100%',
+                    flex: '1 1 auto',
+                    minHeight: '400px',
+                    overflow: 'hidden',
                 }}
             >
                 <Board />
             </Box>
-            <Box>
+            <Box sx={{ flex: '0 0 auto' }}>
                 <PlayerList />
             </Box>
             <Box
                 sx={{
-                    maxHeight: '90%',
+                    height: '300px',
+                    flex: '0 0 auto',
                 }}
             >
                 <RoomChat />
             </Box>
-        </>
+        </Stack>
     );
 }
 
 function RoomSm() {
     return (
-        <>
-            <Box
-                sx={{
-                    flexGrow: 1,
-                }}
-            >
+        <Stack spacing={2} sx={{ height: '100%', overflow: 'hidden' }}>
+            <Box sx={{ flex: '0 0 auto' }}>
                 <RoomInfo />
             </Box>
-            <Box>
+            <Box sx={{ flex: '0 0 auto' }}>
                 <RacetimeCard />
             </Box>
-            <Box>
+            <Box sx={{ flex: '0 0 auto' }}>
                 <PlayerInfo />
             </Box>
             <Box
                 sx={{
-                    maxWidth: '100%',
-                    maxHeight: '100%',
+                    width: '100%',
+                    flex: '1 1 auto',
+                    minHeight: '400px',
+                    overflow: 'hidden',
                 }}
             >
                 <Board />
             </Box>
-            <Box>
+            <Box sx={{ flex: '0 0 auto' }}>
                 <PlayerList />
             </Box>
             <Box
                 sx={{
-                    maxHeight: '90%',
+                    height: '300px',
+                    flex: '0 0 auto',
                 }}
             >
                 <RoomChat />
             </Box>
-        </>
+        </Stack>
     );
 }
 
 function RoomMd() {
     return (
-        <>
+        <Stack spacing={2} sx={{ height: '100%', overflow: 'hidden' }}>
             <Box
                 sx={{
                     display: 'flex',
                     columnGap: 2,
+                    flex: '0 0 auto',
                 }}
             >
-                <Box
-                    sx={{
-                        flexGrow: 1,
-                    }}
-                >
+                <Box sx={{ flex: 1 }}>
                     <RoomInfo />
                 </Box>
-                <Box>
+                <Box sx={{ flex: '0 0 auto' }}>
                     <RacetimeCard />
                 </Box>
             </Box>
-            <Box>
+            <Box sx={{ flex: '0 0 auto' }}>
                 <PlayerInfo />
             </Box>
             <Box
                 sx={{
-                    maxWidth: '100%',
-                    maxHeight: '100%',
                     display: 'flex',
                     columnGap: 1,
-                    alignContent: 'center',
-                    justifyContent: 'center',
+                    flex: '1 1 auto',
+                    minHeight: '400px',
+                    overflow: 'hidden',
                 }}
             >
                 <Box
                     sx={{
-                        width: '75%',
-                        maxHeight: '100%',
+                        flex: '1 1 auto',
+                        minWidth: 0,
+                        minHeight: '400px',
+                        overflow: 'hidden',
                     }}
                 >
                     <Board />
                 </Box>
-                <Box>
+                <Box sx={{ flex: '0 0 auto', minWidth: '200px' }}>
                     <PlayerList />
                 </Box>
             </Box>
             <Box
                 sx={{
-                    px: 4,
-                    maxHeight: '90%',
+                    height: '300px',
+                    flex: '0 0 auto',
                 }}
             >
                 <RoomChat />
             </Box>
-        </>
+        </Stack>
     );
 }
 
@@ -255,27 +242,34 @@ function RoomLg() {
                 width: '100%',
                 height: '100%',
                 display: 'grid',
-                gridTemplateRows: 'repeat(3, auto) 1fr auto 1fr auto',
-                gridTemplateColumns: '1fr minmax(auto, 500px)',
+                gridTemplateRows: 'auto auto auto 1fr auto',
+                gridTemplateColumns: 'minmax(0, 2fr) minmax(350px, 450px)',
                 gap: 1,
+                overflow: 'hidden',
             }}
         >
-            <Box sx={{ gridRow: '1 / -1' }}>
+            <Box sx={{ gridRow: '1 / -1', gridColumn: 1, overflow: 'hidden' }}>
                 <Board />
             </Box>
-            <Box>
+            <Box sx={{ gridColumn: 2, overflow: 'hidden' }}>
                 <RoomInfo />
             </Box>
-            <Box>
+            <Box sx={{ gridColumn: 2, overflow: 'hidden' }}>
                 <PlayerInfo />
             </Box>
-            <Box>
+            <Box sx={{ gridColumn: 2, overflow: 'hidden' }}>
                 <RacetimeCard />
             </Box>
-            <Box sx={{ gridRow: '4 / span 2' }}>
+            <Box
+                sx={{
+                    gridRow: '4 / span 2',
+                    gridColumn: 2,
+                    overflow: 'hidden',
+                }}
+            >
                 <PlayerList />
             </Box>
-            <Box sx={{ gridRow: '6 / -1' }}>
+            <Box sx={{ gridRow: '5 / -1', gridColumn: 2, overflow: 'hidden' }}>
                 <RoomChat />
             </Box>
         </Box>
@@ -289,9 +283,11 @@ function RoomXl() {
                 width: '100%',
                 height: '100%',
                 display: 'grid',
-                gridTemplateRows: 'repeat(4, auto) 1fr',
-                gridTemplateColumns: '1fr auto minmax(auto, 400px)',
+                gridTemplateRows: 'auto auto auto auto 1fr',
+                gridTemplateColumns:
+                    'minmax(0, 2fr) minmax(350px, 450px) minmax(300px, 400px)',
                 gap: 2,
+                overflow: 'hidden',
             }}
         >
             <Box
@@ -299,23 +295,25 @@ function RoomXl() {
                     width: '100%',
                     height: '100%',
                     gridRow: '1 / -1',
+                    gridColumn: 1,
+                    overflow: 'hidden',
                 }}
             >
                 <Board />
             </Box>
-            <Box>
+            <Box sx={{ gridColumn: 2, overflow: 'hidden' }}>
                 <RoomInfo />
             </Box>
-            <Box>
+            <Box sx={{ gridColumn: 2, overflow: 'hidden' }}>
                 <PlayerInfo />
             </Box>
-            <Box>
+            <Box sx={{ gridColumn: 2, overflow: 'hidden' }}>
                 <RacetimeCard />
             </Box>
-            <Box sx={{ gridRow: '4 / -1', gridColumn: 2 }}>
+            <Box sx={{ gridRow: '4 / -1', gridColumn: 2, overflow: 'hidden' }}>
                 <PlayerList />
             </Box>
-            <Box sx={{ gridRow: '1 / -1', gridColumn: 3 }}>
+            <Box sx={{ gridRow: '1 / -1', gridColumn: 3, overflow: 'hidden' }}>
                 <RoomChat />
             </Box>
         </Box>

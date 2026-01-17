@@ -18,7 +18,6 @@ export default function Board() {
                 alignItems: 'center',
                 justifyContent: 'center',
                 overflow: 'hidden',
-                p: 1,
                 width: '100%',
                 height: '100%',
             }}
@@ -32,23 +31,32 @@ export default function Board() {
             >
                 <AutoSizer>
                     {({ width, height }) => {
-                        // Maintain square cells by constraining to smallest dimension
+                        // Maintain square cells by constraining board size
                         const aspectRatio = cols / rows;
                         let boardWidth = width;
                         let boardHeight = width / aspectRatio;
                         let leftMargin = 0;
                         let topMargin = 0;
 
-                        if (boardHeight > height) {
+                        // Only constrain by height if board would exceed available height
+                        // and we have enough width to maintain a reasonable board size
+                        if (boardHeight > height && width > 400) {
                             boardHeight = height;
                             boardWidth = height * aspectRatio;
+                        }
+
+                        // Ensure minimum board dimensions for usability
+                        const minBoardSize = Math.min(300, width);
+                        if (boardWidth < minBoardSize) {
+                            boardWidth = minBoardSize;
+                            boardHeight = minBoardSize / aspectRatio;
                         }
 
                         if (boardWidth < width) {
                             leftMargin = (width - boardWidth) / 2;
                         }
 
-                        if (boardWidth < height) {
+                        if (boardHeight < height) {
                             topMargin = (height - boardHeight) / 2;
                         }
 
