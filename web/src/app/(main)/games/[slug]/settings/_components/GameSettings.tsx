@@ -132,11 +132,26 @@ function LinkRow({ index }: LinkRowProps) {
                 name={`links.${index}.url`}
                 label="URL"
                 sx={{ flexGrow: 2 }}
+                validate={(value) => {
+                    if (!value) {
+                        return 'URL is required';
+                    }
+                    try {
+                        new URL(value);
+                    } catch {
+                        return `Invalid URL`;
+                    }
+                }}
             />
             <FormikTextField
-                name={`links.${index}.text`}
+                name={`links.${index}.name`}
                 label="Label"
                 sx={{ flexGrow: 1 }}
+                validate={(value) => {
+                    if (!value) {
+                        return 'Name is required';
+                    }
+                }}
             />
             <FormikTextField
                 name={`links.${index}.description`}
@@ -178,17 +193,7 @@ function SettingsForm({ gameData }: FormProps) {
                 useTypedRandom: gameData.useTypedRandom,
                 descriptionMd: gameData.descriptionMd ?? '',
                 setupMd: gameData.setupMd ?? '',
-                links: Array.from(
-                    (
-                        gameData.linksMd?.matchAll(
-                            /^\[(?<text>.+)\]\((?<url>.+)\)(?: - (?<description>.+$))?/gm,
-                        ) ?? []
-                    ).map((match) => ({
-                        text: match.groups?.text,
-                        url: match.groups?.url,
-                        description: match.groups?.description,
-                    })),
-                ),
+                links: gameData.resources ?? [],
             }}
             onSubmit={async ({
                 name,
@@ -204,10 +209,6 @@ function SettingsForm({ gameData }: FormProps) {
                 setupMd,
                 links,
             }) => {
-                const linksMd = links?.map(
-                    (link) =>
-                        `[${link.text}](${link.url})${link.description ? ` - ${link.description}` : ''}`,
-                );
                 const shouldDeleteCover = gameData.coverImage && !coverImage;
                 const res = await fetch(`/api/games/${gameData.slug}`, {
                     method: 'POST',
@@ -231,7 +232,7 @@ function SettingsForm({ gameData }: FormProps) {
                         shouldDeleteCover,
                         descriptionMd,
                         setupMd,
-                        linksMd: linksMd.join('\n\n'),
+                        links: links,
                     }),
                 });
                 if (!res.ok) {
@@ -334,7 +335,7 @@ function SettingsForm({ gameData }: FormProps) {
                         <Box>
                             <Typography>Links</Typography>
                             {values.links?.map((link, index) => (
-                                <LinkRow key={link.url} index={index} />
+                                <LinkRow key={link.id} index={index} />
                             ))}
                             <Button
                                 onClick={() =>
