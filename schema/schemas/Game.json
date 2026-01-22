@@ -92,6 +92,12 @@
             "items": {
                 "$ref": "./Variant.json"
             }
+        },
+        "comments": {
+            "type": "array",
+            "items": {
+                "$ref": "./Comment.json"
+            }
         }
     },
     "$defs": {

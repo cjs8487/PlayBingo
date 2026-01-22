@@ -13,13 +13,7 @@ interface Props {
 }
 
 export default function GameTabs({
-    gameData: {
-        slug,
-        newGeneratorBeta,
-        descriptionMd,
-        setupMd,
-        difficultyVariants,
-    },
+    gameData: { slug, newGeneratorBeta },
 }: Props) {
     const [isOwner, setIsOwner] = useState(false);
     const [canModerate, setCanModerate] = useState(false);
@@ -43,9 +37,7 @@ export default function GameTabs({
     }, [slug]);
 
     const tabs: string[] = [];
-    if (descriptionMd || setupMd || (difficultyVariants?.length ?? 0) > 0) {
-        tabs.push('overview');
-    }
+    tabs.push('overview');
     tabs.push('goals');
     tabs.push('variants');
     if (canModerate) {

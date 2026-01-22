@@ -8,7 +8,7 @@
 export interface Comment {
   id: string;
   comment: string;
-  user: User;
+  user?: User;
 }
 export interface User {
   id: string;

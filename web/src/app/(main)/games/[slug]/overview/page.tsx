@@ -1,6 +1,7 @@
 import { Box, Card, CardContent, Typography } from '@mui/material';
 import { Game } from '@playbingo/types';
 import ReactMarkdown from 'react-markdown';
+import GameComments from './_components/GameComments';
 import MarkdownDisplay from '../../../../../components/MarkdownDisplay';
 import { getFullUrl } from '../../../../../lib/Utils';
 
@@ -17,8 +18,8 @@ interface Props {
 }
 
 export default async function Summary({ params }: Props) {
-    const { slug } = await params;
-
+    const resolvedParams = await params;
+    const slug = resolvedParams.slug;
     const game = await getGame(slug);
 
     if (!game) {
@@ -93,6 +94,9 @@ export default async function Summary({ params }: Props) {
                     </CardContent>
                 </Card>
             )}
+            <Box sx={{ gridRow: 'auto', gridColumn: '1 / span 2' }}>
+                <GameComments gameSlug={slug} comments={game.comments || []} />
+            </Box>
         </Box>
     );
 }

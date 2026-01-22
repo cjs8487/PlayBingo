@@ -31,6 +31,7 @@ export interface Game {
   setupMd?: string;
   linksMd?: string;
   variants?: Variant[];
+  comments?: Comment[];
 }
 export interface User {
   id: string;
@@ -52,4 +53,9 @@ export interface Variant {
   generatorSettings?: {
     [k: string]: unknown;
   };
+}
+export interface Comment {
+  id: string;
+  comment: string;
+  user?: User;
 }

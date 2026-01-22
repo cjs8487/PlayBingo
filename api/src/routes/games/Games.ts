@@ -34,6 +34,7 @@ import {
     updateSRLv5Enabled,
     updateUseTypedRandom,
 } from '../../database/games/Games';
+import { addCommentToGame, getCommentsForGame } from '../../database/Comments';
 import {
     createCategory,
     getCategories,
@@ -94,6 +95,18 @@ games.get('/:slug', async (req, res) => {
         setupMd: game.setupMd ?? undefined,
         linksMd: game.linksMd ?? undefined,
         isMod: await isModerator(slug, req.session.user ?? ''),
+        comments: (await getCommentsForGame(game.id)).map((comment) => ({
+            id: comment.id,
+            comment: comment.comment,
+            user: comment.user
+                ? {
+                      id: comment.user.id,
+                      username: comment.user.username,
+                      staff: comment.user.staff,
+                      avatar: comment.user.avatar ?? undefined,
+                  }
+                : undefined,
+        })),
     };
     if (game.newGeneratorBeta) {
         result.generationSettings = game.generatorSettings;
@@ -563,8 +576,55 @@ games.delete('/:slug', async (req, res) => {
     }
 
     const result = await deleteGame(slug);
-    res.status(200).json(result);
+    res.status(200).send(result);
 });
+
+games
+    .route('/:slug/comments')
+    .get(async (req, res) => {
+        const { slug } = req.params;
+        const game = await gameForSlug(slug);
+        if (!game) {
+            res.sendStatus(404);
+            return;
+        }
+
+        const comments = (await getCommentsForGame(game.id)).map((comment) => ({
+            id: comment.id,
+            comment: comment.comment,
+            user: comment.user
+                ? {
+                      id: comment.user.id,
+                      username: comment.user.username,
+                      staff: comment.user.staff,
+                      avatar: comment.user.avatar ?? undefined,
+                  }
+                : undefined,
+        }));
+        res.json(comments);
+    })
+    .post(async (req, res) => {
+        const { slug } = req.params;
+        const { comment } = req.body;
+
+        if (!comment) {
+            res.status(400).send('Missing comment text');
+            return;
+        }
+
+        const game = await gameForSlug(slug);
+        if (!game) {
+            res.sendStatus(404);
+            return;
+        }
+
+        const newComment = await addCommentToGame(
+            game.id,
+            comment,
+            req.session.user,
+        );
+        res.status(201).json(newComment);
+    });
 
 games
     .route('/:slug/categories')

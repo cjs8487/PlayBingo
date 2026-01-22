@@ -27,11 +27,11 @@ export default function Comment({ comment }: Props) {
                 }}
             >
                 <Avatar
-                    src={comment.user.avatar}
-                    alt={comment.user.username}
+                    src={comment.user?.avatar}
+                    alt={comment.user?.username}
                     sx={{ width: 32, height: 32 }}
                 />
-                <Typography>{comment.user.username}</Typography>
+                <Typography>{comment.user?.username}</Typography>
                 <Box sx={{ flexGrow: 1 }} />
                 <Chip label="Owner" variant="outlined" />
             </Box>

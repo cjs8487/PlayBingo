@@ -36,6 +36,14 @@ export const getCommentsForGoal = (goalId: string) => {
     });
 };
 
+export const getCommentsForGame = (gameId: string) => {
+    return prisma.comment.findMany({
+        where: { gameId },
+        orderBy: { createdAt: 'asc' },
+        include: { user: true },
+    });
+};
+
 export const addCommentToGoal = (
     goalId: string,
     comment: string,
