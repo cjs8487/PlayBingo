@@ -94,9 +94,17 @@ export default async function Summary({ params }: Props) {
                     </CardContent>
                 </Card>
             )}
-            <Box sx={{ gridRow: 'auto', gridColumn: '1 / span 2' }}>
-                <GameComments gameSlug={slug} comments={game.comments || []} />
-            </Box>
+            <Card
+                sx={{ gridRow: 'auto', gridColumn: '1 / span 2' }}
+                elevation={3}
+            >
+                <CardContent>
+                    <GameComments
+                        gameSlug={slug}
+                        comments={game.comments || []}
+                    />
+                </CardContent>
+            </Card>
         </Box>
     );
 }

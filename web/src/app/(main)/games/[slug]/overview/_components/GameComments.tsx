@@ -2,13 +2,11 @@
 
 import Comment from '@/components/Comment';
 import { useUserContext } from '@/context/UserContext';
-import { ExpandMore, Send } from '@mui/icons-material';
+import { Send } from '@mui/icons-material';
 import {
-    Accordion,
-    AccordionDetails,
-    AccordionSummary,
     Alert,
     Avatar,
+    Box,
     IconButton,
     InputAdornment,
     Typography,
@@ -28,77 +26,69 @@ export default function GameComments({ gameSlug, comments }: Props) {
     const { loggedIn, user } = useUserContext();
 
     return (
-        <Accordion>
-            <AccordionSummary expandIcon={<ExpandMore />}>
-                <Typography variant="h6">Comments</Typography>
-            </AccordionSummary>
-            <AccordionDetails
-                sx={{
-                    pt: 0,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: 1,
-                }}
-            >
-                {loggedIn && user ? (
-                    <Formik
-                        initialValues={{ comment: '' }}
-                        onSubmit={async ({ comment }, { resetForm }) => {
-                            const res = await postCommentOnGame(
-                                gameSlug,
-                                comment,
-                            );
+        <Box
+            sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 1,
+            }}
+        >
+            <Typography variant="h6">Comments</Typography>
+            {loggedIn && user ? (
+                <Formik
+                    initialValues={{ comment: '' }}
+                    onSubmit={async ({ comment }, { resetForm }) => {
+                        const res = await postCommentOnGame(gameSlug, comment);
 
-                            if (!res.ok) {
-                                alertError('Failed to post comment');
-                                return;
+                        if (!res.ok) {
+                            alertError('Failed to post comment');
+                            return;
+                        }
+                        notifyMessage('Successfully posted comment');
+                        resetForm();
+                    }}
+                >
+                    <Form>
+                        <FormikTextField
+                            name={'comment'}
+                            label={''}
+                            multiline
+                            rows={4}
+                            placeholder="Add a comment about this game..."
+                            fullWidth
+                            startAdornment={
+                                <InputAdornment
+                                    position="start"
+                                    sx={{ alignSelf: 'flex-start' }}
+                                >
+                                    <Avatar
+                                        src={user?.avatar ?? '/'}
+                                        alt={user?.username}
+                                        sx={{ width: 32, height: 32 }}
+                                    />
+                                </InputAdornment>
                             }
-                            notifyMessage('Successfully posted comment');
-                            resetForm();
-                        }}
-                    >
-                        <Form>
-                            <FormikTextField
-                                name={'comment'}
-                                label={''}
-                                multiline
-                                rows={4}
-                                placeholder="Add a comment about this game..."
-                                fullWidth
-                                startAdornment={
-                                    <InputAdornment
-                                        position="start"
-                                        sx={{ alignSelf: 'flex-start' }}
-                                    >
-                                        <Avatar
-                                            src={user?.avatar ?? '/'}
-                                            alt={user?.username}
-                                            sx={{ width: 32, height: 32 }}
-                                        />
-                                    </InputAdornment>
-                                }
-                                endAdornment={
-                                    <InputAdornment
-                                        position="end"
-                                        sx={{ alignSelf: 'flex-end' }}
-                                    >
-                                        <IconButton type="submit">
-                                            <Send />
-                                        </IconButton>
-                                    </InputAdornment>
-                                }
-                            />
-                        </Form>
-                    </Formik>
-                ) : (
-                    <Alert severity="info" variant="filled">
-                        Log in to leave comments and join the discussion
-                    </Alert>
-                )}
-                {comments?.map((comment) => (
-                    <Comment key={comment.id} comment={comment} />
-                ))}
-            </AccordionDetails>
-        </Accordion>
+                            endAdornment={
+                                <InputAdornment
+                                    position="end"
+                                    sx={{ alignSelf: 'flex-end' }}
+                                >
+                                    <IconButton type="submit">
+                                        <Send />
+                                    </IconButton>
+                                </InputAdornment>
+                            }
+                        />
+                    </Form>
+                </Formik>
+            ) : (
+                <Alert severity="info" variant="filled">
+                    Log in to leave comments and join the discussion
+                </Alert>
+            )}
+            {comments?.map((comment) => (
+                <Comment key={comment.id} comment={comment} />
+            ))}
+        </Box>
     );
 }
