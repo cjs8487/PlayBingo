@@ -133,7 +133,9 @@ export default function ApplicationForm({ id, application }: Props) {
                         </Box>
                     </Box>
                     <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-                        <Button color="success">Save</Button>
+                        <Button color="success" type="submit">
+                            Save
+                        </Button>
                     </Box>
                 </Form>
             )}
