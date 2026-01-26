@@ -1,5 +1,5 @@
 'use client';
-import { CheckCircle } from '@mui/icons-material';
+import { CheckCircle, Warning } from '@mui/icons-material';
 import {
     Box,
     Button,
@@ -118,11 +118,11 @@ export default function Authorize({
                         <Typography>
                             This will allow the application to
                         </Typography>
-                        <List>
+                        <List sx={{ py: 0.5 }}>
                             {scopes.map((scope) => (
                                 <ListItem
                                     key={scope}
-                                    sx={{ m: 0, px: 0, py: 0.5, gap: 1 }}
+                                    sx={{ m: 0, px: 0, py: 0, gap: 1 }}
                                 >
                                     <ListItemIcon sx={{ minWidth: 0 }}>
                                         <CheckCircle />
@@ -135,19 +135,34 @@ export default function Authorize({
                         </List>
                     </Box>
                     <Divider sx={{ my: 3 }} />
-                    <Typography
-                        variant="caption"
-                        sx={{ textAlign: 'left', alignSelf: 'flex-start' }}
+                    <Box
+                        sx={{
+                            textAlign: 'left',
+                            display: 'flex',
+                            gap: 2,
+                            alignItems: 'center',
+                            pb: 2,
+                        }}
                     >
-                        You should only authorize this application if you
-                        recognize it. If you don&#39;t recognize it, you can
-                        safely close this window.
-                    </Typography>
-                    <Box sx={{ textAlign: 'left' }}>
+                        <Warning />
+                        <Typography variant="caption">
+                            You should only authorize this application if you
+                            recognize it. If you don&#39;t recognize it, you can
+                            safely close this window.
+                        </Typography>
+                    </Box>
+                    <Box
+                        sx={{
+                            textAlign: 'left',
+                            display: 'flex',
+                            gap: 2,
+                            alignItems: 'center',
+                        }}
+                    >
                         <LinkIcon />
                         <Typography variant="caption">
                             Once authorized, you will be redirected outside of
-                            bingo.gg to {redirectUri}
+                            PlayBingo to {redirectUri}
                         </Typography>
                     </Box>
                 </CardContent>
