@@ -1,4 +1,5 @@
-import { Router, Request } from 'express';
+import { OAuthClient } from '@playbingo/types';
+import { Request, Router } from 'express';
 import { server } from '../../auth/OAuth';
 import {
     createOAuthClient,
@@ -6,12 +7,12 @@ import {
     getClient,
     getClientById,
     getClients,
+    getFullClientById,
     resetClientSecret,
     updateClient,
 } from '../../database/OAuth';
 import { getUser } from '../../database/Users';
 import redirect from './redirect/Redirect';
-import { OAuthClient } from '@playbingo/types';
 
 interface OAuthRequest extends Request {
     oauth2?: {
@@ -34,7 +35,8 @@ oauth.get(
         next();
     },
     server.authorization(async (clientId, redirectUri, scopes, type, done) => {
-        const client = await getClientById(clientId);
+        const client = await getFullClientById(clientId);
+        console.log(clientId);
         if (!client) {
             return done(new Error('Invalid client id'));
         }
@@ -49,7 +51,12 @@ oauth.get(
         }
         res.status(200).json({
             transactionId: req.oauth2.transactionID,
-            client: req.oauth2.client,
+            client: {
+                id: req.oauth2.client.id,
+                name: req.oauth2.client.name,
+                clientId: req.oauth2.client.clientId,
+                redirectUris: req.oauth2.client.redirectUris,
+            },
         });
     },
 );
@@ -71,7 +78,7 @@ oauth.post(
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     //@ts-ignore
     async (req, res, next) => {
-        req.user = await getClientById(req.body.client_id);
+        req.user = await getFullClientById(req.body.client_id);
         next();
     },
     server.token(),

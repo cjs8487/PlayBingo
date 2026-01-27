@@ -1,17 +1,19 @@
+import { OAuthClient } from '@prisma/client';
 import { randomBytes } from 'crypto';
 import oauth2orize from 'oauth2orize';
 import {
+    authorizationMatch,
     authorizeClient,
-    getClient,
+    getFullClient,
     getTokenByRefreshToken,
 } from '../database/OAuth';
 
-export const server = oauth2orize.createServer();
+export const server = oauth2orize.createServer<OAuthClient>();
 
 server.serializeClient((client, done) => done(null, client.id));
 
 server.deserializeClient(async (id, done) => {
-    const client = await getClient(id);
+    const client = await getFullClient(id);
     if (!client) {
         return done(new Error('Unable to load client'));
     }
@@ -49,14 +51,17 @@ server.exchange(
     oauth2orize.exchange.code(
         async (client, code, redirectUri, body, authInfo, issued) => {
             const authCode = codes[code];
-            const clientSecret = body.client_secret;
+            const clientSecret: string = body.client_secret as string;
             if (!authCode) {
                 return issued(new Error('Invalid code'));
             }
             if (
                 client.clientId !== authCode.clientId ||
-                redirectUri !== authCode.redirectUri ||
-                clientSecret !== client.clientSecret
+                !authorizationMatch(
+                    authCode.clientId,
+                    clientSecret,
+                    redirectUri,
+                )
             ) {
                 return issued(null, false);
             }
