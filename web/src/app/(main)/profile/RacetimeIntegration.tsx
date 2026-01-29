@@ -1,5 +1,6 @@
-import { Box, Link, Typography } from '@mui/material';
-import NextLink from 'next/link';
+import { Box, Button, Typography } from '@mui/material';
+import Image from 'next/image';
+import rt from '../../../images/rt.png';
 import { disconnectRacetime } from '../../../actions/Connection';
 import { serverGet } from '../../ServerUtils';
 import DisconnectButton from './DisconnectButton';
@@ -30,8 +31,7 @@ export default async function RacetimeIntegration() {
     const { hasRacetimeConnection, racetimeUser } = racetimeRes;
 
     return (
-        <div>
-            <Typography variant="h6">racetime.gg</Typography>
+        <>
             {!hasRacetimeConnection && (
                 <Box
                     sx={{
@@ -39,23 +39,37 @@ export default async function RacetimeIntegration() {
                         alignItems: 'center',
                     }}
                 >
-                    <Link href={`/api/connect/racetime`} component={NextLink}>
+                    <Button
+                        href={`/api/connect/racetime`}
+                        sx={{ gap: 1 }}
+                        variant="contained"
+                        color="inherit"
+                    >
+                        <Image
+                            src={rt}
+                            alt="racetime.gg"
+                            height={20}
+                            width={20}
+                        />
                         Connect to racetime.gg
-                    </Link>
+                    </Button>
                 </Box>
             )}
             {hasRacetimeConnection && (
-                <Box
-                    sx={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        columnGap: 1,
-                    }}
-                >
-                    <Typography>Connected as {racetimeUser}</Typography>
-                    <DisconnectButton disconnect={disconnectRacetime} />
-                </Box>
+                <>
+                    <Typography variant="h6">racetime.gg</Typography>
+                    <Box
+                        sx={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            columnGap: 1,
+                        }}
+                    >
+                        <Typography>Connected as {racetimeUser}</Typography>
+                        <DisconnectButton disconnect={disconnectRacetime} />
+                    </Box>
+                </>
             )}
-        </div>
+        </>
     );
 }
