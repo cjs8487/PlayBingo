@@ -91,8 +91,8 @@ describe('Goal Filters', () => {
             generator.goals.forEach((g) => {
                 const validCatNames = ['Category 1', 'Category 4'];
                 const hasCat = g.categories.some((cat) =>
-                    validCatNames.includes(cat.name)
-                )
+                    validCatNames.includes(cat.name),
+                );
                 expect(hasCat).toBeTruthy();
             });
         });
@@ -290,6 +290,116 @@ describe('Board Layout', () => {
             expect(generator.layout).toEqual(correctLayout);
         });
     });
+
+    describe('Difficulty Distribution', () => {
+        const generator = new BoardGenerator(goals, categories, {
+            goalFilters: [],
+            goalTransformation: [],
+            boardLayout: {
+                mode: 'difficulty-distribution',
+                distribution: [
+                    { difficulty: 1, count: 10 },
+                    { difficulty: 2, count: 8 },
+                    { difficulty: 3, count: 5 },
+                    { difficulty: 4, count: 2 },
+                ],
+            },
+            restrictions: [],
+            adjustments: [],
+        });
+
+        it('Generates the correct number of cells for each difficulty', () => {
+            generator.reset();
+            generator.generateBoardLayout();
+            const layout = generator.layout;
+
+            const difficultyCounts: { [key: number]: number } = {};
+
+            layout.forEach((row) => {
+                row.forEach((cell) => {
+                    if (cell.selectionCriteria === 'difficulty') {
+                        const difficulty = cell.difficulty;
+                        difficultyCounts[difficulty] =
+                            (difficultyCounts[difficulty] || 0) + 1;
+                    }
+                });
+            });
+
+            expect(difficultyCounts[1]).toBe(10);
+            expect(difficultyCounts[2]).toBe(8);
+            expect(difficultyCounts[3]).toBe(5);
+            expect(difficultyCounts[4]).toBe(2);
+        });
+
+        it('Generates different layouts with different seeds', () => {
+            const generator = new BoardGenerator(goals, categories, {
+                goalFilters: [],
+                goalTransformation: [],
+                boardLayout: {
+                    mode: 'difficulty-distribution',
+                    distribution: [
+                        { difficulty: 1, count: 10 },
+                        { difficulty: 2, count: 8 },
+                        { difficulty: 3, count: 5 },
+                        { difficulty: 4, count: 2 },
+                    ],
+                },
+                restrictions: [],
+                adjustments: [],
+            });
+            generator.reset(12345);
+            generator.generateBoardLayout();
+            const layout1 = generator.layout;
+
+            generator.reset(54321);
+            generator.generateBoardLayout();
+            const layout2 = generator.layout;
+
+            expect(layout1).not.toEqual(layout2);
+        });
+
+        it('Generates the same layout with the same seed', () => {
+            generator.reset(12345);
+            generator.generateBoardLayout();
+            const layout1 = generator.layout;
+
+            generator.reset(12345);
+            generator.generateBoardLayout();
+            const layout2 = generator.layout;
+
+            expect(layout1).toEqual(layout2);
+        });
+
+        it('Handles single difficulty distribution', () => {
+            const singleDifficultyGenerator = new BoardGenerator(
+                goals,
+                categories,
+                {
+                    goalFilters: [],
+                    goalTransformation: [],
+                    boardLayout: {
+                        mode: 'difficulty-distribution' as any,
+                        distribution: [{ difficulty: 2, count: 25 }],
+                    },
+                    restrictions: [],
+                    adjustments: [],
+                },
+            );
+
+            singleDifficultyGenerator.reset();
+            singleDifficultyGenerator.generateBoardLayout();
+            const layout = singleDifficultyGenerator.layout;
+
+            layout.forEach((row) => {
+                row.forEach((cell) => {
+                    expect(cell.selectionCriteria).toBe('difficulty');
+                    if (cell.selectionCriteria === 'difficulty') {
+                        expect(cell.difficulty).toBe(2);
+                    }
+                });
+            });
+        });
+    });
 });
 
 describe('Goal Selection', () => {
@@ -306,7 +416,7 @@ describe('Goal Selection', () => {
         generator.layout = [[{ selectionCriteria: 'category', category: '0' }]];
         const goals = generator.validGoalsForCell(0, 0);
         goals.forEach((goal) => {
-            const catNames = goal.categories.map(c => c.name)
+            const catNames = goal.categories.map((c) => c.name);
             expect(catNames).toContain('Category 1');
         });
     });
@@ -348,7 +458,7 @@ describe('Goal Selection', () => {
         ];
         let goals = generator.validGoalsForCell(0, 0);
         goals.forEach((goal) => {
-            const catNames = goal.categories.map(c => c.name)
+            const catNames = goal.categories.map((c) => c.name);
             expect(catNames).toContain('Category 3');
         });
         goals = generator.validGoalsForCell(0, 1);
@@ -361,7 +471,7 @@ describe('Goal Selection', () => {
         });
         goals = generator.validGoalsForCell(1, 1);
         goals.forEach((goal) => {
-            const catNames = goal.categories.map(c => c.name)
+            const catNames = goal.categories.map((c) => c.name);
             expect(catNames).toContain('Category 6');
         });
     });

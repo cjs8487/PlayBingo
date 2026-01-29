@@ -43,6 +43,8 @@ export class BoardGenerator {
 
     customBoardLayout?: LayoutCell[][];
 
+    difficultyDistribution?: { difficulty: number; count: number }[];
+
     goalsByDifficulty: { [d: number]: GeneratorGoal[] } = {};
     goalsByCategoryId: { [id: string]: GeneratorGoal[] } = {};
     goalCopies: { [k: string]: number } = {};
@@ -90,6 +92,11 @@ export class BoardGenerator {
         this.customBoardLayout =
             config.boardLayout.mode === 'custom'
                 ? config.boardLayout.layout
+                : undefined;
+
+        this.difficultyDistribution =
+            (config.boardLayout as any).mode === 'difficulty-distribution'
+                ? (config.boardLayout as any).distribution
                 : undefined;
     }
 
