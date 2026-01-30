@@ -27,7 +27,6 @@ import { UserContext } from '../../context/UserContext';
 import logo from '../../images/playbingologo.png';
 import { userAvatarUrl } from '../../lib/Utils';
 import LinkButton from '../LinkButton';
-import NavDrawer from './NavDrawer';
 
 export const pages = [
     { name: 'Games', path: '/games' },
@@ -35,11 +34,14 @@ export const pages = [
     { name: 'Discord', path: 'https://discord.gg/8sKNBaq8gu' },
 ];
 
-export default function Header() {
+interface Props {
+    toggleNavDrawer: () => void;
+}
+
+export default function Header({ toggleNavDrawer }: Props) {
     const { user, logout } = useContext(UserContext);
 
     const [anchorElUser, setAnchorElUser] = useState<null | HTMLElement>(null);
-    const [drawerOpen, setDrawerOpen] = useState(false);
 
     const handleOpenUserMenu = (event: React.MouseEvent<HTMLElement>) => {
         setAnchorElUser(event.currentTarget);
@@ -64,7 +66,7 @@ export default function Header() {
                     <IconButton
                         color="inherit"
                         aria-label="open drawer"
-                        onClick={() => setDrawerOpen((curr) => !curr)}
+                        onClick={toggleNavDrawer}
                         edge="start"
                         sx={{ mr: 2 }}
                     >
@@ -162,7 +164,6 @@ export default function Header() {
                     )}
                 </Toolbar>
             </AppBar>
-            <NavDrawer open={drawerOpen} />
         </>
     );
 }
