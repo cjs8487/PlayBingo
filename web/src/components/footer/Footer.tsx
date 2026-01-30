@@ -3,9 +3,9 @@ import {
     faDiscord,
     faGithub,
     faPatreon,
-    faTwitter,
 } from '@fortawesome/free-brands-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import MenuBookIcon from '@mui/icons-material/MenuBook';
 import {
     Box,
     IconButton,
@@ -15,13 +15,19 @@ import {
     Typography,
 } from '@mui/material';
 import NextLink from 'next/link';
-import MenuBookIcon from '@mui/icons-material/MenuBook';
 
-const icons: { icon: IconDefinition; url: string }[] = [
-    { icon: faGithub, url: 'https://github.com/cjs8487/PlayBingo' },
-    { icon: faPatreon, url: 'https://www.patreon.com/Bingothon' },
-    { icon: faTwitter, url: 'https://twitter.com/bingothon' },
-    { icon: faDiscord, url: 'https://discord.gg/8sKNBaq8gu' },
+export const icons: { icon: IconDefinition; url: string; name: string }[] = [
+    { icon: faDiscord, url: 'https://discord.gg/8sKNBaq8gu', name: 'Discord' },
+    {
+        icon: faGithub,
+        url: 'https://github.com/cjs8487/PlayBingo',
+        name: 'Github',
+    },
+    {
+        icon: faPatreon,
+        url: 'https://www.patreon.com/Bingothon',
+        name: 'Patreon',
+    },
 ];
 
 function LargeFooter() {
