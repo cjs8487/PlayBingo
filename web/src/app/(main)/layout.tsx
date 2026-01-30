@@ -1,12 +1,36 @@
 'use client';
-import { Box } from '@mui/material';
-import { ReactNode } from 'react';
+import { Box, styled } from '@mui/material';
+import { ConfirmProvider } from 'material-ui-confirm';
+import { ReactNode, useState } from 'react';
 import CookieConsent from 'react-cookie-consent';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Footer from '../../components/footer/Footer';
 import Header from '../../components/header/Header';
-import { ConfirmProvider } from 'material-ui-confirm';
+import NavDrawer, { drawerWidth } from '../../components/header/NavDrawer';
+
+const Main = styled('main', { shouldForwardProp: (prop) => prop !== 'open' })<{
+    open?: boolean;
+}>(({ theme }) => ({
+    flexGrow: 1,
+    transition: theme.transitions.create('margin', {
+        easing: theme.transitions.easing.sharp,
+        duration: theme.transitions.duration.leavingScreen,
+    }),
+    marginLeft: `-${drawerWidth}px`,
+    variants: [
+        {
+            props: ({ open }) => open,
+            style: {
+                transition: theme.transitions.create('margin', {
+                    easing: theme.transitions.easing.easeOut,
+                    duration: theme.transitions.duration.enteringScreen,
+                }),
+                marginLeft: 0,
+            },
+        },
+    ],
+}));
 
 export default function CoreLayout({
     children,
@@ -15,6 +39,9 @@ export default function CoreLayout({
     children: ReactNode;
     modal: ReactNode;
 }) {
+    const [navDrawerOpen, setNavDrawerOpen] = useState(false);
+    const toggleNavDrawer = () => setNavDrawerOpen((curr) => !curr);
+
     return (
         <>
             <ConfirmProvider>
@@ -28,8 +55,11 @@ export default function CoreLayout({
                         overflow: 'auto',
                     }}
                 >
-                    <Header />
-                    {children}
+                    <Header toggleNavDrawer={toggleNavDrawer} />
+                    <Box sx={{ display: 'flex' }}>
+                        <NavDrawer open={navDrawerOpen} />
+                        <Main open={navDrawerOpen}>{children}</Main>
+                    </Box>
                     <Footer />
                 </Box>
                 <ToastContainer />
