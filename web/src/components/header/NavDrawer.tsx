@@ -1,19 +1,21 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Games, PlayArrow, MenuBook } from '@mui/icons-material';
+import { Games, MenuBook, PlayArrow } from '@mui/icons-material';
 import {
     Box,
+    Divider,
     Drawer,
-    Toolbar,
     List,
     ListItem,
     ListItemButton,
     ListItemIcon,
     ListItemText,
-    Divider,
+    Toolbar,
     Typography,
 } from '@mui/material';
-import { icons } from '../footer/Footer';
 import NextLink from 'next/link';
+import { icons } from '../footer/Footer';
+
+export const drawerWidth = 240;
 
 interface Props {
     open: boolean;
@@ -21,7 +23,18 @@ interface Props {
 
 export default function NavDrawer({ open }: Props) {
     return (
-        <Drawer variant="persistent" open={open}>
+        <Drawer
+            variant="persistent"
+            open={open}
+            sx={{
+                width: drawerWidth,
+                flexShrink: 0,
+                '& .MuiDrawer-paper': {
+                    width: drawerWidth,
+                    boxSizing: 'border-box',
+                },
+            }}
+        >
             <Toolbar />
             <Box
                 sx={{
