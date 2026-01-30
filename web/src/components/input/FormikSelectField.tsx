@@ -81,6 +81,7 @@ export function FormikSelectFieldAutocomplete({
     label,
     options,
     disabled,
+    sx,
 }: FormikSelectProps) {
     const [field, meta, helpers] = useField<string | null>(name);
 
@@ -111,6 +112,7 @@ export function FormikSelectFieldAutocomplete({
                 />
             )}
             disabled={disabled}
+            sx={sx}
         />
     );
 }
