@@ -1,96 +1,98 @@
-import RoomCreateForm from '@/components/RoomCreateForm';
+import {
+    Box,
+    Card,
+    CardContent,
+    CircularProgress,
+    Container,
+    Paper,
+    Typography,
+} from '@mui/material';
 import { Suspense } from 'react';
 import ActiveRoomList from '../../components/ActiveRoomList';
-import { Box, CircularProgress, Paper, Typography } from '@mui/material';
 import ToasterOven from '../../components/utilities/ToasterOven';
+import HomePageRoomForm from './_components/HomePageRoomForm';
 
 export default async function Home() {
     return (
-        <>
+        <Container sx={{ py: 2 }}>
             <Box
                 sx={{
-                    flexGrow: 1,
+                    position: 'relative',
+                    overflow: 'hidden',
+                    borderRadius: 1,
+                    mb: 2,
+                    '&::before': {
+                        content: "''",
+                        display: 'block',
+                        background:
+                            'linear-gradient(90deg,rgba(255, 255, 255, 0) 0%,rgba(102, 102, 102, 0.75) 50%,rgba(255, 255, 255, 0) 100%)',
+                        height: '200%',
+                        width: '150px',
+                        position: 'absolute',
+                        animation: 'rotate 12s linear forwards infinite',
+                        zIndex: 0,
+                        marginTop: '-50%',
+                        left: '50%',
+                        transformOrigin: 'center',
+                    },
+                    '@keyframes rotate': {
+                        '0%': {
+                            rotate: '0deg',
+                        },
+                        '50%': {
+                            rotate: '180deg',
+                        },
+                        '100%': {
+                            rotate: '360deg',
+                        },
+                    },
                 }}
             >
-                <Box
+                <Card
                     sx={{
-                        mt: 2,
-                        pb: 4,
+                        textAlign: 'center',
+                        px: { xs: 2, sm: 6, md: 12 },
+                        py: 4,
+                        m: '2px',
+                        position: 'relative',
+                        zIndex: 1,
                     }}
                 >
-                    <Typography
-                        variant="h3"
-                        sx={{
-                            textAlign: 'center',
-                        }}
-                    >
-                        Welcome to PlayBingo
-                    </Typography>
-                    <Typography
-                        variant="subtitle1"
-                        sx={{
-                            fontStyle: 'italic',
-                            textAlign: 'center',
-                        }}
-                    >
-                        The new way to bingo.
-                    </Typography>
-                </Box>
-                <Box
+                    <CardContent>
+                        <HomePageRoomForm />
+                    </CardContent>
+                </Card>
+            </Box>
+            <Box
+                sx={{
+                    display: 'flex',
+                    columnGap: 8,
+                    rowGap: 1,
+                    flexWrap: 'wrap',
+                    width: '100%',
+                    justifyContent: 'center',
+                    px: 4,
+                }}
+            >
+                <Paper
                     sx={{
-                        display: 'flex',
-                        columnGap: 8,
-                        rowGap: 1,
-                        flexWrap: 'wrap',
-                        width: '100%',
-                        justifyContent: 'center',
-                        px: 4,
+                        textAlign: 'center',
+                        px: { xs: 2, md: 12 },
+                        py: 4,
+                        mb: 4,
+                        animation: '1.5s 1 slidein',
+                        animationDelay: '1s',
+                        animationFillMode: 'backwards',
                     }}
+                    elevation={2}
                 >
-                    <Paper
-                        sx={{
-                            textAlign: 'center',
-                            px: { xs: 2, md: 12 },
-                            py: 4,
-                            mb: 4,
-                            animation: '1.5s 1 slidein',
-                            animationDelay: '1s',
-                            animationFillMode: 'backwards',
-                        }}
-                        elevation={2}
-                    >
-                        <Typography variant="h4">
-                            Join an Existing Room
-                        </Typography>
-                        <Suspense fallback={<CircularProgress />}>
-                            <ActiveRoomList />
-                        </Suspense>
-                    </Paper>
-                    <Paper
-                        sx={{
-                            textAlign: 'center',
-                            px: { xs: 2, sm: 6, md: 12 },
-                            py: 4,
-                            mb: 4,
-                            animation: '1.8s 1 slidein',
-                            animationDelay: '1.3s',
-                            animationFillMode: 'backwards',
-                        }}
-                        elevation={2}
-                    >
-                        <Typography
-                            variant="h4"
-                            sx={{
-                                mb: 2,
-                            }}
-                        >
-                            Create a New Room
-                        </Typography>
-                        <RoomCreateForm />
-                    </Paper>
-                </Box>
+                    <Typography variant="h4">Join an Existing Room</Typography>
+                    <Suspense fallback={<CircularProgress />}>
+                        <ActiveRoomList />
+                    </Suspense>
+                </Paper>
             </Box>
             <ToasterOven />
-        </>
+        </Container>
     );
 }
