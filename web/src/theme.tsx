@@ -82,6 +82,9 @@ const theme = createTheme({
                     },
                 },
             },
+            defaultProps: {
+                variant: 'outlined',
+            },
         },
         MuiLink: {
             defaultProps: {
