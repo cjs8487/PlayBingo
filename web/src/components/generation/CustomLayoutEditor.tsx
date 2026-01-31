@@ -26,7 +26,7 @@ type LayoutCell = CustomLayout[number][number];
 export type Schema = {
     items: {
         items: {
-            anyOf: JSONSchema[];
+            oneOf: JSONSchema[];
         } & JSONSchema;
     } & JSONSchema;
 } & JSONSchema;
@@ -107,7 +107,7 @@ export default function CustomLayoutEditor({
     const getCriteriaType = (
         criteria: CustomLayout[number][number]['selectionCriteria'],
     ) =>
-        schema.items.items.anyOf.filter(
+        schema.items.items.oneOf.filter(
             (opt) => opt.properties!['selectionCriteria'].const === criteria,
         )[0];
 
