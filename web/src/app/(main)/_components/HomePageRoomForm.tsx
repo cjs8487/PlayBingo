@@ -27,6 +27,7 @@ import { Form, Formik, useField, useFormikContext } from 'formik';
 import { useRouter } from 'next/navigation';
 import { useAsync } from 'react-use';
 import * as yup from 'yup';
+import GameModeSelector from '../../../components/input/GameModeSelector';
 
 const roomValidationSchema = yup.object().shape({
     name: yup.string().required('Room name is required'),
@@ -244,6 +245,7 @@ export default function HomePageRoomForm() {
                             />
                         )}
                     </Box>
+                    <GameModeSelector />
                     <Box sx={{ display: 'flex', columnGap: 2 }}>
                         <FormikSwitch
                             id="hide-card"
