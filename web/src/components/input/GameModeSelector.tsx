@@ -139,7 +139,7 @@ function GameModeButton({
     return (
         <Box
             sx={{
-                flex: isSelected ? 1 : 0, // Shrink even further when not selected
+                flex: isSelected ? 1 : 0,
                 transition: 'flex 0.3s ease-in-out',
                 height: '100%',
                 display: 'flex',
@@ -157,11 +157,10 @@ function GameModeButton({
                     alignItems: 'flex-start',
                     justifyContent: 'flex-start',
                     textTransform: 'none',
-                    transition: 'all 0.3s ease-in-out',
                     bgcolor: isSelected
                         ? 'secondary.light'
                         : 'background.paper',
-                    borderColor: isSelected ? 'primary.main' : 'divider',
+                    borderColor: isSelected ? 'secondary.main' : 'divider',
                     '&:hover': isSelected
                         ? {}
                         : {
@@ -192,7 +191,6 @@ function GameModeButton({
                         variant="h6"
                         sx={{
                             fontSize: isSelected ? '1.5rem' : '1.2rem',
-                            transition: 'font-size 0.3s ease-in-out',
                         }}
                     >
                         {mode.icon}
@@ -202,64 +200,58 @@ function GameModeButton({
                         sx={{
                             fontSize: isSelected ? '1.1rem' : '0.9rem',
                             fontWeight: isSelected ? 600 : 500,
-                            transition: 'all 0.3s ease-in-out',
                         }}
                     >
                         {mode.name}
                     </Typography>
                 </Box>
                 {isSelected && (
-                    <Box>
-                        <Typography
-                            variant="body2"
-                            sx={{
-                                mb: 1,
-                                opacity: isSelected ? 1 : 0.7,
-                                transition: 'opacity 0.3s ease-in-out',
-                            }}
-                        >
-                            {mode.description}
-                        </Typography>
-                        {mode.detailedDescription && (
+                    <>
+                        <Box>
                             <Typography
                                 variant="body2"
-                                color="text.secondary"
                                 sx={{
-                                    fontSize: '0.8rem',
-                                    lineHeight: 1.4,
+                                    mb: 1,
                                     opacity: 0,
-                                    animation: isSelected
-                                        ? 'fadeIn 0.5s ease-in-out 0.2s forwards'
-                                        : 'none',
-                                    '@keyframes fadeIn': {
-                                        from: { opacity: 0 },
-                                        to: { opacity: 1 },
-                                    },
+                                    animation:
+                                        '0.5s ease-in-out 0.2s forwards slidein',
                                 }}
                             >
-                                {mode.detailedDescription}
+                                {mode.description}
                             </Typography>
-                        )}
-                    </Box>
-                )}
-                {isSelected && (
-                    <Box
-                        sx={{
-                            mt: 2,
-                            p: 2,
-                            bgcolor: isSelected
-                                ? 'rgba(255,255,255,0.1)'
-                                : 'background.paper',
-                            borderRadius: 1,
-                            border: isSelected
-                                ? '1px solid rgba(255,255,255,0.2)'
-                                : '1px solid',
-                            width: '100%',
-                        }}
-                    >
-                        {mode.id === 'BINGO' && <BingoModeConfig />}
-                        {mode.id === 'BLACKOUT' && <BlackoutModeConfig />}
-                    </Box>
+                            {mode.detailedDescription && (
+                                <Typography
+                                    variant="body2"
+                                    color="text.secondary"
+                                    sx={{
+                                        fontSize: '0.8rem',
+                                        lineHeight: 1.4,
+                                        opacity: 0,
+                                        animation:
+                                            '0.5s ease-in-out 0.3s forwards slidein',
+                                    }}
+                                >
+                                    {mode.detailedDescription}
+                                </Typography>
+                            )}
+                        </Box>
+                        <Box
+                            sx={{
+                                mt: 2,
+                                p: 2,
+                                bgcolor: 'rgba(255,255,255,0.1)',
+                                borderRadius: 1,
+                                border: '1px solid rgba(255,255,255,0.2)',
+                                width: '100%',
+                                opacity: 0,
+                                animation:
+                                    '0.5s ease-in-out 0.4s forwards slidein',
+                            }}
+                        >
+                            {mode.id === 'BINGO' && <BingoModeConfig />}
+                            {mode.id === 'BLACKOUT' && <BlackoutModeConfig />}
+                        </Box>
+                    </>
                 )}
             </Box>
         </Box>
