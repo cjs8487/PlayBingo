@@ -28,6 +28,7 @@ import { useRouter } from 'next/navigation';
 import { useAsync } from 'react-use';
 import * as yup from 'yup';
 import GameModeSelector from '../../../components/input/GameModeSelector';
+import { RoomFormValues } from '../../../components/RoomCreateForm';
 
 const roomValidationSchema = yup.object().shape({
     name: yup.string().required('Room name is required'),
@@ -137,7 +138,7 @@ export default function HomePageRoomForm() {
     }
 
     return (
-        <Formik
+        <Formik<RoomFormValues>
             initialValues={{
                 name: '',
                 nickname: '',

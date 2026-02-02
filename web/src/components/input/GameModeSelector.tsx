@@ -2,12 +2,13 @@
 import {
     Box,
     Button,
-    Typography,
-    Switch,
     FormControlLabel,
+    Switch,
+    Typography,
 } from '@mui/material';
 import { useField, useFormikContext } from 'formik';
 import { useState } from 'react';
+import { RoomFormValues } from '../RoomCreateForm';
 
 interface GameMode {
     id: string;
@@ -19,7 +20,7 @@ interface GameMode {
 
 const gameModes: GameMode[] = [
     {
-        id: 'BINGO',
+        id: 'LINES',
         name: 'Bingo',
         description: 'Complete lines, patterns, or full card',
         detailedDescription:
@@ -36,66 +37,98 @@ const gameModes: GameMode[] = [
     },
 ];
 
+interface StandardBingoWinCondition {
+    name: string;
+    lineCount: number;
+}
+
+const winConditions: StandardBingoWinCondition[] = [
+    {
+        name: 'Single Bingo',
+        lineCount: 1,
+    },
+    {
+        name: 'Double Bingo',
+        lineCount: 2,
+    },
+    {
+        name: 'Triple Bingo',
+        lineCount: 3,
+    },
+    {
+        name: 'Quad Bingo',
+        lineCount: 4,
+    },
+    {
+        name: 'Cinco Bingo',
+        lineCount: 5,
+    },
+];
+
 function BingoModeConfig() {
-    const { values, setFieldValue } = useFormikContext<Record<string, any>>();
+    const { values, setFieldValue } = useFormikContext<RoomFormValues>();
 
     return (
         <Box>
             <Typography variant="subtitle2" sx={{ mb: 1, color: 'white' }}>
-                Win Configuration
+                Win Condition
             </Typography>
             <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                {['1 Line', '2 Lines', '3 Lines', '4 Lines', '5 Lines'].map(
-                    (lines) => (
-                        <Button
-                            key={lines}
-                            size="small"
-                            variant={
-                                values.winCondition === lines
-                                    ? 'contained'
-                                    : 'outlined'
-                            }
-                            onClick={() => setFieldValue('winCondition', lines)}
-                            sx={{
-                                fontSize: '0.75rem',
-                                py: 0.5,
-                                px: 1,
-                                bgcolor:
-                                    values.winCondition === lines
-                                        ? 'rgba(255,255,255,0.2)'
-                                        : 'rgba(255,255,255,0.1)',
-                                borderColor: 'rgba(255,255,255,0.3)',
-                                color: 'white',
-                                '&:hover': {
-                                    bgcolor: 'rgba(255,255,255,0.3)',
-                                },
-                            }}
-                        >
-                            {lines}
-                        </Button>
-                    ),
-                )}
+                {winConditions.map((condition) => (
+                    <Button
+                        key={condition.name}
+                        size="small"
+                        variant={
+                            values.lineCount === condition.lineCount
+                                ? 'contained'
+                                : 'outlined'
+                        }
+                        onClick={() =>
+                            setFieldValue('lineCount', condition.lineCount)
+                        }
+                        sx={{
+                            fontSize: '0.75rem',
+                            py: 0.5,
+                            px: 1,
+                            bgcolor:
+                                values.lineCount === condition.lineCount
+                                    ? 'rgba(255,255,255,0.2)'
+                                    : 'rgba(255,255,255,0.1)',
+                            borderColor: 'rgba(255,255,255,0.3)',
+                            color: 'white',
+                            '&:hover': {
+                                bgcolor: 'rgba(255,255,255,0.3)',
+                            },
+                        }}
+                    >
+                        {condition.name}
+                    </Button>
+                ))}
             </Box>
         </Box>
     );
 }
 
 function BlackoutModeConfig() {
-    const { values, setFieldValue } = useFormikContext<Record<string, any>>();
+    const { values, setFieldValue, handleBlur } =
+        useFormikContext<RoomFormValues>();
 
     return (
         <Box>
             <Typography variant="subtitle2" sx={{ mb: 1, color: 'white' }}>
                 Blackout Settings
             </Typography>
-
             <FormControlLabel
                 control={
                     <Switch
-                        checked={values.lockoutMode || false}
+                        checked={values.mode === 'LOCKOUT'}
                         onChange={(e) =>
-                            setFieldValue('lockoutMode', e.target.checked)
+                            setFieldValue(
+                                'mode',
+                                e.target.checked ? 'LOCKOUT' : 'BLACKOUT',
+                            )
                         }
+                        onBlur={handleBlur}
                         sx={{
                             '& .MuiSwitch-switchBase.Mui-checked': {
                                 color: 'white',
@@ -107,21 +140,19 @@ function BlackoutModeConfig() {
                         }}
                     />
                 }
-                label={
-                    <Typography sx={{ color: 'white', fontSize: '0.9rem' }}>
-                        Lockout Mode
-                    </Typography>
-                }
-                sx={{ mb: 2 }}
+                label={<Typography>Lockout</Typography>}
+                sx={{
+                    color: 'white',
+                    fontSize: '0.9rem',
+                }}
             />
-
             <Typography
-                variant="body2"
-                sx={{ fontSize: '0.8rem', opacity: 0.8, mb: 1 }}
+                variant="caption"
+                sx={{ opacity: 0.8, mb: 1, display: 'block' }}
             >
-                {values.lockoutMode
-                    ? 'Lockout enabled: Only one player can claim each goal. First to majority wins!'
-                    : 'Standard blackout: All players mark goals independently. First to complete wins.'}
+                {values.mode === 'LOCKOUT'
+                    ? 'Lockout enabled: Only one player can claim each goal. First to majority wins! Best played with exactly 2 players.'
+                    : 'Standard blackout: First player to complete all the goals on the board wins!'}
             </Typography>
         </Box>
     );
@@ -248,7 +279,7 @@ function GameModeButton({
                                     '0.5s ease-in-out 0.4s forwards slidein',
                             }}
                         >
-                            {mode.id === 'BINGO' && <BingoModeConfig />}
+                            {mode.id === 'LINES' && <BingoModeConfig />}
                             {mode.id === 'BLACKOUT' && <BlackoutModeConfig />}
                         </Box>
                     </>
@@ -267,7 +298,7 @@ export default function GameModeSelector() {
 
     const handleModeSelect = (modeId: string) => {
         setSelectedMode(modeId);
-        setFieldValue('gameMode', modeId);
+        setFieldValue('mode', modeId);
     };
 
     return (
@@ -276,8 +307,8 @@ export default function GameModeSelector() {
                 display: 'flex',
                 gap: 2,
                 alignItems: 'flex-start',
-                minHeight: 320,
-                height: 320,
+                minHeight: 300,
+                height: 300,
             }}
         >
             {gameModes.map((mode) => (
