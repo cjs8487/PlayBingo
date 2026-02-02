@@ -123,6 +123,22 @@ function VariantSelectField() {
     );
 }
 
+export interface RoomFormValues {
+    name: string;
+    nickname: string;
+    game: string;
+    password: string;
+    variant: string;
+    mode: 'LINES' | 'BLACKOUT' | 'LOCKOUT';
+    lineCount: number;
+    seed?: number;
+    hideCard: boolean;
+    spectator: boolean;
+    exploration: boolean;
+    explorationStart: 'TL' | 'TR' | 'BL' | 'BR' | 'CENTER' | 'RANDOM';
+    explorationStartCount: string;
+}
+
 interface FormProps {
     game?: string;
 }
@@ -140,11 +156,11 @@ export default function RoomCreateForm({ game }: FormProps) {
     }
 
     return (
-        <Formik
+        <Formik<RoomFormValues>
             initialValues={{
                 name: '',
                 nickname: '',
-                game,
+                game: game ?? '',
                 password: '',
                 variant: '',
                 mode: 'LINES',
