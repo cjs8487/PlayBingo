@@ -3,7 +3,7 @@ import Modal from '../Modal';
 
 export default function LoginIntercept() {
     return (
-        <Modal>
+        <Modal sx={{ p: 0 }}>
             <Login useRouterBack />
         </Modal>
     );
