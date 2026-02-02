@@ -9,6 +9,12 @@ import { useUserContext } from '../context/UserContext';
 import FormikTextField from './input/FormikTextField';
 import logo from '@/images/playbingologo.png';
 import Image from 'next/image';
+import {
+    SportsEsportsTwoTone as SportsEsports,
+    HubTwoTone as Hub,
+    SyncTwoTone as Sync,
+    LockTwoTone as Lock,
+} from '@mui/icons-material';
 
 interface LoginProps {
     useRouterBack?: boolean;
@@ -37,10 +43,146 @@ export default function Login({ useRouterBack }: LoginProps) {
                     sx={{
                         color: 'text.secondary',
                         textAlign: 'center',
+                        mb: 2,
                     }}
                 >
                     Login is never required to play bingo.
                 </Typography>
+                <Box sx={{ p: 2 }}>
+                    <Box
+                        sx={{
+                            display: 'grid',
+                            gridTemplateColumns: '1fr 1fr',
+                            gap: 2,
+                        }}
+                    >
+                        <Box
+                            sx={{
+                                display: 'flex',
+                                alignItems: 'flex-start',
+                                mb: 2,
+                            }}
+                        >
+                            <SportsEsports
+                                color="primary"
+                                fontSize="large"
+                                sx={{ mr: 1, mt: 0.5 }}
+                            />
+                            <Box>
+                                <Typography
+                                    variant="subtitle1"
+                                    sx={{
+                                        fontWeight: 'medium',
+                                        mb: 0.5,
+                                    }}
+                                >
+                                    Game Management
+                                </Typography>
+                                <Typography
+                                    variant="body2"
+                                    color="text.secondary"
+                                >
+                                    Create and manage your own bingo games, no
+                                    coding required!
+                                </Typography>
+                            </Box>
+                        </Box>
+                        <Box
+                            sx={{
+                                display: 'flex',
+                                alignItems: 'flex-start',
+                                mb: 2,
+                            }}
+                        >
+                            <Hub
+                                color="primary"
+                                fontSize="large"
+                                sx={{ mr: 1, mt: 0.5 }}
+                            />
+                            <Box>
+                                <Typography
+                                    variant="subtitle1"
+                                    sx={{
+                                        fontWeight: 'medium',
+                                        mb: 0.5,
+                                    }}
+                                >
+                                    Connect with Services
+                                </Typography>
+                                <Typography
+                                    variant="body2"
+                                    color="text.secondary"
+                                >
+                                    Integrate with external platforms like
+                                    racetime.gg for enhanced bingo experiences
+                                </Typography>
+                            </Box>
+                        </Box>
+                        <Box
+                            sx={{
+                                display: 'flex',
+                                alignItems: 'flex-start',
+                                mb: 2,
+                            }}
+                        >
+                            <Sync
+                                color="primary"
+                                fontSize="large"
+                                sx={{ mr: 1, mt: 0.5 }}
+                            />
+                            <Box>
+                                <Typography
+                                    variant="subtitle1"
+                                    sx={{
+                                        fontWeight: 'medium',
+                                        mb: 0.5,
+                                    }}
+                                >
+                                    Sync Across Devices
+                                </Typography>
+                                <Typography
+                                    variant="body2"
+                                    color="text.secondary"
+                                >
+                                    Seamlessly sync your preferences and game
+                                    data across all your devices
+                                </Typography>
+                            </Box>
+                        </Box>
+                        <Box
+                            sx={{
+                                display: 'flex',
+                                alignItems: 'flex-start',
+                                mb: 2,
+                            }}
+                        >
+                            <Lock
+                                color="primary"
+                                fontSize="large"
+                                sx={{ mr: 1, mt: 0.5 }}
+                            />
+                            <Box>
+                                <Typography
+                                    variant="subtitle1"
+                                    sx={{
+                                        fontWeight: 'medium',
+                                        mb: 0.5,
+                                    }}
+                                >
+                                    Passwordless Room Entry
+                                </Typography>
+                                <Typography
+                                    variant="body2"
+                                    color="text.secondary"
+                                >
+                                    Quickly rejoin rooms that you are already a
+                                    part of without needing to re-enter the
+                                    password
+                                </Typography>
+                            </Box>
+                        </Box>
+                    </Box>
+                </Box>
                 {error && (
                     <Typography variant="body2" color="error">
                         {error}
@@ -77,6 +219,7 @@ export default function Login({ useRouterBack }: LoginProps) {
                         backgroundColor: 'background.paper',
                         p: 4,
                         boxShadow: 2,
+                        minWidth: 300,
                     }}
                     component={Form}
                 >
