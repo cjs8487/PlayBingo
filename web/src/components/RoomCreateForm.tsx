@@ -15,12 +15,12 @@ import {
     Select,
     TextField,
 } from '@mui/material';
-import { Game } from '@playbingo/types';
 import type { BoardSizeOptions } from '@playbingo/shared';
+import { Game } from '@playbingo/types';
 import { Form, Formik, useField, useFormikContext } from 'formik';
 import { useRouter } from 'next/navigation';
-import { useAsync } from 'react-use';
 import { useEffect, useMemo } from 'react';
+import { useAsync } from 'react-use';
 import useSWR from 'swr';
 import * as yup from 'yup';
 import { useApi } from '../lib/Hooks';
@@ -220,6 +220,24 @@ function BoardSizeSelectField() {
         </TextField>
     );
 }
+export interface RoomFormValues {
+    name: string;
+    nickname: string;
+    game: string;
+    password: string;
+    variant: string;
+    boardSize: RoomBoardSize | '';
+    boardSizes: RoomBoardSize[];
+    mode: 'LINES' | 'BLACKOUT' | 'LOCKOUT';
+    lineCount: number;
+    seed?: number;
+    hideCard: boolean;
+    spectator: boolean;
+    teamsEnabled: boolean;
+    exploration: boolean;
+    explorationStart: 'TL' | 'TR' | 'BL' | 'BR' | 'CENTER' | 'RANDOM';
+    explorationStartCount: string;
+}
 
 interface FormProps {
     game?: string;
@@ -238,11 +256,11 @@ export default function RoomCreateForm({ game }: FormProps) {
     }
 
     return (
-        <Formik
+        <Formik<RoomFormValues>
             initialValues={{
                 name: '',
                 nickname: '',
-                game,
+                game: game ?? '',
                 password: '',
                 variant: '',
                 boardSize: '' as RoomBoardSize | '',
@@ -339,7 +357,10 @@ export default function RoomCreateForm({ game }: FormProps) {
                                 label="Game Mode"
                                 options={[
                                     { value: 'LINES', label: 'Lines' },
-                                    { value: 'BLACKOUT', label: 'Blackout' },
+                                    {
+                                        value: 'BLACKOUT',
+                                        label: 'Blackout',
+                                    },
                                     { value: 'LOCKOUT', label: 'Lockout' },
                                 ]}
                                 sx={{ flexGrow: 1 }}

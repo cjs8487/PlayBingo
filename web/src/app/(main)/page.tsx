@@ -95,7 +95,6 @@ export default async function Home() {
             <Suspense fallback={null}>
                 <ToasterOven />
             </Suspense>
-            <ToasterOven />
         </Container>
     );
 }
