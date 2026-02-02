@@ -177,7 +177,7 @@ export default function HomePageRoomForm() {
                 router.push(`/rooms/${slug}`);
             }}
         >
-            {({ values: { mode, exploration, explorationStart } }) => (
+            {({ values: { exploration, explorationStart } }) => (
                 <Box
                     component={Form}
                     sx={{
@@ -218,33 +218,6 @@ export default function HomePageRoomForm() {
                             sx={{ flexGrow: 1 }}
                         />
                         <VariantSelectField />
-                    </Box>
-                    <Box
-                        sx={{
-                            display: 'flex',
-                            width: '100%',
-                            alignItems: 'center',
-                            columnGap: 2,
-                        }}
-                    >
-                        <FormikSelectField
-                            id="room-mode-select"
-                            name="mode"
-                            label="Game Mode"
-                            options={[
-                                { value: 'LINES', label: 'Lines' },
-                                { value: 'BLACKOUT', label: 'Blackout' },
-                                { value: 'LOCKOUT', label: 'Lockout' },
-                            ]}
-                            sx={{ flexGrow: 1 }}
-                        />
-                        {mode === 'LINES' && (
-                            <NumberInput
-                                name="lineCount"
-                                label="Lines"
-                                disabled={mode !== 'LINES'}
-                            />
-                        )}
                     </Box>
                     <GameModeSelector />
                     <Box sx={{ display: 'flex', columnGap: 2 }}>
