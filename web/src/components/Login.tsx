@@ -183,6 +183,16 @@ export default function Login({ useRouterBack }: LoginProps) {
                         </Box>
                     </Box>
                 </Box>
+                <Box sx={{ textAlign: 'right', mt: 2 }}>
+                    <Link
+                        href="/legal/privacy"
+                        component={NextLink}
+                        variant="caption"
+                        color="text.secondary"
+                    >
+                        Privacy Policy
+                    </Link>
+                </Box>
                 {error && (
                     <Typography variant="body2" color="error">
                         {error}
