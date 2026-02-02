@@ -1,20 +1,20 @@
 'use client';
+import logo from '@/images/playbingologo.png';
+import {
+    HubTwoTone as Hub,
+    LockTwoTone as Lock,
+    SportsEsportsTwoTone as SportsEsports,
+    SyncTwoTone as Sync,
+} from '@mui/icons-material';
 import { Box, Button, Link, Typography } from '@mui/material';
 import { Form, Formik } from 'formik';
+import Image from 'next/image';
 import NextLink from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { login } from '../actions/Session';
 import { useUserContext } from '../context/UserContext';
 import FormikTextField from './input/FormikTextField';
-import logo from '@/images/playbingologo.png';
-import Image from 'next/image';
-import {
-    SportsEsportsTwoTone as SportsEsports,
-    HubTwoTone as Hub,
-    SyncTwoTone as Sync,
-    LockTwoTone as Lock,
-} from '@mui/icons-material';
 
 interface LoginProps {
     useRouterBack?: boolean;
@@ -238,7 +238,7 @@ export default function Login({ useRouterBack }: LoginProps) {
                         name="username"
                         label="Username"
                     />
-                    <Box>
+                    <Box sx={{ textAlign: 'right' }}>
                         <FormikTextField
                             id="password"
                             name="password"
@@ -255,18 +255,14 @@ export default function Login({ useRouterBack }: LoginProps) {
                             Forgot password?
                         </Link>
                     </Box>
-                    <Box
-                        sx={{
-                            textAlign: 'right',
-                        }}
-                    >
-                        <Button href="/register" component={NextLink}>
-                            Register
-                        </Button>
-                        <Button type="submit" variant="contained">
-                            Log In
-                        </Button>
-                    </Box>
+                    <Button type="submit" variant="outlined" color="success">
+                        Log In
+                    </Button>
+                    <Box sx={{ flexGrow: 1 }} />
+                    <Typography variant="body2" color="text.secondary">
+                        New to PlayBingo?{' '}
+                        <Link href="/register">Create an account</Link>
+                    </Typography>
                 </Box>
             </Formik>
         </Box>
