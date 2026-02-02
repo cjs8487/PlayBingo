@@ -61,6 +61,8 @@ export default function Login({ useRouterBack }: LoginProps) {
                                 display: 'flex',
                                 alignItems: 'flex-start',
                                 mb: 2,
+                                opacity: 0,
+                                animation: '1s ease-in-out forwards slidein',
                             }}
                         >
                             <SportsEsports
@@ -92,6 +94,9 @@ export default function Login({ useRouterBack }: LoginProps) {
                                 display: 'flex',
                                 alignItems: 'flex-start',
                                 mb: 2,
+                                opacity: 0,
+                                animation:
+                                    '1s ease-in-out 0.5s forwards slidein',
                             }}
                         >
                             <Hub
@@ -123,6 +128,8 @@ export default function Login({ useRouterBack }: LoginProps) {
                                 display: 'flex',
                                 alignItems: 'flex-start',
                                 mb: 2,
+                                opacity: 0,
+                                animation: '1s ease-in-out 1s forwards slidein',
                             }}
                         >
                             <Sync
@@ -154,6 +161,9 @@ export default function Login({ useRouterBack }: LoginProps) {
                                 display: 'flex',
                                 alignItems: 'flex-start',
                                 mb: 2,
+                                opacity: 0,
+                                animation:
+                                    '1s ease-in-out 1.5s forwards slidein',
                             }}
                         >
                             <Lock
