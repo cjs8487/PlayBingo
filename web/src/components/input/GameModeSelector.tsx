@@ -2,6 +2,7 @@
 import {
     Box,
     Button,
+    ButtonGroup,
     FormControlLabel,
     Switch,
     Typography,
@@ -73,11 +74,10 @@ function BingoModeConfig() {
             <Typography variant="subtitle2" sx={{ mb: 1, color: 'white' }}>
                 Win Condition
             </Typography>
-            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+            <ButtonGroup size="small" color="secondary">
                 {winConditions.map((condition) => (
                     <Button
                         key={condition.name}
-                        size="small"
                         variant={
                             values.lineCount === condition.lineCount
                                 ? 'contained'
@@ -90,21 +90,13 @@ function BingoModeConfig() {
                             fontSize: '0.75rem',
                             py: 0.5,
                             px: 1,
-                            bgcolor:
-                                values.lineCount === condition.lineCount
-                                    ? 'rgba(255,255,255,0.2)'
-                                    : 'rgba(255,255,255,0.1)',
-                            borderColor: 'rgba(255,255,255,0.3)',
                             color: 'white',
-                            '&:hover': {
-                                bgcolor: 'rgba(255,255,255,0.3)',
-                            },
                         }}
                     >
                         {condition.name}
                     </Button>
                 ))}
-            </Box>
+            </ButtonGroup>
         </Box>
     );
 }
