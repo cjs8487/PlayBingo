@@ -7,6 +7,8 @@ import { useState } from 'react';
 import { login } from '../actions/Session';
 import { useUserContext } from '../context/UserContext';
 import FormikTextField from './input/FormikTextField';
+import logo from '@/images/playbingologo.png';
+import Image from 'next/image';
 
 interface LoginProps {
     useRouterBack?: boolean;
@@ -20,14 +22,16 @@ export default function Login({ useRouterBack }: LoginProps) {
     const router = useRouter();
 
     return (
-        <>
+        <Box sx={{ display: 'flex', gap: 2 }}>
             <Box
                 sx={{
-                    paddingBottom: 2,
+                    p: 2,
                     textAlign: 'center',
                 }}
             >
-                <Typography variant="h4">Login to PlayBingo</Typography>
+                <Box>
+                    <Image src={logo} alt="PlayBingo logo" height={52} />
+                </Box>
                 <Typography
                     variant="caption"
                     sx={{
@@ -64,51 +68,54 @@ export default function Login({ useRouterBack }: LoginProps) {
                     }
                 }}
             >
-                <Form>
+                <Box
+                    sx={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        rowGap: 2,
+                        backgroundColor: 'background.paper',
+                        borderRadius: 1,
+                        p: 4,
+                        boxShadow: 2,
+                    }}
+                    component={Form}
+                >
+                    <FormikTextField
+                        id="username"
+                        name="username"
+                        label="Username"
+                    />
+                    <Box>
+                        <FormikTextField
+                            id="password"
+                            name="password"
+                            label="Password"
+                            type="password"
+                            autoComplete="current-password"
+                            fullWidth
+                        />
+                        <Link
+                            href="/forgotpass"
+                            component={NextLink}
+                            variant="caption"
+                        >
+                            Forgot password?
+                        </Link>
+                    </Box>
                     <Box
                         sx={{
-                            display: 'flex',
-                            flexDirection: 'column',
-                            rowGap: 2,
+                            textAlign: 'right',
                         }}
                     >
-                        <FormikTextField
-                            id="username"
-                            name="username"
-                            label="Username"
-                        />
-                        <Box>
-                            <FormikTextField
-                                id="password"
-                                name="password"
-                                label="Password"
-                                type="password"
-                                autoComplete="current-password"
-                                fullWidth
-                            />
-                            <Link
-                                href="/forgotpass"
-                                component={NextLink}
-                                variant="caption"
-                            >
-                                Forgot password?
-                            </Link>
-                        </Box>
-                        <Box
-                            sx={{
-                                textAlign: 'right',
-                            }}
-                        >
-                            <Button href="/register" component={NextLink}>
-                                Register
-                            </Button>
-                            <Button type="submit" variant="contained">
-                                Log In
-                            </Button>
-                        </Box>
+                        <Button href="/register" component={NextLink}>
+                            Register
+                        </Button>
+                        <Button type="submit" variant="contained">
+                            Log In
+                        </Button>
                     </Box>
-                </Form>
+                </Box>
             </Formik>
-        </>
+        </Box>
     );
 }
