@@ -3,7 +3,7 @@ import Modal from '../Modal';
 
 export default function LoginIntercept() {
     return (
-        <Modal sx={{ p: 0 }}>
+        <Modal sx={{ p: 0 }} fullWidth maxWidth="md">
             <Login useRouterBack />
         </Modal>
     );
