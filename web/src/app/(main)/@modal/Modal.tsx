@@ -1,13 +1,17 @@
 'use client';
-import { ReactNode } from 'react';
-import { Dialog, DialogContent } from '@mui/material';
+import { Dialog, DialogContent, SxProps } from '@mui/material';
 import { useRouter } from 'next/navigation';
+import { PropsWithChildren } from 'react';
 
-export default function Modal({ children }: { children: ReactNode }) {
+interface Props extends PropsWithChildren {
+    sx?: SxProps;
+}
+
+export default function Modal({ children, sx }: Props) {
     const router = useRouter();
     return (
         <Dialog open onClose={() => router.back()}>
-            <DialogContent sx={{ p: 4 }}>{children}</DialogContent>
+            <DialogContent sx={sx}>{children}</DialogContent>
         </Dialog>
     );
 }
