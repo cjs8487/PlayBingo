@@ -26,19 +26,20 @@ export default function Login({ useRouterBack }: LoginProps) {
             <Box
                 sx={{
                     p: 2,
-                    textAlign: 'center',
+                    flexGrow: 1,
                 }}
             >
-                <Box>
+                <Box sx={{ mb: 1, textAlign: 'center' }}>
                     <Image src={logo} alt="PlayBingo logo" height={52} />
                 </Box>
                 <Typography
-                    variant="caption"
+                    variant="body1"
                     sx={{
                         color: 'text.secondary',
+                        textAlign: 'center',
                     }}
                 >
-                    No login is required to play bingo.
+                    Login is never required to play bingo.
                 </Typography>
                 {error && (
                     <Typography variant="body2" color="error">
@@ -74,7 +75,6 @@ export default function Login({ useRouterBack }: LoginProps) {
                         flexDirection: 'column',
                         rowGap: 2,
                         backgroundColor: 'background.paper',
-                        borderRadius: 1,
                         p: 4,
                         boxShadow: 2,
                     }}
