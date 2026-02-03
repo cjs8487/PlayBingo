@@ -39,7 +39,7 @@ export default function Login({ useRouterBack }: LoginProps) {
                 }}
             >
                 <Box sx={{ mb: 1, textAlign: 'center' }}>
-                    <Image src={logo} alt="PlayBingo logo" height={52} />
+                    <Image src={logo} alt="PlayBingo logo" height={78} />
                 </Box>
                 <Typography
                     variant="body1"
