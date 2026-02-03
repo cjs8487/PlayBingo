@@ -74,7 +74,11 @@ function BingoModeConfig() {
             <Typography variant="subtitle2" sx={{ mb: 1, color: 'white' }}>
                 Win Condition
             </Typography>
-            <ButtonGroup size="small" color="secondary">
+            <ButtonGroup
+                size="small"
+                color="secondary"
+                sx={{ flexWrap: 'wrap' }}
+            >
                 {winConditions.map((condition) => (
                     <Button
                         key={condition.name}
