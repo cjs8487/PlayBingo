@@ -183,11 +183,11 @@ export default function HomePageRoomForm() {
                     sx={{
                         display: 'flex',
                         flexDirection: 'column',
-                        rowGap: 2.5,
+                        rowGap: 2,
                         textAlign: 'left',
                     }}
                 >
-                    <Box sx={{ display: 'flex', columnGap: 2 }}>
+                    <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
                         <FormikTextField
                             name="name"
                             label="Room Name"
@@ -206,7 +206,7 @@ export default function HomePageRoomForm() {
                             sx={{ flexGrow: 1 }}
                         />
                     </Box>
-                    <Box sx={{ display: 'flex', columnGap: 2 }}>
+                    <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
                         <FormikSelectFieldAutocomplete
                             id="gameSelect"
                             name="game"
@@ -220,7 +220,7 @@ export default function HomePageRoomForm() {
                         <VariantSelectField />
                     </Box>
                     <GameModeSelector />
-                    <Box sx={{ display: 'flex', columnGap: 2 }}>
+                    <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
                         <FormikSwitch
                             id="hide-card"
                             name="hideCard"
@@ -235,6 +235,7 @@ export default function HomePageRoomForm() {
                     <Box
                         sx={{
                             display: 'flex',
+                            flexWrap: 'wrap',
                             alignItems: 'center',
                             gap: 2,
                         }}
