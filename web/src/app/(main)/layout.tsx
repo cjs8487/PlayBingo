@@ -1,5 +1,5 @@
 'use client';
-import { Box, styled } from '@mui/material';
+import { Box, styled, useMediaQuery, useTheme } from '@mui/material';
 import { ConfirmProvider } from 'material-ui-confirm';
 import { ReactNode, useState } from 'react';
 import CookieConsent from 'react-cookie-consent';
@@ -39,7 +39,9 @@ export default function CoreLayout({
     children: ReactNode;
     modal: ReactNode;
 }) {
-    const [navDrawerOpen, setNavDrawerOpen] = useState(false);
+    const theme = useTheme();
+    const isLg = useMediaQuery(theme.breakpoints.up('lg'));
+    const [navDrawerOpen, setNavDrawerOpen] = useState(isLg);
     const toggleNavDrawer = () => setNavDrawerOpen((curr) => !curr);
 
     return (
