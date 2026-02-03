@@ -1,20 +1,22 @@
 'use client';
-import logo from '@/images/playbingologo.png';
-import {
-    HubTwoTone as Hub,
-    LockTwoTone as Lock,
-    SportsEsportsTwoTone as SportsEsports,
-    SyncTwoTone as Sync,
-} from '@mui/icons-material';
-import { Box, Button, Link, Typography } from '@mui/material';
+import { Box, Button, Link, Typography, IconButton } from '@mui/material';
 import { Form, Formik } from 'formik';
-import Image from 'next/image';
 import NextLink from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { login } from '../actions/Session';
 import { useUserContext } from '../context/UserContext';
 import FormikTextField from './input/FormikTextField';
+import logo from '@/images/playbingologo.png';
+import {
+    HubTwoTone as Hub,
+    LockTwoTone as Lock,
+    SportsEsportsTwoTone as SportsEsports,
+    SyncTwoTone as Sync,
+    Visibility,
+    VisibilityOff,
+} from '@mui/icons-material';
+import Image from 'next/image';
 
 interface LoginProps {
     useRouterBack?: boolean;
@@ -24,6 +26,7 @@ export default function Login({ useRouterBack }: LoginProps) {
     const { checkSession } = useUserContext();
 
     const [error, setError] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
 
     const router = useRouter();
 
@@ -253,9 +256,24 @@ export default function Login({ useRouterBack }: LoginProps) {
                             id="password"
                             name="password"
                             label="Password"
-                            type="password"
+                            type={showPassword ? 'text' : 'password'}
                             autoComplete="current-password"
                             fullWidth
+                            endAdornment={
+                                <IconButton
+                                    onClick={() =>
+                                        setShowPassword((curr) => !curr)
+                                    }
+                                    edge="end"
+                                    size="small"
+                                >
+                                    {showPassword ? (
+                                        <VisibilityOff />
+                                    ) : (
+                                        <Visibility />
+                                    )}
+                                </IconButton>
+                            }
                         />
                         <Link
                             href="/forgotpass"
