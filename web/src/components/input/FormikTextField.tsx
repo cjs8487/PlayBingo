@@ -37,6 +37,7 @@ interface FormikTextFieldProps {
     validate?: FieldValidator;
     placeholder?: string;
     shrinkLabel?: boolean;
+    endAdornment?: React.ReactNode;
 }
 
 export default function FormikTextField({
@@ -57,6 +58,7 @@ export default function FormikTextField({
     validate,
     placeholder,
     shrinkLabel,
+    endAdornment,
 }: FormikTextFieldProps) {
     const [field, meta] = useField<string>({ name, validate });
     return (
@@ -82,6 +84,7 @@ export default function FormikTextField({
             slotProps={{
                 htmlInput: { pattern, inputMode },
                 inputLabel: { shrink: shrinkLabel },
+                input: { endAdornment },
             }}
         />
     );
