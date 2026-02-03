@@ -1,3 +1,4 @@
+'use client';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Games, MenuBook, PlayArrow } from '@mui/icons-material';
 import {
@@ -13,6 +14,7 @@ import {
     Typography,
 } from '@mui/material';
 import NextLink from 'next/link';
+import { useSelectedLayoutSegment } from 'next/navigation';
 import { icons } from '../footer/Footer';
 
 export const drawerWidth = 240;
@@ -22,6 +24,7 @@ interface Props {
 }
 
 export default function NavDrawer({ open }: Props) {
+    const segment = useSelectedLayoutSegment();
     return (
         <Drawer
             variant="persistent"
@@ -47,7 +50,11 @@ export default function NavDrawer({ open }: Props) {
             >
                 <List>
                     <ListItem disablePadding>
-                        <ListItemButton component={NextLink} href="/games">
+                        <ListItemButton
+                            component={NextLink}
+                            href="/games"
+                            selected={segment === 'games'}
+                        >
                             <ListItemIcon>
                                 <Games />
                             </ListItemIcon>
@@ -55,7 +62,11 @@ export default function NavDrawer({ open }: Props) {
                         </ListItemButton>
                     </ListItem>
                     <ListItem disablePadding>
-                        <ListItemButton component={NextLink} href="/rooms">
+                        <ListItemButton
+                            component={NextLink}
+                            href="/rooms"
+                            selected={segment === 'rooms'}
+                        >
                             <ListItemIcon>
                                 <PlayArrow />
                             </ListItemIcon>
@@ -66,7 +77,11 @@ export default function NavDrawer({ open }: Props) {
                 <Box sx={{ flexGrow: 1 }} />
                 <List>
                     <ListItem disablePadding>
-                        <ListItemButton>
+                        <ListItemButton
+                            component={NextLink}
+                            href="/docs"
+                            selected={segment === 'docs'}
+                        >
                             <ListItemIcon>
                                 <MenuBook />
                             </ListItemIcon>
