@@ -30,6 +30,10 @@ const Main = styled('main', { shouldForwardProp: (prop) => prop !== 'open' })<{
             },
         },
     ],
+    display: 'grid',
+    gridTemplateRows: '1fr auto',
+    gridRow: '2',
+    gridColumn: '2',
 }));
 
 export default function CoreLayout({
@@ -51,7 +55,7 @@ export default function CoreLayout({
                     sx={{
                         display: 'grid',
                         gridTemplateColumns: '1fr',
-                        gridTemplateRows: 'auto 1fr auto',
+                        gridTemplateRows: 'auto 1fr',
                         height: '100%',
                         maxHeight: '100%',
                         overflow: 'auto',
@@ -60,9 +64,11 @@ export default function CoreLayout({
                     <Header toggleNavDrawer={toggleNavDrawer} />
                     <Box sx={{ display: 'flex' }}>
                         <NavDrawer open={navDrawerOpen} />
-                        <Main open={navDrawerOpen}>{children}</Main>
+                        <Main open={navDrawerOpen}>
+                            {children}
+                            <Footer />
+                        </Main>
                     </Box>
-                    <Footer />
                 </Box>
                 <ToastContainer />
                 {modal}
