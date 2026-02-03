@@ -1,6 +1,6 @@
 'use client';
 
-import { Box, Paper } from '@mui/material';
+import { Container, Paper } from '@mui/material';
 import { useRouter } from 'next/navigation';
 import { useContext, useEffect } from 'react';
 import Login from '../../../components/Login';
@@ -18,7 +18,7 @@ export default function LoginPage() {
     }, [user, router]);
 
     return (
-        <Box
+        <Container
             sx={{
                 display: 'flex',
                 alignItems: 'center',
@@ -29,6 +29,6 @@ export default function LoginPage() {
             <Paper sx={{ px: 8, py: 4 }}>
                 <Login />
             </Paper>
-        </Box>
+        </Container>
     );
 }
