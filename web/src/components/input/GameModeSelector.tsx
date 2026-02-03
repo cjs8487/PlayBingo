@@ -6,6 +6,7 @@ import {
     FormControlLabel,
     Switch,
     Typography,
+    useTheme,
 } from '@mui/material';
 import { useField, useFormikContext } from 'formik';
 import { useState } from 'react';
@@ -292,6 +293,8 @@ export default function GameModeSelector() {
         field.value || gameModes[0].id,
     );
 
+    const theme = useTheme();
+
     const handleModeSelect = (modeId: string) => {
         setSelectedMode(modeId);
         setFieldValue('mode', modeId);
@@ -303,8 +306,18 @@ export default function GameModeSelector() {
                 display: 'flex',
                 gap: 2,
                 alignItems: 'flex-start',
-                minHeight: 300,
-                height: 300,
+                [theme.breakpoints.only('xs')]: {
+                    minHeight: 450,
+                    height: 450,
+                },
+                [theme.breakpoints.up('sm')]: {
+                    minHeight: 350,
+                    height: 350,
+                },
+                [theme.breakpoints.up('md')]: {
+                    minHeight: 300,
+                    height: 300,
+                },
             }}
         >
             {gameModes.map((mode) => (
