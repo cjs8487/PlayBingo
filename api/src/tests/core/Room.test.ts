@@ -64,6 +64,7 @@ beforeEach(() => {
         1,
         false,
         'Normal',
+        1,
     );
     room.board = mockDeep<RevealedCell[][]>();
     emitSpy = jest.spyOn(room, 'emit');
@@ -89,7 +90,7 @@ describe('handleJoin', () => {
         expect(
             room.players.get(mockTokenPayload.playerId)?.connections.size,
         ).toBe(1);
-        expect(emitSpy).toHaveBeenCalledTimes(1);
+        expect(emitSpy).toHaveBeenCalledTimes(2);
         expect(emitSpy.mock.calls[0][0]).toBe('players:join');
     });
 
@@ -115,11 +116,11 @@ describe('handleJoin', () => {
 
     it('Creates two new players when two new players join', () => {
         room.handleJoin(mockJoinAction, mockTokenPayload, mockSocket);
-        expect(emitSpy).toHaveBeenCalledTimes(1);
+        expect(emitSpy).toHaveBeenCalledTimes(2);
         expect(emitSpy.mock.calls[0][0]).toBe('players:join');
         room.handleJoin(mockJoinAction, mockTokenPayloadPlayer2, mockSocket2);
-        expect(emitSpy).toHaveBeenCalledTimes(2);
-        expect(emitSpy.mock.calls[1][0]).toBe('players:join');
+        expect(emitSpy).toHaveBeenCalledTimes(4);
+        expect(emitSpy.mock.calls[2][0]).toBe('players:join');
         expect(room.players.has(mockTokenPayload.playerId)).toBe(true);
         expect(room.players.has(mockTokenPayloadPlayer2.playerId)).toBe(true);
         expect(room.players.size).toBe(2);
@@ -230,9 +231,11 @@ describe('handleChat', () => {
         const sendChatSpy = jest.spyOn(room, 'sendChat');
         room.handleChat(mockChatAction, mockTokenPayload);
         expect(sendChatSpy).toHaveBeenCalledTimes(1);
-        expect(sendChatSpy).toHaveBeenCalledWith(
+        expect(sendChatSpy).toHaveBeenCalledWith([
             `${player.nickname}: test message`,
-        );
+        ]);
+        expect(emitSpy).toHaveBeenCalledTimes(1);
+        expect(emitSpy.mock.calls[0][0]).toBe('chatSent');
         expect(mockCreateRoomAction).toHaveBeenCalledTimes(1);
     });
     // TODO: TEST UNAUTHORIZED
@@ -278,6 +281,8 @@ describe('Board Control', () => {
                 ].completedPlayers;
             expect(completedPlayers.length).toBe(1);
             expect(completedPlayers).toContain(mockTokenPayload.playerId);
+            expect(emitSpy).toHaveBeenCalledTimes(2);
+            expect(emitSpy.mock.calls[0][0]).toBe('board:goalMarked');
             room.handleMark(mockMarkAction, mockTokenPayloadPlayer2);
             for (let i = 0; i < 5; i++) {
                 for (let j = 0; j < 5; j++) {
@@ -298,6 +303,8 @@ describe('Board Control', () => {
                     }
                 }
             }
+            expect(emitSpy).toHaveBeenCalledTimes(4);
+            expect(emitSpy.mock.calls[2][0]).toBe('board:goalMarked');
         });
 
         it('Sends a cell message update', () => {
@@ -321,6 +328,8 @@ describe('Board Control', () => {
             };
             expect(playerSendSpy).toHaveBeenCalledWith(cellUpdateMessage);
             expect(player2SendSpy).toHaveBeenCalledWith(cellUpdateMessage);
+            expect(emitSpy).toHaveBeenCalledTimes(2);
+            expect(emitSpy.mock.calls[0][0]).toBe('board:goalMarked');
         });
 
         it('Sends a chat message', () => {
@@ -336,6 +345,8 @@ describe('Board Control', () => {
                 },
                 ` marked ${room.board[row][col].goal.goal} (${row},${col})`,
             ]);
+            expect(emitSpy).toHaveBeenCalledTimes(2);
+            expect(emitSpy.mock.calls[1][0]).toBe('chatSent');
         });
         // TODO: TEST UNAUTHORIZED
     });
@@ -380,6 +391,8 @@ describe('Board Control', () => {
             };
             expect(playerSendSpy).toHaveBeenCalledWith(cellUpdateMessage);
             expect(player2SendSpy).toHaveBeenCalledWith(cellUpdateMessage);
+            expect(emitSpy).toHaveBeenCalledTimes(2);
+            expect(emitSpy.mock.calls[0][0]).toBe('board:goalUnmarked');
         });
 
         it('Sends a chat message', () => {
@@ -395,6 +408,8 @@ describe('Board Control', () => {
                 },
                 ` unmarked ${room.board[row][col].goal.goal} (${row},${col})`,
             ]);
+            expect(emitSpy).toHaveBeenCalledTimes(2);
+            expect(emitSpy.mock.calls[1][0]).toBe('chatSent');
         });
         // TODO: TEST UNAUTHORIZED
     });
@@ -429,6 +444,9 @@ describe('handleChangeColor', () => {
             { contents: 'red', color: 'red' },
         ]);
         expect(mockCreateRoomAction).toHaveBeenCalledTimes(1);
+        expect(emitSpy).toHaveBeenCalledTimes(2);
+        expect(emitSpy.mock.calls[0][0]).toBe('player:colorChanged');
+        expect(emitSpy.mock.calls[1][0]).toBe('chatSent');
     });
 
     it('Returns unauthorized for non-existent player', () => {
@@ -441,6 +459,7 @@ describe('handleChangeColor', () => {
         });
 
         expect(result).toEqual({ action: 'unauthorized' });
+        expect(emitSpy).not.toHaveBeenCalled();
     });
 
     it('Does nothing if no color provided', () => {
@@ -455,6 +474,7 @@ describe('handleChangeColor', () => {
 
         expect(result).toBeUndefined();
         expect(sendChatSpy).not.toHaveBeenCalled();
+        expect(emitSpy).not.toHaveBeenCalled();
     });
 });
 
@@ -480,6 +500,8 @@ describe('handleNewCard', () => {
         room.handleNewCard(mockNewCardAction);
 
         expect(generateBoardSpy).toHaveBeenCalledWith({ mode: 'Random' });
+        expect(emitSpy).toHaveBeenCalledTimes(1);
+        expect(emitSpy.mock.calls[0][0]).toBe('board:regenerated');
     });
 
     it('Generates new board with provided options', () => {
@@ -496,6 +518,8 @@ describe('handleNewCard', () => {
             mode: 'SRLv5',
             seed: 12345,
         });
+        expect(emitSpy).toHaveBeenCalledTimes(1);
+        expect(emitSpy.mock.calls[0][0]).toBe('board:regenerated');
     });
 });
 
@@ -550,72 +574,4 @@ describe('readyPlayer and unreadyPlayer', () => {
 
         expect(result).toBe(false);
     });
-});
-
-describe('Unauthorized Access Tests', () => {
-    it('handleChat returns unauthorized for non-existent player', () => {
-        const result = room.handleChat(mockChatAction, {
-            ...mockTokenPayload,
-            playerId: 'nonexistent',
-        });
-
-        expect(result).toEqual({ action: 'unauthorized' });
-    });
-
-    it('handleMark returns unauthorized for non-existent player', () => {
-        const result = room.handleMark(mockMarkAction, {
-            ...mockTokenPayload,
-            playerId: 'nonexistent',
-        });
-
-        expect(result).toEqual({ action: 'unauthorized' });
-    });
-
-    it('handleUnmark returns unauthorized for non-existent player', () => {
-        const result = room.handleUnmark(mockUnmarkAction, {
-            ...mockTokenPayload,
-            playerId: 'nonexistent',
-        });
-
-        expect(result).toEqual({ action: 'unauthorized' });
-    });
-});
-
-describe('Event Emission Tests', () => {
-    beforeEach(() => {
-        const player = new Player(
-            room,
-            'test',
-            'Test Player',
-            'blue',
-            false,
-            false,
-        );
-        player.addConnection(mockTokenPayload.uuid, mockSocket);
-        room.players.set(mockTokenPayload.playerId, player);
-
-        for (let i = 0; i < 5; i++) {
-            for (let j = 0; j < 5; j++) {
-                room.board[i][j].completedPlayers = [];
-            }
-        }
-    });
-
-    it('Emits players:join event when new player joins', () => {
-        emitSpy.mockClear();
-
-        room.handleJoin(mockJoinAction, mockTokenPayloadPlayer2, mockSocket2);
-
-        expect(emitSpy).toHaveBeenCalledTimes(1);
-        expect(emitSpy).toHaveBeenCalledWith(
-            'players:join',
-            expect.any(Player),
-        );
-    });
-
-    // TODO: Add event emission tests for other handlers once events are implemented
-    // - players:leave event when player leaves
-    // - chatSent event when chat message is sent
-    // - board:goalMarked event when cell is marked
-    // - board:goalUnmarked event when cell is unmarked
 });

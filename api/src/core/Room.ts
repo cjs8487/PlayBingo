@@ -97,6 +97,7 @@ export type BoardGenerationOptions =
 interface RoomEvents {
     'players:join': (player: Player) => void;
     'players:leave': (player: Player) => void;
+    'player:colorChanged': (player: Player, newColor: string) => void;
     'board:cellUpdate': (cell: Cell, row: number, col: number) => void;
     'board:goalMarked': (
         cell: Cell,
@@ -110,6 +111,11 @@ interface RoomEvents {
         col: number,
         player: Player,
     ) => void;
+    'board:regenerated': (
+        board: RevealedCell[][],
+        options: BoardGenerationOptions,
+    ) => void;
+    'board:revealed': (player: Player) => void;
     chatSent: (message: ChatMessage) => void;
     'system:message': (message: ChatMessage) => void;
 }
@@ -439,6 +445,7 @@ export default class Room extends EventEmitter {
         this.raceHandler.resetTimer();
 
         this.sendSyncBoard();
+        this.emit('board:regenerated', this.board, options);
         setRoomBoard(
             this.id,
             this.board.flat().map((cell) => cell.goal.id),
@@ -486,6 +493,7 @@ export default class Room extends EventEmitter {
         }
 
         if (newPlayer) {
+            this.emit('players:join', player);
             if (auth.isSpectating) {
                 this.sendChat(`${player.nickname} is now spectating`);
             } else {
@@ -494,7 +502,6 @@ export default class Room extends EventEmitter {
                     ' has joined.',
                 ]);
             }
-            this.emit('players:join', player);
         }
 
         player.addConnection(auth.uuid, socket);
@@ -567,6 +574,7 @@ export default class Room extends EventEmitter {
                 ' has left.',
             ]);
             addLeaveAction(this.id, player.nickname, player.color).then();
+            this.emit('players:leave', player);
             if (this.players.size === 0) {
                 this.close();
             }
@@ -585,7 +593,10 @@ export default class Room extends EventEmitter {
         }
         const { message: chatMessage } = action.payload;
         if (!chatMessage) return;
-        this.sendChat(`${player.nickname}: ${chatMessage}`);
+        const chatMessageArray: ChatMessage = [
+            `${player.nickname}: ${chatMessage}`,
+        ];
+        this.sendChat(chatMessageArray);
         addChatAction(
             this.id,
             player.nickname,
@@ -617,6 +628,7 @@ export default class Room extends EventEmitter {
         );
         player.mark(row, col);
         this.sendCellUpdate(row, col);
+        this.emit('board:goalMarked', this.board[row][col], row, col, player);
         this.sendChat([
             {
                 contents: player.nickname,
@@ -644,6 +656,13 @@ export default class Room extends EventEmitter {
         ].completedPlayers.filter((playerId) => playerId !== player.id);
         player.unmark(unRow, unCol);
         this.sendCellUpdate(unRow, unCol);
+        this.emit(
+            'board:goalUnmarked',
+            this.board[unRow][unCol],
+            unRow,
+            unCol,
+            player,
+        );
         this.sendChat([
             { contents: player.nickname, color: player.color },
             ` unmarked ${this.board[unRow][unCol].goal.goal} (${unRow},${unCol})`,
@@ -671,6 +690,7 @@ export default class Room extends EventEmitter {
             color,
         ).then();
         player.color = color;
+        this.emit('player:colorChanged', player, color);
         createUpdatePlayer(this.id, player).then();
         this.sendChat([
             { contents: player.nickname, color: player.color },
@@ -691,6 +711,7 @@ export default class Room extends EventEmitter {
             // the board from the previous settings
             this.generateBoard(this.lastGenerationMode);
         }
+        this.emit('board:regenerated', this.board, this.lastGenerationMode);
     }
 
     handleStartTimer() {
@@ -792,6 +813,23 @@ export default class Room extends EventEmitter {
             return null;
         }
         this.revealCardForPlayer(player);
+        this.sendChat([
+            {
+                contents: player.nickname,
+                color: player.color,
+            },
+            ' has revealed the card.',
+        ]);
+        this.emit('board:revealed', player);
+        player.sendMessage({
+            action: 'syncBoard',
+            board: {
+                hidden: false,
+                board: this.board,
+                width: this.board[0].length,
+                height: this.board.length,
+            },
+        });
     }
 
     handleSetChatEnabled(action: SetChatEnabledAction) {
@@ -811,9 +849,11 @@ export default class Room extends EventEmitter {
         if (typeof message === 'string') {
             this.chatHistory.push([message]);
             this.sendServerMessage({ action: 'chat', message: [message] });
+            this.emit('chatSent', [message]);
         } else {
             this.chatHistory.push(message);
             this.sendServerMessage({ action: 'chat', message: message });
+            this.emit('chatSent', message);
         }
     }
 

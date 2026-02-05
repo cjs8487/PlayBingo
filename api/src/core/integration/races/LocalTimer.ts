@@ -39,7 +39,7 @@ export default class LocalTimer implements RaceHandler {
     }
 
     async unreadyPlayer(player: Player): Promise<boolean> {
-        throw new Error('Method not implemented.');
+        return true;
     }
 
     async refresh(): Promise<void> {}
