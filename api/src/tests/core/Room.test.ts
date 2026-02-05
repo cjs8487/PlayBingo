@@ -1,8 +1,10 @@
 import {
+    ChangeColorAction,
     ChatAction,
     JoinAction,
     LeaveAction,
     MarkAction,
+    NewCardAction,
     RevealedCell,
     ServerMessage,
     UnmarkAction,
@@ -11,7 +13,7 @@ import { mockDeep, mockReset } from 'jest-mock-extended';
 import WebSocket from 'ws';
 import { RoomTokenPayload } from '../../auth/RoomAuth';
 import Player from '../../core/Player';
-import Room from '../../core/Room';
+import Room, { BoardGenerationMode } from '../../core/Room';
 import { mockCreateRoomAction, mockPlayerUpsert } from '../setup';
 
 let room: Room;
@@ -396,4 +398,224 @@ describe('Board Control', () => {
         });
         // TODO: TEST UNAUTHORIZED
     });
+});
+
+describe('handleChangeColor', () => {
+    beforeEach(() => {
+        const player = new Player(
+            room,
+            'test',
+            'Test Player',
+            'blue',
+            false,
+            false,
+        );
+        player.addConnection(mockTokenPayload.uuid, mockSocket);
+        room.players.set(mockTokenPayload.playerId, player);
+    });
+
+    it('Changes player color and sends chat message', () => {
+        const sendChatSpy = jest.spyOn(room, 'sendChat');
+        const mockChangeColorAction = mockDeep<ChangeColorAction>();
+        mockChangeColorAction.payload = { color: 'red' };
+
+        room.handleChangeColor(mockChangeColorAction, mockTokenPayload);
+
+        const player = room.players.get(mockTokenPayload.playerId)!;
+        expect(player.color).toBe('red');
+        expect(sendChatSpy).toHaveBeenCalledWith([
+            { contents: 'Test Player', color: 'red' },
+            ' has changed their color to ',
+            { contents: 'red', color: 'red' },
+        ]);
+        expect(mockCreateRoomAction).toHaveBeenCalledTimes(1);
+    });
+
+    it('Returns unauthorized for non-existent player', () => {
+        const mockChangeColorAction = mockDeep<ChangeColorAction>();
+        mockChangeColorAction.payload = { color: 'red' };
+
+        const result = room.handleChangeColor(mockChangeColorAction, {
+            ...mockTokenPayload,
+            playerId: 'nonexistent',
+        });
+
+        expect(result).toEqual({ action: 'unauthorized' });
+    });
+
+    it('Does nothing if no color provided', () => {
+        const sendChatSpy = jest.spyOn(room, 'sendChat');
+        const mockChangeColorAction = mockDeep<ChangeColorAction>();
+        mockChangeColorAction.payload = { color: undefined as any };
+
+        const result = room.handleChangeColor(
+            mockChangeColorAction,
+            mockTokenPayload,
+        );
+
+        expect(result).toBeUndefined();
+        expect(sendChatSpy).not.toHaveBeenCalled();
+    });
+});
+
+describe('handleNewCard', () => {
+    beforeEach(() => {
+        const player = new Player(
+            room,
+            'test',
+            'Test Player',
+            'blue',
+            false,
+            false,
+        );
+        player.addConnection(mockTokenPayload.uuid, mockSocket);
+        room.players.set(mockTokenPayload.playerId, player);
+    });
+
+    it('Generates new board with default options', () => {
+        const generateBoardSpy = jest.spyOn(room, 'generateBoard');
+        const mockNewCardAction = mockDeep<NewCardAction>();
+        mockNewCardAction.options = undefined;
+
+        room.handleNewCard(mockNewCardAction);
+
+        expect(generateBoardSpy).toHaveBeenCalledWith({ mode: 'Random' });
+    });
+
+    it('Generates new board with provided options', () => {
+        const generateBoardSpy = jest.spyOn(room, 'generateBoard');
+        const mockNewCardAction = mockDeep<NewCardAction>();
+        mockNewCardAction.options = {
+            mode: 'SRLv5',
+            seed: 12345,
+        };
+
+        room.handleNewCard(mockNewCardAction);
+
+        expect(generateBoardSpy).toHaveBeenCalledWith({
+            mode: 'SRLv5',
+            seed: 12345,
+        });
+    });
+});
+
+describe('readyPlayer and unreadyPlayer', () => {
+    beforeEach(() => {
+        const player = new Player(
+            room,
+            'test',
+            'Test Player',
+            'blue',
+            false,
+            false,
+        );
+        player.addConnection(mockTokenPayload.uuid, mockSocket);
+        room.players.set(mockTokenPayload.playerId, player);
+    });
+
+    it('Readies player successfully', () => {
+        const player = room.players.get(mockTokenPayload.playerId)!;
+        const readySpy = jest.spyOn(player, 'ready');
+
+        const result = room.readyPlayer(mockTokenPayload);
+
+        expect(readySpy).toHaveBeenCalled();
+        expect(result).toBeInstanceOf(Promise);
+    });
+
+    it('Returns false for non-existent player when readying', () => {
+        const result = room.readyPlayer({
+            ...mockTokenPayload,
+            playerId: 'nonexistent',
+        });
+
+        expect(result).toBe(false);
+    });
+
+    it('Unreadies player successfully', () => {
+        const player = room.players.get(mockTokenPayload.playerId)!;
+        const unreadySpy = jest.spyOn(player, 'unready');
+
+        const result = room.unreadyPlayer(mockTokenPayload);
+
+        expect(unreadySpy).toHaveBeenCalled();
+        expect(result).toBeInstanceOf(Promise);
+    });
+
+    it('Returns false for non-existent player when unreadying', () => {
+        const result = room.unreadyPlayer({
+            ...mockTokenPayload,
+            playerId: 'nonexistent',
+        });
+
+        expect(result).toBe(false);
+    });
+});
+
+describe('Unauthorized Access Tests', () => {
+    it('handleChat returns unauthorized for non-existent player', () => {
+        const result = room.handleChat(mockChatAction, {
+            ...mockTokenPayload,
+            playerId: 'nonexistent',
+        });
+
+        expect(result).toEqual({ action: 'unauthorized' });
+    });
+
+    it('handleMark returns unauthorized for non-existent player', () => {
+        const result = room.handleMark(mockMarkAction, {
+            ...mockTokenPayload,
+            playerId: 'nonexistent',
+        });
+
+        expect(result).toEqual({ action: 'unauthorized' });
+    });
+
+    it('handleUnmark returns unauthorized for non-existent player', () => {
+        const result = room.handleUnmark(mockUnmarkAction, {
+            ...mockTokenPayload,
+            playerId: 'nonexistent',
+        });
+
+        expect(result).toEqual({ action: 'unauthorized' });
+    });
+});
+
+describe('Event Emission Tests', () => {
+    beforeEach(() => {
+        const player = new Player(
+            room,
+            'test',
+            'Test Player',
+            'blue',
+            false,
+            false,
+        );
+        player.addConnection(mockTokenPayload.uuid, mockSocket);
+        room.players.set(mockTokenPayload.playerId, player);
+
+        for (let i = 0; i < 5; i++) {
+            for (let j = 0; j < 5; j++) {
+                room.board[i][j].completedPlayers = [];
+            }
+        }
+    });
+
+    it('Emits players:join event when new player joins', () => {
+        emitSpy.mockClear();
+
+        room.handleJoin(mockJoinAction, mockTokenPayloadPlayer2, mockSocket2);
+
+        expect(emitSpy).toHaveBeenCalledTimes(1);
+        expect(emitSpy).toHaveBeenCalledWith(
+            'players:join',
+            expect.any(Player),
+        );
+    });
+
+    // TODO: Add event emission tests for other handlers once events are implemented
+    // - players:leave event when player leaves
+    // - chatSent event when chat message is sent
+    // - board:goalMarked event when cell is marked
+    // - board:goalUnmarked event when cell is unmarked
 });
