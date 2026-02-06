@@ -2,7 +2,6 @@
 import Board from '@/components/board/Board';
 import PlayerInfo from '@/components/room/PlayerInfo';
 import PlayerList from '@/components/room/PlayerList';
-import RacetimeCard from '@/components/room/racetime/RacetimeCard';
 import RoomChat from '@/components/room/RoomChat';
 import RoomInfo from '@/components/room/RoomInfo';
 import RoomLogin from '@/components/room/RoomLogin';
@@ -117,7 +116,7 @@ function RoomXs() {
     return (
         <Stack spacing={2} sx={{ height: '100%', overflow: 'hidden' }}>
             <RoomInfo />
-            <RacetimeCard />
+            <Timer />
             <PlayerInfo />
             <Box
                 sx={{
@@ -151,7 +150,7 @@ function RoomSm() {
                 <RoomInfo />
             </Box>
             <Box sx={{ flex: '0 0 auto' }}>
-                <RacetimeCard />
+                <Timer />
             </Box>
             <Box sx={{ flex: '0 0 auto' }}>
                 <PlayerInfo />
@@ -195,7 +194,7 @@ function RoomMd() {
                     <RoomInfo />
                 </Box>
                 <Box sx={{ flex: '0 0 auto' }}>
-                    <RacetimeCard />
+                    <Timer />
                 </Box>
             </Box>
             <Box sx={{ flex: '0 0 auto' }}>
