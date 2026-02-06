@@ -33,14 +33,8 @@ import {
 } from '../auth/RoomAuth';
 import {
     addChangeColorAction,
-    addChatAction,
-    addJoinAction,
-    addLeaveAction,
-    addMarkAction,
-    addUnmarkAction,
     createUpdatePlayer,
     createUpdateTeam,
-    setRoomBoard,
     updateRaceHandler,
     updateTeamsEnabled,
 } from '../database/Rooms';
@@ -105,8 +99,10 @@ export type BoardGenerationOptions =
     | BoardGenerationOptionsDifficulty;
 
 interface RoomEvents {
+    'player:connected': (player: Player, timestamp: Date) => void;
+    'player:chat': (player: Player, message: string, timestamp: Date) => void;
     'players:join': (player: Player) => void;
-    'players:leave': (player: Player) => void;
+    'players:leave': (player: Player, timestamp: Date) => void;
     'player:colorChanged': (player: Player, newColor: string) => void;
     'board:cellUpdate': (cell: Cell, row: number, col: number) => void;
     'board:goalMarked': (
@@ -114,16 +110,19 @@ interface RoomEvents {
         row: number,
         col: number,
         player: Player,
+        timestamp: Date,
     ) => void;
     'board:goalUnmarked': (
         cell: Cell,
         row: number,
         col: number,
         player: Player,
+        timestamp: Date,
     ) => void;
     'board:regenerated': (
         board: RevealedCell[][],
         options: BoardGenerationOptions,
+        persist?: (operation: Promise<void>) => void,
     ) => void;
     'board:revealed': (player: Player) => void;
     chatSent: (message: ChatMessage) => void;
@@ -668,13 +667,11 @@ export default class Room extends EventEmitter {
         this.raceHandler.resetTimer();
 
         this.sendSyncBoard();
-        this.emit('board:regenerated', this.board, options);
-        await setRoomBoard(
-            this.id,
-            this.board.flat().map((cell) => cell.goal.id),
-            this.boardWidth,
-            this.boardHeight,
+        const writes: Promise<void>[] = [];
+        this.emit('board:regenerated', this.board, options, (write) =>
+            writes.push(write),
         );
+        await Promise.all(writes);
     }
 
     getPlayerData(): { teams: TeamData[]; spectators: PlayerData[] } {
@@ -771,13 +768,7 @@ export default class Room extends EventEmitter {
         }
 
         player.addConnection(auth.uuid, socket);
-        addJoinAction(
-            this.id,
-            player.id,
-            player.nickname,
-            playerTeam?.id,
-            timestamp,
-        ).then();
+        this.emit('player:connected', player, timestamp);
         this.persistPlayer(player);
         return {
             action: 'connected',
@@ -909,14 +900,7 @@ export default class Room extends EventEmitter {
         } else {
             this.sendChat(`${player.nickname} has left.`, timestamp);
         }
-        addLeaveAction(
-            this.id,
-            player.id,
-            player.nickname,
-            playerTeam?.id,
-            timestamp,
-        ).then();
-        this.emit('players:leave', player);
+        this.emit('players:leave', player, timestamp);
         const anyoneConnected =
             this.teams.values().some((team) => team.showInRoom()) ||
             this.spectators
@@ -939,13 +923,7 @@ export default class Room extends EventEmitter {
         if (!chatMessage) return;
         const timestamp = new Date();
         this.sendChat(`${player.nickname}: ${chatMessage}`, timestamp);
-        addChatAction(
-            this.id,
-            player.id,
-            player.nickname,
-            chatMessage,
-            timestamp,
-        ).then();
+        this.emit('player:chat', player, chatMessage, timestamp);
     }
 
     handleMark(
@@ -970,8 +948,15 @@ export default class Room extends EventEmitter {
         this.board[row][col].completedTeams.sort((a, b) => a.localeCompare(b));
         team.mark(row, col);
         this.sendCellUpdate(row, col);
-        this.emit('board:goalMarked', this.board[row][col], row, col, player);
         const timestamp = new Date();
+        this.emit(
+            'board:goalMarked',
+            this.board[row][col],
+            row,
+            col,
+            player,
+            timestamp,
+        );
         this.sendChat(
             [
                 {
@@ -982,7 +967,6 @@ export default class Room extends EventEmitter {
             ],
             timestamp,
         );
-        addMarkAction(this.id, player.id, team.id, row, col, timestamp).then();
         this.checkWinConditions();
     }
 
@@ -1003,14 +987,15 @@ export default class Room extends EventEmitter {
         ].completedTeams.filter((teamId) => teamId !== team.id);
         team.unmark(unRow, unCol);
         this.sendCellUpdate(unRow, unCol);
+        const timestamp = new Date();
         this.emit(
             'board:goalUnmarked',
             this.board[unRow][unCol],
             unRow,
             unCol,
             player,
+            timestamp,
         );
-        const timestamp = new Date();
         this.sendChat(
             [
                 {
@@ -1021,14 +1006,6 @@ export default class Room extends EventEmitter {
             ],
             timestamp,
         );
-        addUnmarkAction(
-            this.id,
-            player.id,
-            team.id,
-            unRow,
-            unCol,
-            timestamp,
-        ).then();
         this.checkWinConditions();
     }
 

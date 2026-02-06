@@ -14,13 +14,7 @@ import WebSocket from 'ws';
 import { RoomTokenPayload } from '../../auth/RoomAuth';
 import Player from '../../core/Player';
 import Room from '../../core/Room';
-import {
-    addChangeColorAction,
-    addChatAction,
-    addJoinAction,
-    addLeaveAction,
-    createUpdatePlayer,
-} from '../../database/Rooms';
+import { addChangeColorAction, createUpdatePlayer } from '../../database/Rooms';
 
 jest.mock('../../database/Rooms');
 
@@ -106,13 +100,12 @@ describe('handleJoin', () => {
     it('Creates a new player when a new player joins', async () => {
         room.handleJoin(mockJoinAction, mockTokenPayload, mockSocket);
         expect(room.getPlayerById(mockTokenPayload.playerId)).toBeDefined();
-        expect(addJoinAction).toHaveBeenCalled();
         await Promise.resolve();
         expect(createUpdatePlayer).toHaveBeenCalled();
         expect(
             room.getPlayerById(mockTokenPayload.playerId)?.connections.size,
         ).toBe(1);
-        expect(emitSpy).toHaveBeenCalledTimes(2);
+        expect(emitSpy).toHaveBeenCalledTimes(3);
         expect(emitSpy.mock.calls[0][0]).toBe('players:join');
     });
 
@@ -126,16 +119,20 @@ describe('handleJoin', () => {
         ).toBe(2);
         expect(room.getPlayerById(mockTokenPayload.playerId)).toBeDefined();
         expect(room.getAllPlayers().length).toBe(1);
-        expect(emitSpy).not.toHaveBeenCalled();
+        expect(emitSpy).toHaveBeenCalledWith(
+            'player:connected',
+            player,
+            new Date(),
+        );
     });
 
     it('Creates two new players when two new players join', async () => {
         room.handleJoin(mockJoinAction, mockTokenPayload, mockSocket);
-        expect(emitSpy).toHaveBeenCalledTimes(2);
+        expect(emitSpy).toHaveBeenCalledTimes(3);
         expect(emitSpy.mock.calls[0][0]).toBe('players:join');
         room.handleJoin(mockJoinAction, mockTokenPayloadPlayer2, mockSocket2);
-        expect(emitSpy).toHaveBeenCalledTimes(4);
-        expect(emitSpy.mock.calls[2][0]).toBe('players:join');
+        expect(emitSpy).toHaveBeenCalledTimes(6);
+        expect(emitSpy.mock.calls[3][0]).toBe('players:join');
         expect(room.getPlayerById(mockTokenPayload.playerId)).toBeDefined();
         expect(
             room.getPlayerById(mockTokenPayloadPlayer2.playerId),
@@ -148,7 +145,6 @@ describe('handleJoin', () => {
             room.getPlayerById(mockTokenPayloadPlayer2.playerId)?.connections
                 .size,
         ).toBe(1);
-        expect(addJoinAction).toHaveBeenCalledTimes(2);
         await Promise.resolve();
         expect(createUpdatePlayer).toHaveBeenCalledTimes(2);
     });
@@ -208,7 +204,6 @@ describe('handleLeave', () => {
         room.handleLeave(mockLeaveAction, mockTokenPayload, 'test');
         expect(player.connections.size).toBe(0);
         expect(player.showInRoom()).toBe(false);
-        expect(addLeaveAction).toHaveBeenCalledTimes(1);
         expect(sendChatSpy).toHaveBeenCalledTimes(1);
         expect(sendChatSpy).toHaveBeenCalledWith(
             [
@@ -230,7 +225,7 @@ describe('handleLeave', () => {
         room.handleLeave(mockLeaveAction, mockTokenPayload2, 'test');
         expect(player.connections.size).toBe(1);
         expect(player.showInRoom()).toBe(true);
-        expect(addLeaveAction).not.toHaveBeenCalled();
+        expect(emitSpy).not.toHaveBeenCalled();
         expect(sendChatSpy).not.toHaveBeenCalled();
     });
     // TODO: POST REFACTOR CHECK FOR UNAUTHORIZED RESPONSE SINCE THE RETURN TYPE
@@ -248,9 +243,14 @@ describe('handleChat', () => {
             `${player.nickname}: test message`,
             new Date(),
         );
-        expect(emitSpy).toHaveBeenCalledTimes(1);
+        expect(emitSpy).toHaveBeenCalledTimes(2);
         expect(emitSpy.mock.calls[0][0]).toBe('chatSent');
-        expect(addChatAction).toHaveBeenCalledTimes(1);
+        expect(emitSpy).toHaveBeenCalledWith(
+            'player:chat',
+            player,
+            'test message',
+            new Date(),
+        );
     });
     // TODO: TEST UNAUTHORIZED
 });
