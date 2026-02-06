@@ -1,13 +1,13 @@
 import { RaceStatusConnected } from '@playbingo/types';
-import RaceHandler from './RaceHandler';
-import Player from '../../Player';
-import Room from '../../Room';
+import { RaceHandler as RaceHandlers } from '@prisma/client';
 import {
     createUpdatePlayer,
     updateFinishTime,
     updateStartTime,
 } from '../../../database/Rooms';
-import { RaceHandler as RaceHandlers } from '@prisma/client';
+import Player from '../../Player';
+import Room from '../../Room';
+import RaceHandler from './RaceHandler';
 
 export default class LocalTimer implements RaceHandler {
     startedAt?: string;
@@ -73,9 +73,10 @@ export default class LocalTimer implements RaceHandler {
     }
 
     startTimer(): void {
-        this.startedAt = new Date().toISOString();
+        const now = new Date();
+        this.startedAt = now.toISOString();
         this.room.revealCardForAllPlayers();
-        updateStartTime(this.room.id, new Date()).then();
+        updateStartTime(this.room.id, now).then();
     }
 
     async playerFinished(player: Player): Promise<void> {
