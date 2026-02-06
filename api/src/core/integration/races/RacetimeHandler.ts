@@ -255,7 +255,6 @@ export default class RacetimeHandler implements RaceHandler {
 
     handleWebsocketMessage(data: RawData) {
         const message: WebSocketMessage = JSON.parse(data.toString());
-        this.room.logDebug(`racetime.gg ws message: ${message.type}`);
         switch (message.type) {
             case 'pong':
                 if (this.nextPongCallback) {
