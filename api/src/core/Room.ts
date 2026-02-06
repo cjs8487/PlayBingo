@@ -26,17 +26,7 @@ import {
     Permissions,
     RoomTokenPayload,
 } from '../auth/RoomAuth';
-import {
-    addChangeColorAction,
-    addChatAction,
-    addJoinAction,
-    addLeaveAction,
-    addMarkAction,
-    addUnmarkAction,
-    createUpdatePlayer,
-    setRoomBoard,
-    updateRaceHandler,
-} from '../database/Rooms';
+import { updateRaceHandler } from '../database/Rooms';
 import { isStaff } from '../database/Users';
 import {
     getDifficultyGroupCount,
@@ -447,10 +437,6 @@ export default class Room extends EventEmitter {
 
         this.sendSyncBoard();
         this.emit('board:regenerated', this.board, options);
-        setRoomBoard(
-            this.id,
-            this.board.flat().map((cell) => cell.goal.id),
-        );
     }
 
     getPlayers(): PlayerData[] {
@@ -513,8 +499,6 @@ export default class Room extends EventEmitter {
         }
 
         player.addConnection(auth.uuid, socket);
-        addJoinAction(this.id, player.nickname, player.color, timestamp).then();
-        createUpdatePlayer(this.id, player).then();
         return {
             action: 'connected',
             board: {
@@ -585,12 +569,7 @@ export default class Room extends EventEmitter {
                 ],
                 timestamp,
             );
-            addLeaveAction(
-                this.id,
-                player.nickname,
-                player.color,
-                timestamp,
-            ).then();
+
             this.emit('players:leave', player);
             if (this.players.size === 0) {
                 this.close();
@@ -612,13 +591,6 @@ export default class Room extends EventEmitter {
         if (!chatMessage) return;
         const timestamp = new Date();
         this.sendChat(`${player.nickname}: ${chatMessage}`, timestamp);
-        addChatAction(
-            this.id,
-            player.nickname,
-            player.color,
-            chatMessage,
-            timestamp,
-        ).then();
     }
 
     handleMark(
@@ -656,7 +628,6 @@ export default class Room extends EventEmitter {
             ],
             timestamp,
         );
-        addMarkAction(this.id, player.id, row, col, timestamp).then();
         this.checkWinConditions();
     }
 
@@ -691,7 +662,7 @@ export default class Room extends EventEmitter {
             ],
             timestamp,
         );
-        addUnmarkAction(this.id, player.id, unRow, unCol, timestamp).then();
+
         this.checkWinConditions();
     }
 
@@ -708,16 +679,9 @@ export default class Room extends EventEmitter {
             return;
         }
         const timestamp = new Date();
-        addChangeColorAction(
-            this.id,
-            player.nickname,
-            player.color,
-            color,
-            timestamp,
-        ).then();
+
         player.color = color;
         this.emit('player:colorChanged', player, color);
-        createUpdatePlayer(this.id, player).then();
         this.sendChat(
             [
                 { contents: player.nickname, color: player.color },
@@ -786,12 +750,6 @@ export default class Room extends EventEmitter {
                     ],
                     timestamp,
                 );
-                addLeaveAction(
-                    this.id,
-                    player.nickname,
-                    player.color,
-                    timestamp,
-                ).then();
                 if (this.players.size === 0) {
                     this.close();
                 }
