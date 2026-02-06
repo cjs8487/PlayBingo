@@ -13,8 +13,8 @@ import { mockDeep, mockReset } from 'jest-mock-extended';
 import WebSocket from 'ws';
 import { RoomTokenPayload } from '../../auth/RoomAuth';
 import Player from '../../core/Player';
-import Room, { BoardGenerationMode } from '../../core/Room';
-import { mockCreateRoomAction, mockPlayerUpsert } from '../setup';
+import Room from '../../core/Room';
+import { mockCreateRoomAction } from '../setup';
 
 let room: Room;
 
@@ -85,8 +85,6 @@ describe('handleJoin', () => {
     it('Creates a new player when a new player joins', () => {
         room.handleJoin(mockJoinAction, mockTokenPayload, mockSocket);
         expect(room.players.has(mockTokenPayload.playerId)).toBe(true);
-        expect(mockCreateRoomAction).toHaveBeenCalled();
-        expect(mockPlayerUpsert).toHaveBeenCalled();
         expect(
             room.players.get(mockTokenPayload.playerId)?.connections.size,
         ).toBe(1);
@@ -131,8 +129,6 @@ describe('handleJoin', () => {
             room.players.get(mockTokenPayloadPlayer2.playerId)?.connections
                 .size,
         ).toBe(1);
-        expect(mockCreateRoomAction).toHaveBeenCalledTimes(2);
-        expect(mockPlayerUpsert).toHaveBeenCalledTimes(2);
     });
 
     it('Sends join message for new players', () => {
@@ -185,7 +181,7 @@ describe('handleLeave', () => {
         room.handleLeave(mockLeaveAction, mockTokenPayload, 'test');
         expect(player.connections.size).toBe(0);
         expect(player.showInRoom()).toBe(false);
-        expect(mockCreateRoomAction).toHaveBeenCalledTimes(1);
+        // Database operations now happen asynchronously through event listeners
         expect(sendChatSpy).toHaveBeenCalledTimes(1);
         expect(sendChatSpy).toHaveBeenCalledWith([
             { contents: 'Test Player', color: 'blue' },
@@ -210,7 +206,7 @@ describe('handleLeave', () => {
         room.handleLeave(mockLeaveAction, mockTokenPayload2, 'test');
         expect(player.connections.size).toBe(1);
         expect(player.showInRoom()).toBe(true);
-        expect(mockCreateRoomAction).not.toHaveBeenCalled();
+        expect(emitSpy).not.toHaveBeenCalled();
         expect(sendChatSpy).not.toHaveBeenCalled();
     });
     // TODO: POST REFACTOR CHECK FOR UNAUTHORIZED RESPONSE SINCE THE RETURN TYPE
@@ -236,7 +232,6 @@ describe('handleChat', () => {
         ]);
         expect(emitSpy).toHaveBeenCalledTimes(1);
         expect(emitSpy.mock.calls[0][0]).toBe('chatSent');
-        expect(mockCreateRoomAction).toHaveBeenCalledTimes(1);
     });
     // TODO: TEST UNAUTHORIZED
 });
@@ -443,7 +438,6 @@ describe('handleChangeColor', () => {
             ' has changed their color to ',
             { contents: 'red', color: 'red' },
         ]);
-        expect(mockCreateRoomAction).toHaveBeenCalledTimes(1);
         expect(emitSpy).toHaveBeenCalledTimes(2);
         expect(emitSpy.mock.calls[0][0]).toBe('player:colorChanged');
         expect(emitSpy.mock.calls[1][0]).toBe('chatSent');
