@@ -1,12 +1,20 @@
+import { GeneratorSettings, makeGeneratorSchema } from '@playbingo/shared';
+import { RoomData } from '@playbingo/types';
+import { DifficultyVariant, RaceHandler, Variant } from '@prisma/client';
 import { randomInt } from 'crypto';
 import { Router } from 'express';
 import { logError, logInfo, logWarn } from '../../Logger';
 import { createRoomToken, verifyRoomToken } from '../../auth/RoomAuth';
+import { DatabaseEventListeners } from '../../core/DatabaseEventListeners';
+import Player from '../../core/Player';
 import Room, {
     BoardGenerationMode,
     BoardGenerationOptions,
 } from '../../core/Room';
 import { allRooms } from '../../core/RoomServer';
+import { GenerationFailedError } from '../../core/generation/GenerationFailedError';
+import LocalTimer from '../../core/integration/races/LocalTimer';
+import RacetimeHandler from '../../core/integration/races/RacetimeHandler';
 import {
     createRoom,
     getFullRoomList,
@@ -18,20 +26,12 @@ import {
     getTags,
     goalCount,
 } from '../../database/games/Games';
+import { getCategories } from '../../database/games/GoalCategories';
+import { getGoalList, goalsForGameFull } from '../../database/games/Goals';
+import { getVariant } from '../../database/games/Variants';
 import { chunk } from '../../util/Array';
 import { randomWord, slugAdjectives, slugNouns } from '../../util/Words';
 import { handleAction } from './actions/Actions';
-import { getGoalList, goalsForGameFull } from '../../database/games/Goals';
-import { RoomData } from '@playbingo/types';
-import Player from '../../core/Player';
-import { GeneratorSettings, makeGeneratorSchema } from '@playbingo/shared';
-import { getCategories } from '../../database/games/GoalCategories';
-import { getVariant } from '../../database/games/Variants';
-import { DifficultyVariant, RaceHandler, Variant } from '@prisma/client';
-import { GenerationFailedError } from '../../core/generation/GenerationFailedError';
-import RacetimeHandler from '../../core/integration/races/RacetimeHandler';
-import LocalTimer from '../../core/integration/races/LocalTimer';
-import { error } from 'console';
 
 const MIN_ROOM_GOALS_REQUIRED = 25;
 const rooms = Router();
@@ -256,6 +256,9 @@ rooms.post('/', async (req, res) => {
     }
     allRooms.set(slug, room);
 
+    // Subscribe the room to database event listeners
+    DatabaseEventListeners.getInstance().subscribe(room);
+
     const token = createRoomToken(
         room,
         {
@@ -441,6 +444,10 @@ async function getOrLoadRoom(slug: string): Promise<Room | null> {
     }
 
     allRooms.set(slug, newRoom);
+
+    // Subscribe the room to database event listeners
+    DatabaseEventListeners.getInstance().subscribe(newRoom);
+
     return newRoom;
 }
 
