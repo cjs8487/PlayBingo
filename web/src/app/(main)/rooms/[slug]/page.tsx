@@ -241,8 +241,9 @@ function RoomLg() {
             sx={{
                 width: '100%',
                 height: '100%',
+                maxHeight: 'calc(100vh - 64px - 78px - 16px)',
                 display: 'grid',
-                gridTemplateRows: 'auto auto auto 1fr auto',
+                gridTemplateRows: 'auto auto auto 1fr 1fr',
                 gridTemplateColumns: 'minmax(0, 2fr) minmax(350px, 450px)',
                 gap: 1,
                 overflow: 'hidden',
@@ -262,14 +263,14 @@ function RoomLg() {
             </Box>
             <Box
                 sx={{
-                    gridRow: '4 / span 2',
+                    gridRow: 4,
                     gridColumn: 2,
                     overflow: 'hidden',
                 }}
             >
                 <PlayerList />
             </Box>
-            <Box sx={{ gridRow: '5 / -1', gridColumn: 2, overflow: 'hidden' }}>
+            <Box sx={{ gridRow: 5, gridColumn: 2, overflow: 'hidden' }}>
                 <RoomChat />
             </Box>
         </Box>
@@ -282,6 +283,7 @@ function RoomXl() {
             sx={{
                 width: '100%',
                 height: '100%',
+                maxHeight: 'calc(100vh - 64px - 78px - 16px)',
                 display: 'grid',
                 gridTemplateRows: 'auto auto auto auto 1fr',
                 gridTemplateColumns:
