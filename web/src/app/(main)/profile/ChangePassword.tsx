@@ -7,7 +7,13 @@ import {
     DialogContent,
     DialogTitle,
     DialogActions,
+    IconButton,
+    Alert,
 } from '@mui/material';
+import Check from '@mui/icons-material/Check';
+import Close from '@mui/icons-material/Close';
+import Visibility from '@mui/icons-material/Visibility';
+import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import { useUserContext } from '../../../context/UserContext';
 import { Form, Formik } from 'formik';
 import { forwardRef, RefObject, useRef, useState } from 'react';
@@ -33,17 +39,13 @@ export default function ChangePassword() {
                 <DialogTitle>Change Password</DialogTitle>
                 <DialogContent>
                     <Box sx={{ pt: 0.75, pb: 1 }}>
+                        <Alert severity="warning">
+                            Changing your password will end all of your login
+                            sessions, including this one. You will need to log
+                            in again after the password change.
+                        </Alert>
                         <PasswordForm ref={formRef} dialogRef={dialogRef} />
                     </Box>
-                    <Typography
-                        variant="caption"
-                        color="warning"
-                        lineHeight={0}
-                    >
-                        Changing your password will end all of your login
-                        sessions, including this one. You will need to log in
-                        again after the password change.
-                    </Typography>
                 </DialogContent>
                 <DialogActions>
                     <Button
@@ -91,6 +93,9 @@ const PasswordForm = forwardRef<HTMLFormElement, FormProps>(
         const { user, checkSession } = useUserContext();
 
         const [message, setMessage] = useState('');
+        const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+        const [showNewPassword, setShowNewPassword] = useState(false);
+        const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
         if (!user) {
             return null;
@@ -133,7 +138,22 @@ const PasswordForm = forwardRef<HTMLFormElement, FormProps>(
                             name="currentPassword"
                             label="Current Password"
                             autoComplete="password"
-                            type="password"
+                            type={showCurrentPassword ? 'text' : 'password'}
+                            endAdornment={
+                                <IconButton
+                                    onClick={() =>
+                                        setShowCurrentPassword((curr) => !curr)
+                                    }
+                                    edge="end"
+                                    size="small"
+                                >
+                                    {showCurrentPassword ? (
+                                        <VisibilityOff />
+                                    ) : (
+                                        <Visibility />
+                                    )}
+                                </IconButton>
+                            }
                         />
                         <Box
                             sx={{
@@ -145,7 +165,22 @@ const PasswordForm = forwardRef<HTMLFormElement, FormProps>(
                             <FormikTextField
                                 name="newPassword"
                                 label="New Password"
-                                type="password"
+                                type={showNewPassword ? 'text' : 'password'}
+                                endAdornment={
+                                    <IconButton
+                                        onClick={() =>
+                                            setShowNewPassword((curr) => !curr)
+                                        }
+                                        edge="end"
+                                        size="small"
+                                    >
+                                        {showNewPassword ? (
+                                            <VisibilityOff />
+                                        ) : (
+                                            <Visibility />
+                                        )}
+                                    </IconButton>
+                                }
                             />
                             <Typography variant="caption">
                                 Your new password must contain the following:
@@ -158,7 +193,17 @@ const PasswordForm = forwardRef<HTMLFormElement, FormProps>(
                                                 ? 'success.main'
                                                 : ''
                                         }
+                                        sx={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: 0.5,
+                                        }}
                                     >
+                                        {newPassword.length >= 8 ? (
+                                            <Check sx={{ fontSize: 16 }} />
+                                        ) : (
+                                            <Close sx={{ fontSize: 16 }} />
+                                        )}
                                         At least 8 characters
                                     </Typography>
                                     <Typography
@@ -169,7 +214,17 @@ const PasswordForm = forwardRef<HTMLFormElement, FormProps>(
                                                 ? 'success.main'
                                                 : ''
                                         }
+                                        sx={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: 0.5,
+                                        }}
                                     >
+                                        {newPassword.match(/[a-z]+/) ? (
+                                            <Check sx={{ fontSize: 16 }} />
+                                        ) : (
+                                            <Close sx={{ fontSize: 16 }} />
+                                        )}
                                         One lowercase letter
                                     </Typography>
                                     <Typography
@@ -180,7 +235,17 @@ const PasswordForm = forwardRef<HTMLFormElement, FormProps>(
                                                 ? 'success.main'
                                                 : ''
                                         }
+                                        sx={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: 0.5,
+                                        }}
                                     >
+                                        {newPassword.match(/[A-Z]+/) ? (
+                                            <Check sx={{ fontSize: 16 }} />
+                                        ) : (
+                                            <Close sx={{ fontSize: 16 }} />
+                                        )}
                                         One uppercase letter
                                     </Typography>
                                     <Typography
@@ -191,7 +256,17 @@ const PasswordForm = forwardRef<HTMLFormElement, FormProps>(
                                                 ? 'success.main'
                                                 : ''
                                         }
+                                        sx={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: 0.5,
+                                        }}
                                     >
+                                        {newPassword.match(/[0-9]+/) ? (
+                                            <Check sx={{ fontSize: 16 }} />
+                                        ) : (
+                                            <Close sx={{ fontSize: 16 }} />
+                                        )}
                                         A number
                                     </Typography>
                                     <Typography
@@ -204,7 +279,19 @@ const PasswordForm = forwardRef<HTMLFormElement, FormProps>(
                                                 ? 'success.main'
                                                 : ''
                                         }
+                                        sx={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: 0.5,
+                                        }}
                                     >
+                                        {newPassword.match(
+                                            /[*.!@$%^&(){}[\]:;<>,.?/~_+\-=|\\]+/,
+                                        ) ? (
+                                            <Check sx={{ fontSize: 16 }} />
+                                        ) : (
+                                            <Close sx={{ fontSize: 16 }} />
+                                        )}
                                         A symbol
                                     </Typography>
                                 </ul>
@@ -213,7 +300,22 @@ const PasswordForm = forwardRef<HTMLFormElement, FormProps>(
                         <FormikTextField
                             name="confirmNewPassword"
                             label="Confirm New Password"
-                            type="password"
+                            type={showConfirmPassword ? 'text' : 'password'}
+                            endAdornment={
+                                <IconButton
+                                    onClick={() =>
+                                        setShowConfirmPassword((curr) => !curr)
+                                    }
+                                    edge="end"
+                                    size="small"
+                                >
+                                    {showConfirmPassword ? (
+                                        <VisibilityOff />
+                                    ) : (
+                                        <Visibility />
+                                    )}
+                                </IconButton>
+                            }
                         />
                     </Form>
                 )}
