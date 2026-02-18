@@ -13,16 +13,10 @@ import { alertError } from '../../../lib/Utils';
 import { useUserContext } from '../../../context/UserContext';
 import FormikFileUpload from '../../../components/input/FileUpload';
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const validationSchema = object({
     email: string()
         .required('Email is required.')
-        .email('Not a properly formatted email.')
-        .test(
-            'isAvailable',
-            'An account is already registered with that email.',
-            emailAvailable,
-        ),
+        .email('Not a properly formatted email.'),
     username: string()
         .required('Username is required.')
         .min(4, 'Username must be at least 4 characters.')
@@ -30,11 +24,6 @@ const validationSchema = object({
         .matches(
             /^[a-zA-Z0-9]*$/,
             'Username can only contain letters and numbers.',
-        )
-        .test(
-            'isAvailable',
-            'An account with that username already exists.',
-            usernameAvailable,
         ),
 });
 
@@ -62,6 +51,25 @@ export default function ProfileForm() {
                     return;
                 }
                 checkSession();
+            }}
+            validationSchema={validationSchema}
+            validate={async ({ username, email }) => {
+                if (username !== user.username) {
+                    if (!(await usernameAvailable(username))) {
+                        return {
+                            username:
+                                'An account with that username already exists.',
+                        };
+                    }
+                }
+                if (email && email !== user.email) {
+                    if (!(await emailAvailable(email))) {
+                        return {
+                            email: 'An account is already registered with that email.',
+                        };
+                    }
+                }
+                return undefined;
             }}
         >
             <Form>
