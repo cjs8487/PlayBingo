@@ -1,8 +1,8 @@
 'use client';
-import { useContext, useEffect, useRef, useState } from 'react';
 import { RoomContext } from '@/context/RoomContext';
-import { Box, Button, Paper, TextField, Typography } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
+import { Box, Button, Card, TextField, Typography } from '@mui/material';
+import { useContext, useEffect, useRef, useState } from 'react';
 
 export default function RoomChat() {
     const { messages, sendChatMessage, roomData } = useContext(RoomContext);
@@ -16,7 +16,7 @@ export default function RoomChat() {
     }, [messages]);
 
     return (
-        <Paper
+        <Card
             sx={{
                 display: 'flex',
                 height: '100%',
@@ -97,13 +97,13 @@ export default function RoomChat() {
                         >
                             Send
                         </Button>
-                    </Box>
+                    </Box>{' '}
                 </>
             ) : (
                 <Typography variant="h6" align="center">
                     Chat is disabled for this room
                 </Typography>
             )}
-        </Paper>
+        </Card>
     );
 }
