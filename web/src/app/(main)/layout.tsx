@@ -8,6 +8,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import Footer from '../../components/footer/Footer';
 import Header from '../../components/header/Header';
 import NavDrawer, { drawerWidth } from '../../components/header/NavDrawer';
+import { useIsInRoom } from '../../hooks/useIsInRoom';
 
 const Main = styled('main', { shouldForwardProp: (prop) => prop !== 'open' })<{
     open?: boolean;
@@ -45,8 +46,15 @@ export default function CoreLayout({
 }) {
     const theme = useTheme();
     const isLg = useMediaQuery(theme.breakpoints.up('lg'));
-    const [navDrawerOpen, setNavDrawerOpen] = useState(isLg);
-    const toggleNavDrawer = () => setNavDrawerOpen((curr) => !curr);
+    const isInRoom = useIsInRoom();
+
+    const [manuallyOpened, setManuallyOpened] = useState(false);
+
+    const navDrawerOpen = (!isInRoom && isLg) || manuallyOpened;
+
+    const toggleNavDrawer = () => {
+        setManuallyOpened((curr) => !curr);
+    };
 
     return (
         <>
