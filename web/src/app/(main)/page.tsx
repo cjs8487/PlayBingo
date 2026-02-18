@@ -3,8 +3,6 @@ import {
     Card,
     CardContent,
     CircularProgress,
-    Container,
-    Paper,
     Typography,
 } from '@mui/material';
 import { Suspense } from 'react';
@@ -14,7 +12,7 @@ import HomePageRoomForm from './_components/HomePageRoomForm';
 
 export default async function Home() {
     return (
-        <Container sx={{ py: 2 }}>
+        <Box sx={{ p: 2 }}>
             <Box
                 sx={{
                     position: 'relative',
@@ -31,9 +29,9 @@ export default async function Home() {
                         position: 'absolute',
                         animation: 'rotate 12s linear forwards infinite',
                         zIndex: 0,
-                        marginTop: '-50%',
+                        translate: '-50% -50%',
+                        top: '50%',
                         left: '50%',
-                        transformOrigin: 'center',
                     },
                     '@keyframes rotate': {
                         '0%': {
@@ -51,11 +49,13 @@ export default async function Home() {
                 <Card
                     sx={{
                         textAlign: 'center',
-                        px: { xs: 2, sm: 6, md: 12 },
-                        py: 4,
+                        px: 2,
+                        pt: 2,
                         m: '2px',
                         position: 'relative',
                         zIndex: 1,
+                        width: 'calc(100% - 4px)',
+                        boxSizing: 'border-box',
                     }}
                 >
                     <CardContent>
@@ -63,36 +63,21 @@ export default async function Home() {
                     </CardContent>
                 </Card>
             </Box>
-            <Box
+            <Card
                 sx={{
-                    display: 'flex',
-                    columnGap: 8,
-                    rowGap: 1,
-                    flexWrap: 'wrap',
+                    textAlign: 'center',
+                    px: 2,
+                    pt: 2,
                     width: '100%',
-                    justifyContent: 'center',
-                    px: 4,
                 }}
+                elevation={2}
             >
-                <Paper
-                    sx={{
-                        textAlign: 'center',
-                        px: { xs: 2, md: 12 },
-                        py: 4,
-                        mb: 4,
-                        animation: '1.5s 1 slidein',
-                        animationDelay: '1s',
-                        animationFillMode: 'backwards',
-                    }}
-                    elevation={2}
-                >
-                    <Typography variant="h4">Join an Existing Room</Typography>
-                    <Suspense fallback={<CircularProgress />}>
-                        <ActiveRoomList />
-                    </Suspense>
-                </Paper>
-            </Box>
+                <Typography variant="h4">Join an Existing Room</Typography>
+                <Suspense fallback={<CircularProgress />}>
+                    <ActiveRoomList />
+                </Suspense>
+            </Card>
             <ToasterOven />
-        </Container>
+        </Box>
     );
 }
