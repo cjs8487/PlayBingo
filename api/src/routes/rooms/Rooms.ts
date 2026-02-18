@@ -36,10 +36,20 @@ const rooms = Router();
 rooms.get('/', async (req, res) => {
     const { inactive } = req.query;
 
-    const roomList: { name: string; game: string; slug: string }[] = [];
+    const roomList: {
+        name: string;
+        game: string;
+        slug: string;
+        gameSlug: string;
+    }[] = [];
     if (!inactive) {
         allRooms.forEach((room, key) => {
-            roomList.push({ name: room.name, game: room.game, slug: key });
+            roomList.push({
+                name: room.name,
+                game: room.game,
+                slug: key,
+                gameSlug: room.gameSlug,
+            });
         });
         res.send(roomList);
     } else {
@@ -47,6 +57,7 @@ rooms.get('/', async (req, res) => {
             (await getFullRoomList()).map((room) => ({
                 name: room.name,
                 game: room.game?.name ?? 'Deleted Game',
+                gameSlug: room.game?.slug,
                 slug: room.slug,
             })),
         );
