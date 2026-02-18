@@ -4,7 +4,7 @@ import { readFileSync, writeFileSync } from 'fs';
 import { getDefaultGeneratorSettingsJson } from '@playbingo/shared/DefaultGeneratorSettings';
 import { join } from 'path';
 
-const schemaPath = join(__dirname, '../api/prisma/schema.prisma');
+const schemaPath = join(__dirname, '../prisma/schema.prisma');
 
 function updatePrismaDefaults() {
     console.log(
