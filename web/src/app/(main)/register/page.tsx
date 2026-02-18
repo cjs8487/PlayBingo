@@ -1,9 +1,16 @@
 'use client';
-import { Box, Button, Link, Paper, Typography } from '@mui/material';
+import {
+    Box,
+    Button,
+    Link,
+    Paper,
+    Typography,
+    IconButton,
+} from '@mui/material';
 import { Form, Formik } from 'formik';
 import NextLink from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useContext, useEffect } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import * as yup from 'yup';
 import {
     emailAvailable,
@@ -13,6 +20,10 @@ import {
 import FormikTextField from '../../../components/input/FormikTextField';
 import { UserContext } from '../../../context/UserContext';
 import { alertError } from '../../../lib/Utils';
+import Check from '@mui/icons-material/Check';
+import Close from '@mui/icons-material/Close';
+import Visibility from '@mui/icons-material/Visibility';
+import VisibilityOff from '@mui/icons-material/VisibilityOff';
 
 const validationSchema = yup.object({
     email: yup
@@ -59,6 +70,8 @@ const validationSchema = yup.object({
 export default function Register() {
     const router = useRouter();
     const { user, checkSession } = useContext(UserContext);
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
     useEffect(() => {
         if (user) {
@@ -136,8 +149,23 @@ export default function Register() {
                                     name="password"
                                     autoComplete="new-password"
                                     label="Password"
-                                    type="password"
+                                    type={showPassword ? 'text' : 'password'}
                                     fullWidth
+                                    endAdornment={
+                                        <IconButton
+                                            onClick={() =>
+                                                setShowPassword((curr) => !curr)
+                                            }
+                                            edge="end"
+                                            size="small"
+                                        >
+                                            {showPassword ? (
+                                                <VisibilityOff />
+                                            ) : (
+                                                <Visibility />
+                                            )}
+                                        </IconButton>
+                                    }
                                 />
                                 <Typography variant="caption">
                                     Your password must contain the following:
@@ -150,7 +178,17 @@ export default function Register() {
                                                     ? 'success.main'
                                                     : ''
                                             }
+                                            sx={{
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: 0.5,
+                                            }}
                                         >
+                                            {password.length >= 8 ? (
+                                                <Check sx={{ fontSize: 16 }} />
+                                            ) : (
+                                                <Close sx={{ fontSize: 16 }} />
+                                            )}
                                             At least 8 characters
                                         </Typography>
                                         <Typography
@@ -161,7 +199,17 @@ export default function Register() {
                                                     ? 'success.main'
                                                     : ''
                                             }
+                                            sx={{
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: 0.5,
+                                            }}
                                         >
+                                            {password.match(/[a-z]+/) ? (
+                                                <Check sx={{ fontSize: 16 }} />
+                                            ) : (
+                                                <Close sx={{ fontSize: 16 }} />
+                                            )}
                                             One lowercase letter
                                         </Typography>
                                         <Typography
@@ -172,7 +220,17 @@ export default function Register() {
                                                     ? 'success.main'
                                                     : ''
                                             }
+                                            sx={{
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: 0.5,
+                                            }}
                                         >
+                                            {password.match(/[A-Z]+/) ? (
+                                                <Check sx={{ fontSize: 16 }} />
+                                            ) : (
+                                                <Close sx={{ fontSize: 16 }} />
+                                            )}
                                             One uppercase letter
                                         </Typography>
                                         <Typography
@@ -183,7 +241,17 @@ export default function Register() {
                                                     ? 'success.main'
                                                     : ''
                                             }
+                                            sx={{
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: 0.5,
+                                            }}
                                         >
+                                            {password.match(/[0-9]+/) ? (
+                                                <Check sx={{ fontSize: 16 }} />
+                                            ) : (
+                                                <Close sx={{ fontSize: 16 }} />
+                                            )}
                                             A number
                                         </Typography>
                                         <Typography
@@ -196,7 +264,19 @@ export default function Register() {
                                                     ? 'success.main'
                                                     : ''
                                             }
+                                            sx={{
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: 0.5,
+                                            }}
                                         >
+                                            {password.match(
+                                                /[*.!@$%^&(){}[\]:;<>,.?/~_+\-=|\\]+/,
+                                            ) ? (
+                                                <Check sx={{ fontSize: 16 }} />
+                                            ) : (
+                                                <Close sx={{ fontSize: 16 }} />
+                                            )}
                                             A symbol
                                         </Typography>
                                     </ul>
@@ -204,11 +284,28 @@ export default function Register() {
                             </Box>
                             <FormikTextField
                                 id="confirmPassword"
-                                type="password"
+                                type={showConfirmPassword ? 'text' : 'password'}
                                 name="passwordConfirmation"
                                 label="Confirm Password"
                                 autoComplete="new-password"
                                 fullWidth
+                                endAdornment={
+                                    <IconButton
+                                        onClick={() =>
+                                            setShowConfirmPassword(
+                                                (curr) => !curr,
+                                            )
+                                        }
+                                        edge="end"
+                                        size="small"
+                                    >
+                                        {showConfirmPassword ? (
+                                            <VisibilityOff />
+                                        ) : (
+                                            <Visibility />
+                                        )}
+                                    </IconButton>
+                                }
                             />
                             <Box textAlign="right">
                                 <Button
