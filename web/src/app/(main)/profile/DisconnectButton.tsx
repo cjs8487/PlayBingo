@@ -7,9 +7,7 @@ interface DisconnectButtonProps {
     disconnect: () => Promise<{ ok: boolean; status: number }>;
 }
 
-export default function DiscconectButton({
-    disconnect,
-}: DisconnectButtonProps) {
+export default function DisconectButton({ disconnect }: DisconnectButtonProps) {
     return (
         <Button
             color="error"
