@@ -22,46 +22,22 @@ export default async function ProfilePage() {
     }
 
     return (
-        <Container>
-            <Typography
-                variant="h4"
-                sx={{
-                    mb: 2,
-                }}
-            >
+        <Container sx={{ mt: 2 }}>
+            <Typography variant="h4" sx={{ mb: 2 }}>
                 {user.username}
             </Typography>
-            <Typography
-                variant="h5"
-                sx={{
-                    mb: 2,
-                }}
-            >
+            <Typography variant="h5" sx={{ mb: 2 }}>
                 Account Info
             </Typography>
             <ProfileForm />
-            <Box
-                sx={{
-                    mb: 3,
-                }}
-            >
-                <Typography
-                    variant="h6"
-                    sx={{
-                        mb: 1,
-                    }}
-                >
+            <Box sx={{ mb: 3 }}>
+                <Typography variant="h6" sx={{ mb: 1 }}>
                     Security
                 </Typography>
                 <ChangePassword />
             </Box>
             <Box>
-                <Typography
-                    variant="h5"
-                    sx={{
-                        mb: 1,
-                    }}
-                >
+                <Typography variant="h5" sx={{ mb: 1 }}>
                     Integrations
                 </Typography>
                 <RacetimeIntegration />
