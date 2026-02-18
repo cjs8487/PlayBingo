@@ -1,4 +1,4 @@
-import { Box, Paper, Typography } from '@mui/material';
+import { Box, Card, Typography } from '@mui/material';
 import { Duration } from 'luxon';
 import { Sword } from 'mdi-material-ui';
 import { useContext } from 'react';
@@ -10,7 +10,7 @@ export default function PlayerList() {
     const players = allPlayers.filter((p) => !p.spectator);
     const spectators = allPlayers.filter((p) => p.spectator);
     return (
-        <Paper
+        <Card
             sx={{
                 display: 'flex',
                 maxHeight: '100%',
@@ -107,6 +107,6 @@ export default function PlayerList() {
                     </>
                 )}
             </Box>
-        </Paper>
+        </Card>
     );
 }
