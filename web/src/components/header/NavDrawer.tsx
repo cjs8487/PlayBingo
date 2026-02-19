@@ -16,22 +16,24 @@ import {
 import NextLink from 'next/link';
 import { useSelectedLayoutSegment } from 'next/navigation';
 import { icons } from '../footer/Footer';
-import { useIsInRoom } from '@/hooks/useIsInRoom';
+import { useIsOnHomePage } from '@/hooks/useIsOnHomePage';
 
 export const drawerWidth = 240;
 
 interface Props {
     open: boolean;
+    setOpen: (open: boolean) => void;
 }
 
-export default function NavDrawer({ open }: Props) {
+export default function NavDrawer({ open, setOpen }: Props) {
     const segment = useSelectedLayoutSegment();
-    const isInRoom = useIsInRoom();
+    const isOnHomePage = useIsOnHomePage();
 
     return (
         <Drawer
-            variant={isInRoom ? 'temporary' : 'persistent'}
+            variant={isOnHomePage ? 'persistent' : 'temporary'}
             open={open}
+            onClose={() => setOpen(false)}
             sx={{
                 width: drawerWidth,
                 flexShrink: 0,
@@ -57,6 +59,7 @@ export default function NavDrawer({ open }: Props) {
                             component={NextLink}
                             href="/games"
                             selected={segment === 'games'}
+                            onClick={() => setOpen(false)}
                         >
                             <ListItemIcon>
                                 <Games />
@@ -69,6 +72,7 @@ export default function NavDrawer({ open }: Props) {
                             component={NextLink}
                             href="/rooms"
                             selected={segment === 'rooms'}
+                            onClick={() => setOpen(false)}
                         >
                             <ListItemIcon>
                                 <PlayArrow />
@@ -84,6 +88,7 @@ export default function NavDrawer({ open }: Props) {
                             component={NextLink}
                             href="/docs"
                             selected={segment === 'docs'}
+                            onClick={() => setOpen(false)}
                         >
                             <ListItemIcon>
                                 <MenuBook />
@@ -99,6 +104,7 @@ export default function NavDrawer({ open }: Props) {
                             <ListItemButton
                                 component={NextLink}
                                 href={social.url}
+                                onClick={() => setOpen(false)}
                             >
                                 <ListItemIcon>
                                     <FontAwesomeIcon icon={social.icon} />
