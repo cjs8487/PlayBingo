@@ -10,8 +10,11 @@ import Header from '../../components/header/Header';
 import NavDrawer, { drawerWidth } from '../../components/header/NavDrawer';
 import { useIsInRoom } from '../../hooks/useIsInRoom';
 
-const Main = styled('main', { shouldForwardProp: (prop) => prop !== 'open' })<{
+const Main = styled('main', {
+    shouldForwardProp: (prop) => prop !== 'open' && prop !== 'isInRoom',
+})<{
     open?: boolean;
+    isInRoom?: boolean;
 }>(({ theme }) => ({
     flexGrow: 1,
     transition: theme.transitions.create('margin', {
@@ -21,7 +24,7 @@ const Main = styled('main', { shouldForwardProp: (prop) => prop !== 'open' })<{
     marginLeft: `-${drawerWidth}px`,
     variants: [
         {
-            props: ({ open }) => open,
+            props: ({ open, isInRoom }) => open || isInRoom,
             style: {
                 transition: theme.transitions.create('margin', {
                     easing: theme.transitions.easing.easeOut,
@@ -72,7 +75,7 @@ export default function CoreLayout({
                     <Header toggleNavDrawer={toggleNavDrawer} />
                     <Box sx={{ display: 'flex' }}>
                         <NavDrawer open={navDrawerOpen} />
-                        <Main open={navDrawerOpen}>
+                        <Main open={navDrawerOpen} isInRoom={isInRoom}>
                             {children}
                             <Footer />
                         </Main>
