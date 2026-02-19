@@ -16,6 +16,7 @@ import {
 import NextLink from 'next/link';
 import { useSelectedLayoutSegment } from 'next/navigation';
 import { icons } from '../footer/Footer';
+import { useIsInRoom } from '@/hooks/useIsInRoom';
 
 export const drawerWidth = 240;
 
@@ -25,9 +26,11 @@ interface Props {
 
 export default function NavDrawer({ open }: Props) {
     const segment = useSelectedLayoutSegment();
+    const isInRoom = useIsInRoom();
+
     return (
         <Drawer
-            variant="persistent"
+            variant={isInRoom ? 'temporary' : 'persistent'}
             open={open}
             sx={{
                 width: drawerWidth,
