@@ -24,10 +24,10 @@ export default async function Home() {
                         display: 'block',
                         background:
                             'linear-gradient(90deg,rgba(255, 255, 255, 0) 0%,rgba(102, 102, 102, 0.75) 50%,rgba(255, 255, 255, 0) 100%)',
-                        height: '200%',
+                        height: '300%',
                         width: '150px',
                         position: 'absolute',
-                        animation: 'rotate 12s linear forwards infinite',
+                        animation: 'rotate 18s linear forwards infinite',
                         zIndex: 0,
                         translate: '-50% -50%',
                         top: '50%',
