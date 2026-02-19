@@ -8,13 +8,13 @@ import 'react-toastify/dist/ReactToastify.css';
 import Footer from '../../components/footer/Footer';
 import Header from '../../components/header/Header';
 import NavDrawer, { drawerWidth } from '../../components/header/NavDrawer';
-import { useIsInRoom } from '../../hooks/useIsInRoom';
+import { useIsOnHomePage } from '../../hooks/useIsOnHomePage';
 
 const Main = styled('main', {
-    shouldForwardProp: (prop) => prop !== 'open' && prop !== 'isInRoom',
+    shouldForwardProp: (prop) => prop !== 'open' && prop !== 'isOnHomePage',
 })<{
     open?: boolean;
-    isInRoom?: boolean;
+    isOnHomePage?: boolean;
 }>(({ theme }) => ({
     flexGrow: 1,
     transition: theme.transitions.create('margin', {
@@ -24,7 +24,7 @@ const Main = styled('main', {
     marginLeft: `-${drawerWidth}px`,
     variants: [
         {
-            props: ({ open, isInRoom }) => open || isInRoom,
+            props: ({ open, isOnHomePage }) => open || !isOnHomePage,
             style: {
                 transition: theme.transitions.create('margin', {
                     easing: theme.transitions.easing.easeOut,
@@ -49,11 +49,11 @@ export default function CoreLayout({
 }) {
     const theme = useTheme();
     const isLg = useMediaQuery(theme.breakpoints.up('lg'));
-    const isInRoom = useIsInRoom();
+    const isOnHomePage = useIsOnHomePage();
 
     const [manuallyOpened, setManuallyOpened] = useState(false);
 
-    const navDrawerOpen = (!isInRoom && isLg) || manuallyOpened;
+    const navDrawerOpen = (isOnHomePage && isLg) || manuallyOpened;
 
     const toggleNavDrawer = () => {
         setManuallyOpened((curr) => !curr);
@@ -74,8 +74,11 @@ export default function CoreLayout({
                 >
                     <Header toggleNavDrawer={toggleNavDrawer} />
                     <Box sx={{ display: 'flex' }}>
-                        <NavDrawer open={navDrawerOpen} />
-                        <Main open={navDrawerOpen} isInRoom={isInRoom}>
+                        <NavDrawer
+                            open={navDrawerOpen}
+                            setOpen={setManuallyOpened}
+                        />
+                        <Main open={navDrawerOpen} isOnHomePage={isOnHomePage}>
                             {children}
                             <Footer />
                         </Main>
