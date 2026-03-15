@@ -281,13 +281,13 @@ describe('Board Layout', () => {
         it('Generates the correct layout', () => {
             generator.reset();
             generator.generateBoardLayout();
-            expect(generator.layout).toEqual(correctLayout);
+            expect(generator.layout).toStrictEqual(correctLayout);
         });
 
         it('Is unaffected by seed', () => {
             generator.reset(12345);
             generator.generateBoardLayout();
-            expect(generator.layout).toEqual(correctLayout);
+            expect(generator.layout).toStrictEqual(correctLayout);
         });
     });
 
@@ -355,7 +355,7 @@ describe('Board Layout', () => {
             generator.generateBoardLayout();
             const layout2 = generator.layout;
 
-            expect(layout1).not.toEqual(layout2);
+            expect(layout1).not.toStrictEqual(layout2);
         });
 
         it('Generates the same layout with the same seed', () => {
@@ -367,7 +367,7 @@ describe('Board Layout', () => {
             generator.generateBoardLayout();
             const layout2 = generator.layout;
 
-            expect(layout1).toEqual(layout2);
+            expect(layout1).toStrictEqual(layout2);
         });
 
         it('Handles single difficulty distribution', () => {
@@ -501,17 +501,17 @@ describe('Goal Restriction', () => {
             // the sample goals only have one category each so we can just
             // expect categories[0] to not equal
             restrictedGoals.forEach((r) => {
-                expect(r.categories[0]).not.toEqual(g.categories[0]);
+                expect(r.categories[0]).not.toStrictEqual(g.categories[0]);
             });
 
             restrictedGoals = generator.validGoalsForCell(1, 0);
             restrictedGoals.forEach((r) => {
-                expect(r.categories[0]).not.toEqual(g.categories[0]);
+                expect(r.categories[0]).not.toStrictEqual(g.categories[0]);
             });
 
             restrictedGoals = generator.validGoalsForCell(2, 2);
             restrictedGoals.forEach((r) => {
-                expect(r.categories[0]).not.toEqual(g.categories[0]);
+                expect(r.categories[0]).not.toStrictEqual(g.categories[0]);
             });
         });
     });
@@ -673,7 +673,7 @@ describe('Full Generation', () => {
         generator.reset(12345);
         generator.generateBoard();
         const board2 = generator.board;
-        expect(board1).toEqual(board2);
+        expect(board1).toStrictEqual(board2);
     });
 
     it('Generates the same board given the same seed (SRLv5)', () => {
@@ -690,7 +690,7 @@ describe('Full Generation', () => {
         generator.reset(12345);
         generator.generateBoard();
         const board2 = generator.board;
-        expect(board1).toEqual(board2);
+        expect(board1).toStrictEqual(board2);
     });
 
     it('Generates a board with maximum restrictions', () => {

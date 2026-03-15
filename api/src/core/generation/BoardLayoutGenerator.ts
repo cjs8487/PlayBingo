@@ -1,15 +1,13 @@
 import { GeneratorSettings } from '@playbingo/shared';
-import { BoardGenerator, LayoutCell } from './BoardGenerator';
 import { chunk, shuffle } from '../../util/Array';
+import { BoardGenerator, LayoutCell } from './BoardGenerator';
 
 type BoardLayout = GeneratorSettings['boardLayout'];
 
 export type BoardLayoutGenerator = (generator: BoardGenerator) => void;
 
 export const createLayoutGenerator = (strategy: BoardLayout) => {
-    const mode = (strategy as any).mode;
-
-    switch (mode) {
+    switch (strategy.mode) {
         case 'random':
             return noLayout;
         case 'srlv5':
@@ -21,7 +19,8 @@ export const createLayoutGenerator = (strategy: BoardLayout) => {
         case 'difficulty-distribution':
             return difficultyDistribution;
         default:
-            throw Error(`Unknown GenerationListMode strategy: ${mode}`);
+            // should never happen, strategy.mode is typed as never if the switch is properly exhaustive
+            throw Error('Unknown GenerationListMode strategy');
     }
 };
 

@@ -95,8 +95,8 @@ export class BoardGenerator {
                 : undefined;
 
         this.difficultyDistribution =
-            (config.boardLayout as any).mode === 'difficulty-distribution'
-                ? (config.boardLayout as any).distribution
+            config.boardLayout.mode === 'difficulty-distribution'
+                ? config.boardLayout.distribution
                 : undefined;
     }
 
