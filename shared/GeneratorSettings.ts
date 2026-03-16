@@ -156,6 +156,43 @@ export const makeGeneratorSchema = (categories: GoalCategory[]) => {
                 .meta({ title: 'Layout' })
                 .default([[{ selectionCriteria: 'random' }]]),
         }),
+        z.object({
+            mode: z.literal('difficulty-distribution').meta({
+                title: 'Difficulty Distribution',
+                description:
+                    'Generates a board that distributes goals by difficulty across the board. Each difficulty is placed a specified number of times randomly across the board. Goals with an invalid difficulty will be ignored.',
+            }),
+            distribution: z
+                .array(
+                    z.object({
+                        difficulty: z
+                            .number()
+                            .int()
+                            .min(1, 'Difficulty must be at least 1')
+                            .meta({ title: 'Difficulty' }),
+                        count: z
+                            .number()
+                            .int()
+                            .min(1, 'Count must be at least 1')
+                            .meta({ title: 'Number of Slots' }),
+                    }),
+                )
+                .min(
+                    1,
+                    'At least one difficulty distribution must be specified',
+                )
+                .refine(
+                    (arr) => {
+                        const totalSlots = arr.reduce(
+                            (sum, item) => sum + item.count,
+                            0,
+                        );
+                        return totalSlots === 25; // Standard 5x5 board
+                    },
+                    { error: 'Total slots must equal 25 for a 5x5 board' },
+                )
+                .meta({ title: 'Difficulty Distribution' }),
+        }),
     ]);
 
     const GenerationGoalRestrictionSchema = z.discriminatedUnion('type', [

@@ -1,4 +1,5 @@
 import { GeneratorSettings } from '@playbingo/shared';
+import { chunk, shuffle } from '../../util/Array';
 import { BoardGenerator, LayoutCell } from './BoardGenerator';
 
 type BoardLayout = GeneratorSettings['boardLayout'];
@@ -15,7 +16,10 @@ export const createLayoutGenerator = (strategy: BoardLayout) => {
             return staticDifficulty;
         case 'custom':
             return custom;
+        case 'difficulty-distribution':
+            return difficultyDistribution;
         default:
+            // should never happen, strategy.mode is typed as never if the switch is properly exhaustive
             throw Error('Unknown GenerationListMode strategy');
     }
 };
@@ -102,4 +106,27 @@ const custom: BoardLayoutGenerator = (generator) => {
         throw new Error('Custom board layout not provided');
     }
     generator.layout = generator.customBoardLayout;
+};
+
+const difficultyDistribution: BoardLayoutGenerator = (generator) => {
+    if (!generator.difficultyDistribution) {
+        throw new Error('Difficulty distribution configuration not provided');
+    }
+
+    const difficulties: number[] = [];
+    generator.difficultyDistribution.forEach((difficulty) => {
+        difficulties.push(
+            ...Array(difficulty.count).fill(difficulty.difficulty),
+        );
+    });
+
+    shuffle(difficulties, generator.seed);
+
+    generator.layout = chunk(
+        difficulties.map((diff) => ({
+            selectionCriteria: 'difficulty',
+            difficulty: diff,
+        })),
+        5,
+    );
 };
