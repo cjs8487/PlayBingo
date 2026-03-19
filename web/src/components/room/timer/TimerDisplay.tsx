@@ -1,46 +1,23 @@
 import { Typography } from '@mui/material';
 import { DateTime, Duration } from 'luxon';
-import { useContext, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useInterval } from 'react-use';
-import { RoomContext } from '../../../context/RoomContext';
+import { useRoomContext } from '../../../context/RoomContext';
 
-export default function Timer() {
-    const { roomData } = useContext(RoomContext);
+export default function TimerDisplay({ offset }: { offset: Duration }) {
+    const { roomData } = useRoomContext();
 
-    if (!roomData || !roomData.racetimeConnection) {
-        return null;
+    const { startedAt, finishedAt } = roomData!;
+
+    let start: DateTime | undefined;
+    if (startedAt) {
+        start = DateTime.fromISO(startedAt);
+    }
+    let end: DateTime | undefined;
+    if (finishedAt) {
+        end = DateTime.fromISO(finishedAt);
     }
 
-    const {
-        racetimeConnection: { startDelay, started, ended },
-    } = roomData;
-
-    if (!startDelay) {
-        return null;
-    }
-
-    let startDt: DateTime | undefined;
-    if (started) {
-        startDt = DateTime.fromISO(started);
-    }
-    let endDt: DateTime | undefined;
-    if (ended) {
-        endDt = DateTime.fromISO(ended);
-    }
-    const offset = Duration.fromISO(startDelay);
-
-    return <TimerDisplay start={startDt} end={endDt} offset={offset} />;
-}
-
-function TimerDisplay({
-    start,
-    offset,
-    end,
-}: {
-    start?: DateTime;
-    end?: DateTime;
-    offset: Duration;
-}) {
     const [updateTimer, setUpdateTimer] = useState(true);
     const [dur, setDur] = useState<Duration>(
         start && end ? end.diff(start) : offset,
@@ -64,6 +41,8 @@ function TimerDisplay({
             setDur(end.diff(start));
         } else if (start) {
             setDur(DateTime.now().diff(start).normalize());
+        } else {
+            setDur(offset);
         }
     }, interval);
 
@@ -80,8 +59,9 @@ function TimerDisplay({
     }, []);
 
     return (
-        <Typography variant="h6">
-            {dur.toFormat('h:mm:ss')}.{dur.milliseconds % 10}
+        <Typography sx={{ fontFamily: 'monospace', fontSize: 28 }}>
+            {dur.shiftToAll().toFormat('h:mm:ss')}.
+            {Math.floor((dur.milliseconds % 1000) / 100)}
         </Typography>
     );
 }
