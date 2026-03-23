@@ -8,7 +8,66 @@ export async function deleteCategory(slug: string, categoryId: string) {
         method: 'DELETE',
     });
 
-    revalidatePath(`/api/goals/${slug}/categories`);
+    revalidatePath(`/api/games/${slug}/categories`);
+
+    return {
+        ok: res.ok,
+        status: res.status,
+    };
+}
+
+export async function createTag(slug: string, name: string) {
+    const res = await serverFetch(`/api/games/${slug}/tags`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name }),
+    });
+
+    if (!res.ok) {
+        return {
+            ok: res.ok,
+            status: res.status,
+            message: await res.text(),
+        };
+    }
+
+    revalidatePath(`/api/games/${slug}/tags`);
+
+    return {
+        ok: res.ok,
+        status: res.status,
+    };
+}
+
+export async function updateTag(slug: string, tagId: string, name: string) {
+    const res = await serverFetch(`/api/games/${slug}/tags/${tagId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name }),
+    });
+
+    if (!res.ok) {
+        return {
+            ok: res.ok,
+            status: res.status,
+            message: await res.text(),
+        };
+    }
+
+    revalidatePath(`/api/games/${slug}/tags`);
+
+    return {
+        ok: res.ok,
+        status: res.status,
+    };
+}
+
+export async function deleteTag(slug: string, tagId: string) {
+    const res = await serverFetch(`/api/games/${slug}/tags/${tagId}`, {
+        method: 'DELETE',
+    });
+
+    revalidatePath(`/api/games/${slug}/tags`);
 
     return {
         ok: res.ok,

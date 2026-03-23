@@ -7,7 +7,10 @@ export const goalsForGame = async (slug: string) => {
     const goals = await prisma.goal.findMany({
         where: { game: { slug } },
         orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
-        include: { categories: { orderBy: { name: 'asc' } } },
+        include: {
+            categories: { orderBy: { name: 'asc' } },
+            tags: { orderBy: { name: 'asc' } },
+        },
     });
 
     return goals.map((g) => ({
@@ -20,7 +23,10 @@ export const goalsForGameFull = (slug: string) => {
     return prisma.goal.findMany({
         where: { game: { slug } },
         orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
-        include: { categories: { orderBy: { name: 'asc' } } },
+        include: {
+            categories: { orderBy: { name: 'asc' } },
+            tags: { orderBy: { name: 'asc' } },
+        },
     });
 };
 

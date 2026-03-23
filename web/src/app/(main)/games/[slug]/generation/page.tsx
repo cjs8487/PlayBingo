@@ -1,5 +1,5 @@
 import { GeneratorSettings } from '@playbingo/shared';
-import { Game, GoalCategory } from '@playbingo/types';
+import { Game, Goal, GoalCategory, GoalTag } from '@playbingo/types';
 import { getFullUrl } from '../../../../../lib/Utils';
 import GenerationForm from './_components/GenerationForm';
 import { serverGet } from '../../../../ServerUtils';
@@ -21,6 +21,23 @@ async function getCategories(
     }
     return res.json();
 }
+
+async function getGoals(slug: string): Promise<Goal[] | undefined> {
+    const res = await serverGet(getFullUrl(`/api/games/${slug}/goals`));
+    if (!res.ok) {
+        return undefined;
+    }
+    return res.json();
+}
+
+async function getTags(slug: string): Promise<GoalTag[]> {
+    const res = await serverGet(getFullUrl(`/api/games/${slug}/tags`));
+    if (!res.ok) {
+        return [];
+    }
+    return res.json();
+}
+
 interface Props {
     params: Promise<{ slug: string }>;
 }
@@ -30,8 +47,10 @@ export default async function GameGeneration({ params }: Props) {
 
     const game = await getGame(slug);
     const categories = await getCategories(slug);
+    const goals = await getGoals(slug);
+    const tags = await getTags(slug);
 
-    if (!game || !categories) {
+    if (!game || !categories || !goals || !tags) {
         return null;
     }
 
@@ -39,7 +58,9 @@ export default async function GameGeneration({ params }: Props) {
         <GenerationForm
             slug={slug}
             categories={categories}
+            goals={goals}
             initialValues={game.generationSettings as GeneratorSettings}
+            tags={tags}
         />
     );
 }

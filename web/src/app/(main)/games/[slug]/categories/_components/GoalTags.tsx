@@ -1,7 +1,7 @@
 'use client';
 import FormikTextField from '@/components/input/FormikTextField';
-import NumberInput from '@/components/input/NumberInput';
 import { alertError } from '@/lib/Utils';
+import { Save } from '@mui/icons-material';
 import ArrowDownward from '@mui/icons-material/ArrowDownward';
 import ArrowUpward from '@mui/icons-material/ArrowUpward';
 import Check from '@mui/icons-material/Check';
@@ -10,13 +10,9 @@ import Delete from '@mui/icons-material/Delete';
 import Edit from '@mui/icons-material/Edit';
 import {
     Box,
-    FormControl,
     IconButton,
-    InputLabel,
     List,
     ListItem,
-    MenuItem,
-    Select,
     TextField,
     Tooltip,
     Typography,
@@ -24,15 +20,18 @@ import {
 import { GoalCategory } from '@playbingo/types';
 import { Form, Formik } from 'formik';
 import { useState } from 'react';
-import { mutate } from 'swr';
-import { deleteCategory } from '../../../../../../actions/Game';
+import {
+    createTag,
+    deleteTag,
+    updateTag,
+} from '../../../../../../actions/Game';
 
-interface CategoryFormProps {
-    cat: GoalCategory;
+interface TagFormProps {
+    tag: GoalCategory;
     slug: string;
 }
 
-function CategoryForm({ cat, slug }: CategoryFormProps) {
+function TagForm({ tag, slug }: TagFormProps) {
     const [edit, setEdit] = useState(false);
     return (
         <ListItem
@@ -47,21 +46,15 @@ function CategoryForm({ cat, slug }: CategoryFormProps) {
                 }}
             >
                 <Formik
-                    initialValues={{ name: cat.name, max: cat.max }}
-                    onSubmit={async (values) => {
-                        const res = await fetch(
-                            `/api/goals/categories/${cat.id}`,
-                            {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify(values),
-                            },
-                        );
+                    initialValues={{ name: tag.name, max: tag.max }}
+                    onSubmit={async ({ name }) => {
+                        const res = await updateTag(slug, tag.id, name.trim());
 
                         if (!res.ok) {
-                            return alertError('Failed to update goal category');
+                            return alertError(
+                                `Failed to update goal tag -  ${res.message}`,
+                            );
                         }
-                        mutate(`/api/games/${slug}/categories`);
                         setEdit(false);
                     }}
                 >
@@ -76,16 +69,10 @@ function CategoryForm({ cat, slug }: CategoryFormProps) {
                             >
                                 <FormikTextField
                                     name="name"
-                                    id={`cat-${cat.id}-name`}
+                                    id={`tag-${tag.id}-name`}
                                     label="Name"
                                     disabled={!edit}
                                 />
-                                <NumberInput
-                                    name="max"
-                                    label="Max"
-                                    disabled={!edit}
-                                />
-
                                 {!edit && (
                                     <IconButton
                                         edge="end"
@@ -118,22 +105,20 @@ function CategoryForm({ cat, slug }: CategoryFormProps) {
                                 <IconButton
                                     edge="end"
                                     onClick={async () => {
-                                        const res = await deleteCategory(
+                                        const res = await deleteTag(
                                             slug,
-                                            cat.id,
+                                            tag.id,
                                         );
 
                                         if (!res.ok) {
-                                            alertError(
-                                                `Unable to delete category`,
-                                            );
+                                            alertError(`Unable to delete tag`);
                                             return;
                                         }
                                     }}
                                 >
                                     <Delete />
                                 </IconButton>
-                                <Typography>{cat.goalCount} goals</Typography>
+                                <Typography>{tag.goalCount} goals</Typography>
                             </Box>
                         </Form>
                     )}
@@ -143,29 +128,16 @@ function CategoryForm({ cat, slug }: CategoryFormProps) {
     );
 }
 
-enum SortOptions {
-    NAME,
-    MAXIMUM,
-}
-
-const sortOptions = [
-    { label: 'Name', value: SortOptions.NAME },
-    { label: 'Maximum', value: SortOptions.MAXIMUM },
-];
-interface GoalCategoriesProps {
+interface GoalTagsProps {
     slug: string;
-    categories: GoalCategory[];
+    tags: GoalCategory[];
 }
 
-export default function GoalCategories({
-    slug,
-    categories,
-}: GoalCategoriesProps) {
-    const [sort, setSort] = useState<SortOptions>(SortOptions.NAME);
+export default function GoalTags({ slug, tags: tags }: GoalTagsProps) {
     const [reverse, setReverse] = useState(false);
     const [search, setSearch] = useState('');
 
-    const shownCats = categories
+    const shownTags = tags
         .filter((c) => {
             if (search && search.length > 0) {
                 if (c.name.toLowerCase().includes(search.toLowerCase())) {
@@ -175,18 +147,9 @@ export default function GoalCategories({
             }
             return true;
         })
-        .sort((a, b) => {
-            switch (sort) {
-                case SortOptions.NAME:
-                    return a.name.localeCompare(b.name);
-                case SortOptions.MAXIMUM:
-                    return (a.max ?? 0) - (b.max ?? 0);
-                default:
-                    return 1;
-            }
-        });
+        .sort((a, b) => a.name.localeCompare(b.name));
     if (reverse) {
-        shownCats.reverse();
+        shownTags.reverse();
     }
 
     return (
@@ -198,52 +161,78 @@ export default function GoalCategories({
                 maxHeight: '100%',
             }}
         >
-            <Box sx={{ display: 'flex', columnGap: 4 }}>
+            <Box sx={{ display: 'flex', columnGap: 1 }}>
                 <TextField
                     type="text"
                     label="Search"
                     onChange={(e) => setSearch(e.target.value)}
                     sx={{ width: '33%' }}
                 />
-                <Box
-                    sx={{
-                        display: 'flex',
-                        width: '33%',
-                        alignItems: 'center',
-                        columnGap: 1,
-                    }}
-                >
-                    <FormControl fullWidth>
-                        <InputLabel id="filter-sort-by-label">
-                            Sort by
-                        </InputLabel>
-                        <Select
-                            id="filter-sort-by"
-                            labelId="filter-sort-by-label"
-                            value={sort}
-                            onChange={(e) => {
-                                setSort(e.target.value as SortOptions);
-                            }}
-                            label="Sort by"
-                        >
-                            {sortOptions.map((opt) => (
-                                <MenuItem key={opt.value} value={opt.value}>
-                                    {opt.label}
-                                </MenuItem>
-                            ))}
-                        </Select>
-                    </FormControl>
-                    <Tooltip title="Toggle sort direction">
-                        <IconButton onClick={() => setReverse((curr) => !curr)}>
-                            {reverse ? <ArrowUpward /> : <ArrowDownward />}
-                        </IconButton>
-                    </Tooltip>
-                </Box>
+                <Tooltip title="Toggle sort direction">
+                    <IconButton onClick={() => setReverse((curr) => !curr)}>
+                        {reverse ? <ArrowUpward /> : <ArrowDownward />}
+                    </IconButton>
+                </Tooltip>
             </Box>
             <List sx={{ maxHeight: '100%', overflowY: 'auto' }}>
-                {shownCats.map((cat) => (
-                    <CategoryForm key={cat.id} cat={cat} slug={slug} />
+                {shownTags.map((tag) => (
+                    <TagForm key={tag.id} tag={tag} slug={slug} />
                 ))}
+                <ListItem>
+                    <Box
+                        sx={{
+                            display: 'flex',
+                        }}
+                    >
+                        <Formik
+                            initialValues={{ name: '' }}
+                            onSubmit={async ({ name }, { resetForm }) => {
+                                const res = await createTag(slug, name.trim());
+
+                                if (!res.ok) {
+                                    return alertError(
+                                        `Failed to create goal tag - ${res.message}`,
+                                    );
+                                }
+                                resetForm();
+                            }}
+                        >
+                            {({ resetForm }) => (
+                                <Form>
+                                    <Box
+                                        sx={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            columnGap: 0.5,
+                                        }}
+                                    >
+                                        <FormikTextField
+                                            name="name"
+                                            id={`new-tag-name`}
+                                            label="Name"
+                                        />
+                                        <IconButton
+                                            edge="end"
+                                            onClick={() => {
+                                                resetForm();
+                                            }}
+                                            color="error"
+                                        >
+                                            <Close />
+                                        </IconButton>
+                                        <IconButton
+                                            type="submit"
+                                            edge="end"
+                                            color="success"
+                                        >
+                                            <Save />
+                                        </IconButton>
+                                    </Box>
+                                </Form>
+                            )}
+                        </Formik>
+                    </Box>
+                </ListItem>
             </List>
         </Box>
     );

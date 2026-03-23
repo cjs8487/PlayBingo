@@ -1,5 +1,5 @@
 'use client';
-import { Category, Goal } from '@playbingo/types';
+import { Category, Goal, GoalTag } from '@playbingo/types';
 import {
     Dispatch,
     ReactNode,
@@ -19,11 +19,17 @@ export enum SortOptions {
     DIFFICULTY,
 }
 
+interface CategorySearchOption {
+    value: string;
+    display: string;
+    isTag: boolean;
+}
+
 interface SearchParams {
     sort: SortOptions | null;
     reverse: boolean;
     search: string;
-    shownCats: string[];
+    shownCats: CategorySearchOption[];
 }
 
 interface GoalManagerSettings {
@@ -41,7 +47,7 @@ interface GoalManagerContext {
     settings: GoalManagerSettings;
     setSelectedGoal: (goal: string) => void;
     deleteGoal: (id: string) => void;
-    setShownCats: (cats: string[]) => void;
+    setShownCats: (cats: CategorySearchOption[]) => void;
     setSort: (sort: SortOptions) => void;
     setReverse: Dispatch<SetStateAction<boolean>>;
     setSearch: (search: string) => void;
@@ -49,6 +55,7 @@ interface GoalManagerContext {
     mutateGoals: KeyedMutator<Goal[]>;
     newGoal: boolean;
     setNewGoal: (newGoal: boolean) => void;
+    tags: GoalTag[];
 }
 
 const GoalManagerContext = createContext<GoalManagerContext>({
@@ -74,6 +81,7 @@ const GoalManagerContext = createContext<GoalManagerContext>({
     },
     newGoal: false,
     setNewGoal() {},
+    tags: [],
 });
 
 interface GoalManagerContextProps {
@@ -81,6 +89,7 @@ interface GoalManagerContextProps {
     canModerate: boolean;
     categories: Category[];
     children: ReactNode;
+    tags: GoalTag[];
 }
 
 export function GoalManagerContextProvider({
@@ -88,6 +97,7 @@ export function GoalManagerContextProvider({
     canModerate,
     categories,
     children,
+    tags,
 }: GoalManagerContextProps) {
     // API
     const {
@@ -102,7 +112,7 @@ export function GoalManagerContextProvider({
     const [newGoal, setNewGoal] = useState(false);
     // search params
     const [sort, setSort] = useState<SortOptions | null>(SortOptions.DEFAULT);
-    const [shownCats, setShownCats] = useState<string[]>([]);
+    const [shownCats, setShownCats] = useState<CategorySearchOption[]>([]);
     const [reverse, setReverse] = useState(false);
     const [search, setSearch] = useState('');
     //settings
@@ -139,8 +149,12 @@ export function GoalManagerContextProvider({
         .filter((goal) => {
             let shown = true;
             if (shownCats.length > 0) {
-                shown = shownCats.some((cat) =>
-                    goal.categories?.map((cat) => cat.name).includes(cat),
+                shown = shownCats.some((searchOpt) =>
+                    searchOpt.isTag
+                        ? goal.tags?.map((t) => t.id).includes(searchOpt.value)
+                        : goal.categories
+                              ?.map((c) => c.id)
+                              .includes(searchOpt.value),
                 );
             }
             if (!shown) {
@@ -193,6 +207,7 @@ export function GoalManagerContextProvider({
                 mutateGoals,
                 newGoal,
                 setNewGoal,
+                tags,
             }}
         >
             {children}

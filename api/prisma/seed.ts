@@ -1,10 +1,5 @@
 import { pbkdf2Sync, randomBytes } from 'crypto';
-import {
-    GenerationBoardLayout,
-    GenerationGoalRestriction,
-    GenerationGoalSelection,
-    PrismaClient,
-} from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
@@ -60,6 +55,7 @@ async function main() {
 
     console.log('Creating games and goals');
     await prisma.category.deleteMany();
+    await prisma.goalTag.deleteMany();
     await prisma.goal.deleteMany();
     await prisma.game.deleteMany();
 
@@ -85,6 +81,15 @@ async function main() {
                     { id: owner.id },
                     { id: player.id },
                 ],
+            },
+            generatorSettings: {
+                goalFilters: [],
+                goalTransformation: [],
+                boardLayout: {
+                    mode: 'random',
+                },
+                restrictions: [],
+                adjustments: [],
             },
         },
     });
@@ -122,10 +127,15 @@ async function main() {
             racetimeBeta: false,
             owners: { connect: [{ id: owner.id }] },
             moderators: { connect: [{ id: mod.id }] },
-            generationBoardLayout: GenerationBoardLayout.SRLv5,
-            generationGoalRestrictions: [
-                GenerationGoalRestriction.LINE_TYPE_EXCLUSION,
-            ],
+            generatorSettings: {
+                goalFilters: [],
+                goalTransformation: [],
+                boardLayout: {
+                    mode: 'srlv5',
+                },
+                restrictions: [{ type: 'line-type-exclusion' }],
+                adjustments: [],
+            },
         },
     });
     await prisma.category.createMany({
@@ -164,6 +174,15 @@ async function main() {
             owners: { connect: [{ id: staff.id }, { id: owner.id }] },
             moderators: { connect: [{ id: mod.id }] },
             usersFavorited: { connect: [{ id: owner.id }, { id: mod.id }] },
+            generatorSettings: {
+                goalFilters: [],
+                goalTransformation: [],
+                boardLayout: {
+                    mode: 'srlv5',
+                },
+                restrictions: [{ type: 'line-type-exclusion' }],
+                adjustments: [],
+            },
         },
     });
     await prisma.category.createMany({
@@ -201,6 +220,15 @@ async function main() {
             racetimeBeta: false,
             owners: { connect: [{ id: owner.id }] },
             moderators: { connect: [{ id: mod.id }] },
+            generatorSettings: {
+                goalFilters: [],
+                goalTransformation: [],
+                boardLayout: {
+                    mode: 'srlv5',
+                },
+                restrictions: [{ type: 'line-type-exclusion' }],
+                adjustments: [],
+            },
         },
     });
     await prisma.category.createMany({
@@ -239,6 +267,15 @@ async function main() {
             owners: { connect: [{ id: owner.id }] },
             moderators: { connect: [{ id: mod.id }] },
             usersFavorited: { connect: [{ id: mod.id }, { id: player.id }] },
+            generatorSettings: {
+                goalFilters: [],
+                goalTransformation: [],
+                boardLayout: {
+                    mode: 'srlv5',
+                },
+                restrictions: [{ type: 'line-type-exclusion' }],
+                adjustments: [],
+            },
         },
     });
     await prisma.category.createMany({
@@ -280,389 +317,15 @@ async function main() {
         'Story Progression',
         'Boss Battle',
     ];
-    const realisticGoals = (id: string) => [
-        {
-            gameId: id,
-            goal: 'Collect 100 Coins',
-            description: 'Gather 100 coins from various levels.',
-            categories: {
-                connect: ['Collecting'].map((cat) => ({
-                    gameId_name: {
-                        gameId: id,
-                        name: cat,
-                    },
-                })),
-            },
-            difficulty: 3,
-        },
-        {
-            gameId: id,
-            goal: 'Defeat the Fire Dragon',
-            description: 'Slay the Fire Dragon in the Volcano Dungeon.',
-            categories: {
-                connect: ['Combat', 'Boss Battle'].map((cat) => ({
-                    gameId_name: {
-                        gameId: id,
-                        name: cat,
-                    },
-                })),
-            },
-            difficulty: 15,
-        },
-        {
-            gameId: id,
-            goal: 'Find 3 Hidden Keys',
-            description: 'Locate 3 keys hidden throughout the forest.',
-            categories: {
-                connect: ['Exploration', 'Puzzle'].map((cat) => ({
-                    gameId_name: {
-                        gameId: id,
-                        name: cat,
-                    },
-                })),
-            },
-            difficulty: 8,
-        },
-        {
-            gameId: id,
-            goal: 'Solve the Ancient Temple Puzzle',
-            description: 'Unlock the secret chamber in the temple.',
-            categories: {
-                connect: ['Puzzle'].map((cat) => ({
-                    gameId_name: {
-                        gameId: id,
-                        name: cat,
-                    },
-                })),
-            },
-            difficulty: 10,
-        },
-        {
-            gameId: id,
-            goal: 'Craft a Health Potion',
-            description: 'Use herbs and water to craft a basic health potion.',
-            categories: {
-                connect: ['Resource Management'].map((cat) => ({
-                    gameId_name: {
-                        gameId: id,
-                        name: cat,
-                    },
-                })),
-            },
-            difficulty: 5,
-        },
-        {
-            gameId: id,
-            goal: 'Complete the Speedrun Trial',
-            description: 'Finish the speedrun course in under 3 minutes.',
-            categories: {
-                connect: ['Time Challenge'].map((cat) => ({
-                    gameId_name: {
-                        gameId: id,
-                        name: cat,
-                    },
-                })),
-            },
-            difficulty: 20,
-        },
-        {
-            gameId: id,
-            goal: 'Pickpocket a Guard',
-            description: 'Steal a gold coin from a guard without being caught.',
-            categories: {
-                connect: ['Stealth'].map((cat) => ({
-                    gameId_name: {
-                        gameId: id,
-                        name: cat,
-                    },
-                })),
-            },
-            difficulty: 7,
-        },
-        {
-            gameId: id,
-            goal: 'Reach Level 10',
-            description: 'Gain experience and reach level 10.',
-            categories: {
-                connect: ['Story Progression'].map((cat) => ({
-                    gameId_name: {
-                        gameId: id,
-                        name: cat,
-                    },
-                })),
-            },
-            difficulty: 4,
-        },
-        {
-            gameId: id,
-            goal: 'Defeat 50 Enemies',
-            description: 'Eliminate 50 enemies to prove your strength.',
-            categories: {
-                connect: ['Combat'].map((cat) => ({
-                    gameId_name: {
-                        gameId: id,
-                        name: cat,
-                    },
-                })),
-            },
-            difficulty: 12,
-        },
-        {
-            gameId: id,
-            goal: 'Cross the Lava Pit',
-            description: 'Use platforms to cross the lava pit safely.',
-            categories: {
-                connect: ['Movement', 'Puzzle'].map((cat) => ({
-                    gameId_name: {
-                        gameId: id,
-                        name: cat,
-                    },
-                })),
-            },
-            difficulty: 14,
-        },
-        {
-            gameId: id,
-            goal: 'Rescue the Lost Villager',
-            description: 'Find and rescue a villager trapped in the cave.',
-            categories: {
-                connect: ['Exploration', 'Story Progression'].map((cat) => ({
-                    gameId_name: {
-                        gameId: id,
-                        name: cat,
-                    },
-                })),
-            },
-            difficulty: 6,
-        },
-        {
-            gameId: id,
-            goal: 'Gather 10 Rare Herbs',
-            description: 'Collect rare herbs from the mountain region.',
-            categories: {
-                connect: ['Collecting', 'Resource Management'].map((cat) => ({
-                    gameId_name: {
-                        gameId: id,
-                        name: cat,
-                    },
-                })),
-            },
-            difficulty: 9,
-        },
-        {
-            gameId: id,
-            goal: 'Defeat the Ice Golem',
-            description: 'Defeat the Ice Golem in the Frozen Cavern.',
-            categories: {
-                connect: ['Combat', 'Boss Battle'].map((cat) => ({
-                    gameId_name: {
-                        gameId: id,
-                        name: cat,
-                    },
-                })),
-            },
-            difficulty: 18,
-        },
-        {
-            gameId: id,
-            goal: 'Escape the Dungeon Maze',
-            description: 'Navigate and escape the maze in the dungeon.',
-            categories: {
-                connect: ['Puzzle', 'Exploration'].map((cat) => ({
-                    gameId_name: {
-                        gameId: id,
-                        name: cat,
-                    },
-                })),
-            },
-            difficulty: 13,
-        },
-        {
-            gameId: id,
-            goal: 'Solve the Color Matching Puzzle',
-            description: 'Match colors correctly to unlock the gate.',
-            categories: {
-                connect: ['Puzzle'].map((cat) => ({
-                    gameId_name: {
-                        gameId: id,
-                        name: cat,
-                    },
-                })),
-            },
-            difficulty: 8,
-        },
-        {
-            gameId: id,
-            goal: 'Survive the Night in the Forest',
-            description: 'Survive until morning without getting caught.',
-            categories: {
-                connect: ['Stealth', 'Time Challenge'].map((cat) => ({
-                    gameId_name: {
-                        gameId: id,
-                        name: cat,
-                    },
-                })),
-            },
-            difficulty: 19,
-        },
-        {
-            gameId: id,
-            goal: 'Gather 20 Crystals',
-            description: 'Mine 20 crystals from the underground cave.',
-            categories: {
-                connect: ['Collecting'].map((cat) => ({
-                    gameId_name: {
-                        gameId: id,
-                        name: cat,
-                    },
-                })),
-            },
-            difficulty: 5,
-        },
-        {
-            gameId: id,
-            goal: 'Win a Duel',
-            description: 'Defeat an enemy in a 1v1 duel.',
-            categories: {
-                connect: ['Combat'].map((cat) => ({
-                    gameId_name: {
-                        gameId: id,
-                        name: cat,
-                    },
-                })),
-            },
-            difficulty: 17,
-        },
-        {
-            gameId: id,
-            goal: 'Repair the Broken Bridge',
-            description: 'Find materials and repair the bridge.',
-            categories: {
-                connect: ['Resource Management', 'Exploration'].map((cat) => ({
-                    gameId_name: {
-                        gameId: id,
-                        name: cat,
-                    },
-                })),
-            },
-            difficulty: 11,
-        },
-        {
-            gameId: id,
-            goal: 'Climb the Tower of Trials',
-            description: 'Reach the top of the Tower of Trials.',
-            categories: {
-                connect: ['Movement', 'Story Progression'].map((cat) => ({
-                    gameId_name: {
-                        gameId: id,
-                        name: cat,
-                    },
-                })),
-            },
-            difficulty: 21,
-        },
-        {
-            gameId: id,
-            goal: 'Find the Golden Sword',
-            description: 'Retrieve the legendary Golden Sword.',
-            categories: {
-                connect: ['Exploration'].map((cat) => ({
-                    gameId_name: {
-                        gameId: id,
-                        name: cat,
-                    },
-                })),
-            },
-            difficulty: 16,
-        },
-        {
-            gameId: id,
-            goal: 'Complete the Puzzle Gauntlet',
-            description: 'Solve a series of puzzles back-to-back.',
-            categories: {
-                connect: ['Puzzle'].map((cat) => ({
-                    gameId_name: {
-                        gameId: id,
-                        name: cat,
-                    },
-                })),
-            },
-            difficulty: 23,
-        },
-        {
-            gameId: id,
-            goal: 'Steal a Rare Artifact',
-            description: 'Steal an artifact from the museum undetected.',
-            categories: {
-                connect: ['Stealth', 'Resource Management'].map((cat) => ({
-                    gameId_name: {
-                        gameId: id,
-                        name: cat,
-                    },
-                })),
-            },
-            difficulty: 22,
-        },
-        {
-            gameId: id,
-            goal: 'Defeat the Dark Lord',
-            description: 'Defeat the final boss and save the kingdom.',
-            categories: {
-                connect: ['Combat', 'Boss Battle'].map((cat) => ({
-                    gameId_name: {
-                        gameId: id,
-                        name: cat,
-                    },
-                })),
-            },
-            difficulty: 25,
-        },
-        {
-            gameId: id,
-            goal: 'Find and Open 10 Treasure Chests',
-            description: 'Locate and open 10 treasure chests.',
-            categories: {
-                connect: ['Collecting'].map((cat) => ({
-                    gameId_name: {
-                        gameId: id,
-                        name: cat,
-                    },
-                })),
-            },
-            difficulty: 10,
-        },
-        {
-            gameId: id,
-            goal: 'Survive the Arena for 5 Rounds',
-            description: 'Defeat all enemies across 5 rounds in the arena.',
-            categories: {
-                connect: ['Combat', 'Time Challenge'].map((cat) => ({
-                    gameId_name: {
-                        gameId: id,
-                        name: cat,
-                    },
-                })),
-            },
-            difficulty: 24,
-        },
-        ...Array.from({ length: 54 }).map((_, i) => ({
-            gameId: id,
-            goal: `Side Quest ${i + 27}`,
-            description: `Complete side quest number ${
-                i + 27
-            } for extra rewards.`,
-            categories: {
-                connect: {
-                    gameId_name: {
-                        gameId: id,
-                        name: realisticCategories[
-                            i % realisticCategories.length
-                        ],
-                    },
-                },
-            },
-            difficulty: ((i + 1) % 25) + 1,
-        })),
+    const tagNames = [
+        'Easy',
+        'Medium',
+        'Hard',
+        'Extreme',
+        'Optional',
+        'Main Story',
+        'Side Quest',
+        'Timed',
     ];
 
     const game6 = await prisma.game.create({
@@ -737,14 +400,491 @@ async function main() {
                 'summit',
                 'tundra',
             ],
-            generationBoardLayout: GenerationBoardLayout.SRLv5,
-            generationGoalRestrictions: [
-                GenerationGoalRestriction.LINE_TYPE_EXCLUSION,
-            ],
-            generationGoalSelection: GenerationGoalSelection.DIFFICULTY,
             newGeneratorBeta: true,
+            generatorSettings: {
+                goalFilters: [],
+                goalTransformation: [],
+                boardLayout: {
+                    mode: 'srlv5',
+                },
+                restrictions: [{ type: 'line-type-exclusion' }],
+                adjustments: [],
+            },
         },
     });
+
+    const tags = await prisma.goalTag.createManyAndReturn({
+        data: tagNames.map((name) => ({
+            name,
+            gameId: game6.id,
+        })),
+    });
+    const realisticGoals = (id: string) => [
+        {
+            gameId: id,
+            goal: 'Collect 100 Coins',
+            description: 'Gather 100 coins from various levels.',
+            categories: {
+                connect: ['Collecting'].map((cat) => ({
+                    gameId_name: {
+                        gameId: id,
+                        name: cat,
+                    },
+                })),
+            },
+            tags: {
+                connect: [{ id: tags[0].id }, { id: tags[5].id }],
+            },
+            difficulty: 3,
+        },
+        {
+            gameId: id,
+            goal: 'Defeat the Fire Dragon',
+            description: 'Slay the Fire Dragon in the Volcano Dungeon.',
+            categories: {
+                connect: ['Combat', 'Boss Battle'].map((cat) => ({
+                    gameId_name: {
+                        gameId: id,
+                        name: cat,
+                    },
+                })),
+            },
+            tags: {
+                connect: [{ id: tags[2].id }, { id: tags[5].id }],
+            },
+            difficulty: 15,
+        },
+        {
+            gameId: id,
+            goal: 'Find 3 Hidden Keys',
+            description: 'Locate 3 keys hidden throughout the forest.',
+            categories: {
+                connect: ['Exploration', 'Puzzle'].map((cat) => ({
+                    gameId_name: {
+                        gameId: id,
+                        name: cat,
+                    },
+                })),
+            },
+            tags: {
+                connect: [{ id: tags[1].id }, { id: tags[6].id }],
+            },
+            difficulty: 8,
+        },
+        {
+            gameId: id,
+            goal: 'Solve the Ancient Temple Puzzle',
+            description: 'Unlock the secret chamber in the temple.',
+            categories: {
+                connect: ['Puzzle'].map((cat) => ({
+                    gameId_name: {
+                        gameId: id,
+                        name: cat,
+                    },
+                })),
+            },
+            tags: {
+                connect: [{ id: tags[3].id }, { id: tags[5].id }],
+            },
+            difficulty: 10,
+        },
+        {
+            gameId: id,
+            goal: 'Craft a Health Potion',
+            description: 'Use herbs and water to craft a basic health potion.',
+            categories: {
+                connect: ['Resource Management'].map((cat) => ({
+                    gameId_name: {
+                        gameId: id,
+                        name: cat,
+                    },
+                })),
+            },
+            tags: {
+                connect: [{ id: tags[0].id }, { id: tags[7].id }],
+            },
+            difficulty: 5,
+        },
+        {
+            gameId: id,
+            goal: 'Complete the Speedrun Trial',
+            description: 'Finish the speedrun course in under 3 minutes.',
+            categories: {
+                connect: ['Time Challenge'].map((cat) => ({
+                    gameId_name: {
+                        gameId: id,
+                        name: cat,
+                    },
+                })),
+            },
+            tags: {
+                connect: [{ id: tags[3].id }, { id: tags[7].id }],
+            },
+            difficulty: 20,
+        },
+        {
+            gameId: id,
+            goal: 'Pickpocket a Guard',
+            description: 'Steal a gold coin from a guard without being caught.',
+            categories: {
+                connect: ['Stealth'].map((cat) => ({
+                    gameId_name: {
+                        gameId: id,
+                        name: cat,
+                    },
+                })),
+            },
+            tags: {
+                connect: [{ id: tags[1].id }, { id: tags[6].id }],
+            },
+            difficulty: 7,
+        },
+        {
+            gameId: id,
+            goal: 'Reach Level 10',
+            description: 'Gain experience and reach level 10.',
+            categories: {
+                connect: ['Story Progression'].map((cat) => ({
+                    gameId_name: {
+                        gameId: id,
+                        name: cat,
+                    },
+                })),
+            },
+            tags: {
+                connect: [{ id: tags[0].id }, { id: tags[5].id }],
+            },
+            difficulty: 4,
+        },
+        {
+            gameId: id,
+            goal: 'Defeat 50 Enemies',
+            description: 'Eliminate 50 enemies to prove your strength.',
+            categories: {
+                connect: ['Combat'].map((cat) => ({
+                    gameId_name: {
+                        gameId: id,
+                        name: cat,
+                    },
+                })),
+            },
+            tags: {
+                connect: [{ id: tags[0].id }, { id: tags[5].id }],
+            },
+            difficulty: 12,
+        },
+        {
+            gameId: id,
+            goal: 'Cross the Lava Pit',
+            description: 'Use platforms to cross the lava pit safely.',
+            categories: {
+                connect: ['Movement', 'Puzzle'].map((cat) => ({
+                    gameId_name: {
+                        gameId: id,
+                        name: cat,
+                    },
+                })),
+            },
+            tags: {
+                connect: [{ id: tags[2].id }, { id: tags[7].id }],
+            },
+            difficulty: 14,
+        },
+        {
+            gameId: id,
+            goal: 'Rescue the Lost Villager',
+            description: 'Find and rescue a villager trapped in the cave.',
+            categories: {
+                connect: ['Exploration', 'Story Progression'].map((cat) => ({
+                    gameId_name: {
+                        gameId: id,
+                        name: cat,
+                    },
+                })),
+            },
+            tags: {
+                connect: [{ id: tags[2].id }, { id: tags[7].id }],
+            },
+            difficulty: 6,
+        },
+        {
+            gameId: id,
+            goal: 'Gather 10 Rare Herbs',
+            description: 'Collect rare herbs from the mountain region.',
+            categories: {
+                connect: ['Collecting', 'Resource Management'].map((cat) => ({
+                    gameId_name: {
+                        gameId: id,
+                        name: cat,
+                    },
+                })),
+            },
+            tags: {
+                connect: [{ id: tags[2].id }, { id: tags[7].id }],
+            },
+            difficulty: 9,
+        },
+        {
+            gameId: id,
+            goal: 'Defeat the Ice Golem',
+            description: 'Defeat the Ice Golem in the Frozen Cavern.',
+            categories: {
+                connect: ['Combat', 'Boss Battle'].map((cat) => ({
+                    gameId_name: {
+                        gameId: id,
+                        name: cat,
+                    },
+                })),
+            },
+            tags: {
+                connect: [{ id: tags[3].id }, { id: tags[5].id }],
+            },
+            difficulty: 18,
+        },
+        {
+            gameId: id,
+            goal: 'Escape the Dungeon Maze',
+            description: 'Navigate and escape the maze in the dungeon.',
+            categories: {
+                connect: ['Puzzle', 'Exploration'].map((cat) => ({
+                    gameId_name: {
+                        gameId: id,
+                        name: cat,
+                    },
+                })),
+            },
+            tags: {
+                connect: [{ id: tags[1].id }, { id: tags[6].id }],
+            },
+            difficulty: 13,
+        },
+        {
+            gameId: id,
+            goal: 'Solve the Color Matching Puzzle',
+            description: 'Match colors correctly to unlock the gate.',
+            categories: {
+                connect: ['Puzzle'].map((cat) => ({
+                    gameId_name: {
+                        gameId: id,
+                        name: cat,
+                    },
+                })),
+            },
+            tags: {
+                connect: [{ id: tags[0].id }, { id: tags[7].id }],
+            },
+            difficulty: 8,
+        },
+        {
+            gameId: id,
+            goal: 'Survive the Night in the Forest',
+            description: 'Survive until morning without getting caught.',
+            categories: {
+                connect: ['Stealth', 'Time Challenge'].map((cat) => ({
+                    gameId_name: {
+                        gameId: id,
+                        name: cat,
+                    },
+                })),
+            },
+            tags: {
+                connect: [{ id: tags[3].id }, { id: tags[7].id }],
+            },
+            difficulty: 19,
+        },
+        {
+            gameId: id,
+            goal: 'Gather 20 Crystals',
+            description: 'Mine 20 crystals from the underground cave.',
+            categories: {
+                connect: ['Collecting'].map((cat) => ({
+                    gameId_name: {
+                        gameId: id,
+                        name: cat,
+                    },
+                })),
+            },
+            tags: {
+                connect: [{ id: tags[1].id }, { id: tags[6].id }],
+            },
+            difficulty: 5,
+        },
+        {
+            gameId: id,
+            goal: 'Win a Duel',
+            description: 'Defeat an enemy in a 1v1 duel.',
+            categories: {
+                connect: ['Combat'].map((cat) => ({
+                    gameId_name: {
+                        gameId: id,
+                        name: cat,
+                    },
+                })),
+            },
+            tags: {
+                connect: [{ id: tags[0].id }, { id: tags[5].id }],
+            },
+            difficulty: 17,
+        },
+        {
+            gameId: id,
+            goal: 'Repair the Broken Bridge',
+            description: 'Find materials and repair the bridge.',
+            categories: {
+                connect: ['Resource Management', 'Exploration'].map((cat) => ({
+                    gameId_name: {
+                        gameId: id,
+                        name: cat,
+                    },
+                })),
+            },
+            tags: {
+                connect: [{ id: tags[2].id }, { id: tags[6].id }],
+            },
+            difficulty: 11,
+        },
+        {
+            gameId: id,
+            goal: 'Climb the Tower of Trials',
+            description: 'Reach the top of the Tower of Trials.',
+            categories: {
+                connect: ['Movement', 'Story Progression'].map((cat) => ({
+                    gameId_name: {
+                        gameId: id,
+                        name: cat,
+                    },
+                })),
+            },
+            tags: {
+                connect: [{ id: tags[3].id }, { id: tags[5].id }],
+            },
+            difficulty: 21,
+        },
+        {
+            gameId: id,
+            goal: 'Find the Golden Sword',
+            description: 'Retrieve the legendary Golden Sword.',
+            categories: {
+                connect: ['Exploration'].map((cat) => ({
+                    gameId_name: {
+                        gameId: id,
+                        name: cat,
+                    },
+                })),
+            },
+            tags: {
+                connect: [{ id: tags[2].id }, { id: tags[7].id }],
+            },
+            difficulty: 16,
+        },
+        {
+            gameId: id,
+            goal: 'Complete the Puzzle Gauntlet',
+            description: 'Solve a series of puzzles back-to-back.',
+            categories: {
+                connect: ['Puzzle'].map((cat) => ({
+                    gameId_name: {
+                        gameId: id,
+                        name: cat,
+                    },
+                })),
+            },
+            tags: {
+                connect: [{ id: tags[3].id }, { id: tags[7].id }],
+            },
+            difficulty: 23,
+        },
+        {
+            gameId: id,
+            goal: 'Steal a Rare Artifact',
+            description: 'Steal an artifact from the museum undetected.',
+            categories: {
+                connect: ['Stealth', 'Resource Management'].map((cat) => ({
+                    gameId_name: {
+                        gameId: id,
+                        name: cat,
+                    },
+                })),
+            },
+            tags: {
+                connect: [{ id: tags[1].id }, { id: tags[6].id }],
+            },
+            difficulty: 22,
+        },
+        {
+            gameId: id,
+            goal: 'Defeat the Dark Lord',
+            description: 'Defeat the final boss and save the kingdom.',
+            categories: {
+                connect: ['Combat', 'Boss Battle'].map((cat) => ({
+                    gameId_name: {
+                        gameId: id,
+                        name: cat,
+                    },
+                })),
+            },
+            tags: {
+                connect: [{ id: tags[4].id }, { id: tags[5].id }],
+            },
+            difficulty: 25,
+        },
+        {
+            gameId: id,
+            goal: 'Find and Open 10 Treasure Chests',
+            description: 'Locate and open 10 treasure chests.',
+            categories: {
+                connect: ['Collecting'].map((cat) => ({
+                    gameId_name: {
+                        gameId: id,
+                        name: cat,
+                    },
+                })),
+            },
+            tags: {
+                connect: [{ id: tags[0].id }, { id: tags[7].id }],
+            },
+            difficulty: 10,
+        },
+        {
+            gameId: id,
+            goal: 'Survive the Arena for 5 Rounds',
+            description: 'Defeat all enemies across 5 rounds in the arena.',
+            categories: {
+                connect: ['Combat', 'Time Challenge'].map((cat) => ({
+                    gameId_name: {
+                        gameId: id,
+                        name: cat,
+                    },
+                })),
+            },
+            tags: {
+                connect: [{ id: tags[3].id }, { id: tags[7].id }],
+            },
+            difficulty: 24,
+        },
+        ...Array.from({ length: 54 }).map((_, i) => ({
+            gameId: id,
+            goal: `Side Quest ${i + 27}`,
+            description: `Complete side quest number ${
+                i + 27
+            } for extra rewards.`,
+            categories: {
+                connect: {
+                    gameId_name: {
+                        gameId: id,
+                        name: realisticCategories[
+                            i % realisticCategories.length
+                        ],
+                    },
+                },
+            },
+            tags: {
+                connect: [{ id: tags[i % tags.length].id }],
+            },
+            difficulty: ((i + 1) % 25) + 1,
+        })),
+    ];
+
     await prisma.category.createMany({
         data: realisticCategories.map((cat) => ({
             gameId: game6.id,

@@ -31,9 +31,15 @@ goals.post('/:id', async (req, res) => {
     }
 
     const { id } = req.params;
-    const { goal, description, categories, difficulty } = req.body;
+    const { goal, description, categories, difficulty, tags } = req.body;
 
-    if (!goal && description === undefined && !categories && !difficulty) {
+    if (
+        !goal &&
+        description === undefined &&
+        !categories &&
+        !difficulty &&
+        !tags
+    ) {
         res.status(400).send('No changes submitted');
         return;
     }
@@ -60,6 +66,15 @@ goals.post('/:id', async (req, res) => {
                         name: cat,
                     },
                 },
+            })),
+        };
+    }
+
+    if (tags) {
+        input.tags = {
+            set: [],
+            connect: tags?.map((tag: string) => ({
+                id: tag,
             })),
         };
     }

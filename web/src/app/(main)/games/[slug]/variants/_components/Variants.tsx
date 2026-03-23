@@ -9,7 +9,7 @@ import {
     ListItem,
     Typography,
 } from '@mui/material';
-import { GoalCategory, Variant } from '@playbingo/types';
+import { Goal, GoalCategory, GoalTag, Variant } from '@playbingo/types';
 import { useConfirm } from 'material-ui-confirm';
 import { useState } from 'react';
 import { deleteVariant } from '@/actions/Variants';
@@ -21,6 +21,8 @@ interface Props {
     moderator?: boolean;
     slug: string;
     categories: GoalCategory[];
+    goals: Goal[];
+    tags: GoalTag[];
 }
 
 export default function Variants({
@@ -28,6 +30,8 @@ export default function Variants({
     moderator,
     slug,
     categories,
+    goals,
+    tags,
 }: Props) {
     const [showModal, setShowModal] = useState(false);
     const [editVariant, setEditVariant] = useState<Variant | undefined>();
@@ -137,6 +141,8 @@ export default function Variants({
                     <VariantForm
                         slug={slug}
                         categories={categories}
+                        goals={goals}
+                        tags={tags}
                         editVariant={editVariant}
                         closeModal={closeModal}
                     />
@@ -144,6 +150,8 @@ export default function Variants({
                     <VariantForm
                         slug={slug}
                         categories={categories}
+                        goals={goals}
+                        tags={tags}
                         closeModal={closeModal}
                         isNew
                     />
