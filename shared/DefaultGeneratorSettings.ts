@@ -1,20 +1,28 @@
 import { makeGeneratorSchema } from './GeneratorSettings';
-import { GoalCategory } from '@playbingo/types';
+import { Goal, GoalCategory, GoalTag } from '@playbingo/types';
 
 /**
  * Generates the default GeneratorSettings by parsing an empty object through the schema
  * This ensures defaults are always in sync with the schema definition
  */
-export const getDefaultGeneratorSettings = (categories: GoalCategory[] = []) => {
-    const { schema } = makeGeneratorSchema(categories);
+export const getDefaultGeneratorSettings = (
+    categories: GoalCategory[] = [],
+    goals: Goal[] = [],
+    tags: GoalTag[] = [],
+) => {
+    const { schema } = makeGeneratorSchema(categories, goals, tags);
     return schema.parse({});
 };
 
 /**
  * Gets the default GeneratorSettings as a JSON string for database defaults
  */
-export const getDefaultGeneratorSettingsJson = (categories: GoalCategory[] = []): string => {
-    return JSON.stringify(getDefaultGeneratorSettings(categories));
+export const getDefaultGeneratorSettingsJson = (
+    categories: GoalCategory[] = [],
+    goals: Goal[] = [],
+    tags: GoalTag[] = [],
+): string => {
+    return JSON.stringify(getDefaultGeneratorSettings(categories, goals, tags));
 };
 
 /**
@@ -22,5 +30,5 @@ export const getDefaultGeneratorSettingsJson = (categories: GoalCategory[] = [])
  * This is useful for database defaults since categories aren't known at schema level
  */
 export const getBaseDefaultGeneratorSettings = () => {
-    return getDefaultGeneratorSettings([]);
+    return getDefaultGeneratorSettings([], [], []);
 };
