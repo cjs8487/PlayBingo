@@ -244,6 +244,7 @@ export default class Room {
                 categories,
                 this.generatorSettings,
             );
+            generator.reset(options.seed);
             generator.generateBoard();
             this.board = generator.board.map((row) =>
                 row.map((goal) => ({
