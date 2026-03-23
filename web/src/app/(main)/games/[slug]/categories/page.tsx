@@ -35,7 +35,14 @@ export default async function GamePermissions({ params }: Props) {
 
     return (
         <Box sx={{ height: '100%' }}>
-            <Box sx={{ maxHeight: '50%', overflowY: 'auto', pt: 1 }}>
+            <Box
+                sx={{
+                    maxHeight: '50%',
+                    pt: 1,
+                    display: 'grid',
+                    gridTemplateRows: 'auto auto 1fr',
+                }}
+            >
                 <Typography variant="h6" gutterBottom>
                     Categories
                 </Typography>
@@ -44,7 +51,14 @@ export default async function GamePermissions({ params }: Props) {
                 )}
             </Box>
             <Divider sx={{ py: 1 }} />
-            <Box sx={{ maxHeight: '50%', overflowY: 'auto', pt: 1 }}>
+            <Box
+                sx={{
+                    maxHeight: '50%',
+                    pt: 1,
+                    display: 'grid',
+                    gridTemplateRows: 'auto auto 1fr',
+                }}
+            >
                 <Typography variant="h6" gutterBottom>
                     Tags
                 </Typography>

@@ -193,7 +193,8 @@ export default function GoalCategories({
         <Box
             sx={{
                 display: 'grid',
-                gridTemplateRows: 'auto 1fr',
+                gridTemplateRows: 'subgrid',
+                gridRow: 'span 2',
                 maxHeight: '100%',
             }}
         >
