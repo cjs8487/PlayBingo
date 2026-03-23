@@ -55,7 +55,7 @@ model Variant {
   description       String
   game              Game   @relation(fields: [gameId], references: [id])
   /// [GeneratorSettings]
-  generatorSettings Json   @default("{}")
+  generatorSettings Json   @default("{\"goalFilters\":[],\"goalTransformation\":[],\"boardLayout\":{\"mode\":\"random\"},\"restrictions\":[],\"adjustments\":[]}")
   gameId            String
   Room              Room[]
 }
@@ -90,7 +90,7 @@ model Game {
   generationGoalRestrictions  GenerationGoalRestriction[]   @default([])
   generationGlobalAdjustments GenerationGlobalAdjustments[] @default([])
   /// [GeneratorSettings]
-  generatorSettings           Json                          @default("{}")
+  generatorSettings           Json                          @default("{\"goalFilters\":[],\"goalTransformation\":[],\"boardLayout\":{\"mode\":\"random\"},\"restrictions\":[],\"adjustments\":[]}")
   newGeneratorBeta            Boolean                       @default(true)
   descriptionMd               String?
   setupMd                     String?
