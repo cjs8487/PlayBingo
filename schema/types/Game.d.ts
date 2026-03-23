@@ -29,8 +29,8 @@ export interface Game {
   newGeneratorBeta?: boolean;
   descriptionMd?: string;
   setupMd?: string;
-  linksMd?: string;
   variants?: Variant[];
+  resources?: GameResource[];
 }
 export interface User {
   id: string;
@@ -52,4 +52,10 @@ export interface Variant {
   generatorSettings?: {
     [k: string]: unknown;
   };
+}
+export interface GameResource {
+  id: string;
+  name: string;
+  url: string;
+  description?: string;
 }

@@ -1,15 +1,7 @@
-import {
-    GenerationBoardLayout,
-    GenerationGlobalAdjustments,
-    GenerationGoalRestriction,
-    GenerationGoalSelection,
-    GenerationListMode,
-    GenerationListTransform,
-    Prisma,
-} from '@prisma/client';
+import { GeneratorSettings } from '@playbingo/shared/GeneratorSettings';
+import { Game, GameResource, Prisma } from '@prisma/client';
 import { logError } from '../../Logger';
 import { prisma } from '../Database';
-import { GeneratorSettings } from '@playbingo/shared/GeneratorSettings';
 
 export const allGames = async (user?: string) => {
     const games = await prisma.game.findMany({
@@ -54,6 +46,7 @@ export const gameForSlug = (slug: string) => {
                 select: { id: true, name: true, goalAmounts: true },
             },
             variants: true,
+            resources: true,
         },
     });
 };
@@ -185,8 +178,34 @@ export const updateSetup = (slug: string, setupMd: string) => {
     return prisma.game.update({ where: { slug }, data: { setupMd } });
 };
 
-export const updateLinks = (slug: string, linksMd: string) => {
-    return prisma.game.update({ where: { slug }, data: { linksMd } });
+export const updateLinks = async (
+    slug: string,
+    links: { id: string; name: string; url: string; description?: string }[],
+) => {
+    let game: Game | undefined = undefined;
+    await prisma.$transaction(async (tx) => {
+        await prisma.game.update({
+            where: { slug },
+            data: { resources: { deleteMany: {} } },
+        });
+        game = await tx.game.update({
+            where: { slug },
+            data: {
+                linksMd: '',
+                resources: {
+                    createMany: {
+                        data: links.map(({ id, name, url, description }) => ({
+                            id,
+                            name,
+                            url,
+                            description,
+                        })),
+                    },
+                },
+            },
+        });
+    });
+    return game;
 };
 
 export const getRacetimeConfiguration = (slug: string) => {
