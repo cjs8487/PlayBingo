@@ -145,6 +145,7 @@ model Room {
   name             String
   private          Boolean
   password         String?
+  seed             Int?
   history          RoomAction[]
   game             Game?        @relation(fields: [gameId], references: [id])
   gameId           String?

@@ -129,6 +129,7 @@ export interface RoomData {
   token?: string;
   variant: string;
   mode: string;
+  seed: number;
 }
 export interface RacetimeConnection {
   /**

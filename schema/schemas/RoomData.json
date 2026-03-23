@@ -9,7 +9,8 @@
         "gameSlug",
         "newGenerator",
         "variant",
-        "mode"
+        "mode",
+        "seed"
     ],
     "description": "Basic information about a room",
     "properties": {
@@ -40,6 +41,9 @@
         },
         "mode": {
             "type": "string"
+        },
+        "seed": {
+            "type": "number"
         }
     },
     "$defs": {

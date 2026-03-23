@@ -64,12 +64,12 @@ rooms.post('/', async (req, res) => {
         lineCount,
         generationMode,
         hideCard,
-        seed,
         spectator,
         exploration,
         explorationStart,
         explorationStartCount,
     } = req.body;
+    const seed = req.body.seed ?? Math.ceil(999999 * Math.random());
 
     if (!name || !game || !nickname /*|| !variant || !mode*/) {
         res.status(400).send('Missing required element(s).');
@@ -176,6 +176,7 @@ rooms.post('/', async (req, res) => {
                 ? `${explorationStartCount}`
                 : explorationStart
             : undefined,
+        seed,
     );
     const room = new Room(
         name,
@@ -191,6 +192,7 @@ rooms.post('/', async (req, res) => {
             !!gameData.racetimeCategory &&
             !!gameData.racetimeGoal,
         variantName,
+        seed,
         exploration
             ? explorationStart === 'RANDOM'
                 ? explorationStartCount
@@ -304,6 +306,7 @@ async function getOrLoadRoom(slug: string): Promise<Room | null> {
             !!dbRoom.game.racetimeGoal) ||
             !!dbRoom.racetimeRoom,
         variantName,
+        dbRoom.seed ?? 0,
         dbRoom.explorationStart ?? undefined,
         dbRoom.racetimeRoom ?? '',
         generatorSettings,
@@ -426,6 +429,7 @@ rooms.get('/:slug', async (req, res) => {
         name: room.name,
         gameSlug: room.gameSlug,
         newGenerator: room.newGenerator,
+        seed: room.seed,
         racetimeConnection: {
             gameActive: room.racetimeEligible,
             url: room.raceHandler.url,

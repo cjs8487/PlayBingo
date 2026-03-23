@@ -107,6 +107,7 @@ export default class Room {
     variantName: string;
     exploration: boolean = false;
     alwaysRevealedMask: bigint = 0n;
+    seed: number;
 
     lastGenerationMode: BoardGenerationOptions;
 
@@ -138,6 +139,7 @@ export default class Room {
         lineCount: number,
         racetimeEligible: boolean,
         variantName: string,
+        seed: number,
         explorationStart?: string,
         racetimeUrl?: string,
         generatorSettings?: GeneratorSettings,
@@ -179,6 +181,8 @@ export default class Room {
         );
 
         this.players = new Map<string, Player>();
+
+        this.seed = seed;
 
         if (explorationStart) {
             this.exploration = true;
@@ -246,6 +250,7 @@ export default class Room {
             );
             generator.reset(options.seed);
             generator.generateBoard();
+            this.seed = generator.seed;
             this.board = generator.board.map((row) =>
                 row.map((goal) => ({
                     goal: goal,
@@ -427,6 +432,7 @@ export default class Room {
                 name: this.name,
                 gameSlug: this.gameSlug,
                 newGenerator: this.newGenerator,
+                seed: this.seed,
                 racetimeConnection: {
                     gameActive: this.racetimeEligible,
                     url: this.raceHandler.url,
@@ -621,6 +627,7 @@ export default class Room {
                 slug: this.slug,
                 name: this.name,
                 gameSlug: this.gameSlug,
+                seed: this.seed,
                 racetimeConnection: {
                     url,
                 },
@@ -643,6 +650,7 @@ export default class Room {
                 slug: this.slug,
                 name: this.name,
                 gameSlug: this.gameSlug,
+                seed: this.seed,
                 racetimeConnection: {
                     url: undefined,
                 },
