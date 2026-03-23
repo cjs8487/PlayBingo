@@ -20,8 +20,11 @@ import {
 import { GoalCategory } from '@playbingo/types';
 import { Form, Formik } from 'formik';
 import { useState } from 'react';
-import { mutate } from 'swr';
-import { deleteTag } from '../../../../../../actions/Game';
+import {
+    createTag,
+    deleteTag,
+    updateTag,
+} from '../../../../../../actions/Game';
 
 interface TagFormProps {
     tag: GoalCategory;
@@ -44,20 +47,14 @@ function TagForm({ tag, slug }: TagFormProps) {
             >
                 <Formik
                     initialValues={{ name: tag.name, max: tag.max }}
-                    onSubmit={async (values) => {
-                        const res = await fetch(
-                            `/api/games/${slug}/tags/${tag.id}`,
-                            {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify(values),
-                            },
-                        );
+                    onSubmit={async ({ name }) => {
+                        const res = await updateTag(slug, tag.id, name.trim());
 
                         if (!res.ok) {
-                            return alertError('Failed to update goal tag');
+                            return alertError(
+                                `Failed to update goal tag -  ${res.message}`,
+                            );
                         }
-                        mutate(`/api/games/${slug}/tags`);
                         setEdit(false);
                     }}
                 >
@@ -188,24 +185,15 @@ export default function GoalTags({ slug, tags: tags }: GoalTagsProps) {
                     >
                         <Formik
                             initialValues={{ name: '' }}
-                            onSubmit={async (values) => {
-                                const res = await fetch(
-                                    `/api/games/${slug}/tags/`,
-                                    {
-                                        method: 'POST',
-                                        headers: {
-                                            'Content-Type': 'application/json',
-                                        },
-                                        body: JSON.stringify(values),
-                                    },
-                                );
+                            onSubmit={async ({ name }, { resetForm }) => {
+                                const res = await createTag(slug, name.trim());
 
                                 if (!res.ok) {
                                     return alertError(
-                                        'Failed to create goal tag',
+                                        `Failed to create goal tag - ${res.message}`,
                                     );
                                 }
-                                mutate(`/api/games/${slug}/tags`);
+                                resetForm();
                             }}
                         >
                             {({ resetForm }) => (

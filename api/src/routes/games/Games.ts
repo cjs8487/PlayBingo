@@ -733,7 +733,7 @@ games
     .route('/:slug/tags')
     .post(async (req, res) => {
         const { slug } = req.params;
-        const { name } = req.body;
+        const name = req.body.name.trim();
 
         if (!req.session.user) {
             res.sendStatus(401);
@@ -777,7 +777,7 @@ games
             return;
         }
 
-        const { name } = req.body;
+        const name = req.body.name.trim();
         if (!name) {
             res.status(400).send('Missing tag name');
             return;
