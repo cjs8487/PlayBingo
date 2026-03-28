@@ -4,6 +4,7 @@ import { deleteGoal, editGoal, gameForGoal } from '../../database/games/Goals';
 import upload from './Upload';
 import goalCategories from './GoalCategories';
 import { Prisma } from '@prisma/client';
+import { validateGoalMeta } from '../../util/GoalValidation';
 
 const goals = Router();
 
@@ -31,22 +32,41 @@ goals.post('/:id', async (req, res) => {
     }
 
     const { id } = req.params;
-    const { goal, description, categories, difficulty, tags } = req.body;
+    const { goal, description, categories, difficulty, tags, meta } = req.body;
 
     if (
         !goal &&
         description === undefined &&
         !categories &&
         !difficulty &&
-        !tags
+        !tags &&
+        meta === undefined
     ) {
         res.status(400).send('No changes submitted');
         return;
     }
 
+    // Validate meta data if provided
+    if (meta !== undefined) {
+        try {
+            const metaJson = JSON.parse(meta);
+            const metaValidation = validateGoalMeta(metaJson);
+            if (!metaValidation.valid) {
+                res.status(400).json({ error: metaValidation.error });
+                return;
+            }
+        } catch {
+            res.status(400).json({
+                error: 'Invalid metadata - invalid JSON syntax',
+            });
+            return;
+        }
+    }
+
     const input: Prisma.GoalUpdateInput = {
         goal,
         description,
+        meta: JSON.parse(meta),
     };
 
     if (difficulty === 0) {

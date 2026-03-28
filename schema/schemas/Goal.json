@@ -10,6 +10,11 @@
         "description": {"type": ["string", "null"]},
         "difficulty": {"type": ["number", "null"]},
         "categories": {"type": "array", "items": {"$ref": "./Category.json"}},
-        "tags": {"type": "array", "items": {"$ref": "./GoalTag.json"}}
+        "tags": {"type": "array", "items": {"$ref": "./GoalTag.json"}},
+        "meta": {
+            "type": ["object", "null"],
+            "description": "Optional metadata for goal auto-tracking and additional properties",
+            "additionalProperties": true
+        }
     }
 }

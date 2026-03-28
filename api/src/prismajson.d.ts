@@ -5,5 +5,9 @@ export default {};
 declare global {
     namespace PrismaJson {
         type GeneratorSettings = GeneratorSettingsShared;
+
+        type GoalMeta = {
+            [k: string]: unknown;
+        };
     }
 }

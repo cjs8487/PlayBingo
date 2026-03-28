@@ -15,6 +15,12 @@ export interface Goal {
   difficulty?: number | null;
   categories?: Category[];
   tags?: GoalTag[];
+  /**
+   * Optional metadata for goal auto-tracking and additional properties
+   */
+  meta?: {
+    [k: string]: unknown;
+  } | null;
 }
 /**
  * The full goal category definition.

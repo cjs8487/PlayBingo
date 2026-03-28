@@ -14,6 +14,7 @@ const createBoard = (): Cell[][] =>
             difficulty: 0,
             description: '',
             tags: [],
+            meta: {},
         })),
         5,
     );
