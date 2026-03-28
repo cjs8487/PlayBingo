@@ -28,6 +28,7 @@ const goals: GeneratorGoal[] = Array.from({ length: 100 }).map((_, i) => ({
     ],
     tags: i % 5 === 0 ? [] : [tags[i % tags.length]],
     difficulty: (i % 25) + 1,
+    meta: {},
 }));
 
 describe('Goal Filters', () => {

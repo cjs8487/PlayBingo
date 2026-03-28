@@ -22,6 +22,7 @@ model Goal {
   categories    Category[] @relation("GoalCategories")
   tags          GoalTag[]  @relation("GoalTags")
   difficulty    Int?
+  /// [GoalMeta]
   meta          Json?
   game          Game       @relation(fields: [gameId], references: [id])
   createdAt     DateTime   @default(now())
