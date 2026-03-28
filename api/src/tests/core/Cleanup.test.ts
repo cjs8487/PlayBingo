@@ -21,6 +21,7 @@ const createRoom = () =>
         1,
         false,
         'Normal',
+        1,
     );
 
 describe('canClose()', () => {

@@ -55,6 +55,8 @@ export default function RoomInfo() {
                             <Typography>{roomData.variant}</Typography>
                             <Box sx={{ borderLeft: 1 }} />
                             <Typography>{roomData.mode}</Typography>
+                            <Box sx={{ borderLeft: 1 }} />
+                            <Typography>Seed: {roomData.seed}</Typography>
                         </Box>
                         <ConnectionState />
                     </CardContent>

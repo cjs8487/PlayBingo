@@ -14,6 +14,7 @@ export const createRoom = (
     lineCount: number = 1,
     variant?: string,
     explorationStart?: string,
+    seed?: number,
 ) => {
     return prisma.room.create({
         data: {
@@ -28,6 +29,7 @@ export const createRoom = (
             variant: variant ? { connect: { id: variant } } : undefined,
             exploration: !!explorationStart,
             explorationStart,
+            seed,
         },
     });
 };
