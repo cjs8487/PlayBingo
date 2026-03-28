@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/refs */
 'use client';
 import {
     arrow,
@@ -118,7 +119,6 @@ export default function BoardCell({
 
     useEffect(() => {
         if (revealed && !wasRevealed) {
-            // eslint-disable-next-line react-hooks/set-state-in-effect
             setWasRevealed(true);
             setAnimating(true);
             const timer = setTimeout(() => {
@@ -187,8 +187,6 @@ export default function BoardCell({
 
     const handleCellClick = (e: MouseEvent<HTMLDivElement>) => {
         setMenuOpen(false);
-
-        console.log(e);
 
         if (e.button === 0) {
             // left click
