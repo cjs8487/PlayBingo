@@ -48,9 +48,17 @@ goals.post('/:id', async (req, res) => {
 
     // Validate meta data if provided
     if (meta !== undefined) {
-        const metaValidation = validateGoalMeta(meta);
-        if (!metaValidation.valid) {
-            res.status(400).json({ error: metaValidation.error });
+        try {
+            const metaJson = JSON.parse(meta);
+            const metaValidation = validateGoalMeta(metaJson);
+            if (!metaValidation.valid) {
+                res.status(400).json({ error: metaValidation.error });
+                return;
+            }
+        } catch {
+            res.status(400).json({
+                error: 'Invalid metadata - invalid JSON syntax',
+            });
             return;
         }
     }
@@ -58,7 +66,7 @@ goals.post('/:id', async (req, res) => {
     const input: Prisma.GoalUpdateInput = {
         goal,
         description,
-        meta,
+        meta: JSON.parse(meta),
     };
 
     if (difficulty === 0) {

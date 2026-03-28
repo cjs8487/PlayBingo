@@ -7,11 +7,13 @@ import {
     Button,
     Checkbox,
     TextField,
+    Typography,
     createFilterOptions,
 } from '@mui/material';
 import { Category, Goal, GoalTag } from '@playbingo/types';
 import { Form, Formik, useField } from 'formik';
 import { KeyedMutator } from 'swr';
+import FormikJsonEditor from '../../../../../../components/input/FormikJsonEditor';
 import FormikTextField from '../../../../../../components/input/FormikTextField';
 import { useGoalManagerContext } from '../../../../../../context/GoalManagerContext';
 import { alertError } from '../../../../../../lib/Utils';
@@ -91,7 +93,6 @@ function TagSelect({ tags }: TagSelectProps) {
     const [field, , helpers] = useField<string[]>('tags');
 
     const tagList = tags.map((t) => ({ value: t.id, display: t.name }));
-    console.log(tags);
     return (
         <Autocomplete
             multiple
@@ -148,6 +149,7 @@ export default function GoalEditor({
     canModerate,
 }: GoalEditorProps) {
     const { tags } = useGoalManagerContext();
+
     return (
         <Formik
             initialValues={{
@@ -156,6 +158,7 @@ export default function GoalEditor({
                 categories: goal.categories?.map((c) => c.name) ?? [],
                 difficulty: goal.difficulty ?? 0,
                 tags: goal.tags?.map((t) => t.id) ?? [],
+                meta: JSON.stringify(goal.meta) ?? '{}',
             }}
             onSubmit={async ({
                 goal: goalText,
@@ -163,6 +166,7 @@ export default function GoalEditor({
                 categories,
                 difficulty,
                 tags,
+                meta,
             }) => {
                 if (isNew) {
                     const res = await fetch(`/api/games/${slug}/goals`, {
@@ -175,6 +179,7 @@ export default function GoalEditor({
                             description,
                             categories,
                             difficulty,
+                            meta,
                         }),
                     });
                     if (!res.ok) {
@@ -220,6 +225,12 @@ export default function GoalEditor({
                                 )
                                     ? tags
                                     : undefined,
+                            meta:
+                                meta &&
+                                JSON.stringify(meta) !==
+                                    JSON.stringify(goal.meta)
+                                    ? meta
+                                    : undefined,
                         }),
                     });
                     if (!res.ok) {
@@ -241,6 +252,7 @@ export default function GoalEditor({
                             width: '100%',
                             rowGap: 3,
                             pt: 1,
+                            pr: 1,
                         }}
                     >
                         <FormikTextField
@@ -296,10 +308,19 @@ export default function GoalEditor({
                         </Box>
                     </Box>
                     {canModerate && (
+                        <Box sx={{ pt: 1, pr: 1 }}>
+                            <Typography variant="subtitle2" gutterBottom>
+                                Metadata
+                            </Typography>
+                            <FormikJsonEditor name="meta" />
+                        </Box>
+                    )}
+                    {canModerate && (
                         <Box
                             sx={{
                                 display: 'flex',
                                 pt: 1,
+                                pr: 1,
                             }}
                         >
                             <Button
