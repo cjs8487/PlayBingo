@@ -1088,7 +1088,6 @@ export default class Room {
             });
         });
         allRooms.delete(this.slug);
-        this.computeVictoryMasks();
     }
 
     revealCardForPlayer(player: Player) {
