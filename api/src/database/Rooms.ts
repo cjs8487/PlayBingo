@@ -1,4 +1,4 @@
-import { BingoMode, RoomActionType } from '@prisma/client';
+import { BingoMode, RaceHandler, RoomActionType } from '@prisma/client';
 import { prisma } from './Database';
 import { JsonObject } from '@prisma/client/runtime/library';
 import Player from '../core/Player';
@@ -130,6 +130,7 @@ export const createUpdatePlayer = async (room: string, player: Player) => {
                 : undefined,
             spectator: player.spectator,
             monitor: player.monitor,
+            finishedAt: player.finishedAt,
         },
         update: {
             nickname: player.nickname,
@@ -139,6 +140,33 @@ export const createUpdatePlayer = async (room: string, player: Player) => {
                 : { disconnect: true },
             spectator: player.spectator,
             monitor: player.monitor,
+            finishedAt: player.finishedAt ?? null,
         },
+    });
+};
+
+export const updateStartTime = async (room: string, startedAt: Date | null) => {
+    return prisma.room.update({
+        where: { id: room },
+        data: { startedAt },
+    });
+};
+export const updateFinishTime = async (
+    room: string,
+    finishedAt: Date | null,
+) => {
+    return prisma.room.update({
+        where: { id: room },
+        data: { finishedAt },
+    });
+};
+
+export const updateRaceHandler = async (
+    room: string,
+    raceHandler: RaceHandler,
+) => {
+    return prisma.room.update({
+        where: { id: room },
+        data: { raceHandler },
     });
 };
