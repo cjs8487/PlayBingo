@@ -22,8 +22,8 @@ export default function RootLayout({
     children: React.ReactNode;
 }) {
     return (
-        <html lang="en">
-            <body>
+        <html lang="en" className="dark" data-theme="dark">
+            <body className="bg-background text-foreground">
                 <AppRouterCacheProvider options={{ enableCssLayer: true }}>
                     <ThemeProvider theme={theme}>
                         <CssBaseline />
