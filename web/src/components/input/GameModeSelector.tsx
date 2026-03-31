@@ -1,4 +1,6 @@
 'use client';
+import { faLock } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
     Description,
     Switch as HeroSwitch,
@@ -7,8 +9,6 @@ import {
     RadioGroup,
     Slider,
     Surface,
-    ToggleButton,
-    ToggleButtonGroup,
 } from '@heroui/react';
 import {
     Box,
@@ -23,9 +23,6 @@ import clsx from 'clsx';
 import { useField, useFormikContext } from 'formik';
 import { useState } from 'react';
 import { RoomFormValues } from '../RoomCreateForm';
-import { Lock } from '@mui/icons-material';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faLock } from '@fortawesome/free-solid-svg-icons';
 
 interface GameMode {
     id: string;
@@ -39,9 +36,9 @@ const gameModes: GameMode[] = [
     {
         id: 'LINES',
         name: 'Bingo',
-        description: 'Complete lines, patterns, or full card',
+        description: 'Complete a set number of lines to win',
         detailedDescription:
-            'Traditional bingo gameplay with customizable win conditions. Complete horizontal lines, vertical lines, diagonal lines, or specific patterns to win.',
+            'Traditional line based bingo with a configurable number of lines required to complete the board. Complete horizontal lines, vertical lines, or diagonal lines to win.',
         icon: '🎯',
     },
     {
@@ -408,20 +405,20 @@ function HeroGameModeButton({ mode }: { mode: GameMode }) {
                                         className="max-w-1/2"
                                     >
                                         <Label className="pb-2 text-sm font-bold">
-                                            Win Condition
+                                            Lines Required
                                         </Label>
                                         <Slider.Output>
                                             {({ state: { values } }) => {
                                                 if (values[0] === 1)
-                                                    return 'Single Bingo (1 Line)';
+                                                    return '1 Line (Single Bingo)';
                                                 if (values[0] === 2)
-                                                    return 'Double Bingo (2 Lines)';
+                                                    return ' 2 Lines (Double Bingo)';
                                                 if (values[0] === 3)
-                                                    return 'Triple Bingo (3 Lines)';
+                                                    return '3 Lines (Triple Bingo)';
                                                 if (values[0] === 4)
-                                                    return 'Quad Bingo (4 Lines)';
+                                                    return '4 Lines (Quad Bingo)';
                                                 if (values[0] === 5)
-                                                    return 'Cinco Bingo (5 Lines)';
+                                                    return '5 Lines (Cinco Bingo)';
                                                 return '';
                                             }}
                                         </Slider.Output>
