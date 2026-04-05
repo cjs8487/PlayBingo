@@ -4,3 +4,4 @@ export interface BoardSizeOptions {
     sizes: number[];
     customLayout?: { width: number; height: number };
 }
+export * from './validation';

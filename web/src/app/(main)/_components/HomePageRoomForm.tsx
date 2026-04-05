@@ -6,9 +6,9 @@ import {
     Description,
     EmptyState,
     FieldError,
-    Accordion as HeroAccordion,
-    Button as HeroButton,
-    Form as HeroForm,
+    Accordion,
+    Button,
+    Form,
     Input,
     Key,
     Label,
@@ -21,49 +21,12 @@ import {
     useFilter,
 } from '@heroui/react';
 import { CircularProgress, FormHelperText } from '@mui/material';
+import { roomCreateSchema } from '@playbingo/shared';
 import { Game } from '@playbingo/types';
-import { Formik } from 'formik';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { useAsync } from 'react-use';
-import * as yup from 'yup';
 import { GameModeSelectorHero } from '../../../components/input/GameModeSelector';
-import { RoomFormValues } from '../../../components/RoomCreateForm';
-
-const roomValidationSchema = yup.object().shape({
-    name: yup.string().required('Room name is required'),
-    nickname: yup.string().required('Player nickname is required'),
-    password: yup.string().required('Password is required'),
-    game: yup.string().required('Game is required'),
-    variant: yup.string(),
-    mode: yup
-        .string()
-        .required('Game mode is required')
-        .oneOf(['LINES', 'BLACKOUT', 'LOCKOUT'], 'Invalid game mode'),
-    explorationStart: yup
-        .string()
-        .oneOf(
-            ['TL', 'TR', 'BL', 'BR', 'CENTER', 'RANDOM'],
-            'Invalid starting square mode',
-        )
-        .when('exploration', {
-            is: true,
-            then: (schema) => schema.required('Starting square is required'),
-            otherwise: (schema) => schema.notRequired(),
-        }),
-    explorationStartCount: yup
-        .number()
-        .when(['exploration', 'explorationStart'], {
-            is: (exploration: boolean, explorationStart: string) =>
-                exploration && explorationStart === 'RANDOM',
-            then: (schema) =>
-                schema
-                    .required('Start count is required')
-                    .min(1, 'Must start with at least 1 revealed square')
-                    .max(5, 'Cannot start with more than 5 goals revealed'),
-            otherwise: (schema) => schema.notRequired(),
-        }),
-});
 
 function VariantSelectField({ game }: { game: Key | null }) {
     const options = useAsync(async () => {
@@ -85,7 +48,7 @@ function VariantSelectField({ game }: { game: Key | null }) {
     const disabled = !options.value || options.value.length === 0;
 
     return (
-        <Select className="grow" isDisabled={disabled}>
+        <Select className="grow" isDisabled={disabled} name="variant">
             <Label>Variant</Label>
             <Select.Trigger>
                 <Select.Value />
@@ -121,6 +84,7 @@ export default function HomePageRoomForm() {
     const router = useRouter();
     const { contains } = useFilter({ sensitivity: 'base' });
     const [game, setGame] = useState<Key | null>('');
+    const [errors, setErrors] = useState<{ [k: string]: string }>({});
 
     if (isLoading) {
         return <CircularProgress />;
@@ -131,279 +95,278 @@ export default function HomePageRoomForm() {
     }
 
     return (
-        <>
-            <HeroForm
-                className="flex flex-col gap-4 text-left"
-                validationBehavior="aria"
-                onSubmit={async (e) => {
-                    e.preventDefault();
-                    const formData = new FormData(e.currentTarget);
-                    const data = Object.fromEntries(formData);
-                    console.log('Form data:', data);
-                }}
-            >
-                <div className="flex gap-4">
-                    <TextField name="name" isRequired className="grow">
-                        <Label>Room Name</Label>
-                        <Input placeholder="Room Name" />
-                        <FieldError />
-                    </TextField>
-                    <TextField name="nickname" isRequired className="grow">
-                        <Label>Nickname</Label>
-                        <Input placeholder="Nickname" />
-                        <FieldError />
-                    </TextField>
-                    <TextField name="password" isRequired className="grow">
-                        <Label>Password</Label>
-                        <Input placeholder="Password" />
-                        <FieldError />
-                    </TextField>
-                </div>
-                <div className="flex gap-4">
-                    <Autocomplete
-                        isRequired
-                        className="grow"
-                        value={game}
-                        onChange={setGame}
-                    >
-                        <Label>Game</Label>
-                        <Autocomplete.Trigger>
-                            <Autocomplete.Value />
-                            <Autocomplete.Indicator />
-                        </Autocomplete.Trigger>
-                        <Autocomplete.Popover>
-                            <Autocomplete.Filter filter={contains}>
-                                <SearchField
-                                    autoFocus
-                                    name="search"
-                                    variant="secondary"
-                                >
-                                    <SearchField.Group>
-                                        <SearchField.SearchIcon />
-                                        <SearchField.Input placeholder="Search games..." />
-                                    </SearchField.Group>
-                                </SearchField>
-                                <ListBox
-                                    renderEmptyState={() => (
-                                        <EmptyState>No games found</EmptyState>
-                                    )}
-                                >
-                                    {games.map((game) => (
-                                        <ListBox.Item
-                                            key={game.slug}
-                                            id={game.slug}
-                                            textValue={game.name}
-                                        >
-                                            <Label>{game.name}</Label>
-                                            <ListBox.ItemIndicator />
-                                        </ListBox.Item>
-                                    ))}
-                                </ListBox>
-                            </Autocomplete.Filter>
-                        </Autocomplete.Popover>
-                    </Autocomplete>
-                    <VariantSelectField game={game} />
-                </div>
+        <Form
+            className="flex flex-col gap-4 text-left"
+            validationBehavior="aria"
+            validationErrors={errors}
+            onSubmit={async (e) => {
+                e.preventDefault();
+                const formData = new FormData(e.currentTarget);
+                const data = Object.fromEntries(formData);
 
-                <GameModeSelectorHero />
+                const result = roomCreateSchema.safeParse(data);
 
-                <HeroAccordion className="bg-surface">
-                    <HeroAccordion.Item>
-                        <HeroAccordion.Heading>
-                            <HeroAccordion.Trigger>
-                                Additional Settings
-                                <HeroAccordion.Indicator />
-                            </HeroAccordion.Trigger>
-                        </HeroAccordion.Heading>
-                        <HeroAccordion.Panel>
-                            <HeroAccordion.Body className="flex flex-col gap-4">
-                                <div className="flex gap-4">
-                                    <Switch size="md" name="hideCard">
-                                        <Switch.Control>
-                                            <Switch.Thumb />
-                                        </Switch.Control>
-                                        <Switch.Content>
-                                            <Label>Hide card initially?</Label>
-                                            <Description>
-                                                Hides the card for newly joining
-                                                players.
-                                            </Description>
-                                        </Switch.Content>
-                                    </Switch>
-                                    <Switch size="md" name="spectator">
-                                        <Switch.Control>
-                                            <Switch.Thumb />
-                                        </Switch.Control>
-                                        <Switch.Content>
-                                            <Label>Join as a spectator?</Label>
-                                            <Description>
-                                                Join the game as a spectator,
-                                                who are unable to interact
-                                                directly with the board.
-                                            </Description>
-                                        </Switch.Content>
-                                    </Switch>
-                                </div>
-
-                                <div className="flex gap-4">
-                                    <Switch size="md" name="exploration">
-                                        <Switch.Control>
-                                            <Switch.Thumb />
-                                        </Switch.Control>
-                                        <Switch.Content>
-                                            <Label>Enable fog of war?</Label>
-                                            <Description>
-                                                Fog obscures goals until an
-                                                adjacent goal has been
-                                                completed.
-                                            </Description>
-                                        </Switch.Content>
-                                    </Switch>
-                                    <Select
-                                        name="explorationStart"
-                                        variant="secondary"
-                                    >
-                                        <Label>Starting Square</Label>
-                                        <Select.Trigger>
-                                            <Select.Value />
-                                            <Select.Indicator />
-                                        </Select.Trigger>
-                                        <Description>
-                                            Select the location of the goal that
-                                            will start the game revealed.
-                                        </Description>
-                                        <Select.Popover>
-                                            <ListBox>
-                                                {[
-                                                    {
-                                                        value: 'TL',
-                                                        label: 'Top Left',
-                                                    },
-                                                    {
-                                                        value: 'TR',
-                                                        label: 'Top Right',
-                                                    },
-                                                    {
-                                                        value: 'BL',
-                                                        label: 'Bottom Left',
-                                                    },
-                                                    {
-                                                        value: 'BR',
-                                                        label: 'Bottom Right',
-                                                    },
-                                                    {
-                                                        value: 'CENTER',
-                                                        label: 'Center',
-                                                        tooltip:
-                                                            'The center square of the board starts revealed. If the board has an even width or height, two squares will be revealed in that direction.',
-                                                    },
-                                                    {
-                                                        value: 'RANDOM',
-                                                        label: 'Random',
-                                                        tooltip:
-                                                            'A specified number of cells in the square will be chosen at random to start revealed',
-                                                    },
-                                                ].map((option) => (
-                                                    <ListBox.Item
-                                                        key={option.value}
-                                                        id={option.value}
-                                                        textValue={option.label}
-                                                    >
-                                                        <Label>
-                                                            {option.label}
-                                                        </Label>
-                                                        {option.tooltip && (
-                                                            <Description>
-                                                                {option.tooltip}
-                                                            </Description>
-                                                        )}
-                                                        <ListBox.ItemIndicator />
-                                                    </ListBox.Item>
-                                                ))}
-                                            </ListBox>
-                                        </Select.Popover>
-                                    </Select>
-                                    <NumberField
-                                        id="exploration-random-revealed-count"
-                                        name="explorationStartCount"
-                                        variant="secondary"
-                                        className="w-full max-w-64"
-                                        minValue={1}
-                                        maxValue={5}
-                                        step={1}
-                                    >
-                                        <Label>Starting Square Count</Label>
-                                        <NumberField.Group>
-                                            <NumberField.DecrementButton />
-                                            <NumberField.Input />
-                                            <NumberField.IncrementButton />
-                                        </NumberField.Group>
-                                    </NumberField>
-                                </div>
-                                <NumberField
-                                    name="seed"
-                                    className=""
-                                    variant="secondary"
-                                    fullWidth
-                                    formatOptions={{ maximumFractionDigits: 0 }}
-                                >
-                                    <Label>Seed</Label>
-                                    <NumberField.Group>
-                                        <NumberField.Input className="col-span-3" />
-                                    </NumberField.Group>
-                                    <Description>
-                                        Enter a seed to generate the same board
-                                        across multiple rooms. Leave blank to
-                                        generate a random seed.
-                                    </Description>
-                                </NumberField>
-                            </HeroAccordion.Body>
-                        </HeroAccordion.Panel>
-                    </HeroAccordion.Item>
-                </HeroAccordion>
-
-                <HeroButton type="submit">Create Room</HeroButton>
-            </HeroForm>
-
-            <Formik<RoomFormValues>
-                initialValues={{
-                    name: '',
-                    nickname: '',
-                    game: '',
-                    password: '',
-                    variant: '',
-                    mode: 'LINES',
-                    lineCount: 1,
-                    seed: undefined,
-                    hideCard: false,
-                    spectator: false,
-                    exploration: false,
-                    explorationStart: 'TL',
-                    explorationStartCount: '',
-                }}
-                validationSchema={roomValidationSchema}
-                onSubmit={async (values) => {
-                    const res = await fetch('/api/rooms', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify(values),
-                    });
-                    if (!res.ok) {
-                        const error = await res.text();
-                        alertError(`Unable to create room - ${error}`);
-                        return;
+                if (!result.success) {
+                    const newErrors: { [k: string]: string } = {};
+                    console.log(result.error.issues);
+                    for (const issue of result.error.issues) {
+                        newErrors[issue.path.join('.')] = issue.message;
                     }
-                    const { slug, authToken } = await res.json();
-                    localStorage.setItem(
-                        'PlayBingo.temp.nickname',
-                        values.nickname,
-                    );
-                    localStorage.setItem(`authToken-${slug}`, authToken);
-                    router.push(`/rooms/${slug}`);
-                }}
-            ></Formik>
-        </>
+                    console.log(newErrors);
+                    setErrors(newErrors);
+                    return;
+                } else {
+                    setErrors({});
+                }
+
+                const values = result.data;
+
+                const res = await fetch('/api/rooms', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(values),
+                });
+                if (!res.ok) {
+                    const error = await res.text();
+                    alertError(`Unable to create room - ${error}`);
+                    return;
+                }
+                const { slug, authToken } = await res.json();
+                localStorage.setItem(
+                    'PlayBingo.temp.nickname',
+                    values.nickname,
+                );
+                localStorage.setItem(`authToken-${slug}`, authToken);
+                router.push(`/rooms/${slug}`);
+            }}
+        >
+            <div className="flex gap-4">
+                <TextField name="name" isRequired className="grow">
+                    <Label>Room Name</Label>
+                    <Input placeholder="Room Name" />
+                    <FieldError />
+                </TextField>
+                <TextField name="nickname" isRequired className="grow">
+                    <Label>Nickname</Label>
+                    <Input placeholder="Nickname" />
+                    <FieldError />
+                </TextField>
+                <TextField name="password" isRequired className="grow">
+                    <Label>Password</Label>
+                    <Input placeholder="Password" />
+                    <FieldError />
+                </TextField>
+            </div>
+            <div className="flex gap-4">
+                <Autocomplete
+                    isRequired
+                    name="game"
+                    className="grow"
+                    value={game}
+                    onChange={setGame}
+                >
+                    <Label>Game</Label>
+                    <Autocomplete.Trigger>
+                        <Autocomplete.Value />
+                        <Autocomplete.Indicator />
+                    </Autocomplete.Trigger>
+                    <FieldError />
+                    <Autocomplete.Popover>
+                        <Autocomplete.Filter filter={contains}>
+                            <SearchField
+                                autoFocus
+                                name="search"
+                                variant="secondary"
+                            >
+                                <SearchField.Group>
+                                    <SearchField.SearchIcon />
+                                    <SearchField.Input placeholder="Search games..." />
+                                </SearchField.Group>
+                            </SearchField>
+                            <ListBox
+                                renderEmptyState={() => (
+                                    <EmptyState>No games found</EmptyState>
+                                )}
+                            >
+                                {games.map((game) => (
+                                    <ListBox.Item
+                                        key={game.slug}
+                                        id={game.slug}
+                                        textValue={game.name}
+                                    >
+                                        <Label>{game.name}</Label>
+                                        <ListBox.ItemIndicator />
+                                    </ListBox.Item>
+                                ))}
+                            </ListBox>
+                        </Autocomplete.Filter>
+                    </Autocomplete.Popover>
+                </Autocomplete>
+                <VariantSelectField game={game} />
+            </div>
+
+            <GameModeSelectorHero />
+
+            <Accordion className="bg-surface">
+                <Accordion.Item>
+                    <Accordion.Heading>
+                        <Accordion.Trigger>
+                            Additional Settings
+                            <Accordion.Indicator />
+                        </Accordion.Trigger>
+                    </Accordion.Heading>
+                    <Accordion.Panel>
+                        <Accordion.Body className="flex flex-col gap-4">
+                            <div className="flex gap-4">
+                                <Switch size="md" name="hideCard">
+                                    <Switch.Control>
+                                        <Switch.Thumb />
+                                    </Switch.Control>
+                                    <Switch.Content>
+                                        <Label>Hide card initially?</Label>
+                                        <Description>
+                                            Hides the card for newly joining
+                                            players.
+                                        </Description>
+                                    </Switch.Content>
+                                </Switch>
+                                <Switch size="md" name="spectator">
+                                    <Switch.Control>
+                                        <Switch.Thumb />
+                                    </Switch.Control>
+                                    <Switch.Content>
+                                        <Label>Join as a spectator?</Label>
+                                        <Description>
+                                            Join the game as a spectator, who
+                                            are unable to interact directly with
+                                            the board.
+                                        </Description>
+                                    </Switch.Content>
+                                </Switch>
+                            </div>
+
+                            <div className="flex gap-4">
+                                <Switch size="md" name="exploration">
+                                    <Switch.Control>
+                                        <Switch.Thumb />
+                                    </Switch.Control>
+                                    <Switch.Content>
+                                        <Label>Enable fog of war?</Label>
+                                        <Description>
+                                            Fog obscures goals until an adjacent
+                                            goal has been completed.
+                                        </Description>
+                                    </Switch.Content>
+                                </Switch>
+                                <Select
+                                    name="explorationStart"
+                                    variant="secondary"
+                                >
+                                    <Label>Starting Square</Label>
+                                    <Select.Trigger>
+                                        <Select.Value />
+                                        <Select.Indicator />
+                                    </Select.Trigger>
+                                    <Description>
+                                        Select the location of the goal that
+                                        will start the game revealed.
+                                    </Description>
+                                    <FieldError />
+                                    <Select.Popover>
+                                        <ListBox>
+                                            {[
+                                                {
+                                                    value: 'TL',
+                                                    label: 'Top Left',
+                                                },
+                                                {
+                                                    value: 'TR',
+                                                    label: 'Top Right',
+                                                },
+                                                {
+                                                    value: 'BL',
+                                                    label: 'Bottom Left',
+                                                },
+                                                {
+                                                    value: 'BR',
+                                                    label: 'Bottom Right',
+                                                },
+                                                {
+                                                    value: 'CENTER',
+                                                    label: 'Center',
+                                                    tooltip:
+                                                        'The center square of the board starts revealed. If the board has an even width or height, two squares will be revealed in that direction.',
+                                                },
+                                                {
+                                                    value: 'RANDOM',
+                                                    label: 'Random',
+                                                    tooltip:
+                                                        'A specified number of cells in the square will be chosen at random to start revealed',
+                                                },
+                                            ].map((option) => (
+                                                <ListBox.Item
+                                                    key={option.value}
+                                                    id={option.value}
+                                                    textValue={option.label}
+                                                >
+                                                    <Label>
+                                                        {option.label}
+                                                    </Label>
+                                                    {option.tooltip && (
+                                                        <Description>
+                                                            {option.tooltip}
+                                                        </Description>
+                                                    )}
+                                                    <ListBox.ItemIndicator />
+                                                </ListBox.Item>
+                                            ))}
+                                        </ListBox>
+                                    </Select.Popover>
+                                </Select>
+                                <NumberField
+                                    id="exploration-random-revealed-count"
+                                    name="explorationStartCount"
+                                    variant="secondary"
+                                    className="w-full max-w-64"
+                                    minValue={1}
+                                    maxValue={5}
+                                    step={1}
+                                >
+                                    <Label>Starting Square Count</Label>
+                                    <NumberField.Group>
+                                        <NumberField.DecrementButton />
+                                        <NumberField.Input />
+                                        <NumberField.IncrementButton />
+                                    </NumberField.Group>
+                                    <FieldError />
+                                </NumberField>
+                            </div>
+                            <NumberField
+                                name="seed"
+                                className=""
+                                variant="secondary"
+                                fullWidth
+                                formatOptions={{ maximumFractionDigits: 0 }}
+                            >
+                                <Label>Seed</Label>
+                                <NumberField.Group>
+                                    <NumberField.Input className="col-span-3" />
+                                </NumberField.Group>
+                                <Description>
+                                    Enter a seed to generate the same board
+                                    across multiple rooms. Leave blank to
+                                    generate a random seed.
+                                </Description>
+                                <FieldError />
+                            </NumberField>
+                        </Accordion.Body>
+                    </Accordion.Panel>
+                </Accordion.Item>
+            </Accordion>
+
+            <Button type="submit">Create Room</Button>
+        </Form>
     );
 }
