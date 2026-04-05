@@ -3,6 +3,7 @@ import { faLock } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
     Description,
+    FieldError,
     Switch as HeroSwitch,
     Label,
     Radio,
@@ -346,12 +347,13 @@ export default function GameModeSelector() {
 
 export function GameModeSelectorHero() {
     return (
-        <RadioGroup orientation="horizontal" name="gameMode">
-            <div className="width-full xs:h-112.5 flex gap-4 sm:h-87.5 md:h-75">
+        <RadioGroup orientation="vertical" name="mode">
+            <div className="width-full xs:h-112.5 flex gap-4 pb-2 sm:h-87.5 md:h-75">
                 {gameModes.map((mode) => (
                     <HeroGameModeButton key={mode.id} mode={mode} />
                 ))}
             </div>
+            <FieldError />
         </RadioGroup>
     );
 }
@@ -426,6 +428,7 @@ function HeroGameModeButton({ mode }: { mode: GameMode }) {
                                             <Slider.Fill />
                                             <Slider.Thumb name="lineCount" />
                                         </Slider.Track>
+                                        <FieldError />
                                     </Slider>
                                 </>
                             )}
