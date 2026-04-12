@@ -1,7 +1,7 @@
 'use client';
 import { RoomContext } from '@/context/RoomContext';
+import { Button, Input, TextField } from '@heroui/react';
 import SendIcon from '@mui/icons-material/Send';
-import { Box, Button, Card, TextField } from '@mui/material';
 import { useContext, useEffect, useRef, useState } from 'react';
 
 export default function RoomChat() {
@@ -16,24 +16,8 @@ export default function RoomChat() {
     }, [messages]);
 
     return (
-        <Card
-            sx={{
-                display: 'flex',
-                height: '100%',
-                flexDirection: 'column',
-                rowGap: 1,
-                p: 1,
-            }}
-        >
-            <Box
-                sx={{
-                    height: '100%',
-                    flexGrow: 1,
-                    overflowY: 'auto',
-                    px: 1,
-                }}
-                ref={chatDivRef}
-            >
+        <div className="bg-surface-secondary grid-rows-[1fr_auto absolute grid h-full w-full grid-cols-1 gap-2 p-2">
+            <div className="max-h-full overflow-y-auto px-2" ref={chatDivRef}>
                 {messages.map((message, index) => (
                     <div key={index}>
                         {message.map((messageContents, contentIndex) => {
@@ -57,38 +41,32 @@ export default function RoomChat() {
                         })}
                     </div>
                 ))}
-            </Box>
-            <Box
-                sx={{
-                    display: 'flex',
-                    columnGap: 1,
-                }}
-            >
+            </div>
+            <div className="flex gap-1">
                 <TextField
-                    size="small"
-                    variant="outlined"
                     value={message}
-                    placeholder="Send a chat message..."
-                    onChange={(event) => setMessage(event.target.value)}
+                    className="grow"
+                    fullWidth
+                    onChange={setMessage}
                     onKeyUp={(event) => {
                         if (event.key === 'Enter') {
                             sendChatMessage(message);
                             setMessage('');
                         }
                     }}
-                    sx={{ flexGrow: 1 }}
-                />
+                >
+                    <Input placeholder="Send a chat message..." />
+                </TextField>
                 <Button
-                    variant="contained"
-                    endIcon={<SendIcon />}
                     onClick={() => {
                         sendChatMessage(message);
                         setMessage('');
                     }}
                 >
                     Send
+                    <SendIcon />
                 </Button>
-            </Box>
-        </Card>
+            </div>
+        </div>
     );
 }
