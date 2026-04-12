@@ -99,6 +99,7 @@ export default function Board() {
                                     textAlign: 'center',
                                     ml: `${leftMargin}px`,
                                     mt: `${topMargin}px`,
+                                    gap: 1,
                                 }}
                             >
                                 {board.board.map((row, rowIndex) =>
