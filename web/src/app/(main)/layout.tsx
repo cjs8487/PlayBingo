@@ -38,6 +38,8 @@ const Main = styled('main', {
     gridTemplateRows: '1fr auto',
     gridRow: '2',
     gridColumn: '2',
+    height: '100%',
+    maxHeight: '100%',
 }));
 
 export default function CoreLayout({
@@ -73,7 +75,13 @@ export default function CoreLayout({
                     }}
                 >
                     <Header toggleNavDrawer={toggleNavDrawer} />
-                    <Box sx={{ display: 'flex' }}>
+                    <Box
+                        sx={{
+                            display: 'flex',
+                            height: '100%',
+                            maxHeight: '100%',
+                        }}
+                    >
                         <NavDrawer
                             open={navDrawerOpen}
                             setOpen={setManuallyOpened}
