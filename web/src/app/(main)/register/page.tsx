@@ -81,13 +81,15 @@ export default function Register() {
 
     return (
         <Box
-            flexGrow={1}
-            alignItems="center"
-            justifyContent="center"
-            display="flex"
+            sx={{
+                flexGrow: 1,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+            }}
         >
             <Paper sx={{ px: 8, py: 4 }}>
-                <Box textAlign="center" pb={2}>
+                <Box sx={{ textAlign: 'center', pb: 2 }}>
                     <Typography variant="h4">
                         Register for an Account
                     </Typography>
@@ -307,7 +309,7 @@ export default function Register() {
                                     </IconButton>
                                 }
                             />
-                            <Box textAlign="right">
+                            <Box sx={{ textAlign: 'right' }}>
                                 <Button
                                     type="submit"
                                     disabled={!isValid || isSubmitting}
