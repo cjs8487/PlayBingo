@@ -39,7 +39,7 @@ export default function ResetPassword() {
         <Container
             sx={{ pt: 3, maxWidth: { sm: '75%', lg: '50%', xl: '35%' } }}
         >
-            <Typography variant="h5" align="center" pb={2}>
+            <Typography variant="h5" sx={{ textAlign: 'center', pb: 2 }}>
                 Reset Password
             </Typography>
             <Formik
@@ -69,7 +69,7 @@ export default function ResetPassword() {
                             type="password"
                             label="New Password"
                         />
-                        <Typography variant="caption" mt={0.5} ml={0.5}>
+                        <Typography variant="caption" sx={{ mt: 0.5, ml: 0.5 }}>
                             Your password must contain the following:
                             <ul style={{ margin: 0 }}>
                                 <Typography
@@ -138,8 +138,8 @@ export default function ResetPassword() {
                             label="Confirm New Password"
                             sx={{ mt: 2, mb: 1 }}
                         />
-                        <Box display="flex">
-                            <Box flexGrow={1} />
+                        <Box sx={{ display: 'flex' }}>
+                            <Box sx={{ flexGrow: 1 }} />
                             <Button
                                 type="submit"
                                 disabled={!isValid || isSubmitting}
