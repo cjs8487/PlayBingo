@@ -133,7 +133,7 @@ export default async function GameLayout({
                         </Box>
                     )}
                 </Box>
-                <Typography variant="h5" textAlign="center" sx={{ mb: 1 }}>
+                <Typography variant="h5" sx={{ mb: 1, textAlign: 'center' }}>
                     {name}
                 </Typography>
                 {owners && owners.length > 0 && (
