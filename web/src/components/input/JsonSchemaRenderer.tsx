@@ -15,20 +15,13 @@ import {
     Tooltip,
     Typography,
 } from '@mui/material';
-import React, {
-    ReactNode,
-    useCallback,
-    useEffect,
-    useMemo,
-    useState,
-} from 'react';
-import z, { ZodType } from 'zod';
+import { ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
+import z, { ZodObject } from 'zod';
 import NumberField from '../NumberField';
 
 type Errors = Record<string, string>;
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function useJSONForm<T extends ZodType<any, any>>(
+export function useJSONForm<T extends ZodObject>(
     schema: T,
     initialValues: z.infer<T>,
 ) {
