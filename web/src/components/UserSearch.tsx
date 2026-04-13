@@ -160,8 +160,10 @@ export default function UserSearch({
                                             checked={selected.includes(user.id)}
                                             tabIndex={-1}
                                             disableRipple
-                                            inputProps={{
-                                                'aria-labelledby': `user-list-label-${index}`,
+                                            slotProps={{
+                                                input: {
+                                                    'aria-labelledby': `user-list-label-${index}`,
+                                                },
                                             }}
                                         />
                                     </ListItemIcon>
