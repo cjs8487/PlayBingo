@@ -163,6 +163,21 @@ export class BoardGenerator {
 
     pruneGoalList() {
         this.goalFilters.forEach((f) => f(this));
+
+        this.goalsByDifficulty = {};
+        this.goalsByCategoryId = {};
+        this.goalCopies = {};
+        this.goals.forEach((goal) => {
+            if (goal.difficulty) {
+                const prev = this.goalsByDifficulty[goal.difficulty] ?? [];
+                this.goalsByDifficulty[goal.difficulty] = [...prev, goal];
+            }
+            goal.categories.forEach((cat) => {
+                const prev = this.goalsByCategoryId[cat.id] ?? [];
+                this.goalsByCategoryId[cat.id] = [...prev, goal];
+            });
+            this.goalCopies[goal.id] = 1;
+        });
     }
 
     transformGoals() {
