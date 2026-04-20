@@ -66,7 +66,7 @@ goals.post('/:id', async (req, res) => {
     const input: Prisma.GoalUpdateInput = {
         goal,
         description,
-        meta: JSON.parse(meta),
+        meta: meta ? JSON.parse(meta) : undefined,
     };
 
     if (difficulty === 0) {
