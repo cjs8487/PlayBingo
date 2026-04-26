@@ -2,10 +2,10 @@
 import Board from '@/components/board/Board';
 import PlayerInfo from '@/components/room/PlayerInfo';
 import PlayerList from '@/components/room/PlayerList';
-import RacetimeCard from '@/components/room/racetime/RacetimeCard';
 import RoomChat from '@/components/room/RoomChat';
 import RoomInfo from '@/components/room/RoomInfo';
 import RoomLogin from '@/components/room/RoomLogin';
+import Timer from '@/components/room/timer/Timer';
 import { ConnectionStatus, useRoomContext } from '@/context/RoomContext';
 import { Box, Dialog, DialogContent, Stack } from '@mui/material';
 
@@ -116,7 +116,7 @@ function RoomXs() {
     return (
         <Stack spacing={2} sx={{ height: '100%', overflow: 'hidden' }}>
             <RoomInfo />
-            <RacetimeCard />
+            <Timer />
             <PlayerInfo />
             <Box
                 sx={{
@@ -150,7 +150,7 @@ function RoomSm() {
                 <RoomInfo />
             </Box>
             <Box sx={{ flex: '0 0 auto' }}>
-                <RacetimeCard />
+                <Timer />
             </Box>
             <Box sx={{ flex: '0 0 auto' }}>
                 <PlayerInfo />
@@ -194,7 +194,7 @@ function RoomMd() {
                     <RoomInfo />
                 </Box>
                 <Box sx={{ flex: '0 0 auto' }}>
-                    <RacetimeCard />
+                    <Timer />
                 </Box>
             </Box>
             <Box sx={{ flex: '0 0 auto' }}>
@@ -259,7 +259,7 @@ function RoomLg() {
                 <PlayerInfo />
             </Box>
             <Box sx={{ gridColumn: 2, overflow: 'hidden' }}>
-                <RacetimeCard />
+                <Timer />
             </Box>
             <Box
                 sx={{
@@ -310,7 +310,7 @@ function RoomXl() {
                 <PlayerInfo />
             </Box>
             <Box sx={{ gridColumn: 2, overflow: 'hidden' }}>
-                <RacetimeCard />
+                <Timer />
             </Box>
             <Box sx={{ gridRow: '4 / -1', gridColumn: 2, overflow: 'hidden' }}>
                 <PlayerList />
