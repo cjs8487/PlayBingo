@@ -24,7 +24,6 @@ import { useContext } from 'react';
 import { useAsync } from 'react-use';
 import { RoomContext } from '../../context/RoomContext';
 import FormikTextField from '../input/FormikTextField';
-import rtLogo from '/public/rtgg128.png';
 
 interface RoomControlDialogProps {
     show: boolean;
@@ -98,7 +97,7 @@ export default function RoomControlDialog({
                                 aria-label="centered"
                             >
                                 <Image
-                                    src={rtLogo}
+                                    src="/rtgg128.png"
                                     width={32}
                                     height={32}
                                     alt=""
