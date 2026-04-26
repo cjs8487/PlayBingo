@@ -44,6 +44,7 @@ const addRoomAction = (
             room: { connect: { id: room } },
             action,
             payload,
+            timestamp: new Date(),
         },
     });
 };
