@@ -62,6 +62,8 @@ import { generateSRLv5 } from './generation/SRLv5';
 import LocalTimer from './integration/races/LocalTimer';
 import RaceHandler from './integration/races/RaceHandler';
 import RacetimeHandler, { RaceData } from './integration/races/RacetimeHandler';
+import { time } from 'console';
+import { DateTime, Duration } from 'luxon';
 
 export enum BoardGenerationMode {
     RANDOM = 'Random',
@@ -731,6 +733,20 @@ export default class Room {
     }
     //#endregion
 
+    private getTimestamp() {
+        if (this.raceHandler) {
+            const startTime = this.raceHandler.getStartTime();
+            if (startTime) {
+                const start = DateTime.fromISO(startTime);
+                const now = DateTime.now();
+                const dur = now.diff(start);
+                return dur.shiftToAll().toFormat('h:mm:ss');
+            }
+            return '0:00:00';
+        }
+        return '';
+    }
+
     //#region Send Messages
     sendChat(message: string): void;
     sendChat(message: ChatMessage): void;
@@ -740,16 +756,30 @@ export default class Room {
             return;
         }
         if (typeof message === 'string') {
-            this.chatHistory.push([message]);
+            const timestamp = this.getTimestamp();
+            if (timestamp) {
+                this.chatHistory.push([`[${this.getTimestamp()}] ${message}`]);
+            } else {
+                this.chatHistory.push([message]);
+            }
             this.sendServerMessage({ action: 'chat', message: [message] });
         } else {
+            const timestamp = this.getTimestamp();
+            if (timestamp) {
+                message.unshift(`[${this.getTimestamp()}]`);
+            }
             this.chatHistory.push(message);
             this.sendServerMessage({ action: 'chat', message: message });
         }
     }
 
     sendSystemMessage(message: string) {
-        this.chatHistory.push([message]);
+        const timestamp = this.getTimestamp();
+        if (timestamp) {
+            this.chatHistory.push([`[${this.getTimestamp()}] ${message}`]);
+        } else {
+            this.chatHistory.push([message]);
+        }
         this.sendServerMessage({ action: 'chat', message: [message] }, false);
     }
 
