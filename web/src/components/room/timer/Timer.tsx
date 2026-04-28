@@ -1,6 +1,6 @@
 import { RoomContext } from '@/context/RoomContext';
 import { Check, FastRewind, PlayArrow } from '@mui/icons-material';
-import { Button, ButtonGroup, Card, CardContent } from '@mui/material';
+import { Button, ButtonGroup } from '@mui/material';
 import { Duration } from 'luxon';
 import { useContext } from 'react';
 import RacetimeCard from '../racetime/RacetimeCard';
@@ -25,32 +25,30 @@ export default function Timer() {
     const started = !!roomData.startedAt;
 
     return (
-        <Card>
-            <CardContent>
-                <TimerDisplay offset={offset} />
-                <ButtonGroup
-                    size="small"
-                    variant="contained"
-                    color="inherit"
-                    sx={{ mt: 0.5 }}
+        <div className="">
+            <TimerDisplay offset={offset} />
+            <ButtonGroup
+                size="small"
+                variant="contained"
+                color="inherit"
+                sx={{ mt: 0.5 }}
+            >
+                <Button
+                    disabled={!started || !connectedPlayer?.monitor}
+                    onClick={resetTimer}
                 >
-                    <Button
-                        disabled={!started || !connectedPlayer?.monitor}
-                        onClick={resetTimer}
-                    >
-                        <FastRewind />
+                    <FastRewind />
+                </Button>
+                {started ? (
+                    <Button disabled={!started}>
+                        <Check />
                     </Button>
-                    {started ? (
-                        <Button disabled={!started}>
-                            <Check />
-                        </Button>
-                    ) : (
-                        <Button onClick={startTimer}>
-                            <PlayArrow />
-                        </Button>
-                    )}
-                </ButtonGroup>
-            </CardContent>
-        </Card>
+                ) : (
+                    <Button onClick={startTimer}>
+                        <PlayArrow />
+                    </Button>
+                )}
+            </ButtonGroup>
+        </div>
     );
 }
