@@ -322,7 +322,7 @@ function RoomXl() {
 
     return (
         <div className="grid h-full w-full grid-cols-[300px_1fr_300px] grid-rows-[auto_1fr] overflow-hidden">
-            <div className="col-span-full flex items-center justify-center bg-linear-to-r from-[#600011] from-40% to-[#b769fa] to-90% p-3">
+            <div className="relative col-span-full flex items-center justify-center bg-linear-to-r from-[#600011] from-40% to-[#b769fa] to-90% p-3">
                 <div className="grow">
                     <div className="mb-0.5 text-lg">{roomData.name}</div>
                     <div className="mb-1.5 flex text-xs">
@@ -344,8 +344,8 @@ function RoomXl() {
                         <div>{roomData.seed}</div>
                     </div>
                 </div>
-                <div className="absolute w-full text-center font-mono text-3xl">
-                    TIMER
+                <div className="absolute text-center font-mono text-3xl">
+                    <Timer />
                 </div>
                 <div>
                     <ConnectionState />
