@@ -789,7 +789,7 @@ export default class Room {
         } else {
             const timestamp = this.getTimestamp(eventTimestamp);
             if (timestamp) {
-                message.unshift(`[${this.getTimestamp(eventTimestamp)}]`);
+                message.unshift(`[${this.getTimestamp(eventTimestamp)}] `);
             }
             this.chatHistory.push(message);
             this.sendServerMessage({ action: 'chat', message: message });
