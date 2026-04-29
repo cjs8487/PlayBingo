@@ -350,69 +350,6 @@ async function getOrLoadRoom(slug: string): Promise<Room | null> {
         newRoom.players.set(player.id, player);
     });
 
-    dbRoom.history.forEach((action) => {
-        const {
-            nickname,
-            color,
-            newColor,
-            oldColor,
-            row,
-            col,
-            message,
-            player: playerId,
-        } = action.payload as any;
-
-        const player = newRoom.players.get(playerId)!;
-
-        switch (action.action) {
-            case 'JOIN':
-                newRoom.sendChat([
-                    { contents: nickname, color },
-                    ' has joined.',
-                ]);
-                break;
-            case 'LEAVE':
-                newRoom.sendChat([{ contents: nickname, color }, ' has left.']);
-                break;
-            case 'MARK':
-                if (!player.hasMarked(row, col)) {
-                    newRoom.board[row][col].completedPlayers.push(playerId);
-                    newRoom.board[row][col].completedPlayers.sort((a, b) =>
-                        a.localeCompare(b),
-                    );
-                    player.mark(row, col);
-                    newRoom.sendCellUpdate(row, col);
-                    newRoom.sendChat([
-                        { contents: player.nickname, color: player.color },
-                        ` marked ${newRoom.board[row][col].goal.goal} (${row},${col})`,
-                    ]);
-                }
-                break;
-            case 'UNMARK':
-                if (player.hasMarked(row, col)) {
-                    newRoom.board[row][col].completedPlayers = newRoom.board[
-                        row
-                    ][col].completedPlayers.filter((p) => p !== playerId);
-                    player.unmark(row, col);
-                    newRoom.sendCellUpdate(row, col);
-                    newRoom.sendChat([
-                        { contents: player.nickname, color: player.color },
-                        ` unmarked ${newRoom.board[row][col].goal.goal} (${row},${col})`,
-                    ]);
-                }
-                break;
-            case 'CHAT':
-                newRoom.sendChat(`${nickname}: ${message}`);
-                break;
-            case 'CHANGECOLOR':
-                newRoom.sendChat([
-                    { contents: nickname, color: oldColor },
-                    ' has changed their color to ',
-                    { contents: newColor, color: newColor },
-                ]);
-                break;
-        }
-    });
     switch (dbRoom.raceHandler) {
         case RaceHandler.RACETIME:
             newRoom.raceHandler = new RacetimeHandler(newRoom);
@@ -428,6 +365,83 @@ async function getOrLoadRoom(slug: string): Promise<Room | null> {
             newRoom.raceHandler = handler;
             break;
     }
+
+    dbRoom.history.forEach((action) => {
+        const {
+            nickname,
+            color,
+            newColor,
+            oldColor,
+            row,
+            col,
+            message,
+            player: playerId,
+        } = action.payload as any;
+        const { timestamp } = action;
+
+        const player = newRoom.players.get(playerId)!;
+
+        switch (action.action) {
+            case 'JOIN':
+                newRoom.sendChat(
+                    [{ contents: nickname, color }, ' has joined.'],
+                    timestamp,
+                );
+                break;
+            case 'LEAVE':
+                newRoom.sendChat(
+                    [{ contents: nickname, color }, ' has left.'],
+                    timestamp,
+                );
+                break;
+            case 'MARK':
+                if (!player.hasMarked(row, col)) {
+                    newRoom.board[row][col].completedPlayers.push(playerId);
+                    newRoom.board[row][col].completedPlayers.sort((a, b) =>
+                        a.localeCompare(b),
+                    );
+                    player.mark(row, col);
+                    newRoom.sendCellUpdate(row, col);
+                    newRoom.sendChat(
+                        [
+                            { contents: player.nickname, color: player.color },
+                            ` marked ${newRoom.board[row][col].goal.goal} (${row},${col})`,
+                        ],
+                        timestamp,
+                    );
+                }
+                break;
+            case 'UNMARK':
+                if (player.hasMarked(row, col)) {
+                    newRoom.board[row][col].completedPlayers = newRoom.board[
+                        row
+                    ][col].completedPlayers.filter((p) => p !== playerId);
+                    player.unmark(row, col);
+                    newRoom.sendCellUpdate(row, col);
+                    newRoom.sendChat(
+                        [
+                            { contents: player.nickname, color: player.color },
+                            ` unmarked ${newRoom.board[row][col].goal.goal} (${row},${col})`,
+                        ],
+                        timestamp,
+                    );
+                }
+                break;
+            case 'CHAT':
+                newRoom.sendChat(`${nickname}: ${message}`, timestamp);
+                break;
+            case 'CHANGECOLOR':
+                newRoom.sendChat(
+                    [
+                        { contents: nickname, color: oldColor },
+                        ' has changed their color to ',
+                        { contents: newColor, color: newColor },
+                    ],
+                    timestamp,
+                );
+                break;
+        }
+    });
 
     allRooms.set(slug, newRoom);
     return newRoom;
