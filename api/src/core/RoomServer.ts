@@ -145,9 +145,15 @@ roomWebSocketServer.on('connection', (ws, req) => {
                     if (player.spectator) {
                         player.markedGoals = 0n;
                         player.goalCount = 0;
-                        room.sendChat(`${player.nickname} is now spectating`);
+                        room.sendChat(
+                            `${player.nickname} is now spectating`,
+                            new Date(),
+                        );
                     } else {
-                        room.sendChat(`${player.nickname} is now playing`);
+                        room.sendChat(
+                            `${player.nickname} is now playing`,
+                            new Date(),
+                        );
                     }
                 }
                 break;
