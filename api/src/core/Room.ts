@@ -761,6 +761,9 @@ export default class Room {
                 const start = DateTime.fromISO(startTime);
                 const now = DateTime.fromJSDate(timestamp);
                 const dur = now.diff(start);
+                if (dur.toMillis() < 0) {
+                    return '0:00:00';
+                }
                 return dur.shiftToAll().toFormat('h:mm:ss');
             }
             return '0:00:00';
