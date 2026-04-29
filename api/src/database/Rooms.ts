@@ -1,7 +1,7 @@
 import { BingoMode, RaceHandler, RoomActionType } from '@prisma/client';
-import { prisma } from './Database';
 import { JsonObject } from '@prisma/client/runtime/library';
 import Player from '../core/Player';
+import { prisma } from './Database';
 
 export const createRoom = (
     slug: string,
@@ -38,55 +38,80 @@ const addRoomAction = (
     room: string,
     action: RoomActionType,
     payload: JsonObject,
+    timestamp: Date,
 ) => {
     return prisma.roomAction.create({
         data: {
             room: { connect: { id: room } },
             action,
             payload,
-            timestamp: new Date(),
+            timestamp,
         },
     });
 };
 
-export const addJoinAction = (room: string, nickname: string, color: string) =>
-    addRoomAction(room, RoomActionType.JOIN, { nickname, color });
+export const addJoinAction = (
+    room: string,
+    nickname: string,
+    color: string,
+    timestamp: Date,
+) => addRoomAction(room, RoomActionType.JOIN, { nickname, color }, timestamp);
 
-export const addLeaveAction = (room: string, nickname: string, color: string) =>
-    addRoomAction(room, RoomActionType.LEAVE, { nickname, color });
+export const addLeaveAction = (
+    room: string,
+    nickname: string,
+    color: string,
+    timestamp: Date,
+) => addRoomAction(room, RoomActionType.LEAVE, { nickname, color }, timestamp);
 
 export const addMarkAction = (
     room: string,
     player: string,
     row: number,
     col: number,
-) => addRoomAction(room, RoomActionType.MARK, { player, row, col });
+    timestamp: Date,
+) => addRoomAction(room, RoomActionType.MARK, { player, row, col }, timestamp);
 
 export const addUnmarkAction = (
     room: string,
     player: string,
     row: number,
     col: number,
-) => addRoomAction(room, RoomActionType.UNMARK, { player, row, col });
+    timestamp: Date,
+) =>
+    addRoomAction(room, RoomActionType.UNMARK, { player, row, col }, timestamp);
 
 export const addChatAction = (
     room: string,
     nickname: string,
     color: string,
     message: string,
-) => addRoomAction(room, RoomActionType.CHAT, { nickname, color, message });
+    timestamp: Date,
+) =>
+    addRoomAction(
+        room,
+        RoomActionType.CHAT,
+        { nickname, color, message },
+        timestamp,
+    );
 
 export const addChangeColorAction = (
     room: string,
     nickname: string,
     oldColor: string,
     newColor: string,
+    timestamp: Date,
 ) =>
-    addRoomAction(room, RoomActionType.CHANGECOLOR, {
-        nickname,
-        oldColor,
-        newColor,
-    });
+    addRoomAction(
+        room,
+        RoomActionType.CHANGECOLOR,
+        {
+            nickname,
+            oldColor,
+            newColor,
+        },
+        timestamp,
+    );
 
 export const setRoomBoard = async (room: string, board: string[]) => {
     await prisma.room.update({ where: { id: room }, data: { board } });
