@@ -2,15 +2,20 @@
   "name": "@playbingo/types",
   "version": "1.4.0",
   "description": "",
+  "main": "./build/index.js",
+  "types": "./build/index.d.ts",
   "scripts": {
-    "types:generate": "tsx Generate.ts"
+    "types:generate": "tsx Generate.ts",
+    "dev": "tsc --watch --incremental -p ."
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "json-schema-to-typescript": "^15.0.4"
+    "json-schema-to-typescript": "^15.0.4",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@tsconfig/node24": "^24.0.4",
     "@types/node": "^20.10.4",
     "ts-node": "^10.9.2",
     "tsx": "^4.20.6",

@@ -1,0 +1,18 @@
+{
+    "extends": "@tsconfig/node24/tsconfig.json",
+    "compilerOptions": {
+        "allowJs": true,
+        "declaration": true,
+        "allowSyntheticDefaultImports": true,
+        "noFallthroughCasesInSwitch": true,
+        "resolveJsonModule": true,
+        "isolatedModules": true,
+        "sourceMap": true,
+        "outDir": "build",
+        "declarationMap": true,
+    },
+    "ts-node": {
+        "esm": true
+    },
+    "include": ["**/*.ts"],
+}
