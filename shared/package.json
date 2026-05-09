@@ -10,7 +10,7 @@
   "author": "",
   "dependencies": {
     "@playbingo/types": "file:../schema",
-    "zod": "^4.3.5"
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@tsconfig/node22": "^22.0.5",
