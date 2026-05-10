@@ -110,6 +110,10 @@ export class BoardGenerator {
         this.goalsByCategoryId = {};
         this.goalCopies = {};
 
+        this.categories.forEach((cat) => {
+            this.categoryMaxes[cat.id] = cat.max <= 0 ? -1 : cat.max;
+        });
+
         this.goals.forEach((goal) => {
             if (goal.difficulty) {
                 const prev = this.goalsByDifficulty[goal.difficulty] ?? [];
