@@ -14,6 +14,7 @@ import {
     UnmarkAction,
 } from '@playbingo/types';
 import { BingoMode } from '@prisma/client';
+import { DateTime } from 'luxon';
 import { WebSocket } from 'ws';
 import { roomCleanupInactive } from '../Environment';
 import { logDebug, logError, logInfo, logWarn } from '../Logger';
@@ -404,19 +405,26 @@ export default class Room {
             }
         }
 
+        const timestamp = new Date();
         if (newPlayer) {
             if (auth.isSpectating) {
-                this.sendChat(`${player.nickname} is now spectating`);
+                this.sendChat(
+                    `${player.nickname} is now spectating`,
+                    timestamp,
+                );
             } else {
-                this.sendChat([
-                    { contents: player.nickname, color: player.color },
-                    ' has joined.',
-                ]);
+                this.sendChat(
+                    [
+                        { contents: player.nickname, color: player.color },
+                        ' has joined.',
+                    ],
+                    timestamp,
+                );
             }
         }
 
         player.addConnection(auth.uuid, socket);
-        addJoinAction(this.id, player.nickname, player.color).then();
+        addJoinAction(this.id, player.nickname, player.color, timestamp).then();
         createUpdatePlayer(this.id, player).then();
         return {
             action: 'connected',
@@ -479,12 +487,21 @@ export default class Room {
             return { action: 'unauthorized' };
         }
         const hasLeft = !player.hasConnections();
+        const timestamp = new Date();
         if (hasLeft) {
-            this.sendChat([
-                { contents: player.nickname, color: player.color },
-                ' has left.',
-            ]);
-            addLeaveAction(this.id, player.nickname, player.color).then();
+            this.sendChat(
+                [
+                    { contents: player.nickname, color: player.color },
+                    ' has left.',
+                ],
+                timestamp,
+            );
+            addLeaveAction(
+                this.id,
+                player.nickname,
+                player.color,
+                timestamp,
+            ).then();
             if (this.players.size === 0) {
                 this.close();
             }
@@ -503,12 +520,14 @@ export default class Room {
         }
         const { message: chatMessage } = action.payload;
         if (!chatMessage) return;
-        this.sendChat(`${player.nickname}: ${chatMessage}`);
+        const timestamp = new Date();
+        this.sendChat(`${player.nickname}: ${chatMessage}`, timestamp);
         addChatAction(
             this.id,
             player.nickname,
             player.color,
             chatMessage,
+            timestamp,
         ).then();
     }
 
@@ -535,14 +554,18 @@ export default class Room {
         );
         player.mark(row, col);
         this.sendCellUpdate(row, col);
-        this.sendChat([
-            {
-                contents: player.nickname,
-                color: player.color,
-            },
-            ` marked ${this.board[row][col].goal.goal} (${row},${col})`,
-        ]);
-        addMarkAction(this.id, player.id, row, col).then();
+        const timestamp = new Date();
+        this.sendChat(
+            [
+                {
+                    contents: player.nickname,
+                    color: player.color,
+                },
+                ` marked ${this.board[row][col].goal.goal} (${row},${col})`,
+            ],
+            timestamp,
+        );
+        addMarkAction(this.id, player.id, row, col, timestamp).then();
         this.checkWinConditions();
     }
 
@@ -562,11 +585,15 @@ export default class Room {
         ].completedPlayers.filter((playerId) => playerId !== player.id);
         player.unmark(unRow, unCol);
         this.sendCellUpdate(unRow, unCol);
-        this.sendChat([
-            { contents: player.nickname, color: player.color },
-            ` unmarked ${this.board[unRow][unCol].goal.goal} (${unRow},${unCol})`,
-        ]);
-        addUnmarkAction(this.id, player.id, unRow, unCol).then();
+        const timestamp = new Date();
+        this.sendChat(
+            [
+                { contents: player.nickname, color: player.color },
+                ` unmarked ${this.board[unRow][unCol].goal.goal} (${unRow},${unCol})`,
+            ],
+            timestamp,
+        );
+        addUnmarkAction(this.id, player.id, unRow, unCol, timestamp).then();
         this.checkWinConditions();
     }
 
@@ -582,19 +609,24 @@ export default class Room {
         if (!color) {
             return;
         }
+        const timestamp = new Date();
         addChangeColorAction(
             this.id,
             player.nickname,
             player.color,
             color,
+            timestamp,
         ).then();
         player.color = color;
         createUpdatePlayer(this.id, player).then();
-        this.sendChat([
-            { contents: player.nickname, color: player.color },
-            ' has changed their color to ',
-            { contents: color, color },
-        ]);
+        this.sendChat(
+            [
+                { contents: player.nickname, color: player.color },
+                ' has changed their color to ',
+                { contents: color, color },
+            ],
+            timestamp,
+        );
     }
 
     handleNewCard(action: NewCardAction) {
@@ -644,13 +676,22 @@ export default class Room {
                 player = p;
             }
         }
+        const timestamp = new Date();
         if (player) {
             if (!player.hasConnections()) {
-                this.sendChat([
-                    { contents: player.nickname, color: player.color },
-                    ' has left.',
-                ]);
-                addLeaveAction(this.id, player.nickname, player.color).then();
+                this.sendChat(
+                    [
+                        { contents: player.nickname, color: player.color },
+                        ' has left.',
+                    ],
+                    timestamp,
+                );
+                addLeaveAction(
+                    this.id,
+                    player.nickname,
+                    player.color,
+                    timestamp,
+                ).then();
                 if (this.players.size === 0) {
                     this.close();
                 }
@@ -678,7 +719,7 @@ export default class Room {
                 raceHandler: this.raceHandler?.key(),
             },
         });
-        this.sendChat(`Racetime.gg room created ${url}`);
+        this.sendChat(`Racetime.gg room created ${url}`, new Date());
         this.raceHandler.connect(url);
         (this.raceHandler as RacetimeHandler).connectWebsocket();
     }
@@ -713,22 +754,55 @@ export default class Room {
     }
     //#endregion
 
-    //#region Send Messages
-    sendChat(message: string): void;
-    sendChat(message: ChatMessage): void;
+    private getTimestamp(timestamp: Date) {
+        if (this.raceHandler) {
+            const startTime = this.raceHandler.getStartTime();
+            if (startTime) {
+                const start = DateTime.fromISO(startTime);
+                const now = DateTime.fromJSDate(timestamp);
+                const dur = now.diff(start);
+                if (dur.toMillis() < 0) {
+                    return '0:00:00';
+                }
+                return dur.shiftToAll().toFormat('h:mm:ss');
+            }
+            return '0:00:00';
+        }
+        return '';
+    }
 
-    sendChat(message: string | ChatMessage) {
+    //#region Send Messages
+    sendChat(message: string, timestamp: Date): void;
+    sendChat(message: ChatMessage, timestamp: Date): void;
+
+    sendChat(message: string | ChatMessage, eventTimestamp: Date) {
         if (typeof message === 'string') {
-            this.chatHistory.push([message]);
+            const timestamp = this.getTimestamp(eventTimestamp);
+            if (timestamp) {
+                this.chatHistory.push([
+                    `[${this.getTimestamp(eventTimestamp)}] ${message}`,
+                ]);
+            } else {
+                this.chatHistory.push([message]);
+            }
             this.sendServerMessage({ action: 'chat', message: [message] });
         } else {
+            const timestamp = this.getTimestamp(eventTimestamp);
+            if (timestamp) {
+                message.unshift(`[${this.getTimestamp(eventTimestamp)}] `);
+            }
             this.chatHistory.push(message);
             this.sendServerMessage({ action: 'chat', message: message });
         }
     }
 
     sendSystemMessage(message: string) {
-        this.chatHistory.push([message]);
+        const timestamp = this.getTimestamp(new Date());
+        if (timestamp) {
+            this.chatHistory.push([`[${timestamp}] ${message}`]);
+        } else {
+            this.chatHistory.push([message]);
+        }
         this.sendServerMessage({ action: 'chat', message: [message] }, false);
     }
 
@@ -823,24 +897,30 @@ export default class Room {
                     (this.board.length * this.board[0].length) / 2,
                 );
                 if (!player.goalComplete && player.goalCount >= goalsNeeded) {
-                    this.sendChat([
-                        {
-                            contents: player.nickname,
-                            color: player.color,
-                        },
-                        ' has achieved lockout!',
-                    ]);
+                    this.sendChat(
+                        [
+                            {
+                                contents: player.nickname,
+                                color: player.color,
+                            },
+                            ' has achieved lockout!',
+                        ],
+                        new Date(),
+                    );
                     player.goalComplete = true;
                     this.raceHandler?.playerFinished(player);
                 }
                 if (player.goalComplete && player.goalCount < goalsNeeded) {
-                    this.sendChat([
-                        {
-                            contents: player.nickname,
-                            color: player.color,
-                        },
-                        ' no longer has lockout.',
-                    ]);
+                    this.sendChat(
+                        [
+                            {
+                                contents: player.nickname,
+                                color: player.color,
+                            },
+                            ' no longer has lockout.',
+                        ],
+                        new Date(),
+                    );
                     player.goalComplete = false;
                     this.raceHandler?.playerUnfinshed(player);
                 }
@@ -852,13 +932,16 @@ export default class Room {
                         0,
                     );
                     if (linesComplete > player.linesComplete) {
-                        this.sendChat([
-                            {
-                                contents: player.nickname,
-                                color: player.color,
-                            },
-                            ' has completed a line!',
-                        ]);
+                        this.sendChat(
+                            [
+                                {
+                                    contents: player.nickname,
+                                    color: player.color,
+                                },
+                                ' has completed a line!',
+                            ],
+                            new Date(),
+                        );
                     }
                     if (
                         linesComplete >= this.lineCount &&
@@ -866,26 +949,32 @@ export default class Room {
                     ) {
                         player.goalComplete = true;
                         this.raceHandler?.playerFinished(player).then();
-                        this.sendChat([
-                            {
-                                contents: player.nickname,
-                                color: player.color,
-                            },
-                            ' has completed the goal!',
-                        ]);
+                        this.sendChat(
+                            [
+                                {
+                                    contents: player.nickname,
+                                    color: player.color,
+                                },
+                                ' has completed the goal!',
+                            ],
+                            new Date(),
+                        );
                     } else if (
                         linesComplete < this.lineCount &&
                         player.goalComplete
                     ) {
                         player.goalComplete = false;
                         this.raceHandler?.playerUnfinshed(player);
-                        this.sendChat([
-                            {
-                                contents: player.nickname,
-                                color: player.color,
-                            },
-                            ' has no longer completed the goal.',
-                        ]);
+                        this.sendChat(
+                            [
+                                {
+                                    contents: player.nickname,
+                                    color: player.color,
+                                },
+                                ' has no longer completed the goal.',
+                            ],
+                            new Date(),
+                        );
                     }
                     player.linesComplete = linesComplete;
                 } else {
@@ -895,23 +984,29 @@ export default class Room {
                     if (complete && !player.goalComplete) {
                         player.goalComplete = true;
                         this.raceHandler?.playerFinished(player);
-                        this.sendChat([
-                            {
-                                contents: player.nickname,
-                                color: player.color,
-                            },
-                            ' has achieved blackout!',
-                        ]);
+                        this.sendChat(
+                            [
+                                {
+                                    contents: player.nickname,
+                                    color: player.color,
+                                },
+                                ' has achieved blackout!',
+                            ],
+                            new Date(),
+                        );
                     } else if (!complete && player.goalComplete) {
                         player.goalComplete = false;
                         this.raceHandler?.playerUnfinshed(player);
-                        this.sendChat([
-                            {
-                                contents: player.nickname,
-                                color: player.color,
-                            },
-                            ' no longer has blackout.',
-                        ]);
+                        this.sendChat(
+                            [
+                                {
+                                    contents: player.nickname,
+                                    color: player.color,
+                                },
+                                ' no longer has blackout.',
+                            ],
+                            new Date(),
+                        );
                     }
                 }
             }
@@ -1091,13 +1186,16 @@ export default class Room {
     }
 
     revealCardForPlayer(player: Player) {
-        this.sendChat([
-            {
-                contents: player.nickname,
-                color: player.color,
-            },
-            ' has revealed the card.',
-        ]);
+        this.sendChat(
+            [
+                {
+                    contents: player.nickname,
+                    color: player.color,
+                },
+                ' has revealed the card.',
+            ],
+            new Date(),
+        );
         player.sendMessage({
             action: 'syncBoard',
             board: {

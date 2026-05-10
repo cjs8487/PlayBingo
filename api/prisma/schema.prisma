@@ -193,11 +193,12 @@ model Player {
 }
 
 model RoomAction {
-  id      String         @id @unique @default(cuid())
-  room    Room           @relation(fields: [roomId], references: [id])
-  action  RoomActionType
-  payload Json
-  roomId  String
+  id        String         @id @unique @default(cuid())
+  room      Room           @relation(fields: [roomId], references: [id])
+  action    RoomActionType
+  payload   Json
+  timestamp DateTime       @default(now())
+  roomId    String
 }
 
 model ApiToken {
