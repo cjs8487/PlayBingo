@@ -7,6 +7,7 @@ import RoomInfo from '@/components/room/RoomInfo';
 import RoomLogin from '@/components/room/RoomLogin';
 import Timer from '@/components/room/timer/Timer';
 import TimerControls from '@/components/room/timer/TimerControls';
+import TimingMethodSelector from '@/components/room/timer/TimingMethodSelector';
 import { ConnectionStatus, useRoomContext } from '@/context/RoomContext';
 import {
     Button,
@@ -504,6 +505,7 @@ function RoomXl() {
                 <Separator variant="secondary" className="mt-4 mb-4" />
                 <div className="flex flex-col gap-2">
                     <div className="text-lg font-semibold">Timer Controls</div>
+                    <TimingMethodSelector />
                     <TimerControls />
                 </div>
             </Surface>
