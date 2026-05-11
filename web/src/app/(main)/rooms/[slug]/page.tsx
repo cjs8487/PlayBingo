@@ -9,6 +9,7 @@ import Timer from '@/components/room/timer/Timer';
 import TimerControls from '@/components/room/timer/TimerControls';
 import { ConnectionStatus, useRoomContext } from '@/context/RoomContext';
 import {
+    Button,
     ColorArea,
     ColorChannel,
     ColorField,
@@ -25,6 +26,7 @@ import {
 } from '@heroui/react';
 import { Box, Dialog, DialogContent, Stack } from '@mui/material';
 import { Sword } from 'mdi-material-ui';
+import { Refresh } from '@mui/icons-material';
 import { useState } from 'react';
 import { useLocalStorage } from 'react-use';
 import ConnectionState from '../../../../components/room/ConnectionState';
@@ -306,6 +308,8 @@ function RoomXl() {
         toggleGoalDetails,
         color,
         changeColor,
+        regenerateCard,
+        connectedPlayer,
     } = useRoomContext();
 
     const [storedCustomColor] = useLocalStorage('PlayBingo.customcolor', '');
@@ -485,6 +489,17 @@ function RoomXl() {
                             <Label>Show All Goal Details</Label>
                         </Switch.Content>
                     </Switch>
+                    {connectedPlayer?.monitor && (
+                        <Button
+                            variant="danger-soft"
+                            size="sm"
+                            onPress={() => regenerateCard()}
+                            className="w-full"
+                        >
+                            <Refresh />
+                            Regenerate Card
+                        </Button>
+                    )}
                 </div>
                 <Separator variant="secondary" className="mt-4 mb-4" />
                 <div className="flex flex-col gap-2">
