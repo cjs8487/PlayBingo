@@ -2,6 +2,7 @@ import { BingoMode, RaceHandler, RoomActionType } from '@prisma/client';
 import { JsonObject } from '@prisma/client/runtime/library';
 import Player from '../core/Player';
 import { prisma } from './Database';
+import Team from '../core/Team';
 
 export const createRoom = (
     slug: string,
@@ -15,6 +16,7 @@ export const createRoom = (
     variant?: string,
     explorationStart?: string,
     seed?: number,
+    teamsEnabled: boolean = false,
 ) => {
     return prisma.room.create({
         data: {
@@ -30,6 +32,7 @@ export const createRoom = (
             exploration: !!explorationStart,
             explorationStart,
             seed,
+            teamsEnabled,
         },
     });
 };
@@ -53,16 +56,14 @@ const addRoomAction = (
 export const addJoinAction = (
     room: string,
     nickname: string,
-    color: string,
     timestamp: Date,
-) => addRoomAction(room, RoomActionType.JOIN, { nickname, color }, timestamp);
+) => addRoomAction(room, RoomActionType.JOIN, { nickname }, timestamp);
 
 export const addLeaveAction = (
     room: string,
     nickname: string,
-    color: string,
     timestamp: Date,
-) => addRoomAction(room, RoomActionType.LEAVE, { nickname, color }, timestamp);
+) => addRoomAction(room, RoomActionType.LEAVE, { nickname }, timestamp);
 
 export const addMarkAction = (
     room: string,
@@ -84,20 +85,19 @@ export const addUnmarkAction = (
 export const addChatAction = (
     room: string,
     nickname: string,
-    color: string,
     message: string,
     timestamp: Date,
 ) =>
     addRoomAction(
         room,
         RoomActionType.CHAT,
-        { nickname, color, message },
+        { nickname, message },
         timestamp,
     );
 
 export const addChangeColorAction = (
     room: string,
-    nickname: string,
+    teamName: string,
     oldColor: string,
     newColor: string,
     timestamp: Date,
@@ -106,7 +106,7 @@ export const addChangeColorAction = (
         room,
         RoomActionType.CHANGECOLOR,
         {
-            nickname,
+            teamName,
             oldColor,
             newColor,
         },
@@ -128,7 +128,7 @@ export const getAllRooms = () => {
 export const getRoomFromSlug = (slug: string) => {
     return prisma.room.findUnique({
         where: { slug },
-        include: { history: true, game: true, players: true },
+        include: { history: true, game: true, players: true, teams: true },
     });
 };
 
@@ -149,24 +149,44 @@ export const createUpdatePlayer = async (room: string, player: Player) => {
         create: {
             key: player.id,
             nickname: player.nickname,
-            color: player.color,
             room: { connect: { id: room } },
             user: player.userId
                 ? { connect: { id: player.userId } }
                 : undefined,
-            spectator: player.spectator,
+            team: player.teamId
+                ? { connect: { id: player.teamId } }
+                : undefined,
+            spectator: !player.teamId,
             monitor: player.monitor,
             finishedAt: player.finishedAt,
         },
         update: {
             nickname: player.nickname,
-            color: player.color,
             user: player.userId
                 ? { connect: { id: player.userId } }
                 : { disconnect: true },
-            spectator: player.spectator,
             monitor: player.monitor,
+            team: player.teamId
+                ? { connect: { id: player.teamId } }
+                : { disconnect: true },
+            spectator: !player.teamId,
             finishedAt: player.finishedAt ?? null,
+        },
+    });
+};
+
+export const createUpdateTeam = async (room: string, team: Team) => {
+    return prisma.team.upsert({
+        where: { id_roomId: { id: team.id, roomId: room } },
+        create: {
+            key: team.id,
+            name: team.name,
+            color: team.color,
+            room: { connect: { id: room } },
+        },
+        update: {
+            name: team.name,
+            color: team.color,
         },
     });
 };
@@ -196,3 +216,6 @@ export const updateRaceHandler = async (
         data: { raceHandler },
     });
 };
+
+export const updateTeamsEnabled = async (room: string, teamsEnabled: boolean) =>
+    prisma.room.update({ where: { id: room }, data: { teamsEnabled } });

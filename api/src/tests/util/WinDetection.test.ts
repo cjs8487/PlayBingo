@@ -27,7 +27,7 @@ const boardToBitset = (board: Cell[][], color: string) => {
     let bitset = 0n;
     board.forEach((row, rowIndex) =>
         row.forEach((cell, colIndex) => {
-            if (cell.completedPlayers.includes(color)) {
+            if (cell.completedTeams.includes(color)) {
                 bitset |= 1n << BigInt(rowIndex * board.length + colIndex);
             }
         }),
@@ -113,27 +113,27 @@ describe('Win Conditions', () => {
 
     it('Correctly detects single rows', () => {
         const board = createBoard();
-        board[0][0].completedPlayers = ['blue'];
-        board[0][1].completedPlayers = ['blue'];
-        board[0][2].completedPlayers = ['blue'];
-        board[0][3].completedPlayers = ['blue'];
-        board[0][4].completedPlayers = ['blue'];
+        board[0][0].completedTeams = ['blue'];
+        board[0][1].completedTeams = ['blue'];
+        board[0][2].completedTeams = ['blue'];
+        board[0][3].completedTeams = ['blue'];
+        board[0][4].completedTeams = ['blue'];
         expect(countLines(board, 'blue')).toEqual(1);
         expect(countLines(board, 'red')).toEqual(0);
     });
 
     it('Correctly detects single rows with additional values on the board', () => {
         const board = createBoard();
-        board[0][0].completedPlayers = ['blue', 'red'];
-        board[0][1].completedPlayers = ['blue'];
-        board[0][2].completedPlayers = ['blue'];
-        board[0][3].completedPlayers = ['red', 'blue', 'green'];
-        board[0][4].completedPlayers = ['blue'];
-        board[4][2].completedPlayers = ['red'];
-        board[4][3].completedPlayers = ['red', 'green'];
-        board[3][1].completedPlayers = ['blue', 'red', 'green'];
-        board[1][4].completedPlayers = ['blue', 'green'];
-        board[2][2].completedPlayers = ['green', 'blue'];
+        board[0][0].completedTeams = ['blue', 'red'];
+        board[0][1].completedTeams = ['blue'];
+        board[0][2].completedTeams = ['blue'];
+        board[0][3].completedTeams = ['red', 'blue', 'green'];
+        board[0][4].completedTeams = ['blue'];
+        board[4][2].completedTeams = ['red'];
+        board[4][3].completedTeams = ['red', 'green'];
+        board[3][1].completedTeams = ['blue', 'red', 'green'];
+        board[1][4].completedTeams = ['blue', 'green'];
+        board[2][2].completedTeams = ['green', 'blue'];
         expect(countLines(board, 'blue')).toEqual(1);
         expect(countLines(board, 'red')).toEqual(0);
         expect(countLines(board, 'green')).toEqual(0);
@@ -141,20 +141,20 @@ describe('Win Conditions', () => {
 
     it('Correctly detects multiple rows', () => {
         const board = createBoard();
-        board[0][0].completedPlayers = ['blue', 'red'];
-        board[0][1].completedPlayers = ['blue'];
-        board[0][2].completedPlayers = ['blue'];
-        board[0][3].completedPlayers = ['red', 'blue', 'green'];
-        board[0][4].completedPlayers = ['blue'];
-        board[1][0].completedPlayers = ['red', 'blue'];
-        board[1][1].completedPlayers = ['blue', 'red'];
-        board[1][2].completedPlayers = ['blue'];
-        board[1][3].completedPlayers = ['blue'];
-        board[1][4].completedPlayers = ['blue', 'green'];
-        board[2][2].completedPlayers = ['green', 'blue'];
-        board[3][1].completedPlayers = ['blue', 'red', 'green'];
-        board[4][2].completedPlayers = ['red'];
-        board[4][3].completedPlayers = ['red', 'green'];
+        board[0][0].completedTeams = ['blue', 'red'];
+        board[0][1].completedTeams = ['blue'];
+        board[0][2].completedTeams = ['blue'];
+        board[0][3].completedTeams = ['red', 'blue', 'green'];
+        board[0][4].completedTeams = ['blue'];
+        board[1][0].completedTeams = ['red', 'blue'];
+        board[1][1].completedTeams = ['blue', 'red'];
+        board[1][2].completedTeams = ['blue'];
+        board[1][3].completedTeams = ['blue'];
+        board[1][4].completedTeams = ['blue', 'green'];
+        board[2][2].completedTeams = ['green', 'blue'];
+        board[3][1].completedTeams = ['blue', 'red', 'green'];
+        board[4][2].completedTeams = ['red'];
+        board[4][3].completedTeams = ['red', 'green'];
         expect(countLines(board, 'blue')).toEqual(2);
         expect(countLines(board, 'red')).toEqual(0);
         expect(countLines(board, 'green')).toEqual(0);
@@ -162,27 +162,27 @@ describe('Win Conditions', () => {
 
     it('Correctly detects single columns', () => {
         const board = createBoard();
-        board[0][0].completedPlayers = ['blue'];
-        board[1][0].completedPlayers = ['blue'];
-        board[2][0].completedPlayers = ['blue'];
-        board[3][0].completedPlayers = ['blue'];
-        board[4][0].completedPlayers = ['blue'];
+        board[0][0].completedTeams = ['blue'];
+        board[1][0].completedTeams = ['blue'];
+        board[2][0].completedTeams = ['blue'];
+        board[3][0].completedTeams = ['blue'];
+        board[4][0].completedTeams = ['blue'];
         expect(countLines(board, 'blue')).toEqual(1);
         expect(countLines(board, 'red')).toEqual(0);
     });
 
     it('Correctly detects single column with additional values on the board', () => {
         const board = createBoard();
-        board[0][0].completedPlayers = ['blue'];
-        board[1][0].completedPlayers = ['blue', 'red'];
-        board[2][0].completedPlayers = ['green', 'blue'];
-        board[3][0].completedPlayers = ['blue'];
-        board[4][0].completedPlayers = ['blue', 'red', 'green'];
-        board[4][2].completedPlayers = ['red'];
-        board[4][3].completedPlayers = ['red', 'green'];
-        board[3][1].completedPlayers = ['blue', 'red', 'green'];
-        board[1][4].completedPlayers = ['blue', 'green'];
-        board[2][2].completedPlayers = ['green', 'blue'];
+        board[0][0].completedTeams = ['blue'];
+        board[1][0].completedTeams = ['blue', 'red'];
+        board[2][0].completedTeams = ['green', 'blue'];
+        board[3][0].completedTeams = ['blue'];
+        board[4][0].completedTeams = ['blue', 'red', 'green'];
+        board[4][2].completedTeams = ['red'];
+        board[4][3].completedTeams = ['red', 'green'];
+        board[3][1].completedTeams = ['blue', 'red', 'green'];
+        board[1][4].completedTeams = ['blue', 'green'];
+        board[2][2].completedTeams = ['green', 'blue'];
         expect(countLines(board, 'blue')).toEqual(1);
         expect(countLines(board, 'red')).toEqual(0);
         expect(countLines(board, 'green')).toEqual(0);
@@ -190,19 +190,19 @@ describe('Win Conditions', () => {
 
     it('Correctly detects multiple columns', () => {
         const board = createBoard();
-        board[0][0].completedPlayers = ['blue'];
-        board[1][0].completedPlayers = ['blue', 'red'];
-        board[2][0].completedPlayers = ['green', 'blue'];
-        board[3][0].completedPlayers = ['blue'];
-        board[4][0].completedPlayers = ['blue', 'red', 'green'];
-        board[0][3].completedPlayers = ['blue'];
-        board[1][3].completedPlayers = ['blue', 'red'];
-        board[2][3].completedPlayers = ['green', 'blue'];
-        board[3][3].completedPlayers = ['blue'];
-        board[4][3].completedPlayers = ['blue', 'red', 'green'];
-        board[2][2].completedPlayers = ['green', 'blue'];
-        board[3][1].completedPlayers = ['blue', 'red', 'green'];
-        board[4][2].completedPlayers = ['red'];
+        board[0][0].completedTeams = ['blue'];
+        board[1][0].completedTeams = ['blue', 'red'];
+        board[2][0].completedTeams = ['green', 'blue'];
+        board[3][0].completedTeams = ['blue'];
+        board[4][0].completedTeams = ['blue', 'red', 'green'];
+        board[0][3].completedTeams = ['blue'];
+        board[1][3].completedTeams = ['blue', 'red'];
+        board[2][3].completedTeams = ['green', 'blue'];
+        board[3][3].completedTeams = ['blue'];
+        board[4][3].completedTeams = ['blue', 'red', 'green'];
+        board[2][2].completedTeams = ['green', 'blue'];
+        board[3][1].completedTeams = ['blue', 'red', 'green'];
+        board[4][2].completedTeams = ['red'];
         expect(countLines(board, 'blue')).toEqual(2);
         expect(countLines(board, 'red')).toEqual(0);
         expect(countLines(board, 'green')).toEqual(0);
@@ -210,53 +210,53 @@ describe('Win Conditions', () => {
 
     it('Correctly detects the main diagonal', () => {
         const board = createBoard();
-        board[0][0].completedPlayers = ['blue'];
-        board[1][1].completedPlayers = ['blue'];
-        board[2][2].completedPlayers = ['blue'];
-        board[3][3].completedPlayers = ['blue'];
-        board[4][4].completedPlayers = ['blue'];
+        board[0][0].completedTeams = ['blue'];
+        board[1][1].completedTeams = ['blue'];
+        board[2][2].completedTeams = ['blue'];
+        board[3][3].completedTeams = ['blue'];
+        board[4][4].completedTeams = ['blue'];
         expect(countLines(board, 'blue')).toEqual(1);
         expect(countLines(board, 'red')).toEqual(0);
     });
 
     it('Correctly detects the antiDiagonal', () => {
         const board = createBoard();
-        board[0][4].completedPlayers = ['blue'];
-        board[1][3].completedPlayers = ['blue'];
-        board[2][2].completedPlayers = ['blue'];
-        board[3][1].completedPlayers = ['blue'];
-        board[4][0].completedPlayers = ['blue'];
+        board[0][4].completedTeams = ['blue'];
+        board[1][3].completedTeams = ['blue'];
+        board[2][2].completedTeams = ['blue'];
+        board[3][1].completedTeams = ['blue'];
+        board[4][0].completedTeams = ['blue'];
         expect(countLines(board, 'blue')).toEqual(1);
         expect(countLines(board, 'red')).toEqual(0);
     });
 
     it('Correctly detects mixed lines and colors', () => {
         const board = createBoard();
-        board[0][0].completedPlayers = ['blue', 'green'];
-        board[0][1].completedPlayers = ['blue', 'red', 'green'];
-        board[0][2].completedPlayers = ['green', 'blue'];
-        board[0][3].completedPlayers = ['blue', 'green'];
-        board[0][4].completedPlayers = [
+        board[0][0].completedTeams = ['blue', 'green'];
+        board[0][1].completedTeams = ['blue', 'red', 'green'];
+        board[0][2].completedTeams = ['green', 'blue'];
+        board[0][3].completedTeams = ['blue', 'green'];
+        board[0][4].completedTeams = [
             'blue',
             'red',
             'green',
             'yellow',
             'orange',
         ];
-        board[1][0].completedPlayers = ['blue', 'red', 'orange'];
-        board[2][0].completedPlayers = ['green', 'blue'];
-        board[3][0].completedPlayers = ['blue'];
-        board[4][0].completedPlayers = ['blue', 'yellow', 'green', 'orange'];
-        board[1][1].completedPlayers = ['blue', 'red', 'green'];
-        board[2][2].completedPlayers = ['green'];
-        board[3][3].completedPlayers = ['red', 'green'];
-        board[4][4].completedPlayers = ['blue', 'red', 'green'];
-        board[1][3].completedPlayers = ['blue', 'red'];
-        board[2][3].completedPlayers = ['green', 'blue'];
-        board[4][3].completedPlayers = ['blue', 'red', 'green'];
-        board[3][1].completedPlayers = ['blue', 'red', 'green'];
-        board[4][2].completedPlayers = ['red', 'yellow'];
-        board[4][3].completedPlayers = ['red', 'green', 'orange'];
+        board[1][0].completedTeams = ['blue', 'red', 'orange'];
+        board[2][0].completedTeams = ['green', 'blue'];
+        board[3][0].completedTeams = ['blue'];
+        board[4][0].completedTeams = ['blue', 'yellow', 'green', 'orange'];
+        board[1][1].completedTeams = ['blue', 'red', 'green'];
+        board[2][2].completedTeams = ['green'];
+        board[3][3].completedTeams = ['red', 'green'];
+        board[4][4].completedTeams = ['blue', 'red', 'green'];
+        board[1][3].completedTeams = ['blue', 'red'];
+        board[2][3].completedTeams = ['green', 'blue'];
+        board[4][3].completedTeams = ['blue', 'red', 'green'];
+        board[3][1].completedTeams = ['blue', 'red', 'green'];
+        board[4][2].completedTeams = ['red', 'yellow'];
+        board[4][3].completedTeams = ['red', 'green', 'orange'];
         expect(countLines(board, 'blue')).toEqual(2);
         expect(countLines(board, 'red')).toEqual(0);
         expect(countLines(board, 'green')).toEqual(2);

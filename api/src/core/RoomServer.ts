@@ -8,6 +8,8 @@ import {
 import { roomCleanupInterval } from '../Environment';
 import { logInfo, logWarn } from '../Logger';
 import Room from './Room';
+import Team from './Team';
+import Player from './Player';
 
 export const roomWebSocketServer: WebSocketServer = new WebSocketServer({
     noServer: true,
@@ -135,25 +137,42 @@ roomWebSocketServer.on('connection', (ws, req) => {
                     payload.playerId.split(':')[1],
                     payload.userId,
                 );
-                const player = room.players.get(payload.playerId);
-                if (player) {
-                    player.spectator = action.payload.spectate;
-                    player.sendMessage({
-                        action: 'reauthenticate',
-                        authToken: newToken,
+                let team: Team | undefined;
+                let player: Player | undefined;
+                room.teams.forEach((t) => {
+                    t.players.forEach((p) => {
+                        if (p.id === payload.playerId) {
+                            team = t;
+                            player = p;
+                        }
                     });
-                    if (player.spectator) {
-                        player.markedGoals = 0n;
-                        player.goalCount = 0;
-                        room.sendChat(
-                            `${player.nickname} is now spectating`,
-                            new Date(),
-                        );
+                });
+                room.spectators.forEach((p) => {
+                    if (p.id === payload.playerId) {
+                        player = p;
+                    }
+                });
+                if (player) {
+                    if (action.payload.spectate) {
+                        if (team) {
+                            team.removePlayer(player.id);
+                            if (team.players.size === 0) {
+                                team.destroy();
+                                room.teams.delete(team.id);
+                            }
+                        }
+                        player.sendMessage({
+                            action: 'reauthenticate',
+                            authToken: newToken,
+                        });
+                        room.sendChat(`${player.nickname} is now spectating`, new Date());
+                        break;
                     } else {
-                        room.sendChat(
-                            `${player.nickname} is now playing`,
-                            new Date(),
-                        );
+                        player.sendMessage({
+                            action: 'reauthenticate',
+                            authToken: newToken,
+                        });
+                        room.sendChat(`${player.nickname} is now playing`, new Date());
                     }
                 }
                 break;

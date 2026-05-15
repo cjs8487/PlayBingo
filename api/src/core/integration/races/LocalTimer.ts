@@ -66,7 +66,7 @@ export default class LocalTimer implements RaceHandler {
         this.finishedAt = undefined;
         updateStartTime(this.room.id, null).then();
         updateFinishTime(this.room.id, null).then();
-        this.room.players.forEach((player) => {
+        this.room.getAllPlayers().forEach((player) => {
             player.finishedAt = undefined;
             createUpdatePlayer(this.room.id, player).then();
         });
