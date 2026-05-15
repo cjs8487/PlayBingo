@@ -9,9 +9,7 @@ export interface Player {
   id: string;
   nickname: string;
   color: string;
-  goalCount: number;
   raceStatus: RaceStatusDisconnected | RaceStatusConnected;
-  spectator: boolean;
   monitor: boolean;
   showInRoom: boolean;
 }
