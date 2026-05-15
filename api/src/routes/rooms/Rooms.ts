@@ -259,7 +259,7 @@ rooms.post('/', async (req, res) => {
 });
 
 async function getOrLoadRoom(slug: string): Promise<Room | null> {
-    let room = allRooms.get(slug);
+    const room = allRooms.get(slug);
     if (room) return room;
 
     const dbRoom = await getRoomFromSlug(slug);
@@ -342,7 +342,6 @@ async function getOrLoadRoom(slug: string): Promise<Room | null> {
             dbPlayer.key,
             dbPlayer.nickname,
             dbPlayer.color,
-            dbPlayer.spectator,
             dbPlayer.monitor,
             dbPlayer.userId ?? undefined,
         );

@@ -6,7 +6,6 @@
         "id",
         "nickname",
         "color",
-        "goalCount",
         "raceStatus",
         "spectator",
         "monitor",
@@ -22,9 +21,6 @@
         "color": {
             "type": "string"
         },
-        "goalCount": {
-            "type": "number"
-        },
         "raceStatus": {
             "oneOf": [
                 {
@@ -34,9 +30,6 @@
                     "$ref": "#/$defs/RaceStatusConnected"
                 }
             ]
-        },
-        "spectator": {
-            "type": "boolean"
         },
         "monitor": {
             "type": "boolean"

@@ -167,6 +167,7 @@ model Room {
   bingoMode        BingoMode    @default(LINES)
   lineCount        Int          @default(1)
   players          Player[]
+  teams            Team[]
   variant          Variant?     @relation(fields: [variantId], references: [id])
   variantId        String?
   exploration      Boolean      @default(false)
@@ -176,14 +177,25 @@ model Room {
   finishedAt       DateTime?
 }
 
+model Team {
+  id        String    @id @unique @default(cuid(2))
+  key       String
+  name      String
+  room      Room      @relation(fields: [roomId], references: [id])
+  roomId    String
+  players   Player[]
+}
+
 model Player {
   id         String    @id @unique @default(cuid())
   key        String
   user       User?     @relation(fields: [userId], references: [id])
   room       Room      @relation(fields: [roomId], references: [id])
+  // A player either belongs to a team or is a spectator
+  team       Team?      @relation(fields: [teamId], references: [id])
+  teamId     String?
   nickname   String
   color      String    @default("blue")
-  spectator  Boolean
   monitor    Boolean   @default(false)
   roomId     String
   userId     String?

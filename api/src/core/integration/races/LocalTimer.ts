@@ -66,9 +66,9 @@ export default class LocalTimer implements RaceHandler {
         this.finishedAt = undefined;
         updateStartTime(this.room.id, null).then();
         updateFinishTime(this.room.id, null).then();
-        this.room.players.forEach((player) => {
+        this.room.getAllPlayers().forEach((player) => {
             player.finishedAt = undefined;
-            createUpdatePlayer(this.room.id, player).then();
+            createUpdatePlayer(this.room.id, player, this.room.spectators.has(player.id)).then();
         });
     }
 
@@ -81,12 +81,12 @@ export default class LocalTimer implements RaceHandler {
 
     async playerFinished(player: Player): Promise<void> {
         player.finishedAt = new Date().toISOString();
-        createUpdatePlayer(this.room.id, player).then();
+        createUpdatePlayer(this.room.id, player, this.room.spectators.has(player.id)).then();
     }
 
     async playerUnfinshed(player: Player): Promise<void> {
         player.finishedAt = undefined;
-        createUpdatePlayer(this.room.id, player).then();
+        createUpdatePlayer(this.room.id, player, this.room.spectators.has(player.id)).then();
     }
 
     async allPlayersFinished(): Promise<void> {
