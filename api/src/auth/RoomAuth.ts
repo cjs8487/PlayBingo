@@ -13,6 +13,7 @@ export type RoomTokenPayload = {
     roomSlug: string;
     uuid: string;
     playerId: string;
+    teamId?: string;
     userId?: string;
 } & Permissions;
 
@@ -78,8 +79,8 @@ export const hasPermission = (
         case 'startTimer':
         case 'changeRaceHandler':
         case 'resetTimer':
-            return payload.isMonitor;
         case 'setChatEnabled':
+        case 'setTeamsEnabled':
             return payload.isMonitor;
         default:
             return true;

@@ -1,0 +1,28 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "id",
+        "name",
+        "goalCount",
+        "players"
+    ],
+    "properties": {
+        "id": {
+            "type": "string"
+        },
+        "name": {
+            "type": "string"
+        },
+        "goalCount": {
+            "type": "number"
+        },
+        "players": {
+            "type": "array",
+            "items": {
+                "$ref": "./Player.json"
+            }
+        }
+    }
+}
