@@ -6,7 +6,6 @@
         "id",
         "nickname",
         "raceStatus",
-        "spectator",
         "monitor",
         "showInRoom",
         "teamId"
