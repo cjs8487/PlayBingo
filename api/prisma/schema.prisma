@@ -224,7 +224,7 @@ model Player {
   user       User?     @relation(fields: [userId], references: [id])
   room       Room      @relation(fields: [roomId], references: [id])
   // A player either belongs to a team or is a spectator
-  team       Team?      @relation(fields: [teamId], references: [id])
+  team       Team?      @relation(fields: [teamId, roomId], references: [id, roomId])
   teamId     String?
   nickname   String
   // @deprecated Use Team.color. Retained temporarily to preserve existing data.
