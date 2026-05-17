@@ -38,6 +38,8 @@ export default class Player {
     userId?: string;
     /** If the player has permission to perform monitor actions in the room */
     monitor: boolean;
+    /** Parent Team Id, null if spectator */
+    teamId: string | null;
 
     /** Open connections for the player, mapped by the id in the auth token that
      * is authorized for the connection */
@@ -51,6 +53,7 @@ export default class Player {
         room: Room,
         id: string,
         nickname: string,
+        teamId: string | null,
         color: string = 'blue',
         monitor: boolean,
         getBoardView: BoardViewProvider,
@@ -58,6 +61,7 @@ export default class Player {
     ) {
         this.room = room;
         ((this.id = id), (this.nickname = nickname));
+        this.teamId = teamId;
         this.color = color;
         this.monitor = monitor;
         this.userId = userId;

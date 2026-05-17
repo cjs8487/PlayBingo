@@ -7,9 +7,9 @@
         "nickname",
         "color",
         "raceStatus",
-        "spectator",
         "monitor",
-        "showInRoom"
+        "showInRoom",
+        "teamId"
     ],
     "properties": {
         "id": {
@@ -36,6 +36,9 @@
         },
         "showInRoom": {
             "type": "boolean"
+        },
+        "teamId": {
+            "type": "string"
         }
     },
     "$defs": {
