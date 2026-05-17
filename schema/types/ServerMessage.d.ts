@@ -41,7 +41,10 @@ export type ServerMessage = (
     }
   | {
       action: "syncRaceData";
-      players: Player[];
+      players: {
+        teams: Team[];
+        spectators: Player[];
+      };
       racetimeConnection: RacetimeConnection;
     }
   | {
@@ -56,7 +59,10 @@ export type ServerMessage = (
       startTime: string;
     }
 ) & {
-  players?: Player[];
+  players?: {
+    teams: Team[];
+    spectators: Player[];
+  };
   connectedPlayer?: Player;
 };
 export type ChatMessage = (
@@ -166,15 +172,20 @@ export interface RacetimeConnection {
    */
   startDelay?: string;
 }
+export interface Team {
+  id: string;
+  name: string;
+  goalCount: number;
+  players: Player[];
+}
 export interface Player {
   id: string;
   nickname: string;
   color: string;
-  goalCount: number;
   raceStatus: RaceStatusDisconnected | RaceStatusConnected;
-  spectator: boolean;
   monitor: boolean;
   showInRoom: boolean;
+  teamId: string;
 }
 export interface RaceStatusDisconnected {
   connected: false;

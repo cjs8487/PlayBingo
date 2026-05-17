@@ -32,6 +32,7 @@ import { GenerationFailedError } from '../../core/generation/GenerationFailedErr
 import RacetimeHandler from '../../core/integration/races/RacetimeHandler';
 import LocalTimer from '../../core/integration/races/LocalTimer';
 import { error } from 'console';
+import Team from "../../core/Team";
 
 const MIN_ROOM_GOALS_REQUIRED = 25;
 const rooms = Router();
@@ -259,7 +260,7 @@ rooms.post('/', async (req, res) => {
 });
 
 async function getOrLoadRoom(slug: string): Promise<Room | null> {
-    let room = allRooms.get(slug);
+    const room = allRooms.get(slug);
     if (room) return room;
 
     const dbRoom = await getRoomFromSlug(slug);
@@ -336,18 +337,45 @@ async function getOrLoadRoom(slug: string): Promise<Room | null> {
     }
     newRoom.computeVictoryMasks();
 
+    dbRoom.teams.forEach((dbTeam) => {
+        const team = new Team(newRoom, dbTeam.key, dbTeam.name);
+        newRoom.teams.set(team.id, team);
+    })
+
     dbRoom.players.forEach((dbPlayer) => {
+        // Player is spectator, no need to add a team
+        if (!dbPlayer.teamId) {
+            const player = new Player(
+                newRoom,
+                dbPlayer.key,
+                dbPlayer.nickname,
+                null,
+                dbPlayer.color,
+                dbPlayer.monitor,
+                newRoom.spectatorObfuscateBoard,
+                dbPlayer.userId ?? undefined,
+            );
+            player.finishedAt = dbPlayer.finishedAt?.toISOString();
+            newRoom.spectators.set(player.id, player);
+            return;
+        }
+        // player is not spectator and is on a team
+        const team = newRoom.teams.get(dbPlayer.teamId);
+        if (!team) {
+            // This really shouldn't happen, this is mostly here for type safety
+            throw new Error(`Team for player ${dbPlayer.nickname} not found, please report this to a developer.`);
+        }
         const player = new Player(
             newRoom,
             dbPlayer.key,
             dbPlayer.nickname,
+            team.id,
             dbPlayer.color,
-            dbPlayer.spectator,
             dbPlayer.monitor,
+            team.obfuscateBoard,
             dbPlayer.userId ?? undefined,
-        );
-        player.finishedAt = dbPlayer.finishedAt?.toISOString();
-        newRoom.players.set(player.id, player);
+        )
+        team.players.set(player.id, player);
     });
 
     dbRoom.history.forEach((action) => {
@@ -362,7 +390,9 @@ async function getOrLoadRoom(slug: string): Promise<Room | null> {
             player: playerId,
         } = action.payload as any;
 
-        const player = newRoom.players.get(playerId)!;
+        const player = newRoom.getAllPlayers().find(p => p.id === playerId)!;
+
+        const team = newRoom.teams.get(player.teamId);
 
         switch (action.action) {
             case 'JOIN':
@@ -375,12 +405,12 @@ async function getOrLoadRoom(slug: string): Promise<Room | null> {
                 newRoom.sendChat([{ contents: nickname, color }, ' has left.']);
                 break;
             case 'MARK':
-                if (!player.hasMarked(row, col)) {
+                if (!team.hasMarked(row, col)) {
                     newRoom.board[row][col].completedPlayers.push(playerId);
                     newRoom.board[row][col].completedPlayers.sort((a, b) =>
                         a.localeCompare(b),
                     );
-                    player.mark(row, col);
+                    team.mark(row, col);
                     newRoom.sendCellUpdate(row, col);
                     newRoom.sendChat([
                         { contents: player.nickname, color: player.color },
@@ -389,11 +419,11 @@ async function getOrLoadRoom(slug: string): Promise<Room | null> {
                 }
                 break;
             case 'UNMARK':
-                if (player.hasMarked(row, col)) {
+                if (team.hasMarked(row, col)) {
                     newRoom.board[row][col].completedPlayers = newRoom.board[
                         row
                     ][col].completedPlayers.filter((p) => p !== playerId);
-                    player.unmark(row, col);
+                    team.unmark(row, col);
                     newRoom.sendCellUpdate(row, col);
                     newRoom.sendChat([
                         { contents: player.nickname, color: player.color },
