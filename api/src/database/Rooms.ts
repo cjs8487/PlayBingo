@@ -102,7 +102,7 @@ export const getAllRooms = () => {
 export const getRoomFromSlug = (slug: string) => {
     return prisma.room.findUnique({
         where: { slug },
-        include: { history: true, game: true, players: true },
+        include: { history: true, game: true, players: true, teams: true },
     });
 };
 
