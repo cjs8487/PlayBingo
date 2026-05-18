@@ -25,12 +25,12 @@ import {
     Surface,
     Switch,
 } from '@heroui/react';
-import { Box, Dialog, DialogContent, Stack } from '@mui/material';
-import { Sword } from 'mdi-material-ui';
 import { Refresh } from '@mui/icons-material';
+import { Box, Dialog, DialogContent, Portal, Stack } from '@mui/material';
+import { Sword } from 'mdi-material-ui';
 import { useState } from 'react';
 import { useLocalStorage } from 'react-use';
-import ConnectionState from '../../../../components/room/ConnectionState';
+import RoomHeader from '../../../../components/room/RoomHeader';
 
 export default function Room() {
     const { connectionStatus, roomData } = useRoomContext();
@@ -327,36 +327,19 @@ function RoomXl() {
     }
 
     return (
-        <div className="grid h-full w-full grid-cols-[300px_1fr_300px] grid-rows-[auto_1fr] overflow-hidden">
-            <div className="relative col-span-full flex items-center justify-center bg-linear-to-r from-[#600011] from-40% to-[#b769fa] to-90% p-3">
-                <div className="grow">
-                    <div className="mb-0.5 text-lg">{roomData.name}</div>
-                    <div className="mb-1.5 flex text-xs">
-                        <div>
-                            {roomData.game} ({roomData.variant})
-                        </div>
-                    </div>
-                    <div className="flex text-xs">
-                        <div>{roomData.slug}</div>
-                        <Separator
-                            orientation="vertical"
-                            className="bg-foreground/50 mx-2"
-                        />
-                        <div>{roomData.mode}</div>
-                        <Separator
-                            orientation="vertical"
-                            className="bg-foreground/50 mx-2"
-                        />
-                        <div>{roomData.seed}</div>
-                    </div>
-                </div>
-                <div className="absolute text-center font-mono text-3xl">
-                    <Timer />
-                </div>
-                <div>
-                    <ConnectionState />
-                </div>
-            </div>
+        <Box
+            sx={{
+                width: '100%',
+                height: '100%',
+                overflow: 'hidden',
+                display: 'grid',
+                gridTemplateColumns: '300px 1fr 300px',
+                gridTemplateRows: 'auto 1fr',
+            }}
+        >
+            <Portal container={() => document.getElementById('global-header')}>
+                <RoomHeader />
+            </Portal>
             <Surface className="p-3">
                 {players.map((player) => (
                     <div
@@ -515,7 +498,7 @@ function RoomXl() {
             <div className="relative h-full">
                 <RoomChat />
             </div>
-        </div>
+        </Box>
     );
     // return (
     //     <Box
