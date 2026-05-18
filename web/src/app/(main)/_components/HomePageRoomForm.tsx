@@ -1,90 +1,32 @@
 'use client';
 import { useApi } from '@/lib/Hooks';
 import { alertError } from '@/lib/Utils';
+import { ArrowDropDown } from '@mui/icons-material';
 import {
-    Autocomplete,
-    Description,
-    EmptyState,
-    FieldError,
     Accordion,
+    AccordionDetails,
+    AccordionSummary,
+    Box,
     Button,
-    Form,
-    Input,
-    Key,
-    Label,
-    ListBox,
-    NumberField,
-    SearchField,
-    Select,
-    Switch,
-    TextField,
-    useFilter,
-} from '@heroui/react';
-import { CircularProgress, FormHelperText } from '@mui/material';
-import { roomCreateSchema } from '@playbingo/shared';
+    CircularProgress,
+    Typography,
+} from '@mui/material';
 import { Game } from '@playbingo/types';
+import { Form, Formik, FormikValues } from 'formik';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
-import { useAsync } from 'react-use';
-import { GameModeSelectorHero } from '../../../components/input/GameModeSelector';
-
-function VariantSelectField({ game }: { game: Key | null }) {
-    const options = useAsync(async () => {
-        if (!game) {
-            return [];
-        }
-
-        const res = await fetch(`/api/games/${game}`);
-        if (!res.ok) {
-            return [];
-        }
-        const gameData: Game = await res.json();
-        return [
-            ...(gameData.difficultyVariants ?? []),
-            ...(gameData.variants ?? []),
-        ];
-    }, [game]);
-
-    const disabled = !options.value || options.value.length === 0;
-
-    return (
-        <Select className="grow" isDisabled={disabled} name="variant">
-            <Label>Variant</Label>
-            <Select.Trigger>
-                <Select.Value />
-                <Select.Indicator />
-            </Select.Trigger>
-            <Select.Popover>
-                <ListBox>
-                    {options.value?.map((option) => (
-                        <ListBox.Item
-                            key={option.id}
-                            id={option.id}
-                            textValue={option.name}
-                        >
-                            {option.name}
-                        </ListBox.Item>
-                    ))}
-                </ListBox>
-            </Select.Popover>
-            <FieldError />
-            {disabled && (
-                <FormHelperText>
-                    {options.loading
-                        ? 'Loading variants...'
-                        : 'No variants available'}
-                </FormHelperText>
-            )}
-        </Select>
-    );
-}
+import {
+    FormikSelectField,
+    FormikSelectFieldAutocomplete,
+} from '../../../components/input/FormikSelectField';
+import FormikSwitch from '../../../components/input/FormikSwitch';
+import FormikTextField from '../../../components/input/FormikTextField';
+import GameModeSelector from '../../../components/input/GameModeSelector';
+import NumberInput from '../../../components/input/NumberInput';
+import VariantSelectField from '../../../components/input/VariantSelectField';
 
 export default function HomePageRoomForm() {
     const { data: games, isLoading } = useApi<Game[]>('/api/games');
     const router = useRouter();
-    const { contains } = useFilter({ sensitivity: 'base' });
-    const [game, setGame] = useState<Key | null>('');
-    const [errors, setErrors] = useState<{ [k: string]: string }>({});
 
     if (isLoading) {
         return <CircularProgress />;
@@ -95,32 +37,23 @@ export default function HomePageRoomForm() {
     }
 
     return (
-        <Form
-            className="flex flex-col gap-4 text-left"
-            validationBehavior="aria"
-            validationErrors={errors}
-            onSubmit={async (e) => {
-                e.preventDefault();
-                const formData = new FormData(e.currentTarget);
-                const data = Object.fromEntries(formData);
-
-                const result = roomCreateSchema.safeParse(data);
-
-                if (!result.success) {
-                    const newErrors: { [k: string]: string } = {};
-                    console.log(result.error.issues);
-                    for (const issue of result.error.issues) {
-                        newErrors[issue.path.join('.')] = issue.message;
-                    }
-                    console.log(newErrors);
-                    setErrors(newErrors);
-                    return;
-                } else {
-                    setErrors({});
-                }
-
-                const values = result.data;
-
+        <Formik
+            initialValues={{
+                name: '',
+                nickname: '',
+                game: '',
+                password: '',
+                variant: '',
+                mode: 'LINES',
+                lineCount: 1,
+                seed: undefined,
+                hideCard: false,
+                spectator: false,
+                exploration: false,
+                explorationStart: 'TL',
+                explorationStartCount: '',
+            }}
+            onSubmit={async (values: FormikValues) => {
                 const res = await fetch('/api/rooms', {
                     method: 'POST',
                     headers: {
@@ -142,231 +75,124 @@ export default function HomePageRoomForm() {
                 router.push(`/rooms/${slug}`);
             }}
         >
-            <div className="flex gap-4">
-                <TextField name="name" isRequired className="grow">
-                    <Label>Room Name</Label>
-                    <Input placeholder="Room Name" />
-                    <FieldError />
-                </TextField>
-                <TextField name="nickname" isRequired className="grow">
-                    <Label>Nickname</Label>
-                    <Input placeholder="Nickname" />
-                    <FieldError />
-                </TextField>
-                <TextField name="password" isRequired className="grow">
-                    <Label>Password</Label>
-                    <Input placeholder="Password" />
-                    <FieldError />
-                </TextField>
-            </div>
-            <div className="flex gap-4">
-                <Autocomplete
-                    isRequired
-                    name="game"
-                    className="grow"
-                    value={game}
-                    onChange={setGame}
+            {({ values: { exploration } }) => (
+                <Box
+                    component={Form}
+                    sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}
                 >
-                    <Label>Game</Label>
-                    <Autocomplete.Trigger>
-                        <Autocomplete.Value />
-                        <Autocomplete.Indicator />
-                    </Autocomplete.Trigger>
-                    <FieldError />
-                    <Autocomplete.Popover>
-                        <Autocomplete.Filter filter={contains}>
-                            <SearchField
-                                autoFocus
-                                name="search"
-                                variant="secondary"
-                            >
-                                <SearchField.Group>
-                                    <SearchField.SearchIcon />
-                                    <SearchField.Input placeholder="Search games..." />
-                                </SearchField.Group>
-                            </SearchField>
-                            <ListBox
-                                renderEmptyState={() => (
-                                    <EmptyState>No games found</EmptyState>
-                                )}
-                            >
-                                {games.map((game) => (
-                                    <ListBox.Item
-                                        key={game.slug}
-                                        id={game.slug}
-                                        textValue={game.name}
-                                    >
-                                        <Label>{game.name}</Label>
-                                        <ListBox.ItemIndicator />
-                                    </ListBox.Item>
-                                ))}
-                            </ListBox>
-                        </Autocomplete.Filter>
-                    </Autocomplete.Popover>
-                </Autocomplete>
-                <VariantSelectField game={game} />
-            </div>
+                    <Box sx={{ display: 'flex', gap: 2 }}>
+                        <FormikTextField
+                            id="room-name"
+                            name="name"
+                            label="Room Name"
+                            fullWidth
+                        />
 
-            <GameModeSelectorHero />
-
-            <Accordion className="bg-surface">
-                <Accordion.Item>
-                    <Accordion.Heading>
-                        <Accordion.Trigger>
-                            Additional Settings
-                            <Accordion.Indicator />
-                        </Accordion.Trigger>
-                    </Accordion.Heading>
-                    <Accordion.Panel>
-                        <Accordion.Body className="flex flex-col gap-4">
-                            <div className="flex gap-4">
-                                <Switch size="md" name="hideCard">
-                                    <Switch.Control>
-                                        <Switch.Thumb />
-                                    </Switch.Control>
-                                    <Switch.Content>
-                                        <Label>Hide card initially?</Label>
-                                        <Description>
-                                            Hides the card for newly joining
-                                            players.
-                                        </Description>
-                                    </Switch.Content>
-                                </Switch>
-                                <Switch size="md" name="spectator">
-                                    <Switch.Control>
-                                        <Switch.Thumb />
-                                    </Switch.Control>
-                                    <Switch.Content>
-                                        <Label>Join as a spectator?</Label>
-                                        <Description>
-                                            Join the game as a spectator, who
-                                            are unable to interact directly with
-                                            the board.
-                                        </Description>
-                                    </Switch.Content>
-                                </Switch>
-                            </div>
-
-                            <div className="flex gap-4">
-                                <Switch size="md" name="exploration">
-                                    <Switch.Control>
-                                        <Switch.Thumb />
-                                    </Switch.Control>
-                                    <Switch.Content>
-                                        <Label>Enable fog of war?</Label>
-                                        <Description>
-                                            Fog obscures goals until an adjacent
-                                            goal has been completed.
-                                        </Description>
-                                    </Switch.Content>
-                                </Switch>
-                                <Select
+                        <FormikTextField
+                            id="room-password"
+                            name="password"
+                            label="Password"
+                            fullWidth
+                        />
+                        <FormikTextField
+                            id="player-nickname"
+                            name="nickname"
+                            label="Nickname"
+                            fullWidth
+                        />
+                    </Box>
+                    <Box sx={{ display: 'flex', gap: 2 }}>
+                        <FormikSelectFieldAutocomplete
+                            id="game-select"
+                            name="game"
+                            label="Game"
+                            options={games.map((game) => ({
+                                label: game.name,
+                                value: game.id,
+                            }))}
+                            fullWidth
+                        />
+                        <VariantSelectField fullWidth />
+                    </Box>
+                    <GameModeSelector />
+                    <Accordion className="bg-surface">
+                        <AccordionSummary expandIcon={<ArrowDropDown />}>
+                            <Typography>Additional Settings</Typography>
+                        </AccordionSummary>
+                        <AccordionDetails
+                            sx={{
+                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: 1,
+                            }}
+                        >
+                            <Box sx={{ display: 'flex', gap: 2 }}>
+                                <FormikSwitch
+                                    id="hide-card"
+                                    name="hideCard"
+                                    label="Hide card"
+                                />
+                                <FormikSwitch
+                                    id="spectator-mode"
+                                    name="spectator"
+                                    label="Join as a spectator?"
+                                />
+                            </Box>
+                            <Box sx={{ display: 'flex', gap: 2 }}>
+                                <FormikSwitch
+                                    id="exploration-toogle"
+                                    name="exploration"
+                                    label="Enable fog of war?"
+                                />
+                                <FormikSelectField
+                                    id="room-mode-select"
                                     name="explorationStart"
-                                    variant="secondary"
-                                >
-                                    <Label>Starting Square</Label>
-                                    <Select.Trigger>
-                                        <Select.Value />
-                                        <Select.Indicator />
-                                    </Select.Trigger>
-                                    <Description>
-                                        Select the location of the goal that
-                                        will start the game revealed.
-                                    </Description>
-                                    <FieldError />
-                                    <Select.Popover>
-                                        <ListBox>
-                                            {[
-                                                {
-                                                    value: 'TL',
-                                                    label: 'Top Left',
-                                                },
-                                                {
-                                                    value: 'TR',
-                                                    label: 'Top Right',
-                                                },
-                                                {
-                                                    value: 'BL',
-                                                    label: 'Bottom Left',
-                                                },
-                                                {
-                                                    value: 'BR',
-                                                    label: 'Bottom Right',
-                                                },
-                                                {
-                                                    value: 'CENTER',
-                                                    label: 'Center',
-                                                    tooltip:
-                                                        'The center square of the board starts revealed. If the board has an even width or height, two squares will be revealed in that direction.',
-                                                },
-                                                {
-                                                    value: 'RANDOM',
-                                                    label: 'Random',
-                                                    tooltip:
-                                                        'A specified number of cells in the square will be chosen at random to start revealed',
-                                                },
-                                            ].map((option) => (
-                                                <ListBox.Item
-                                                    key={option.value}
-                                                    id={option.value}
-                                                    textValue={option.label}
-                                                >
-                                                    <Label>
-                                                        {option.label}
-                                                    </Label>
-                                                    {option.tooltip && (
-                                                        <Description>
-                                                            {option.tooltip}
-                                                        </Description>
-                                                    )}
-                                                    <ListBox.ItemIndicator />
-                                                </ListBox.Item>
-                                            ))}
-                                        </ListBox>
-                                    </Select.Popover>
-                                </Select>
-                                <NumberField
+                                    label="Starting Square"
+                                    disabled={!exploration}
+                                    sx={{
+                                        flexGrow: 1,
+                                        textAlign: 'left',
+                                    }}
+                                    options={[
+                                        { value: 'TL', label: 'Top Left' },
+                                        { value: 'TR', label: 'Top Right' },
+                                        { value: 'BL', label: 'Bottom Left' },
+                                        { value: 'BR', label: 'Bottom Right' },
+                                        {
+                                            value: 'CENTER',
+                                            label: 'Center',
+                                            tooltip:
+                                                'The center square of the board starts revealed. If the board has an even width or height, two squares will be revealed in that direction.',
+                                        },
+                                        {
+                                            value: 'RANDOM',
+                                            label: 'Random',
+                                            tooltip:
+                                                'A specified number of cells in the square will be chosen at random to start revealed',
+                                        },
+                                    ]}
+                                />
+                                <NumberInput
                                     id="exploration-random-revealed-count"
                                     name="explorationStartCount"
-                                    variant="secondary"
-                                    className="w-full max-w-64"
-                                    minValue={1}
-                                    maxValue={5}
-                                    step={1}
-                                >
-                                    <Label>Starting Square Count</Label>
-                                    <NumberField.Group>
-                                        <NumberField.DecrementButton />
-                                        <NumberField.Input />
-                                        <NumberField.IncrementButton />
-                                    </NumberField.Group>
-                                    <FieldError />
-                                </NumberField>
-                            </div>
-                            <NumberField
+                                    label="Starting Square Count"
+                                    min={1}
+                                    max={5}
+                                />
+                            </Box>
+                            <FormikTextField
+                                type="number"
                                 name="seed"
-                                className=""
-                                variant="secondary"
+                                label="Seed"
+                                pattern="[0-9]*"
+                                inputMode="numeric"
                                 fullWidth
-                                formatOptions={{ maximumFractionDigits: 0 }}
-                            >
-                                <Label>Seed</Label>
-                                <NumberField.Group>
-                                    <NumberField.Input className="col-span-3" />
-                                </NumberField.Group>
-                                <Description>
-                                    Enter a seed to generate the same board
-                                    across multiple rooms. Leave blank to
-                                    generate a random seed.
-                                </Description>
-                                <FieldError />
-                            </NumberField>
-                        </Accordion.Body>
-                    </Accordion.Panel>
-                </Accordion.Item>
-            </Accordion>
-
-            <Button type="submit">Create Room</Button>
-        </Form>
+                            />
+                        </AccordionDetails>
+                    </Accordion>
+                    <Button type="submit">Create Room</Button>
+                </Box>
+            )}
+        </Formik>
     );
 }

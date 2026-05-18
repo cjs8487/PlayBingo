@@ -25,6 +25,7 @@ interface FormikSelectProps {
     placeholder?: string;
     sx?: SxProps;
     disabled?: boolean;
+    fullWidth?: boolean;
 }
 
 export function FormikSelectField({
@@ -82,6 +83,7 @@ export function FormikSelectFieldAutocomplete({
     options,
     disabled,
     sx,
+    fullWidth,
 }: FormikSelectProps) {
     const [field, meta, helpers] = useField<string | null>(name);
 
@@ -113,6 +115,7 @@ export function FormikSelectFieldAutocomplete({
             )}
             disabled={disabled}
             sx={sx}
+            fullWidth={fullWidth}
         />
     );
 }
