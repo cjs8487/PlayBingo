@@ -1,17 +1,6 @@
 'use client';
-import { faLock } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
-    Description,
-    FieldError,
-    Switch as HeroSwitch,
-    Label,
-    Radio,
-    RadioGroup,
-    Slider,
-    Surface,
-} from '@heroui/react';
-import {
+    alpha,
     Box,
     Button,
     ButtonGroup,
@@ -20,7 +9,6 @@ import {
     Typography,
     useTheme,
 } from '@mui/material';
-import clsx from 'clsx';
 import { useField, useFormikContext } from 'formik';
 import { useState } from 'react';
 import { RoomFormValues } from '../RoomCreateForm';
@@ -88,11 +76,7 @@ function BingoModeConfig() {
             <Typography variant="subtitle2" sx={{ mb: 1, color: 'white' }}>
                 Win Condition
             </Typography>
-            <ButtonGroup
-                size="small"
-                color="secondary"
-                sx={{ flexWrap: 'wrap' }}
-            >
+            <ButtonGroup size="small" color="primary" sx={{ flexWrap: 'wrap' }}>
                 {winConditions.map((condition) => (
                     <Button
                         key={condition.name}
@@ -198,10 +182,12 @@ function GameModeButton({
                     alignItems: 'flex-start',
                     justifyContent: 'flex-start',
                     textTransform: 'none',
-                    bgcolor: isSelected
-                        ? 'secondary.light'
-                        : 'background.paper',
-                    borderColor: isSelected ? 'secondary.main' : 'divider',
+                    bgcolor: (theme) =>
+                        isSelected
+                            ? alpha(theme.palette.primary.main, 0.1)
+                            : theme.palette.background.paper,
+                    opacity: isSelected ? 1 : 0.8,
+                    borderColor: isSelected ? 'primary.main' : 'divider',
                     '&:hover': isSelected
                         ? {}
                         : {
@@ -342,135 +328,5 @@ export default function GameModeSelector() {
                 />
             ))}
         </Box>
-    );
-}
-
-export function GameModeSelectorHero() {
-    return (
-        <RadioGroup orientation="vertical" name="mode">
-            <div className="width-full xs:h-112.5 flex gap-4 pb-2 sm:h-87.5 md:h-75">
-                {gameModes.map((mode) => (
-                    <HeroGameModeButton key={mode.id} mode={mode} />
-                ))}
-            </div>
-            <FieldError />
-        </RadioGroup>
-    );
-}
-
-function HeroGameModeButton({ mode }: { mode: GameMode }) {
-    return (
-        <Radio value={mode.id}>
-            {({ isSelected, isFocusVisible }) => (
-                <Radio.Content
-                    className={clsx(
-                        'group bg-surface h-full min-w-11 rounded-(--radius) border p-6 text-left',
-                        'transition-all duration-300 ease-in-out',
-                        isSelected ? 'flex-1' : 'flex-0',
-                        isSelected && 'border-accent bg-accent/10',
-                        isFocusVisible && 'border-accent bg-accent/10',
-                    )}
-                >
-                    <div
-                        className={clsx(
-                            'flex origin-left items-center justify-start gap-2 pb-2 text-center transition-all duration-300 ease-in-out',
-                            isSelected ? 'rotate-0' : 'rotate-90',
-                        )}
-                    >
-                        {mode.icon}
-                        <Label className="text-lg">{mode.name}</Label>
-                    </div>
-                    <div>
-                        <div
-                            className={clsx(
-                                'animate-[0.5s_ease-in-out_0.2s_forwards_slidein] opacity-0',
-                                isSelected ? 'block' : 'hidden',
-                            )}
-                        >
-                            <div>{mode.description}</div>
-                            <div className="text-muted my-2 text-xs">
-                                {mode.detailedDescription}
-                            </div>
-                        </div>
-                        <Surface
-                            className={clsx(
-                                'rounded-(--radius) border p-4',
-                                'animate-[0.5s_ease-in-out_0.3s_forwards_slidein] opacity-0',
-                                isSelected ? 'block' : 'hidden',
-                            )}
-                        >
-                            {mode.id === 'LINES' && (
-                                <>
-                                    <Slider
-                                        minValue={1}
-                                        maxValue={5}
-                                        className="max-w-1/2"
-                                    >
-                                        <Label className="pb-2 text-sm font-bold">
-                                            Lines Required
-                                        </Label>
-                                        <Slider.Output>
-                                            {({ state: { values } }) => {
-                                                if (values[0] === 1)
-                                                    return '1 Line (Single Bingo)';
-                                                if (values[0] === 2)
-                                                    return ' 2 Lines (Double Bingo)';
-                                                if (values[0] === 3)
-                                                    return '3 Lines (Triple Bingo)';
-                                                if (values[0] === 4)
-                                                    return '4 Lines (Quad Bingo)';
-                                                if (values[0] === 5)
-                                                    return '5 Lines (Cinco Bingo)';
-                                                return '';
-                                            }}
-                                        </Slider.Output>
-                                        <Slider.Track>
-                                            <Slider.Fill />
-                                            <Slider.Thumb name="lineCount" />
-                                        </Slider.Track>
-                                        <FieldError />
-                                    </Slider>
-                                </>
-                            )}
-                            {mode.id === 'BLACKOUT' && (
-                                <>
-                                    <div className="pb-2 text-sm font-bold">
-                                        Blackout Settings
-                                    </div>
-                                    <HeroSwitch size="md" name="lockout">
-                                        {({ isSelected }) => (
-                                            <>
-                                                <HeroSwitch.Control>
-                                                    <HeroSwitch.Thumb>
-                                                        <HeroSwitch.Icon>
-                                                            {isSelected && (
-                                                                <FontAwesomeIcon
-                                                                    icon={
-                                                                        faLock
-                                                                    }
-                                                                    className="text-muted text-xs"
-                                                                />
-                                                            )}
-                                                        </HeroSwitch.Icon>
-                                                    </HeroSwitch.Thumb>
-                                                </HeroSwitch.Control>
-                                                <HeroSwitch.Content>
-                                                    <Label>Lockout</Label>
-                                                    <Description>
-                                                        {isSelected
-                                                            ? 'Lockout enabled: Only one player can claim each goal. First to a majority wins! Best played with exactly 2 players.'
-                                                            : 'Standard blackout: First player to complete all the goals on the board wins!'}
-                                                    </Description>
-                                                </HeroSwitch.Content>
-                                            </>
-                                        )}
-                                    </HeroSwitch>
-                                </>
-                            )}
-                        </Surface>
-                    </div>
-                </Radio.Content>
-            )}
-        </Radio>
     );
 }
