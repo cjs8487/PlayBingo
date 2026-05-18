@@ -36,8 +36,6 @@ export default async function ActiveRoomList() {
         );
     }
 
-    console.log(rooms);
-
     return (
         <List>
             {rooms.map((room) => (
