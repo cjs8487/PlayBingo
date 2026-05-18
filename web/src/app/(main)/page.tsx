@@ -15,6 +15,32 @@ export default async function Home() {
         <Box sx={{ p: 2 }}>
             <Box
                 sx={{
+                    pb: 2,
+                }}
+            >
+                <Typography
+                    variant="h3"
+                    sx={{
+                        textAlign: 'center',
+                        textShadow: '0 6px 20px rgba(0,0,0,0.35)',
+                        pb: 1,
+                    }}
+                >
+                    PlayBingo
+                </Typography>
+                <Typography
+                    variant="subtitle1"
+                    sx={{
+                        textAlign: 'center',
+                        textTransform: 'uppercase',
+                        color: 'secondary.main',
+                    }}
+                >
+                    Bingo Built For Communities
+                </Typography>
+            </Box>
+            <Box
+                sx={{
                     position: 'relative',
                     overflow: 'hidden',
                     borderRadius: 1,

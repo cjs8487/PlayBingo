@@ -122,6 +122,43 @@ html,
 body {
     height: 100%;
     max-height: 100%;
+    background:
+        radial-gradient(
+            circle at 10% 20%,
+            rgba(132, 75, 199, 0.45),
+            transparent 35%
+        ),
+        radial-gradient(
+            circle at 86% 12%,
+            rgba(76, 201, 240, 0.3),
+            transparent 28%
+        ),
+        linear-gradient(175deg, #180b27 0%, #0f071b 100%);
+}
+
+body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.15;
+    background-image: radial-gradient(#ffb703 1px, transparent 1px);
+    background-size: 20px 20px;
+    mix-blend-mode: soft-light;
+}
+
+body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(
+        120deg,
+        transparent 0%,
+        rgba(255, 183, 3, 0.03) 35%,
+        rgba(76, 201, 240, 0.03) 70%,
+        transparent 100%
+    );
 }
 
 .origin-center-left {
