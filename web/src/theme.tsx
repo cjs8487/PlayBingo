@@ -1,12 +1,24 @@
 'use client';
 import { LinkProps } from '@mui/material/Link';
 import { createTheme } from '@mui/material/styles';
-import { Roboto } from 'next/font/google';
+import { Lato, Nunito } from 'next/font/google';
 import NextLink, { LinkProps as NextLinkProps } from 'next/link';
 import { forwardRef } from 'react';
 
-const roboto = Roboto({
-    weight: ['300', '400', '500', '700'],
+declare module '@mui/material/Paper' {
+    interface PaperPropsVariantOverrides {
+        borderless: true;
+    }
+}
+
+const lato = Lato({
+    weight: '700',
+    subsets: ['latin'],
+    display: 'swap',
+});
+
+const nunito = Nunito({
+    weight: ['400', '500', '600', '700', '800'],
     subsets: ['latin'],
     display: 'swap',
 });
@@ -22,37 +34,75 @@ const LinkBehavior = forwardRef<HTMLAnchorElement, NextLinkProps>(
 const theme = createTheme({
     palette: {
         mode: 'dark',
+        background: {
+            default: '#12091d',
+            paper: '#211035',
+        },
         primary: {
-            main: '#b769fa',
+            main: '#ffb703',
         },
         secondary: {
-            main: '#600011',
+            main: '#4cc9f0',
         },
         info: {
-            main: '#627fbe',
+            main: '#a66cff',
+        },
+        success: {
+            main: '#70e000',
+        },
+        text: {
+            primary: '#fff9ec',
+            secondary: '#ecd9ff',
         },
         contrastThreshold: 4.5,
     },
     typography: {
-        fontFamily: roboto.style.fontFamily,
+        fontFamily: nunito.style.fontFamily,
         h1: {
-            fontSize: '3.25rem',
+            fontFamily: lato.style.fontFamily,
+            letterSpacing: '0.03em',
         },
         h2: {
-            fontSize: '2.5rem',
+            fontFamily: lato.style.fontFamily,
+            letterSpacing: '0.03em',
         },
         h3: {
-            fontSize: '2rem',
+            fontFamily: lato.style.fontFamily,
+            letterSpacing: '0.02em',
         },
         h4: {
-            fontSize: '1.75rem',
+            fontFamily: lato.style.fontFamily,
+            letterSpacing: '0.02em',
+        },
+        h5: {
+            fontFamily: lato.style.fontFamily,
+        },
+        h6: {
+            fontFamily: lato.style.fontFamily,
+        },
+        button: {
+            fontWeight: 800,
+            letterSpacing: '0.04em',
+        },
+        subtitle1: {
+            fontWeight: 700,
+            letterSpacing: '0.03em',
         },
     },
     components: {
         MuiAppBar: {
             defaultProps: {
-                color: 'secondary',
                 enableColorOnDark: true,
+            },
+            styleOverrides: {
+                root: {
+                    background:
+                        'linear-gradient(90deg, rgba(106,45,160,0.95) 0%, rgba(44,18,75,0.95) 50%, rgba(27,17,50,0.95) 100%)',
+                    boxShadow: '0 10px 30px rgba(0, 0, 0, 0.35)',
+                    backdropFilter: 'blur(8px)',
+                    borderBottom: '2px solid rgba(255, 183, 3, 0.4)',
+                    color: '#fff9ec',
+                },
             },
         },
         MuiIcon: {
@@ -73,13 +123,21 @@ const theme = createTheme({
         MuiCard: {
             styleOverrides: {
                 root: {
-                    '& .hidden-controls': {
-                        display: 'none',
-                        position: 'absolute',
-                    },
-                    '&:hover .hidden-controls': {
-                        display: 'flex',
-                    },
+                    boxShadow: '0 16px 36px rgba(0, 0, 0, 0.35)',
+                    variants: [
+                        {
+                            props: { variant: 'outlined' },
+                            style: {
+                                border: '2px solid rgba(255, 183, 3, 0.25)',
+                            },
+                        },
+                        {
+                            props: { variant: 'borderless' },
+                            style: {
+                                border: 'none',
+                            },
+                        },
+                    ],
                 },
             },
             defaultProps: {
@@ -96,9 +154,33 @@ const theme = createTheme({
                 LinkComponent: LinkBehavior,
             },
         },
+        MuiButton: {
+            styleOverrides: {
+                root: {
+                    borderRadius: 999,
+                    paddingInline: '1rem',
+                },
+            },
+        },
+        MuiTextField: {
+            defaultProps: {
+                variant: 'outlined',
+            },
+        },
+        MuiOutlinedInput: {
+            styleOverrides: {
+                root: {
+                    borderRadius: 14,
+                    backgroundColor: 'rgba(15, 7, 26, 0.7)',
+                },
+                notchedOutline: {
+                    borderColor: 'rgba(236, 217, 255, 0.35)',
+                },
+            },
+        },
     },
     shape: {
-        borderRadius: 8,
+        borderRadius: 14,
     },
 });
 
