@@ -19,9 +19,5 @@ export default function Timer() {
 
     const offset = Duration.fromDurationLike(0);
 
-    return (
-        <div className="">
-            <TimerDisplay offset={offset} />
-        </div>
-    );
+    return <TimerDisplay offset={offset} />;
 }

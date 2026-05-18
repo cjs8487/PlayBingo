@@ -2,6 +2,7 @@ import { DateTime, Duration } from 'luxon';
 import { useEffect, useState } from 'react';
 import { useInterval } from 'react-use';
 import { useRoomContext } from '../../../context/RoomContext';
+import { Typography } from '@mui/material';
 
 export default function TimerDisplay({ offset }: { offset: Duration }) {
     const { roomData } = useRoomContext();
@@ -58,9 +59,9 @@ export default function TimerDisplay({ offset }: { offset: Duration }) {
     }, []);
 
     return (
-        <div className="font-mono text-5xl">
+        <Typography sx={{ fontFamily: 'monospace', fontSize: 50 }}>
             {dur.shiftToAll().toFormat('h:mm:ss')}.
             {Math.floor((dur.milliseconds % 1000) / 100)}
-        </div>
+        </Typography>
     );
 }

@@ -97,7 +97,7 @@ const theme = createTheme({
             styleOverrides: {
                 root: {
                     background:
-                        'linear-gradient(90deg, rgba(106,45,160,0.95) 0%, rgba(44,18,75,0.95) 50%, rgba(27,17,50,0.95) 100%)',
+                        'linear-gradient(90deg, #600011 0%, rgba(44,18,75,0.95) 60%, rgba(27,17,50,0.95) 100%)',
                     boxShadow: '0 10px 30px rgba(0, 0, 0, 0.35)',
                     backdropFilter: 'blur(8px)',
                     borderBottom: '2px solid rgba(255, 183, 3, 0.4)',
