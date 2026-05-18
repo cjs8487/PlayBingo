@@ -42,7 +42,7 @@ export default async function ActiveRoomList() {
         <List>
             {rooms.map((room) => (
                 <ListItem key={room.slug}>
-                    <Card variant="outlined">
+                    <Card>
                         <CardActionArea
                             href={`/rooms/${room.slug}`}
                             sx={{
