@@ -1,7 +1,14 @@
 'use client';
 import { RoomContext } from '@/context/RoomContext';
-import { Button, Input, TextField } from '@heroui/react';
 import SendIcon from '@mui/icons-material/Send';
+import {
+    alpha,
+    Box,
+    Button,
+    Paper,
+    TextField,
+    Typography,
+} from '@mui/material';
 import { useContext, useEffect, useRef, useState } from 'react';
 
 export default function RoomChat() {
@@ -16,64 +23,96 @@ export default function RoomChat() {
     }, [messages]);
 
     return (
-        <div className="bg-surface-secondary grid-rows-[1fr_auto absolute grid h-full w-full grid-cols-1 gap-2 p-2">
+        <Paper
+            sx={{
+                position: 'absolute',
+                width: '100%',
+                height: '100%',
+                display: 'grid',
+                gridTemplateRows: '1fr auto',
+                gridTemplateColumns: '1fr',
+                gap: 1,
+                p: 1,
+                borderTopLeftRadius: 0,
+                backgroundColor: (theme) =>
+                    alpha(theme.palette.background.paper, 0.5),
+            }}
+        >
             {roomData?.chatEnabled ? (
                 <>
-                    <div className="max-h-full overflow-y-auto px-2" ref={chatDivRef}>
-                    {messages.map((message, index) => (
-                        <div key={index}>
-                            {message.map((messageContents, contentIndex) => {
-                                if (typeof messageContents === 'string') {
-                                    return (
-                                        <span key={`${contentIndex}`} style={{}}>
-                                            {messageContents}
-                                        </span>
-                                    );
-                                }
-                                return (
-                                    <span
-                                        key={`${contentIndex}`}
-                                        style={{
-                                            color: messageContents.color,
-                                        }}
-                                    >
-                                        {messageContents.contents}
-                                    </span>
-                                );
-                            })}
-                        </div>
-                    ))}
-                    <div className="flex gap-1">
+                    <Box
+                        sx={{
+                            maxHeight: '100%',
+                            overflowY: 'auto',
+                            px: 1,
+                            opacity: 1,
+                        }}
+                        ref={chatDivRef}
+                    >
+                        {messages.map((message, index) => (
+                            <div key={index}>
+                                {message.map(
+                                    (messageContents, contentIndex) => {
+                                        if (
+                                            typeof messageContents === 'string'
+                                        ) {
+                                            return (
+                                                <span
+                                                    key={`${contentIndex}`}
+                                                    style={{}}
+                                                >
+                                                    {messageContents}
+                                                </span>
+                                            );
+                                        }
+                                        return (
+                                            <span
+                                                key={`${contentIndex}`}
+                                                style={{
+                                                    color: messageContents.color,
+                                                }}
+                                            >
+                                                {messageContents.contents}
+                                            </span>
+                                        );
+                                    },
+                                )}
+                            </div>
+                        ))}
+                    </Box>
+                    <Box
+                        sx={{ display: 'flex', gap: 0.5 }}
+                        className="flex gap-1"
+                    >
                         <TextField
                             value={message}
-                            className="grow"
+                            size="small"
                             fullWidth
-                            onChange={setMessage}
+                            onChange={(e) => setMessage(e.target.value)}
                             onKeyUp={(event) => {
                                 if (event.key === 'Enter') {
                                     sendChatMessage(message);
                                     setMessage('');
                                 }
                             }}
-                        >
-                            <Input placeholder="Send a chat message..." />
-                        </TextField>
+                            placeholder="Send a chat message..."
+                        />
                         <Button
                             onClick={() => {
                                 sendChatMessage(message);
                                 setMessage('');
                             }}
+                            endIcon={<SendIcon />}
                         >
                             Send
-                            <SendIcon />
                         </Button>
-                    </div>
-                </div>
-            </>) : (
-                <div className="flex h-full items-center justify-center text-center">
+                    </Box>
+                </>
+            ) : (
+                <Typography variant="h6" align="center">
                     Chat is disabled for this room
-                </div>
+                </Typography>
             )}
-        </div>
+        </Paper>
     );
 }

@@ -334,7 +334,7 @@ function RoomXl() {
                 overflow: 'hidden',
                 display: 'grid',
                 gridTemplateColumns: '300px 1fr 300px',
-                gridTemplateRows: 'auto 1fr',
+                gridTemplateRows: 'auto',
             }}
         >
             <Portal container={() => document.getElementById('global-header')}>
@@ -495,9 +495,12 @@ function RoomXl() {
             <div className="board-wrapper relative h-full rounded-xl p-6">
                 <Board />
             </div>
-            <div className="relative h-full">
+            <Box
+                sx={{ position: 'relative', height: '100%' }}
+                className="relative h-full"
+            >
                 <RoomChat />
-            </div>
+            </Box>
         </Box>
     );
     // return (
