@@ -6,8 +6,6 @@ import Timer from './timer/Timer';
 export default function RoomHeader() {
     const { roomData } = useRoomContext();
 
-    console.log(roomData);
-
     if (!roomData) {
         return null;
     }
@@ -35,16 +33,29 @@ export default function RoomHeader() {
                         {roomData.game} ({roomData.variant})
                     </div>
                 </Typography>
-                <Box sx={{ display: 'flex' }} className="flex text-xs">
+                <Box
+                    sx={{ display: 'flex', alignItems: 'center' }}
+                    className="flex text-xs"
+                >
                     <Typography
                         variant="body2"
-                        sx={{ borderRight: '1px solid #fff', pr: 1, mr: 1 }}
+                        sx={{
+                            borderRight: 1,
+                            borderColor: 'divider',
+                            pr: 1,
+                            mr: 1,
+                        }}
                     >
                         {roomData.slug}
                     </Typography>
                     <Typography
                         variant="body2"
-                        sx={{ borderRight: '1px solid #fff', pr: 1, mr: 1 }}
+                        sx={{
+                            borderRight: 1,
+                            borderColor: 'divider',
+                            pr: 1,
+                            mr: 1,
+                        }}
                     >
                         {roomData.mode}
                     </Typography>
