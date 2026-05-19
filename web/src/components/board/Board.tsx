@@ -20,6 +20,7 @@ export default function Board() {
                 overflow: 'hidden',
                 width: '100%',
                 height: '100%',
+                position: 'absolute',
             }}
         >
             <Box
@@ -27,6 +28,7 @@ export default function Board() {
                     flex: '1 1 auto',
                     height: '100%',
                     textAlign: 'center',
+                    p: 3,
                 }}
             >
                 <AutoSizer>
