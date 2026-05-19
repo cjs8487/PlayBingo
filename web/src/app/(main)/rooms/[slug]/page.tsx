@@ -9,27 +9,24 @@ import Timer from '@/components/room/timer/Timer';
 import TimerControls from '@/components/room/timer/TimerControls';
 import TimingMethodSelector from '@/components/room/timer/TimingMethodSelector';
 import { ConnectionStatus, useRoomContext } from '@/context/RoomContext';
-import {
-    Button,
-    ColorArea,
-    ColorChannel,
-    ColorField,
-    ColorPicker,
-    ColorSpace,
-    ColorSwatch,
-    ColorSwatchPicker,
-    Label,
-    ListBox,
-    Select,
-    Separator,
-    Surface,
-    Switch,
-} from '@heroui/react';
 import { Refresh } from '@mui/icons-material';
-import { Box, Dialog, DialogContent, Portal, Stack } from '@mui/material';
+import {
+    alpha,
+    Box,
+    Button,
+    Dialog,
+    DialogContent,
+    FormControlLabel,
+    Paper,
+    Popover,
+    Portal,
+    Stack,
+    Switch,
+    Typography,
+} from '@mui/material';
+import PopupState, { bindPopover, bindTrigger } from 'material-ui-popup-state';
 import { Sword } from 'mdi-material-ui';
-import { useState } from 'react';
-import { useLocalStorage } from 'react-use';
+import { SketchPicker } from 'react-color';
 import RoomHeader from '../../../../components/room/RoomHeader';
 
 export default function Room() {
@@ -313,15 +310,6 @@ function RoomXl() {
         connectedPlayer,
     } = useRoomContext();
 
-    const [storedCustomColor] = useLocalStorage('PlayBingo.customcolor', '');
-
-    const [colorSpace, setColorSpace] = useState<ColorSpace>('rgb');
-    const colorChannelsByColorSpace: Record<ColorSpace, ColorChannel[]> = {
-        hsb: ['hue', 'saturation', 'brightness'],
-        hsl: ['hue', 'saturation', 'lightness'],
-        rgb: ['red', 'green', 'blue'],
-    };
-
     if (!roomData) {
         return null;
     }
@@ -340,161 +328,132 @@ function RoomXl() {
             <Portal container={() => document.getElementById('global-header')}>
                 <RoomHeader />
             </Portal>
-            <Surface className="p-3">
+            <Paper
+                sx={{
+                    p: 1.5,
+                    background: (theme) =>
+                        alpha(theme.palette.background.paper, 0.5),
+                }}
+            >
                 {players.map((player) => (
-                    <div
+                    <Box
                         key={player.id}
-                        className="mb-2 flex items-center border-l-6 border-(--player-color) p-2 shadow-[0_0_6px_var(--player-color)]"
-                        style={
-                            {
-                                '--player-color': player.color,
-                            } as React.CSSProperties
-                        }
+                        sx={{
+                            p: 1,
+                            mb: 1,
+                            borderLeft: 6,
+                            borderColor: player.color,
+                            boxShadow: `0 0 6px ${player.color}`,
+                            display: 'flex',
+                            alignItems: 'center',
+                        }}
                     >
-                        <div className="grow">{player.nickname}</div>
+                        <Typography sx={{ flexGrow: 1 }}>
+                            {player.nickname}
+                        </Typography>
                         {player.monitor && (
                             <Sword fontSize="small" sx={{ color: 'green' }} />
                         )}
-                    </div>
+                    </Box>
                 ))}
-                <Separator variant="secondary" className="mt-4 mb-4" />
-                <ColorPicker
-                    defaultValue={color}
-                    onChange={(color) => changeColor(color.toString('hex'))}
-                >
-                    <ColorPicker.Trigger className="items-center">
-                        <ColorSwatch />
-                        <Label>Change Color</Label>
-                    </ColorPicker.Trigger>
-                    <ColorPicker.Popover>
-                        <ColorArea
-                            colorSpace="hsb"
-                            xChannel="saturation"
-                            yChannel="brightness"
-                        >
-                            <ColorArea.Thumb />
-                        </ColorArea>
-                        <Select
-                            aria-label="Color space"
-                            value={colorSpace}
-                            variant="secondary"
-                            onChange={(value) =>
-                                setColorSpace(value as ColorSpace)
-                            }
-                        >
-                            <Select.Trigger>
-                                <Select.Value className="uppercase" />
-                                <Select.Indicator />
-                            </Select.Trigger>
-                            <Select.Popover>
-                                <ListBox>
-                                    {Object.keys(colorChannelsByColorSpace).map(
-                                        (space) => (
-                                            <ListBox.Item
-                                                key={space}
-                                                className="uppercase"
-                                                id={space}
-                                                textValue={space}
-                                            >
-                                                {space}
-                                                <ListBox.ItemIndicator />
-                                            </ListBox.Item>
-                                        ),
-                                    )}
-                                </ListBox>
-                            </Select.Popover>
-                        </Select>
-                        <div className="grid w-full grid-cols-3 items-center gap-2">
-                            {colorChannelsByColorSpace[colorSpace].map(
-                                (channel) => (
-                                    <ColorField
-                                        key={channel}
-                                        aria-label={channel}
-                                        channel={channel}
-                                        colorSpace={colorSpace}
-                                    >
-                                        <ColorField.Group variant="secondary">
-                                            <ColorField.Input />
-                                        </ColorField.Group>
-                                    </ColorField>
-                                ),
-                            )}
-                        </div>
-                        <ColorSwatchPicker variant="square">
-                            {[
-                                '#ff0000',
-                                '#0000ff',
-                                '#FFA500',
-                                '#008000',
-                                '#800080',
-                                storedCustomColor ?? '#000000',
-                            ].map((colorItem) => (
-                                <ColorSwatchPicker.Item
-                                    key={colorItem}
-                                    color={colorItem}
-                                >
-                                    <ColorSwatchPicker.Swatch />
-                                    <ColorSwatchPicker.Indicator />
-                                </ColorSwatchPicker.Item>
-                            ))}
-                        </ColorSwatchPicker>
-                    </ColorPicker.Popover>
-                </ColorPicker>
-                <Separator variant="secondary" className="mt-4 mb-4" />
-                <div className="flex flex-col gap-2">
-                    <div className="text-lg font-semibold">Settings</div>
-                    <Switch
-                        isSelected={showCounters}
-                        onChange={(show) => {
-                            if (show !== showCounters) {
-                                toggleCounters();
-                            }
-                        }}
-                    >
-                        <Switch.Control>
-                            <Switch.Thumb />
-                        </Switch.Control>
-                        <Switch.Content>
-                            <Label>Show Counters</Label>
-                        </Switch.Content>
-                    </Switch>
-                    <Switch
-                        isSelected={showGoalDetails}
-                        onChange={(show) => {
-                            if (show !== showGoalDetails) {
-                                toggleGoalDetails();
-                            }
-                        }}
-                    >
-                        <Switch.Control>
-                            <Switch.Thumb />
-                        </Switch.Control>
-                        <Switch.Content>
-                            <Label>Show All Goal Details</Label>
-                        </Switch.Content>
-                    </Switch>
+                <Box sx={{ my: 2, border: 1, borderColor: 'divider' }} />
+                <PopupState variant="popover">
+                    {(popupState) => (
+                        <>
+                            <Button
+                                {...bindTrigger(popupState)}
+                                sx={{
+                                    gap: 1,
+                                    color,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                }}
+                            >
+                                <Box
+                                    sx={{
+                                        borderRadius: '100%',
+                                        width: 20,
+                                        height: 20,
+                                        aspectRatio: '1 / 1',
+                                        background: color,
+                                    }}
+                                />
+                                Change Color
+                            </Button>
+                            <Popover
+                                {...bindPopover(popupState)}
+                                anchorOrigin={{
+                                    vertical: 'bottom',
+                                    horizontal: 'center',
+                                }}
+                                transformOrigin={{
+                                    vertical: 'top',
+                                    horizontal: 'center',
+                                }}
+                            >
+                                <SketchPicker
+                                    color={color}
+                                    onChange={(color) => {
+                                        changeColor(color.hex);
+                                    }}
+                                />
+                            </Popover>
+                        </>
+                    )}
+                </PopupState>
+                <Box sx={{ my: 2, border: 1, borderColor: 'divider' }} />
+                <Box>
+                    <Typography variant="h6">Settings</Typography>
+                    <FormControlLabel
+                        control={
+                            <Switch
+                                checked={showCounters}
+                                onChange={(e) => {
+                                    if (e.target.checked !== showCounters) {
+                                        toggleCounters();
+                                    }
+                                }}
+                            />
+                        }
+                        label="Show Counters"
+                    />
+                    <FormControlLabel
+                        control={
+                            <Switch
+                                checked={showGoalDetails}
+                                onChange={(e) => {
+                                    if (e.target.checked !== showGoalDetails) {
+                                        toggleGoalDetails();
+                                    }
+                                }}
+                            />
+                        }
+                        label="Show All Goal Details "
+                    />
                     {connectedPlayer?.monitor && (
                         <Button
-                            variant="danger-soft"
-                            size="sm"
-                            onPress={() => regenerateCard()}
-                            className="w-full"
+                            size="small"
+                            onClick={() => regenerateCard()}
+                            sx={{ width: '100%' }}
+                            startIcon={<Refresh />}
                         >
-                            <Refresh />
                             Regenerate Card
                         </Button>
                     )}
-                </div>
-                <Separator variant="secondary" className="mt-4 mb-4" />
-                <div className="flex flex-col gap-2">
-                    <div className="text-lg font-semibold">Timer Controls</div>
+                </Box>
+                <Box sx={{ my: 2, border: 1, borderColor: 'divider' }} />
+                <Box>
+                    <Typography variant="h6">Timer Controls</Typography>
                     <TimingMethodSelector />
                     <TimerControls />
-                </div>
-            </Surface>
-            <div className="board-wrapper relative h-full rounded-xl p-6">
+                </Box>
+            </Paper>
+            <Box
+                sx={{ position: 'relative', height: '100%', p: 3 }}
+                className="board-wrapper"
+            >
                 <Board />
-            </div>
+            </Box>
             <Box
                 sx={{ position: 'relative', height: '100%' }}
                 className="relative h-full"
@@ -503,50 +462,4 @@ function RoomXl() {
             </Box>
         </Box>
     );
-    // return (
-    //     <Box
-    //         sx={{
-    //             width: '100%',
-    //             height: '100%',
-    //             maxHeight: 'calc(100vh - 64px - 78px - 16px)',
-    //             display: 'grid',
-    //             gridTemplateRows: 'auto auto auto auto 1fr',
-    //             gridTemplateColumns:
-    //                 'minmax(0, 2fr) minmax(350px, 450px) minmax(300px, 400px)',
-    //             gap: 2,
-    //             overflow: 'hidden',
-    //         }}
-    //     >
-    //         <Box
-    //             sx={{
-    //                 width: '100%',
-    //                 height: '100%',
-    //                 gridRow: '1 / -1',
-    //                 gridColumn: 1,
-    //                 overflow: 'hidden',
-    //             }}
-    //         >
-    //             <Board />
-    //         </Box>
-    //         <Box sx={{ gridColumn: 2, overflow: 'hidden' }}>
-    //             <RoomInfo />
-    //         </Box>
-    //         <Box sx={{ gridColumn: 2, overflow: 'hidden' }}>
-    //             <RoomInfo />
-    //         </Box>
-    //         <Box sx={{ gridColumn: 2, overflow: 'hidden' }}>
-    //             <PlayerInfo />
-    //         </Box>
-    //         <Box sx={{ gridColumn: 2, overflow: 'hidden' }}>
-    //             <Timer />
-    //         </Box>
-    //         <Box sx={{ gridRow: '4 / -1', gridColumn: 2, overflow: 'hidden' }}>
-    //             <PlayerList />
-    //         </Box>
-    //         <Box sx={{ gridRow: '1 / -1', gridColumn: 3, overflow: 'hidden' }}>
-    //         <Box sx={{ gridRow: '1 / -1', gridColumn: 3, overflow: 'hidden' }}>
-    //             <RoomChat />
-    //         </Box>
-    //     </Box>
-    // );
 }
