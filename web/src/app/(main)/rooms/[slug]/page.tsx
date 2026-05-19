@@ -449,7 +449,7 @@ function RoomXl() {
                 </Box>
             </Paper>
             <Box
-                sx={{ position: 'relative', height: '100%', p: 3 }}
+                sx={{ position: 'relative', height: '100%' }}
                 className="board-wrapper"
             >
                 <Board />
