@@ -1,14 +1,28 @@
 'use client';
-import { Box } from '@mui/material';
-import { useContext, useRef, useState } from 'react';
-import { SketchPicker } from 'react-color';
-import { useClickAway, useLocalStorage } from 'react-use';
+import { Box, Button, Popover } from '@mui/material';
+import {
+    EditableInput,
+    EditableInputRGBA,
+    hexToHsva,
+    HsvaColor,
+    hsvaToHex,
+    Hue,
+    Saturation,
+    Swatch,
+} from '@uiw/react-color';
+import PopupState, { bindPopover, bindTrigger } from 'material-ui-popup-state';
+import { useContext, useState } from 'react';
+import { useLocalStorage } from 'react-use';
 import { RoomContext } from '../../context/RoomContext';
 
 export default function ColorSelect() {
     const { color, changeColor } = useContext(RoomContext);
 
-    const colors = ['blue', 'red', 'orange', 'green', 'purple'];
+    const colors = ['#0000ff', '#ff0000', '#ffa500', '#008000', '#800080'];
+
+    const [newColor, setNewColor] = useState<HsvaColor>(
+        hexToHsva(color.startsWith('#') ? color : '#0000ff'),
+    );
 
     const [storedCustomColor, setStoredCustomColor] = useLocalStorage(
         'PlayBingo.customcolor',
@@ -16,86 +30,117 @@ export default function ColorSelect() {
     );
 
     const [customColor, setCustomColor] = useState(storedCustomColor ?? '');
-    const [picker, setPicker] = useState(false);
-    const pickerRef = useRef<HTMLDivElement>(null);
-
-    useClickAway(pickerRef, () => {
-        setPicker(false);
-        changeColor(customColor);
-    });
 
     return (
-        <Box
-            sx={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                columnGap: 2,
-                rowGap: 1,
-            }}
-        >
-            {colors.map((colorItem) => (
-                <Box
-                    key={colorItem}
-                    onClick={() => changeColor(colorItem)}
-                    sx={{
-                        bgcolor: colorItem,
-                        backgroundColor: colorItem,
-                        cursor: 'pointer',
-                        border: color === colorItem ? 4 : 0,
-                        borderColor: 'white',
-                        px: 1,
-                        py: 0.5,
-
-                        ':hover': {
-                            scale: '110%',
-                        },
-                    }}
-                >
-                    {colorItem}
-                </Box>
-            ))}
-            <Box
-                sx={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                }}
-            >
-                <Box
-                    sx={{
-                        backgroundColor: customColor,
-                        cursor: 'pointer',
-                        border: color === customColor ? 4 : 0,
-                        borderColor: 'white',
-                        px: 1,
-                        py: 0.5,
-                        ':hover': {
-                            scale: '110%',
-                        },
-                    }}
-                    onClick={() => setPicker(true)}
-                >
-                    custom
-                </Box>
-                {picker && (
-                    <Box
-                        ref={pickerRef}
+        <PopupState variant="popover">
+            {(popupState) => (
+                <>
+                    <Button
+                        {...bindTrigger(popupState)}
                         sx={{
-                            position: 'absolute',
-                            zIndex: 20,
-                            transform: 'translate(-65%, 40px)',
+                            gap: 1,
+                            color,
+                            display: 'flex',
+                            alignItems: 'center',
                         }}
                     >
-                        <SketchPicker
-                            color={customColor}
-                            onChange={(color) => {
-                                setStoredCustomColor(color.hex);
-                                setCustomColor(color.hex);
+                        <Box
+                            sx={{
+                                borderRadius: '100%',
+                                width: 20,
+                                height: 20,
+                                aspectRatio: '1 / 1',
+                                background: color,
                             }}
                         />
-                    </Box>
-                )}
-            </Box>
-        </Box>
+                        Change Color
+                    </Button>
+                    <Popover
+                        {...bindPopover(popupState)}
+                        anchorOrigin={{
+                            vertical: 'bottom',
+                            horizontal: 'center',
+                        }}
+                        transformOrigin={{
+                            vertical: 'top',
+                            horizontal: 'center',
+                        }}
+                        onClose={() => {
+                            const newColorHex = hsvaToHex(newColor);
+                            changeColor(newColorHex);
+                            if (!colors.includes(newColorHex)) {
+                                setStoredCustomColor(newColorHex);
+                                setCustomColor(newColorHex);
+                            }
+                            popupState.close();
+                        }}
+                        sx={{
+                            width: 250,
+                        }}
+                    >
+                        <Box
+                            sx={{
+                                display: 'flex',
+                                flexDirection: 'column',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: 1,
+                                py: 1,
+                            }}
+                        >
+                            <Saturation
+                                hsva={newColor}
+                                onChange={(hsva) => {
+                                    setNewColor(hsva);
+                                }}
+                                radius={12}
+                            />
+                            <Hue
+                                hue={newColor.h}
+                                onChange={(hue) => {
+                                    setNewColor({ ...newColor, h: hue.h });
+                                }}
+                                width={'90%'}
+                                radius={12}
+                            />
+                            <Box
+                                sx={{
+                                    display: 'flex',
+                                    justifyContent: 'center',
+                                    px: 1,
+                                }}
+                            >
+                                <EditableInput
+                                    value={hsvaToHex(newColor)}
+                                    onChange={(e, value) => {
+                                        setNewColor(hexToHsva(`${value}`));
+                                    }}
+                                    label="Hex"
+                                    placement="bottom"
+                                />
+                                <EditableInputRGBA
+                                    hsva={newColor}
+                                    aProps={false}
+                                    onChange={(color) =>
+                                        setNewColor(color.hsva)
+                                    }
+                                />
+                            </Box>
+                            <Swatch
+                                colors={[...colors, customColor]}
+                                color={color}
+                                onChange={(hsva) => {
+                                    setNewColor(hsva);
+                                    const newColorHex = hsvaToHex(hsva);
+                                    if (!colors.includes(newColorHex)) {
+                                        setCustomColor(newColorHex);
+                                    }
+                                }}
+                            />
+                        </Box>
+                    </Popover>
+                </>
+            )}
+        </PopupState>
     );
 }
