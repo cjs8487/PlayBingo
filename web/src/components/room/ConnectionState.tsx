@@ -1,4 +1,4 @@
-import { Paper, Typography } from '@mui/material';
+import { Paper, Typography, Box } from '@mui/material';
 import { useContext } from 'react';
 import { ConnectionStatus, RoomContext } from '../../context/RoomContext';
 
@@ -31,7 +31,7 @@ function getStatusContents(status: ConnectionStatus) {
             };
         case ConnectionStatus.CLOSED:
             return {
-                color: '',
+                color: '#c3c3c3',
                 text: 'Disconnected',
             };
         default:
@@ -48,7 +48,24 @@ export default function ConnectionState() {
     const contents = getStatusContents(connectionStatus);
 
     return (
-        <Paper elevation={8} sx={{ py: 1, backgroundColor: contents.color }}>
+        <Paper
+            elevation={3}
+            sx={{
+                py: 0.5,
+                px: 1.5,
+                display: 'flex',
+                alignItems: 'center',
+                columnGap: 1,
+            }}
+        >
+            <Box
+                sx={{
+                    width: 15,
+                    height: 15,
+                    borderRadius: '50%',
+                    backgroundColor: contents.color,
+                }}
+            />
             <Typography>{contents.text}</Typography>
         </Paper>
     );
