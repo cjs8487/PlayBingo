@@ -91,3 +91,17 @@ body::after {
     background-size: 44px 44px;
     pointer-events: none;
 }
+
+.w-color-sketch {
+    --sketch-background: #323232 !important;
+}
+
+.w-color-swatch {
+    --sketch-swatch-border-top: 1px solid #525252 !important;
+}
+
+.w-color-editable-input {
+    --editable-input-label-color: ##fff9ec !important;
+    --editable-input-box-shadow: #616161 0px 0px 0px 1px inset !important;
+    --editable-input-color: #fff9ec !important;
+}

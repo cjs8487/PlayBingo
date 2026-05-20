@@ -18,15 +18,13 @@ import {
     DialogContent,
     FormControlLabel,
     Paper,
-    Popover,
     Portal,
     Stack,
     Switch,
     Typography,
 } from '@mui/material';
-import PopupState, { bindPopover, bindTrigger } from 'material-ui-popup-state';
 import { Sword } from 'mdi-material-ui';
-import { SketchPicker } from 'react-color';
+import ColorSelect from '../../../../components/room/ColorSelect';
 import RoomHeader from '../../../../components/room/RoomHeader';
 
 export default function Room() {
@@ -304,8 +302,6 @@ function RoomXl() {
         toggleCounters,
         showGoalDetails,
         toggleGoalDetails,
-        color,
-        changeColor,
         regenerateCard,
         connectedPlayer,
     } = useRoomContext();
@@ -357,50 +353,7 @@ function RoomXl() {
                     </Box>
                 ))}
                 <Box sx={{ my: 2, border: 1, borderColor: 'divider' }} />
-                <PopupState variant="popover">
-                    {(popupState) => (
-                        <>
-                            <Button
-                                {...bindTrigger(popupState)}
-                                sx={{
-                                    gap: 1,
-                                    color,
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                }}
-                            >
-                                <Box
-                                    sx={{
-                                        borderRadius: '100%',
-                                        width: 20,
-                                        height: 20,
-                                        aspectRatio: '1 / 1',
-                                        background: color,
-                                    }}
-                                />
-                                Change Color
-                            </Button>
-                            <Popover
-                                {...bindPopover(popupState)}
-                                anchorOrigin={{
-                                    vertical: 'bottom',
-                                    horizontal: 'center',
-                                }}
-                                transformOrigin={{
-                                    vertical: 'top',
-                                    horizontal: 'center',
-                                }}
-                            >
-                                <SketchPicker
-                                    color={color}
-                                    onChange={(color) => {
-                                        changeColor(color.hex);
-                                    }}
-                                />
-                            </Popover>
-                        </>
-                    )}
-                </PopupState>
+                <ColorSelect />
                 <Box sx={{ my: 2, border: 1, borderColor: 'divider' }} />
                 <Box>
                     <Typography variant="h6">Settings</Typography>
