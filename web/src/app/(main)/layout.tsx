@@ -1,5 +1,5 @@
 'use client';
-import { Box, styled, useMediaQuery, useTheme } from '@mui/material';
+import { Box } from '@mui/material';
 import { ConfirmProvider } from 'material-ui-confirm';
 import { ReactNode, useState } from 'react';
 import CookieConsent from 'react-cookie-consent';
@@ -7,40 +7,7 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Footer from '../../components/footer/Footer';
 import Header from '../../components/header/Header';
-import NavDrawer, { drawerWidth } from '../../components/header/NavDrawer';
-import { useIsOnHomePage } from '../../hooks/useIsOnHomePage';
-
-const Main = styled('main', {
-    shouldForwardProp: (prop) => prop !== 'open' && prop !== 'isOnHomePage',
-})<{
-    open?: boolean;
-    isOnHomePage?: boolean;
-}>(({ theme }) => ({
-    flexGrow: 1,
-    transition: theme.transitions.create('margin', {
-        easing: theme.transitions.easing.sharp,
-        duration: theme.transitions.duration.leavingScreen,
-    }),
-    marginLeft: `-${drawerWidth}px`,
-    variants: [
-        {
-            props: ({ open, isOnHomePage }) => open || !isOnHomePage,
-            style: {
-                transition: theme.transitions.create('margin', {
-                    easing: theme.transitions.easing.easeOut,
-                    duration: theme.transitions.duration.enteringScreen,
-                }),
-                marginLeft: 0,
-            },
-        },
-    ],
-    display: 'grid',
-    gridTemplateRows: '1fr auto',
-    gridRow: '2',
-    gridColumn: '2',
-    height: '100%',
-    maxHeight: '100%',
-}));
+import NavDrawer from '../../components/header/NavDrawer';
 
 export default function CoreLayout({
     children,
@@ -49,13 +16,9 @@ export default function CoreLayout({
     children: ReactNode;
     modal: ReactNode;
 }) {
-    const theme = useTheme();
-    const isLg = useMediaQuery(theme.breakpoints.up('lg'));
-    const isOnHomePage = useIsOnHomePage();
-
     const [manuallyOpened, setManuallyOpened] = useState(false);
 
-    const navDrawerOpen = (isOnHomePage && isLg) || manuallyOpened;
+    const navDrawerOpen = manuallyOpened;
 
     const toggleNavDrawer = () => {
         setManuallyOpened((curr) => !curr);
@@ -75,22 +38,12 @@ export default function CoreLayout({
                     }}
                 >
                     <Header toggleNavDrawer={toggleNavDrawer} />
-                    <Box
-                        sx={{
-                            display: 'flex',
-                            height: '100%',
-                            maxHeight: '100%',
-                        }}
-                    >
-                        <NavDrawer
-                            open={navDrawerOpen}
-                            setOpen={setManuallyOpened}
-                        />
-                        <Main open={navDrawerOpen} isOnHomePage={isOnHomePage}>
-                            {children}
-                            <Footer />
-                        </Main>
-                    </Box>
+                    <NavDrawer
+                        open={navDrawerOpen}
+                        setOpen={setManuallyOpened}
+                    />
+                    {children}
+                    <Footer />
                 </Box>
                 <ToastContainer />
                 {modal}

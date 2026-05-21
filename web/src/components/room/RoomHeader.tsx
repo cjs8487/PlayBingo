@@ -29,6 +29,7 @@ export default function RoomHeader() {
                     left: 0,
                     textAlign: 'center',
                     width: '100%',
+                    zIndex: -1,
                 }}
             >
                 <Timer />
