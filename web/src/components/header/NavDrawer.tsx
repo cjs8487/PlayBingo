@@ -10,13 +10,13 @@ import {
     ListItemButton,
     ListItemIcon,
     ListItemText,
-    Toolbar,
     Typography,
 } from '@mui/material';
+import Image from 'next/image';
 import NextLink from 'next/link';
 import { useSelectedLayoutSegment } from 'next/navigation';
+import logo from '../../images/playbingologo.png';
 import { icons } from '../footer/Footer';
-import { useIsOnHomePage } from '@/hooks/useIsOnHomePage';
 
 export const drawerWidth = 240;
 
@@ -27,11 +27,9 @@ interface Props {
 
 export default function NavDrawer({ open, setOpen }: Props) {
     const segment = useSelectedLayoutSegment();
-    const isOnHomePage = useIsOnHomePage();
 
     return (
         <Drawer
-            variant={isOnHomePage ? 'persistent' : 'temporary'}
             open={open}
             onClose={() => setOpen(false)}
             sx={{
@@ -43,7 +41,6 @@ export default function NavDrawer({ open, setOpen }: Props) {
                 },
             }}
         >
-            <Toolbar />
             <Box
                 sx={{
                     overflow: 'auto',
@@ -54,6 +51,9 @@ export default function NavDrawer({ open, setOpen }: Props) {
                 }}
             >
                 <List>
+                    <ListItem>
+                        <Image src={logo} alt="PlayBingo logo" height={52} />
+                    </ListItem>
                     <ListItem disablePadding>
                         <ListItemButton
                             component={NextLink}
