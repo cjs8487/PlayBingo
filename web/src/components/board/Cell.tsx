@@ -30,7 +30,7 @@ import {
 import { grey } from '@mui/material/colors';
 import { Category } from '@playbingo/types';
 import { MouseLeftClickOutline, MouseRightClickOutline } from 'mdi-material-ui';
-import { MouseEvent, useCallback, useEffect, useRef, useState } from 'react';
+import { MouseEvent, useCallback, useRef, useState } from 'react';
 import { useRoomContext } from '../../context/RoomContext';
 import TextFit from '../TextFit';
 
@@ -117,20 +117,6 @@ export default function BoardCell({
         markGoal,
     ]);
 
-    useEffect(() => {
-        if (revealed && !wasRevealed) {
-            setWasRevealed(true);
-            setAnimating(true);
-            const timer = setTimeout(() => {
-                setAnimating(false);
-                if (onReveal) onReveal();
-            }, 1000);
-            return () => {
-                clearTimeout(timer);
-            };
-        }
-    }, [revealed, wasRevealed, onReveal]);
-
     const arrowRef = useRef<SVGSVGElement>(null);
     const { refs, floatingStyles, context } = useFloating({
         open: menuOpen,
@@ -208,6 +194,18 @@ export default function BoardCell({
             }
         }
     };
+
+    if (revealed && !wasRevealed) {
+        setWasRevealed(true);
+        setAnimating(true);
+        const timer = setTimeout(() => {
+            setAnimating(false);
+            if (onReveal) onReveal();
+        }, 1000);
+        return () => {
+            clearTimeout(timer);
+        };
+    }
 
     return (
         <>
