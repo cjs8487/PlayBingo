@@ -1,16 +1,53 @@
-import { Box, Typography } from '@mui/material';
-import ConnectionState from './ConnectionState';
+import { ExpandLess, ExpandMore } from '@mui/icons-material';
+import { Box, Button, Portal, Typography } from '@mui/material';
+import { useState } from 'react';
 import { useRoomContext } from '../../context/RoomContext';
+import ConnectionState from './ConnectionState';
 import Timer from './timer/Timer';
 
 export default function RoomHeader() {
     const { roomData } = useRoomContext();
 
+    const [collapsed, setCollapsed] = useState(false);
+
     if (!roomData) {
         return null;
     }
 
-    return (
+    const portalContent = collapsed ? (
+        <Box
+            sx={{
+                display: 'flex',
+                alignItems: 'center',
+                columnGap: 1,
+            }}
+        >
+            <ConnectionState collapsed />
+            <Box
+                sx={{
+                    position: 'absolute',
+                    left: 0,
+                    textAlign: 'center',
+                    width: '100%',
+                }}
+            >
+                <Timer />
+            </Box>
+            <Button
+                sx={{
+                    position: 'absolute',
+                    top: '100%',
+                    left: '50%',
+                    transform: 'translateX(-50%) translateY(-50%)',
+                }}
+                variant="contained"
+                size="small"
+                onClick={() => setCollapsed(false)}
+            >
+                <ExpandMore fontSize="small" />
+            </Button>
+        </Box>
+    ) : (
         <Box
             sx={{
                 position: 'relative',
@@ -70,9 +107,32 @@ export default function RoomHeader() {
             >
                 <Timer />
             </Box>
-            <div>
-                <ConnectionState />
-            </div>
+            <ConnectionState />
+            <Button
+                sx={{
+                    position: 'absolute',
+                    top: '100%',
+                    left: '50%',
+                    transform: 'translateX(-50%) translateY(-50%)',
+                }}
+                variant="contained"
+                size="small"
+                onClick={() => setCollapsed(true)}
+            >
+                <ExpandLess fontSize="small" />
+            </Button>
         </Box>
+    );
+
+    return (
+        <Portal
+            container={() =>
+                document.getElementById(
+                    collapsed ? 'collapsed-header-slot' : 'global-header',
+                )
+            }
+        >
+            {portalContent}
+        </Portal>
     );
 }

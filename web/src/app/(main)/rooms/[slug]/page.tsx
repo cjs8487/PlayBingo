@@ -18,7 +18,6 @@ import {
     DialogContent,
     FormControlLabel,
     Paper,
-    Portal,
     Stack,
     Switch,
     Typography,
@@ -321,9 +320,7 @@ function RoomXl() {
                 gridTemplateRows: 'auto',
             }}
         >
-            <Portal container={() => document.getElementById('global-header')}>
-                <RoomHeader />
-            </Portal>
+            <RoomHeader />
             <Paper
                 sx={{
                     p: 1.5,
