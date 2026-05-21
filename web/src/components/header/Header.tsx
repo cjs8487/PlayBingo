@@ -73,15 +73,10 @@ export default function Header({ toggleNavDrawer }: Props) {
                     >
                         <MenuIcon />
                     </IconButton>
-                    <Box sx={{ flexGrow: 1 }}>
-                        <LinkButton href="/">
-                            <Image
-                                src={logo}
-                                alt="PlayBingo logo"
-                                height={52}
-                            />
-                        </LinkButton>
-                    </Box>
+                    <LinkButton href="/">
+                        <Image src={logo} alt="PlayBingo logo" height={52} />
+                    </LinkButton>
+                    <Box sx={{ flexGrow: 1 }} id="collapsed-header-slot" />
                     {user ? (
                         <Box sx={{ flexGrow: 0 }}>
                             <Tooltip title="Open user menu">
