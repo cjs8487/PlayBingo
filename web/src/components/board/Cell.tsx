@@ -198,13 +198,10 @@ export default function BoardCell({
     if (revealed && !wasRevealed) {
         setWasRevealed(true);
         setAnimating(true);
-        const timer = setTimeout(() => {
+        setTimeout(() => {
             setAnimating(false);
             if (onReveal) onReveal();
         }, 1000);
-        return () => {
-            clearTimeout(timer);
-        };
     }
 
     return (
