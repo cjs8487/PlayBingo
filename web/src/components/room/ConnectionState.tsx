@@ -42,8 +42,12 @@ function getStatusContents(status: ConnectionStatus) {
     }
 }
 
-export default function ConnectionState() {
-    const { connectionStatus } = useContext(RoomContext);
+interface Props {
+    collapsed?: boolean;
+}
+
+export default function ConnectionState({ collapsed }: Props) {
+    const { connectionStatus, roomData } = useContext(RoomContext);
 
     const contents = getStatusContents(connectionStatus);
 
@@ -66,7 +70,9 @@ export default function ConnectionState() {
                     backgroundColor: contents.color,
                 }}
             />
-            <Typography>{contents.text}</Typography>
+            <Typography>
+                {collapsed ? roomData?.name : contents.text}
+            </Typography>
         </Paper>
     );
 }
