@@ -47,14 +47,19 @@ export default function TextFit({ text, sx }: { text: string; sx?: SxProps }) {
     }, [optimizedFontSize, fit]);
 
     useEffect(() => {
-        window.addEventListener('resize', resetFit);
-        return () => window.removeEventListener('resize', resetFit);
-    }, [resetFit]);
-
-    useEffect(() => {
         // eslint-disable-next-line react-hooks/set-state-in-effect
         resetFit();
     }, [text, resetFit]);
+
+    useEffect(() => {
+        const container = containerRef.current;
+        if (!container) return;
+        const observer = new ResizeObserver(() => {
+            resetFit();
+        });
+        observer.observe(container);
+        return () => observer.disconnect();
+    }, [resetFit]);
 
     return (
         <Box
