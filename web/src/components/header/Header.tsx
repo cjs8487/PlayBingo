@@ -58,11 +58,7 @@ export default function Header({ toggleNavDrawer }: Props) {
 
     return (
         <>
-            <AppBar
-                position="sticky"
-                sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}
-                id="global-header"
-            >
+            <AppBar position="sticky" id="global-header">
                 <Toolbar>
                     <IconButton
                         color="inherit"
