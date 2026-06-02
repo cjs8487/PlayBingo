@@ -10,9 +10,11 @@ import {
     DialogContent,
     DialogTitle,
     FormControl,
+    FormControlLabel,
     InputLabel,
     MenuItem,
     Select,
+    Switch,
     ToggleButton,
     ToggleButtonGroup,
     Typography,
@@ -34,8 +36,13 @@ export default function RoomControlDialog({
     show,
     close,
 }: RoomControlDialogProps) {
-    const { roomData, regenerateCard, changeRaceHandler, connectedPlayer } =
-        useContext(RoomContext);
+    const {
+        roomData,
+        regenerateCard,
+        changeRaceHandler,
+        connectedPlayer,
+        setChatEnabled,
+    } = useContext(RoomContext);
 
     const handleRaceHandlerChange = (
         event: React.MouseEvent<HTMLElement>,
@@ -71,7 +78,13 @@ export default function RoomControlDialog({
             <DialogTitle variant="h5">Room Controls</DialogTitle>
             <DialogContent>
                 {connectedPlayer?.monitor && (
-                    <Box sx={{ mb: 2 }}>
+                    <Box
+                        sx={{
+                            mb: 2,
+                            display: 'flex',
+                            flexDirection: 'column',
+                        }}
+                    >
                         <Typography variant="h6">Monitor Actions</Typography>
                         <Typography sx={{ mb: 0.5 }}>Timing Method</Typography>
                         <ToggleButtonGroup
@@ -109,6 +122,17 @@ export default function RoomControlDialog({
                                 </Typography>
                             </ToggleButton>
                         </ToggleButtonGroup>
+                        <FormControlLabel
+                            control={
+                                <Switch
+                                    checked={roomData?.chatEnabled ?? true}
+                                    onChange={(e) =>
+                                        setChatEnabled(e.target.checked)
+                                    }
+                                />
+                            }
+                            label="Enable chat"
+                        />
                     </Box>
                 )}
                 <Typography variant="h6">Card Controls</Typography>

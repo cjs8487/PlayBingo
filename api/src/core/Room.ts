@@ -12,6 +12,7 @@ import {
     RevealedCell,
     ServerMessage,
     UnmarkAction,
+    SetChatEnabledAction,
 } from '@playbingo/types';
 import { BingoMode } from '@prisma/client';
 import { WebSocket } from 'ws';
@@ -112,6 +113,7 @@ export default class Room {
     exploration: boolean = false;
     alwaysRevealedMask: bigint = 0n;
     seed: number;
+    chatEnabled: boolean = true;
 
     lastGenerationMode: BoardGenerationOptions;
 
@@ -711,6 +713,11 @@ export default class Room {
         }
         this.revealCardForPlayer(player);
     }
+
+    handleSetChatEnabled(action: SetChatEnabledAction) {
+        this.chatEnabled = action.payload.enabled;
+        this.sendRoomData();
+    }
     //#endregion
 
     //#region Send Messages
@@ -718,6 +725,9 @@ export default class Room {
     sendChat(message: ChatMessage): void;
 
     sendChat(message: string | ChatMessage) {
+        if (!this.chatEnabled) {
+            return;
+        }
         if (typeof message === 'string') {
             this.chatHistory.push([message]);
             this.sendServerMessage({ action: 'chat', message: [message] });
@@ -796,6 +806,7 @@ export default class Room {
                 startedAt: this.raceHandler?.getStartTime(),
                 finishedAt: this.raceHandler?.getEndTime(),
                 raceHandler: this.raceHandler?.key(),
+                chatEnabled: this.chatEnabled,
             },
         });
     }

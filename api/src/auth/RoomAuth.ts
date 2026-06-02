@@ -79,6 +79,8 @@ export const hasPermission = (
         case 'changeRaceHandler':
         case 'resetTimer':
             return payload.isMonitor;
+        case 'setChatEnabled':
+            return payload.isMonitor;
         default:
             return true;
     }

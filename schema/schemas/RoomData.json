@@ -53,6 +53,9 @@
         },
         "raceHandler": {
             "enum": ["LOCAL", "RACETIME"]
+        },
+        "chatEnabled": {
+            "type": "boolean"
         }
     },
     "$defs": {

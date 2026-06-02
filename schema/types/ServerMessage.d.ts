@@ -28,6 +28,7 @@ export type ServerMessage = (
       board: Board;
       chatHistory: ChatMessage[];
       roomData?: RoomData;
+      chatEnabled?: boolean;
     }
   | {
       action: "unauthorized";
@@ -143,6 +144,7 @@ export interface RoomData {
   startedAt?: string;
   finishedAt?: string;
   raceHandler?: "LOCAL" | "RACETIME";
+  chatEnabled?: boolean;
 }
 export interface RacetimeConnection {
   /**

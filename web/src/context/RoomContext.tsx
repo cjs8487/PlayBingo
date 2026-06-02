@@ -85,6 +85,7 @@ interface RoomContext {
     startTimer: () => void;
     changeRaceHandler: (handler: string) => void;
     resetTimer: () => void;
+    setChatEnabled: (enabled: boolean) => void;
 }
 
 export const RoomContext = createContext<RoomContext>({
@@ -121,6 +122,7 @@ export const RoomContext = createContext<RoomContext>({
     startTimer() {},
     changeRaceHandler() {},
     resetTimer() {},
+    setChatEnabled() {},
 });
 
 interface RoomContextProps {
@@ -547,6 +549,16 @@ export function RoomContextProvider({
             authToken,
         } as RoomAction);
     }, [authToken, sendJsonMessage]);
+    const setChatEnabledWS = useCallback(
+        (enabled: boolean) => {
+            sendJsonMessage({
+                action: 'setChatEnabled',
+                authToken,
+                payload: { enabled },
+            } as RoomAction);
+        },
+        [authToken, sendJsonMessage],
+    );
 
     return (
         <RoomContext.Provider
@@ -584,6 +596,7 @@ export function RoomContextProvider({
                 startTimer,
                 changeRaceHandler,
                 resetTimer,
+                setChatEnabled: setChatEnabledWS,
             }}
         >
             {children}

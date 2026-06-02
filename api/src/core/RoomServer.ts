@@ -160,6 +160,9 @@ roomWebSocketServer.on('connection', (ws, req) => {
             case 'resetTimer':
                 room.handleResetTimer();
                 break;
+            case 'setChatEnabled':
+                room.handleSetChatEnabled(action);
+                break;
         }
     });
     ws.on('close', (code, reason) => {
