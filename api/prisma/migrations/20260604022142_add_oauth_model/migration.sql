@@ -1,3 +1,6 @@
+-- AlterTable
+ALTER TABLE "User" ADD COLUMN     "developer" BOOLEAN NOT NULL DEFAULT false;
+
 -- CreateTable
 CREATE TABLE "OAuthClient" (
     "id" TEXT NOT NULL,
@@ -5,6 +8,7 @@ CREATE TABLE "OAuthClient" (
     "clientSecret" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "redirectUris" TEXT[],
+    "ownerId" TEXT NOT NULL,
 
     CONSTRAINT "OAuthClient_pkey" PRIMARY KEY ("id")
 );
@@ -39,6 +43,9 @@ CREATE UNIQUE INDEX "OAuthToken_refreshToken_key" ON "OAuthToken"("refreshToken"
 
 -- CreateIndex
 CREATE UNIQUE INDEX "OAuthToken_userId_oAuthClientId_key" ON "OAuthToken"("userId", "oAuthClientId");
+
+-- AddForeignKey
+ALTER TABLE "OAuthClient" ADD CONSTRAINT "OAuthClient_ownerId_fkey" FOREIGN KEY ("ownerId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "OAuthToken" ADD CONSTRAINT "OAuthToken_oAuthClientId_fkey" FOREIGN KEY ("oAuthClientId") REFERENCES "OAuthClient"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
