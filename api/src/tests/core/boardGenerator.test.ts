@@ -8,7 +8,7 @@ import { GeneratorGoal } from '../../core/generation/GeneratorCore';
 const categories: Category[] = Array.from({ length: 7 }).map((_, i) => ({
     gameId: '1',
     id: `${i}`,
-    max: i % 7,
+    max: 5 + (i % 7),
     name: `Category ${i + 1}`,
 }));
 
