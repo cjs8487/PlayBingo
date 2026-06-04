@@ -162,3 +162,14 @@ export const getUserForToken = (token: string) => {
 export const getTokenByRefreshToken = (refreshToken: string) => {
     return prisma.oAuthToken.findUnique({ where: { refreshToken } });
 };
+
+export const verifyToken = async (token: string) => {
+    const result = await prisma.oAuthToken.findUnique({ where: { token } });
+    if (!result) {
+        return false;
+    }
+    if (result.expires <= new Date()) {
+        return false;
+    }
+    return result.userId;
+};

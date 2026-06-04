@@ -16,10 +16,12 @@ import {
     requestDurationHistogram,
 } from './routes/metrics';
 import { closeSessionDatabase, sessionStore } from './util/Session';
+import { verifyToken } from './database/OAuth';
 
 declare module 'express-session' {
     interface SessionData {
         user?: string;
+        isOauth?: boolean;
     }
 }
 
@@ -54,6 +56,29 @@ app.use((req, res, next) => {
             status_code: res.statusCode,
         });
     });
+    next();
+});
+
+//oauth token -> user in session
+app.use(async (req, res, next) => {
+    const { authorization } = req.headers;
+    if (authorization) {
+        const [type, token] = authorization.split(' ');
+
+        if (type === 'Bearer' && token) {
+            const user = await verifyToken(token);
+            if (user) {
+                req.session.user = user;
+                req.session.isOauth = true;
+            } else {
+                req.session.user = undefined;
+            }
+        } else {
+            req.session.user = undefined;
+        }
+    } else if (req.session.isOauth) {
+        req.session.user = undefined;
+    }
     next();
 });
 
