@@ -21,6 +21,7 @@ export type RoomAction = (
   | StartTimerAction
   | ChangeRaceHandlerAction
   | ResetTimerAction
+  | SetChatEnabledAction
 ) & {
   /**
    * JWT for the room obtained from the server
@@ -89,4 +90,10 @@ export interface ChangeRaceHandlerAction {
 }
 export interface ResetTimerAction {
   action: "resetTimer";
+}
+export interface SetChatEnabledAction {
+  action: "setChatEnabled";
+  payload: {
+    enabled: boolean;
+  };
 }

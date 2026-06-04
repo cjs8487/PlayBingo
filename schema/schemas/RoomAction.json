@@ -19,8 +19,8 @@
         {"$ref": "#/$defs/ChangeAuthAction"},
         {"$ref": "#/$defs/StartTimerAction"},
         {"$ref": "#/$defs/ChangeRaceHandlerAction"},
-        {"$ref": "#/$defs/ResetTimerAction"}
-        
+        {"$ref": "#/$defs/ResetTimerAction"},
+        {"$ref": "#/$defs/SetChatEnabledAction"}
     ],
     "$defs": {
         "JoinAction": {
@@ -159,6 +159,20 @@
             "additionalProperties": false,
             "properties": {
                 "action": "resetTimer"
+            }
+        },
+        "SetChatEnabledAction": {
+            "required": ["action", "payload"],
+            "additionalProperties": false,
+            "properties": {
+                "action": "setChatEnabled",
+                "payload": {
+                    "required": ["enabled"],
+                    "additionalProperties": false,
+                    "properties": {
+                        "enabled": {"type": "boolean"}
+                    }
+                }
             }
         }
     }

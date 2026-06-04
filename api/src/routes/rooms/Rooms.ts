@@ -458,6 +458,7 @@ rooms.get('/:slug', async (req, res) => {
         },
         mode: room.bingoMode,
         variant: room.variantName,
+        chatEnabled: room.chatEnabled,
     };
 
     const userKey = req.session.user ?? req.session.id;

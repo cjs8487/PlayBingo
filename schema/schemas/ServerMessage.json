@@ -86,6 +86,9 @@
                 },
                 "roomData": {
                     "$ref": "./RoomData.json"
+                },
+                "chatEnabled": {
+                    "type": "boolean"
                 }
             }
         },
