@@ -1,6 +1,11 @@
 import { OAuthClient } from '@playbingo/types';
-import { Request, Router } from 'express';
-import { server } from '../../auth/OAuth';
+import { randomBytes } from 'crypto';
+import { Router } from 'express';
+import {
+    exchangeCode,
+    exchangeRefreshToken,
+    grantCode,
+} from '../../auth/OAuth';
 import {
     createOAuthClient,
     deleteClient,
@@ -14,77 +19,197 @@ import {
 import { getUser } from '../../database/Users';
 import redirect from './redirect/Redirect';
 
-interface OAuthRequest extends Request {
-    oauth2?: {
-        transactionID: string;
-        client: OAuthClient;
-    };
-}
-
 const oauth = Router();
 
 oauth.use('/redirect', redirect);
-oauth.get('/token', server.token(), server.errorHandler());
 
-oauth.get(
-    '/authorize',
-    (req, res, next) => {
+// oauth spec implementation
+const transactionStore: Record<
+    string,
+    { clientId: string; redirectUri: string; userId: string; scopes: string[] }
+> = {};
+
+oauth
+    .route('/authorize')
+    .get(async (req, res) => {
         if (!req.session.user) {
-            return res.sendStatus(401);
+            res.sendStatus(401);
+            return;
         }
-        next();
-    },
-    server.authorization(async (clientId, redirectUri, scopes, type, done) => {
+        const user = await getUser(req.session.user);
+        if (!user) {
+            res.sendStatus(401);
+            return;
+        }
+
+        const { clientId, redirectUri, responseType, scopes } = req.query;
+
+        if (!clientId) {
+            res.status(400).send('Missing client id');
+            return;
+        }
+        if (typeof clientId !== 'string') {
+            res.status(400).send('Invalid client id');
+            return;
+        }
+
+        if (!redirectUri) {
+            res.status(400).send('Missing redirect uri');
+            return;
+        }
+        if (typeof redirectUri !== 'string') {
+            res.status(400).send('Invalid redirect uri');
+            return;
+        }
+
+        if (!scopes) {
+            res.status(400).send('Missing scopes');
+            return;
+        }
+        if (typeof scopes !== 'string') {
+            res.status(400).send('Invalid scopes');
+            return;
+        }
+
+        if (!responseType) {
+            res.status(400).send('Missing response type');
+            return;
+        }
+        switch (responseType) {
+            case 'code':
+                break;
+            default:
+                res.status(400).send('Unsupported response type');
+                return;
+        }
+
         const client = await getFullClientById(clientId);
-        console.log(clientId);
         if (!client) {
-            return done(new Error('Invalid client id'));
+            res.sendStatus(404);
+            return;
         }
         if (!client.redirectUris.includes(redirectUri)) {
-            return done(new Error('Invalid redirect uri'));
+            res.status(400).send('Invalid redirect uri');
+            return;
         }
-        return done(null, client, redirectUri);
-    }),
-    (req: OAuthRequest, res) => {
-        if (!req.oauth2) {
-            return res.status(500).send('Unable to read transaction data');
-        }
+
+        const transactionId = randomBytes(32).toString('base64url');
+        transactionStore[transactionId] = {
+            clientId,
+            redirectUri,
+            userId: user.id,
+            scopes: scopes.split(' '),
+        };
+
         res.status(200).json({
-            transactionId: req.oauth2.transactionID,
+            transactionId,
             client: {
-                id: req.oauth2.client.id,
-                name: req.oauth2.client.name,
-                clientId: req.oauth2.client.clientId,
-                redirectUris: req.oauth2.client.redirectUris,
-            },
+                id: client.id,
+                name: client.name,
+                clientId: client.clientId,
+                redirectUris: client.redirectUris,
+            } as OAuthClient,
         });
-    },
-);
-
-oauth.post(
-    '/authorize',
-    async (req, res, next) => {
+    })
+    .post(async (req, res) => {
         if (!req.session.user) {
-            return res.sendStatus(401);
+            res.sendStatus(401);
+            return;
         }
-        req.user = (await getUser(req.session.user)) ?? undefined;
-        next();
-    },
-    server.decision(),
-);
 
-oauth.post(
-    '/token',
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    //@ts-ignore
-    async (req, res, next) => {
-        req.user = await getFullClientById(req.body.client_id);
-        next();
-    },
-    server.token(),
-    server.errorHandler(),
-);
+        const { transactionId } = req.body;
 
+        // validate body input
+        if (!transactionId) {
+            res.status(400).send('Missing transaction id');
+            return;
+        }
+        if (typeof transactionId !== 'string') {
+            res.status(400).send('Invalid transaction id');
+            return;
+        }
+
+        // retrieve and validate transaction
+        const transaction = transactionStore[transactionId];
+        if (!transaction) {
+            res.status(403);
+            return;
+        }
+        if (transaction.userId !== req.session.user) {
+            res.status(403);
+            return;
+        }
+        if (!transaction.redirectUri) {
+            res.status(500).send(
+                'Invalid transaction data retrieved from store. This is likely a bug with PlayBingo, please report it to the developers.',
+            );
+            return;
+        }
+        delete transactionStore[transactionId];
+
+        const code = grantCode(
+            transaction.clientId,
+            transaction.redirectUri,
+            transaction.scopes,
+            transaction.userId,
+        );
+
+        res.redirect(`${transaction.redirectUri}?code=${code}`);
+    });
+
+oauth.post('/token', async (req, res) => {
+    const { clientId, clientSecret, redirectUri, grantType } = req.body;
+
+    if (!clientId || !clientSecret || !redirectUri || !grantType) {
+        res.status(400).send('Missing required fields');
+        return;
+    }
+
+    switch (grantType) {
+        case 'authorization_code': {
+            const { code } = req.body;
+            if (!code) {
+                res.status(400).send('Missing code');
+                return;
+            }
+            const result = await exchangeCode(
+                clientId,
+                clientSecret,
+                redirectUri,
+                code,
+            );
+            if (!result.success) {
+                res.status(400).send(result.error);
+                return;
+            }
+            res.status(200).json(result.value);
+            break;
+        }
+        case 'refresh_token': {
+            const { refreshToken } = req.body;
+            if (!refreshToken) {
+                res.status(400).send('Missing refresh token');
+                return;
+            }
+            const result = await exchangeRefreshToken(
+                clientId,
+                clientSecret,
+                redirectUri,
+                refreshToken,
+            );
+            if (!result.success) {
+                res.status(400).send(result.error);
+                return;
+            }
+            res.status(200).json(result.value);
+            break;
+        }
+        default:
+            res.status(400).send('Unsupported grant type');
+    }
+});
+
+// oauth client management
 oauth.get('/clients', async (req, res) => {
     if (!req.session.user) {
         res.sendStatus(401);

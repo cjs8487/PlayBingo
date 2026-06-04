@@ -1,98 +1,125 @@
-import { OAuthClient } from '@prisma/client';
 import { randomBytes } from 'crypto';
-import oauth2orize from 'oauth2orize';
 import {
     authorizationMatch,
     authorizeClient,
-    getFullClient,
+    getClient,
+    getClientById,
+    getToken,
     getTokenByRefreshToken,
 } from '../database/OAuth';
 
-export const server = oauth2orize.createServer<OAuthClient>();
+type OAuthReturnValue<T> =
+    | { success: true; value: T }
+    | { success: false; error: string };
 
-server.serializeClient((client, done) => done(null, client.id));
+interface AuthorizationCode {
+    code: string;
+    clientId: string;
+    redirectUri: string;
+    userId: string;
+    scopes: string[];
+}
 
-server.deserializeClient(async (id, done) => {
-    const client = await getFullClient(id);
-    if (!client) {
-        return done(new Error('Unable to load client'));
-    }
-    return done(null, client);
-});
-
-const codes: Record<
-    string,
-    {
-        clientId: string;
-        redirectUri: string;
-        userId: string;
-        scopes: string[];
-    }
-> = {};
+const codes: Record<string, AuthorizationCode> = {};
 
 // grants
-server.grant(
-    oauth2orize.grant.code(
-        (client, redirectUri, user, res, req, locals, issued) => {
-            const code = randomBytes(8).toString('base64url');
-            codes[code] = {
-                clientId: client.clientId,
-                redirectUri,
-                userId: user.id,
-                scopes: req.scope,
-            };
-            return issued(null, code);
-        },
-    ),
-);
+export const grantCode = (
+    clientId: string,
+    redirectUri: string,
+    scopes: string[],
+    userId: string,
+) => {
+    const code = randomBytes(16).toString('base64url');
+    codes[code] = {
+        clientId,
+        redirectUri,
+        userId,
+        scopes,
+        code,
+    };
+    return code;
+};
 
 // exchanges
-server.exchange(
-    oauth2orize.exchange.code(
-        async (client, code, redirectUri, body, authInfo, issued) => {
-            const authCode = codes[code];
-            const clientSecret: string = body.client_secret as string;
-            if (!authCode) {
-                return issued(new Error('Invalid code'));
-            }
-            if (
-                client.clientId !== authCode.clientId ||
-                !authorizationMatch(
-                    authCode.clientId,
-                    clientSecret,
-                    redirectUri,
-                )
-            ) {
-                return issued(null, false);
-            }
+export const exchangeCode = async (
+    clientId: string,
+    clientSecret: string,
+    redirectUri: string,
+    code: string,
+): Promise<OAuthReturnValue<{ token: string; refreshToken: string }>> => {
+    const authorizationCode = codes[code];
+    if (!authorizationCode) {
+        return { success: false, error: 'Invalid code' };
+    }
 
-            const token = await authorizeClient(
-                authCode.userId,
-                client.id,
-                authCode.scopes,
-            );
-            delete codes[code];
-            return issued(null, token.token, token.refreshToken);
-        },
-    ),
-);
+    if (authorizationCode.clientId !== clientId) {
+        return { success: false, error: 'Invalid client id' };
+    }
+    const client = await getClientById(clientId);
+    if (!client) {
+        return {
+            success: false,
+            error: 'Invalid client id',
+        };
+    }
+    if (!authorizationMatch(clientId, clientSecret, redirectUri)) {
+        return { success: false, error: 'Invalid client credentials' };
+    }
 
-server.exchange(
-    oauth2orize.exchange.refreshToken(
-        async (client, refreshToken, scope, issued) => {
-            const token = await getTokenByRefreshToken(refreshToken);
-            if (!token) {
-                return issued(new Error('Token not found'));
-            }
-            if (client.clientId !== token.oAuthClientId) {
-                return issued(new Error('Token not found'));
-            }
-            const newToken = await authorizeClient(
-                token.userId,
-                client.clientId,
-                scope,
-            );
-            return issued(null, newToken.token, newToken.refreshToken);
+    const token = await authorizeClient(
+        authorizationCode.userId,
+        client.id,
+        authorizationCode.scopes,
+    );
+    if (!token) {
+        return { success: false, error: 'Unable to create token' };
+    }
+
+    delete codes[code];
+    return {
+        success: true,
+        value: {
+            token: token.token,
+            refreshToken: token.refreshToken,
         },
-    ),
-);
+    };
+};
+
+export const exchangeRefreshToken = async (
+    clientId: string,
+    clientSecret: string,
+    redirectUri: string,
+    refreshToken: string,
+): Promise<OAuthReturnValue<{ token: string; refreshToken: string }>> => {
+    const token = await getTokenByRefreshToken(refreshToken);
+    if (!token) {
+        return { success: false, error: 'Invalid refresh token' };
+    }
+
+    const client = await getClientById(clientId);
+    if (!client) {
+        return { success: false, error: 'Invalid client id' };
+    }
+    if (token.oAuthClientId !== client.id) {
+        return { success: false, error: 'Invalid client id' };
+    }
+    if (!authorizationMatch(clientId, clientSecret, redirectUri)) {
+        return { success: false, error: 'Invalid client credentials' };
+    }
+
+    const newToken = await authorizeClient(
+        token.userId,
+        client.id,
+        token.scopes,
+    );
+    if (!newToken) {
+        return { success: false, error: 'Unable to refresh token' };
+    }
+    return {
+        success: true,
+        value: {
+            token: newToken.token,
+            refreshToken: newToken.refreshToken,
+        },
+    };
+};

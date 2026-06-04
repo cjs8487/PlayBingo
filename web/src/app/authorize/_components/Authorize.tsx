@@ -175,7 +175,7 @@ export default function Authorize({
                                     {
                                         method: 'POST',
                                         body: JSON.stringify({
-                                            transaction_id: transactionId,
+                                            transactionId,
                                         }),
                                         redirect: 'follow',
                                     },

@@ -118,7 +118,7 @@ const tokenExpiration = () => {
     return today;
 };
 
-export const authorizeClient = (
+export const authorizeClient = async (
     user: string,
     client: string,
     scopes: string[],

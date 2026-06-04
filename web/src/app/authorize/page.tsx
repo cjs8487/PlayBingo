@@ -14,9 +14,10 @@ export const allScopes = [
 async function getClient(
     clientId: string,
     redirectUri: string,
+    scopes: string,
 ): Promise<{ transactionId: string; client: OAuthClient } | undefined> {
     const res = await serverGet(
-        `/api/oauth/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code`,
+        `/api/oauth/authorize?clientId=${clientId}&redirectUri=${redirectUri}&scopes=${scopes}&responseType=code`,
     );
     if (res.ok) {
         return res.json();
@@ -51,7 +52,7 @@ export default async function AuthorizePage({
         return 'invalid redirect uri';
     }
 
-    const response = await getClient(clientId, redirectUri);
+    const response = await getClient(clientId, redirectUri, scopes);
     if (!response) {
         return 'unable to start authorization flow';
     }
