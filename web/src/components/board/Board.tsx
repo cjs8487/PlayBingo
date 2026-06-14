@@ -1,6 +1,6 @@
 import { Box } from '@mui/material';
 import { useContext } from 'react';
-import AutoSizer from 'react-virtualized-auto-sizer';
+import { AutoSizer } from 'react-virtualized-auto-sizer';
 import { RoomContext } from '../../context/RoomContext';
 import Cell from './Cell';
 
@@ -31,8 +31,11 @@ export default function Board() {
                     p: 3,
                 }}
             >
-                <AutoSizer>
-                    {({ width, height }) => {
+                <AutoSizer
+                    renderProp={({ width, height }) => {
+                        if (!width || !height) {
+                            return null;
+                        }
                         // Maintain square cells by constraining board size
                         const aspectRatio = cols / rows;
                         let boardWidth = width;
@@ -148,7 +151,7 @@ export default function Board() {
                             </Box>
                         );
                     }}
-                </AutoSizer>
+                />
             </Box>
         </Box>
     );

@@ -23,7 +23,7 @@ import { blue, blueGrey, orange, red } from '@mui/material/colors';
 import { DateTime } from 'luxon';
 import { forwardRef, useState } from 'react';
 import { useList } from 'react-use';
-import AutoSizer from 'react-virtualized-auto-sizer';
+import { AutoSizer } from 'react-virtualized-auto-sizer';
 import { TableComponents, TableProps, TableVirtuoso } from 'react-virtuoso';
 import { LogEntry } from '../page';
 
@@ -284,8 +284,8 @@ export default function LogTable({ logs }: Props) {
                 </FormControl>
             </Box>
             <Box style={{ flexGrow: 1 }}>
-                <AutoSizer>
-                    {({ width, height }) => (
+                <AutoSizer
+                    renderProp={({ width, height }) => (
                         <TableVirtuoso<LogEntry, TableContext>
                             width={width}
                             height={height}
@@ -303,7 +303,7 @@ export default function LogTable({ logs }: Props) {
                             context={{ isExpanded, setExpanded }}
                         />
                     )}
-                </AutoSizer>
+                />
             </Box>
         </Box>
     );
