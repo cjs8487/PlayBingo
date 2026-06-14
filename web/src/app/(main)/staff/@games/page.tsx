@@ -18,7 +18,7 @@ import {
 } from '@mui/material';
 import { Game } from '@playbingo/types';
 import { forwardRef, ReactNode, useCallback, useRef, useState } from 'react';
-import AutoSizer from 'react-virtualized-auto-sizer';
+import { AutoSizer } from 'react-virtualized-auto-sizer';
 import { TableVirtuoso } from 'react-virtuoso';
 import Dialog, { DialogRef } from '../../../../components/Dialog';
 import { useApi } from '../../../../lib/Hooks';
@@ -115,8 +115,8 @@ export default function StaffGamesTab() {
             }}
         >
             <Box style={{ flexGrow: 1 }}>
-                <AutoSizer>
-                    {({ width, height }) => (
+                <AutoSizer
+                    renderProp={({ width, height }) => (
                         <TableVirtuoso
                             width={width}
                             height={height}
@@ -156,7 +156,7 @@ export default function StaffGamesTab() {
                             )}
                         />
                     )}
-                </AutoSizer>
+                />
             </Box>
             <Dialog ref={confirmDialogRef}>{dialogContent}</Dialog>
         </Box>
