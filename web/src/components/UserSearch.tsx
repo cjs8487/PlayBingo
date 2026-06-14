@@ -16,7 +16,7 @@ import {
     useTheme,
 } from '@mui/material';
 import { forwardRef, useCallback, useState } from 'react';
-import AutoSizer from 'react-virtualized-auto-sizer';
+import { AutoSizer } from 'react-virtualized-auto-sizer';
 import { Virtuoso } from 'react-virtuoso';
 import { useApi } from '../lib/Hooks';
 import { alertError } from '../lib/Utils';
@@ -99,8 +99,8 @@ export default function UserSearch({
                     onChange={(e) => setSearchString(e.target.value)}
                     sx={{ width: '33%' }}
                 />
-                <AutoSizer>
-                    {({ height, width }) => (
+                <AutoSizer
+                    renderProp={({ height, width }) => (
                         <Virtuoso<User>
                             height={height}
                             width={width}
@@ -176,7 +176,7 @@ export default function UserSearch({
                             )}
                         />
                     )}
-                </AutoSizer>
+                />
             </DialogContent>
             <DialogActions>
                 <Button color="error" onClick={cancel}>
