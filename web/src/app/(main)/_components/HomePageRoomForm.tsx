@@ -66,6 +66,7 @@ export default function HomePageRoomForm() {
                     alertError(`Unable to create room - ${error}`);
                     return;
                 }
+
                 const { slug, authToken } = await res.json();
                 localStorage.setItem(
                     'PlayBingo.temp.nickname',
@@ -108,7 +109,7 @@ export default function HomePageRoomForm() {
                             label="Game"
                             options={games.map((game) => ({
                                 label: game.name,
-                                value: game.id,
+                                value: game.slug,
                             }))}
                             fullWidth
                         />
