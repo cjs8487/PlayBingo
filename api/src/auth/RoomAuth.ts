@@ -13,6 +13,7 @@ export type RoomTokenPayload = {
     roomSlug: string;
     uuid: string;
     playerId: string;
+    teamId?: string;
     userId?: string;
 } & Permissions;
 
