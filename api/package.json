@@ -37,7 +37,7 @@
         "express-fileupload": "^1.5.2",
         "express-session": "^1.18.2",
         "jsonwebtoken": "^9.0.3",
-        "nodemailer": "^7.0.12",
+        "nodemailer": "^9.0.1",
         "nodemailer-express-handlebars": "^6.1.2",
         "prisma": "^6.19.1",
         "prisma-json-types-generator": "^3.6.2",
