@@ -5,12 +5,12 @@
  * and run json-schema-to-typescript to regenerate this file.
  */
 
-export interface User {
+/**
+ * An incoming websocket message from the server telling the client of a change in room state or instructing it to take an action
+ */
+export interface OAuthClient {
   id: string;
-  username: string;
-  email?: string;
-  staff: boolean;
-  racetimeConnected?: boolean;
-  avatar?: string;
-  developer?: boolean;
+  clientId: string;
+  name: string;
+  redirectUris: string[];
 }

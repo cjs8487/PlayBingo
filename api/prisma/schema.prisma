@@ -127,11 +127,14 @@ model User {
   salt           Bytes
   connections    Connection[]
   staff          Boolean        @default(false)
+  developer      Boolean        @default(false)
   ownedGames     Game[]         @relation("GameOwners")
   moderatedGames Game[]         @relation("GameModerators")
   resetToken     PasswordReset?
   favoritedGames Game[]         @relation("GameFavorites")
   Player         Player[]
+  tokens         OAuthToken[]
+  ownedClients   OAuthClient[]
 }
 
 model PasswordReset {
@@ -207,6 +210,31 @@ model ApiToken {
   active    Boolean   @default(true)
   createdOn DateTime  @default(now())
   revokedOn DateTime?
+}
+
+model OAuthClient {
+  id           String       @id @unique @default(cuid())
+  clientId     String       @unique
+  clientSecret String
+  name         String
+  redirectUris String[]
+  owner        User         @relation(fields: [ownerId], references: [id])
+  tokens       OAuthToken[]
+  ownerId      String
+}
+
+model OAuthToken {
+  id            String      @id @unique @default(cuid())
+  token         String      @unique
+  refreshToken  String      @unique
+  client        OAuthClient @relation(fields: [oAuthClientId], references: [id])
+  user          User        @relation(fields: [userId], references: [id])
+  scopes        String[]
+  expires       DateTime
+  oAuthClientId String
+  userId        String
+
+  @@unique([userId, oAuthClientId])
 }
 
 enum RoomActionType {

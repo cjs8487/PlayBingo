@@ -25,6 +25,9 @@
         },
         "avatar": {
             "type": "string"
+        },
+        "developer": {
+            "type": "boolean"
         }
     }
 }
