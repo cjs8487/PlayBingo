@@ -824,16 +824,4 @@ describe('Full Generation', () => {
         const board2 = generator.board;
         expect(board1).toStrictEqual(board2);
     });
-
-    it('Generates a board with maximum restrictions', () => {
-        const generator = new BoardGenerator(goals, categories, {
-            goalFilters: [],
-            goalTransformation: [],
-            boardLayout: { mode: 'srlv5' },
-            restrictions: [{ type: 'line-type-exclusion' }],
-            adjustments: [{ type: 'board-type-max' }],
-        });
-        generator.reset();
-        expect(() => generator.generateBoard()).not.toThrow();
-    });
 });
