@@ -11,6 +11,7 @@
         "outDir": "build",
         "baseUrl": "./src",
         "declarationMap": true,
+        "types": ["jest"]
     },
     "ts-node": {
         "esm": true

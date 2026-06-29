@@ -32,7 +32,18 @@ goals.post('/:id', async (req, res) => {
     }
 
     const { id } = req.params;
-    const { goal, description, categories, difficulty, tags, meta } = req.body;
+    const {
+        goal,
+        description,
+        categories,
+        difficulty,
+        tags,
+        meta,
+        image,
+        secondaryImage,
+        imageTag,
+        count,
+    } = req.body;
 
     if (
         !goal &&
@@ -40,7 +51,11 @@ goals.post('/:id', async (req, res) => {
         !categories &&
         !difficulty &&
         !tags &&
-        meta === undefined
+        meta === undefined &&
+        !image &&
+        !secondaryImage &&
+        !imageTag &&
+        count === undefined
     ) {
         res.status(400).send('No changes submitted');
         return;
@@ -75,6 +90,12 @@ goals.post('/:id', async (req, res) => {
         input.difficulty = difficulty;
     }
 
+    if (count === 0) {
+        input.count = null;
+    } else if (count > 0) {
+        input.count = count;
+    }
+
     if (categories) {
         input.categories = {
             set: [],
@@ -96,6 +117,41 @@ goals.post('/:id', async (req, res) => {
             connect: tags?.map((tag: string) => ({
                 id: tag,
             })),
+        };
+    }
+    if (image) {
+        input.image = {
+            connect: {
+                id: image,
+            },
+        };
+    } else {
+        input.image = {
+            disconnect: true,
+        };
+    }
+
+    if (secondaryImage) {
+        input.secondaryImage = {
+            connect: {
+                id: secondaryImage,
+            },
+        };
+    } else {
+        input.secondaryImage = {
+            disconnect: true,
+        };
+    }
+
+    if (imageTag) {
+        input.imageTag = {
+            connect: {
+                id: imageTag,
+            },
+        };
+    } else {
+        input.imageTag = {
+            disconnect: true,
         };
     }
 

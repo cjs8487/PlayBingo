@@ -28,6 +28,10 @@ export interface Goal {
   meta?: {
     [k: string]: unknown;
   } | null;
+  image?: GoalImage | null;
+  secondaryImage?: GoalImage | null;
+  imageTag?: GoalImageTag | null;
+  count?: number | null;
 }
 /**
  * The full goal category definition.
@@ -45,6 +49,16 @@ export interface GoalTag {
   id: string;
   name: string;
   goalCount?: number;
+}
+export interface GoalImage {
+  id: string;
+  name: string;
+  mediaFile: string;
+}
+export interface GoalImageTag {
+  id: string;
+  label: string;
+  color: string;
 }
 export interface HiddenCell {
   revealed: false;

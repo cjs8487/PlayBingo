@@ -55,7 +55,7 @@ export function getFullUrl(path: string) {
     return `${process.env.NEXT_PUBLIC_API_PATH}/${path}`;
 }
 
-export type MediaWorkflow = 'game' | 'userAvatar';
+export type MediaWorkflow = 'game' | 'userAvatar' | 'goalImage';
 
 export function getMediaForWorkflow(workflow: MediaWorkflow, file: string) {
     switch (workflow) {
@@ -63,6 +63,8 @@ export function getMediaForWorkflow(workflow: MediaWorkflow, file: string) {
             return gameCoverUrl(file);
         case 'userAvatar':
             return userAvatarUrl(file);
+        case 'goalImage':
+            return goalImageUrl(file);
     }
 }
 
@@ -72,4 +74,17 @@ export function gameCoverUrl(file: string) {
 
 export function userAvatarUrl(file: string) {
     return getFullUrl(`/media/userAvatar/${file}`);
+}
+
+export function goalImageUrl(file: string) {
+    return getFullUrl(`/media/goalImage/${file}`);
+}
+
+export function bytesToString(bytes: number) {
+    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+    if (bytes === 0) {
+        return 'n/a';
+    }
+    const i = Math.floor(Math.log2(bytes) / 10);
+    return `${Math.round(bytes / Math.pow(2, i * 10))} ${sizes[i]}`;
 }

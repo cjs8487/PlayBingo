@@ -6,17 +6,20 @@ import {
     Box,
     Button,
     Checkbox,
+    Chip,
     TextField,
     Typography,
     createFilterOptions,
 } from '@mui/material';
 import { Category, Goal, GoalTag } from '@playbingo/types';
 import { Form, Formik, useField } from 'formik';
+import Image from 'next/image';
 import { KeyedMutator } from 'swr';
 import FormikJsonEditor from '../../../../../../components/input/FormikJsonEditor';
+import { FormikSelectFieldAutocomplete } from '../../../../../../components/input/FormikSelectField';
 import FormikTextField from '../../../../../../components/input/FormikTextField';
 import { useGoalManagerContext } from '../../../../../../context/GoalManagerContext';
-import { alertError } from '../../../../../../lib/Utils';
+import { alertError, getMediaForWorkflow } from '../../../../../../lib/Utils';
 
 const icon = <CheckBoxOutlineBlankIcon fontSize="small" />;
 const checkedIcon = <CheckBoxIcon fontSize="small" />;
@@ -148,7 +151,7 @@ export default function GoalEditor({
     categories,
     canModerate,
 }: GoalEditorProps) {
-    const { tags } = useGoalManagerContext();
+    const { tags, images, imageTags } = useGoalManagerContext();
 
     return (
         <Formik
@@ -159,6 +162,10 @@ export default function GoalEditor({
                 difficulty: goal.difficulty ?? 0,
                 tags: goal.tags?.map((t) => t.id) ?? [],
                 meta: JSON.stringify(goal.meta) ?? '{}',
+                image: goal.image?.id ?? '',
+                secondaryImage: goal.secondaryImage?.id ?? '',
+                imageTag: goal.imageTag?.id ?? '',
+                count: goal.count ?? '',
             }}
             onSubmit={async ({
                 goal: goalText,
@@ -167,6 +174,10 @@ export default function GoalEditor({
                 difficulty,
                 tags,
                 meta,
+                image,
+                secondaryImage,
+                imageTag,
+                count,
             }) => {
                 if (isNew) {
                     const res = await fetch(`/api/games/${slug}/goals`, {
@@ -180,6 +191,10 @@ export default function GoalEditor({
                             categories,
                             difficulty,
                             meta,
+                            image,
+                            secondaryImage,
+                            imageTag,
+                            count,
                         }),
                     });
                     if (!res.ok) {
@@ -231,6 +246,16 @@ export default function GoalEditor({
                                     JSON.stringify(goal.meta)
                                     ? meta
                                     : undefined,
+                            image: image !== goal.image?.id ? image : undefined,
+                            secondaryImage:
+                                secondaryImage !== goal.secondaryImage?.id
+                                    ? secondaryImage
+                                    : undefined,
+                            imageTag:
+                                imageTag !== goal.imageTag?.id
+                                    ? imageTag
+                                    : undefined,
+                            count: count !== goal.count ? count : undefined,
                         }),
                     });
                     if (!res.ok) {
@@ -243,7 +268,12 @@ export default function GoalEditor({
             }}
             enableReinitialize
         >
-            {({ isSubmitting, isValidating, resetForm }) => (
+            {({
+                isSubmitting,
+                isValidating,
+                resetForm,
+                values: { image, secondaryImage, imageTag, count },
+            }) => (
                 <Form>
                     <Box
                         sx={{
@@ -305,6 +335,123 @@ export default function GoalEditor({
                                     max={25}
                                 />
                             </Box>
+                        </Box>
+                    </Box>
+                    <Box sx={{ mt: 2, display: 'flex', gap: 4 }}>
+                        <Box
+                            sx={{
+                                position: 'relative',
+                                width: '250px',
+                                height: '250px',
+                                border: 1,
+                                borderColor: 'divider',
+                                backgroundColor: 'background.default',
+                            }}
+                        >
+                            {image && (
+                                <Image
+                                    src={getMediaForWorkflow(
+                                        'goalImage',
+                                        images.filter((i) => i.id === image)[0]
+                                            .mediaFile,
+                                    )}
+                                    alt=""
+                                    width={250}
+                                    height={250}
+                                    style={{
+                                        objectFit: 'contain',
+                                    }}
+                                />
+                            )}
+                            {secondaryImage && (
+                                <Image
+                                    src={getMediaForWorkflow(
+                                        'goalImage',
+                                        images.filter(
+                                            (i) => i.id === secondaryImage,
+                                        )[0].mediaFile,
+                                    )}
+                                    alt=""
+                                    width={25}
+                                    height={25}
+                                    style={{
+                                        objectFit: 'contain',
+                                        position: 'absolute',
+                                        top: '8px',
+                                        left: '8px',
+                                    }}
+                                />
+                            )}
+                            {imageTag && (
+                                <Chip
+                                    label={
+                                        imageTags.filter(
+                                            (i) => i.id === imageTag,
+                                        )[0].label
+                                    }
+                                    sx={{
+                                        position: 'absolute',
+                                        top: 0,
+                                        right: 0,
+                                        mt: 0.5,
+                                        mr: 0.5,
+                                        backgroundColor: imageTags.filter(
+                                            (i) => i.id === imageTag,
+                                        )[0].color,
+                                    }}
+                                />
+                            )}
+                            {count && (
+                                <Typography
+                                    sx={{
+                                        position: 'absolute',
+                                        bottom: 0,
+                                        right: 0,
+                                        pr: 1,
+                                        filter: 'drop-shadow(2px 2px 2px rgba(0,0,0,0))',
+                                        textShadow: '2px 2px black',
+                                        fontSize: 18,
+                                    }}
+                                >
+                                    {count}
+                                </Typography>
+                            )}
+                        </Box>
+                        <Box
+                            sx={{
+                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: 2,
+                            }}
+                        >
+                            <FormikSelectFieldAutocomplete
+                                id="goal-image-primary"
+                                name="image"
+                                label="Primary Image"
+                                options={images.map((i) => ({
+                                    value: i.id,
+                                    label: i.name,
+                                }))}
+                            />
+                            <FormikSelectFieldAutocomplete
+                                id="goal-image-secondary"
+                                name="secondaryImage"
+                                label="Secondary Image"
+                                options={images.map((i) => ({
+                                    value: i.id,
+                                    label: i.name,
+                                }))}
+                            />
+                            <FormikSelectFieldAutocomplete
+                                id="goal-image-tag"
+                                name="imageTag"
+                                label="Image Tag"
+                                options={imageTags.map((i) => ({
+                                    value: i.id,
+                                    label: i.label,
+                                }))}
+                            />
+                            <NumberInput name="count" label="Count" />
                         </Box>
                     </Box>
                     {canModerate && (

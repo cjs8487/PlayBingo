@@ -8,6 +8,7 @@ import { useMemo, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import {
     alertError,
+    bytesToString,
     getFullUrl,
     getMediaForWorkflow,
     MediaWorkflow,
@@ -57,6 +58,9 @@ interface BaseProps {
     edit?: boolean;
     circle?: boolean;
     size?: string | number;
+    shortMessage?: boolean;
+    disableRemove?: boolean;
+    maxSize?: number;
 }
 
 interface CircleProps extends BaseProps {
@@ -77,13 +81,14 @@ export default function FormikFileUpload({
     edit,
     circle,
     size,
+    shortMessage,
+    disableRemove,
+    maxSize = 1024 * 1024,
 }: Props) {
     const [{ value }, , { setValue }] = useField<string>(name);
     const [file, setFile] = useState<{ preview: string } | undefined>(() => {
         if (value) {
-            return {
-                preview: getMediaForWorkflow(workflow, value),
-            };
+            return { preview: getMediaForWorkflow(workflow, value) };
         }
         return undefined;
     });
@@ -132,7 +137,7 @@ export default function FormikFileUpload({
             'image/jpeg': [],
             'image/png': [],
         },
-        maxSize: 1024 * 1024,
+        maxSize,
     });
 
     const borderRadius = circle ? '50%' : 2;
@@ -208,14 +213,25 @@ export default function FormikFileUpload({
                 {!file && (
                     <>
                         <FileUpload />
-                        <Typography variant="caption">
-                            {isDragActive
-                                ? 'Drop files here to upload.'
-                                : 'Drag and drop a file or click to upload.'}
-                        </Typography>
+                        {shortMessage ? (
+                            <Typography variant="caption">
+                                {isDragActive ? '' : 'Upload file'}
+                            </Typography>
+                        ) : (
+                            <Typography variant="caption">
+                                {isDragActive
+                                    ? 'Drop files here to upload.'
+                                    : 'Drag and drop a file or click to upload.'}
+                            </Typography>
+                        )}
                     </>
                 )}
             </Box>
+            {!value && (
+                <Typography variant="caption">
+                    Max size: {bytesToString(maxSize)}
+                </Typography>
+            )}
             {message && (
                 <Typography variant="body2" color="error">
                     {message}
@@ -246,7 +262,7 @@ export default function FormikFileUpload({
                     </IconButton>
                 </Typography>
             )}
-            {edit && !changed && file && (
+            {edit && !changed && file && !disableRemove && (
                 <IconButton
                     size="small"
                     sx={{ ml: 0.5 }}
