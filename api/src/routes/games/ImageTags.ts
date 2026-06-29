@@ -52,7 +52,6 @@ imageTags
         const { slug, id } = req.params;
 
         const slugFromTag = await gameSlugForTag(id);
-        console.log(slugFromTag);
         if (!slugFromTag) {
             res.sendStatus(404);
             return;

@@ -29,8 +29,6 @@ export default async function ImagesPage({
     const images = await getImages(slug);
     const tags = await getImageTags(slug);
 
-    console.log(tags);
-
     return (
         <>
             <List sx={{ maxHeight: '50%', overflowY: 'auto', mb: 2 }}>
