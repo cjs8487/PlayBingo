@@ -303,6 +303,7 @@ function RoomXl() {
         toggleGoalDetails,
         regenerateCard,
         connectedPlayer,
+        setChatEnabled,
     } = useRoomContext();
 
     if (!roomData) {
@@ -378,7 +379,18 @@ function RoomXl() {
                                 }}
                             />
                         }
-                        label="Show All Goal Details "
+                        label="Show All Goal Details"
+                    />
+                    <FormControlLabel
+                        control={
+                            <Switch
+                                checked={roomData?.chatEnabled ?? true}
+                                onChange={(e) =>
+                                    setChatEnabled(e.target.checked)
+                                }
+                            />
+                        }
+                        label="Enable chat"
                     />
                     {connectedPlayer?.monitor && (
                         <Button
