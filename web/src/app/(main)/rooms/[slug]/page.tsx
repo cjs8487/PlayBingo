@@ -38,6 +38,7 @@ export default function Room() {
 
     return (
         <>
+            <RoomHeader />
             <Box sx={{ width: '100%', height: '100%', maxHeight: '100%' }}>
                 <Box
                     sx={{
@@ -252,36 +253,39 @@ function RoomLg() {
             sx={{
                 width: '100%',
                 height: '100%',
-                maxHeight: 'calc(100vh - 64px - 78px - 16px)',
-                display: 'grid',
-                gridTemplateRows: 'auto auto auto 1fr 1fr',
-                gridTemplateColumns: 'minmax(0, 2fr) minmax(350px, 450px)',
-                gap: 1,
                 overflow: 'hidden',
+                display: 'grid',
+                gridTemplateColumns: '300px 1fr 300px',
+                gridTemplateRows: 'auto',
             }}
         >
-            <Box sx={{ gridRow: '1 / -1', gridColumn: 1, overflow: 'hidden' }}>
-                <Board />
-            </Box>
-            <Box sx={{ gridColumn: 2, overflow: 'hidden' }}>
-                <RoomInfo />
-            </Box>
-            <Box sx={{ gridColumn: 2, overflow: 'hidden' }}>
-                <PlayerInfo />
-            </Box>
-            <Box sx={{ gridColumn: 2, overflow: 'hidden' }}>
-                <Timer />
-            </Box>
-            <Box
+            <Paper
                 sx={{
-                    gridRow: 4,
-                    gridColumn: 2,
-                    overflow: 'hidden',
+                    p: 1.5,
+                    background: (theme) =>
+                        alpha(theme.palette.background.paper, 0.5),
                 }}
             >
                 <PlayerList />
+                <Box sx={{ my: 2, border: 1, borderColor: 'divider' }} />
+                <SettingsPanel />
+                <Box sx={{ my: 2, border: 1, borderColor: 'divider' }} />
+                <Box>
+                    <Typography variant="h6">Timer Controls</Typography>
+                    <TimingMethodSelector />
+                    <TimerControls />
+                </Box>
+            </Paper>
+            <Box
+                sx={{ position: 'relative', height: '100%' }}
+                className="board-wrapper"
+            >
+                <Board />
             </Box>
-            <Box sx={{ gridRow: 5, gridColumn: 2, overflow: 'hidden' }}>
+            <Box
+                sx={{ position: 'relative', height: '100%' }}
+                className="relative h-full"
+            >
                 <RoomChat />
             </Box>
         </Box>
@@ -289,12 +293,6 @@ function RoomLg() {
 }
 
 function RoomXl() {
-    const { roomData } = useRoomContext();
-
-    if (!roomData) {
-        return null;
-    }
-
     return (
         <Box
             sx={{
@@ -306,7 +304,6 @@ function RoomXl() {
                 gridTemplateRows: 'auto',
             }}
         >
-            <RoomHeader />
             <Paper
                 sx={{
                     p: 1.5,
