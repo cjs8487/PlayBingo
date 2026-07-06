@@ -154,14 +154,6 @@ const theme = createTheme({
                 LinkComponent: LinkBehavior,
             },
         },
-        MuiButton: {
-            styleOverrides: {
-                root: {
-                    borderRadius: 999,
-                    paddingInline: '1rem',
-                },
-            },
-        },
         MuiTextField: {
             defaultProps: {
                 variant: 'outlined',
