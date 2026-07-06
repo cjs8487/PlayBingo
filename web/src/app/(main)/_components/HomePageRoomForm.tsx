@@ -94,6 +94,7 @@ export default function HomePageRoomForm() {
                             name="password"
                             label="Password"
                             fullWidth
+                            type="password"
                         />
                         <FormikTextField
                             id="player-nickname"
