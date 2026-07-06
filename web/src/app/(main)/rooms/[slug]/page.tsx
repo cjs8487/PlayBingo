@@ -1,7 +1,6 @@
 'use client';
 import Board from '@/components/board/Board';
 import PlayerInfo from '@/components/room/PlayerInfo';
-import PlayerList from '@/components/room/PlayerList';
 import RoomChat from '@/components/room/RoomChat';
 import RoomInfo from '@/components/room/RoomInfo';
 import RoomLogin from '@/components/room/RoomLogin';
@@ -9,22 +8,18 @@ import Timer from '@/components/room/timer/Timer';
 import TimerControls from '@/components/room/timer/TimerControls';
 import TimingMethodSelector from '@/components/room/timer/TimingMethodSelector';
 import { ConnectionStatus, useRoomContext } from '@/context/RoomContext';
-import { Refresh } from '@mui/icons-material';
 import {
     alpha,
     Box,
-    Button,
     Dialog,
     DialogContent,
-    FormControlLabel,
     Paper,
     Stack,
-    Switch,
     Typography,
 } from '@mui/material';
-import { Sword } from 'mdi-material-ui';
-import ColorSelect from '../../../../components/room/ColorSelect';
+import PlayerList from '../../../../components/room/PlayerList';
 import RoomHeader from '../../../../components/room/RoomHeader';
+import SettingsPanel from '../../../../components/room/SettingsPanel';
 
 export default function Room() {
     const { connectionStatus, roomData } = useRoomContext();
@@ -294,17 +289,7 @@ function RoomLg() {
 }
 
 function RoomXl() {
-    const {
-        roomData,
-        players,
-        showCounters,
-        toggleCounters,
-        showGoalDetails,
-        toggleGoalDetails,
-        regenerateCard,
-        connectedPlayer,
-        setChatEnabled,
-    } = useRoomContext();
+    const { roomData } = useRoomContext();
 
     if (!roomData) {
         return null;
@@ -329,80 +314,9 @@ function RoomXl() {
                         alpha(theme.palette.background.paper, 0.5),
                 }}
             >
-                {players.map((player) => (
-                    <Box
-                        key={player.id}
-                        sx={{
-                            p: 1,
-                            mb: 1,
-                            borderLeft: 6,
-                            borderColor: player.color,
-                            boxShadow: `0 0 6px ${player.color}`,
-                            display: 'flex',
-                            alignItems: 'center',
-                        }}
-                    >
-                        <Typography sx={{ flexGrow: 1 }}>
-                            {player.nickname}
-                        </Typography>
-                        {player.monitor && (
-                            <Sword fontSize="small" sx={{ color: 'green' }} />
-                        )}
-                    </Box>
-                ))}
+                <PlayerList />
                 <Box sx={{ my: 2, border: 1, borderColor: 'divider' }} />
-                <ColorSelect />
-                <Box sx={{ my: 2, border: 1, borderColor: 'divider' }} />
-                <Box>
-                    <Typography variant="h6">Settings</Typography>
-                    <FormControlLabel
-                        control={
-                            <Switch
-                                checked={showCounters}
-                                onChange={(e) => {
-                                    if (e.target.checked !== showCounters) {
-                                        toggleCounters();
-                                    }
-                                }}
-                            />
-                        }
-                        label="Show Counters"
-                    />
-                    <FormControlLabel
-                        control={
-                            <Switch
-                                checked={showGoalDetails}
-                                onChange={(e) => {
-                                    if (e.target.checked !== showGoalDetails) {
-                                        toggleGoalDetails();
-                                    }
-                                }}
-                            />
-                        }
-                        label="Show All Goal Details"
-                    />
-                    <FormControlLabel
-                        control={
-                            <Switch
-                                checked={roomData?.chatEnabled ?? true}
-                                onChange={(e) =>
-                                    setChatEnabled(e.target.checked)
-                                }
-                            />
-                        }
-                        label="Enable chat"
-                    />
-                    {connectedPlayer?.monitor && (
-                        <Button
-                            size="small"
-                            onClick={() => regenerateCard()}
-                            sx={{ width: '100%' }}
-                            startIcon={<Refresh />}
-                        >
-                            Regenerate Card
-                        </Button>
-                    )}
-                </Box>
+                <SettingsPanel />
                 <Box sx={{ my: 2, border: 1, borderColor: 'divider' }} />
                 <Box>
                     <Typography variant="h6">Timer Controls</Typography>
