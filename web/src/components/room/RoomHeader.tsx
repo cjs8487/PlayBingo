@@ -19,13 +19,29 @@ export default function RoomHeader() {
 
     const [collapsed, setCollapsed] = useState(false);
     const canCollapse = useMediaQuery(theme.breakpoints.up('lg'));
+    const isXSmall = useMediaQuery(theme.breakpoints.only('xs'));
 
     if (!roomData) {
         return null;
     }
 
-    const portalContent =
-        canCollapse && collapsed ? (
+    let portalContent;
+    if (isXSmall) {
+        portalContent = (
+            <Box
+                sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    columnGap: 1,
+                    px: 2,
+                }}
+            >
+                <Timer />
+            </Box>
+        );
+    } else if (canCollapse && collapsed) {
+        portalContent = (
             <Box
                 sx={{
                     display: 'flex',
@@ -61,7 +77,9 @@ export default function RoomHeader() {
                     </Button>
                 )}
             </Box>
-        ) : (
+        );
+    } else {
+        portalContent = (
             <Box
                 sx={{
                     position: 'relative',
@@ -142,6 +160,7 @@ export default function RoomHeader() {
                 )}
             </Box>
         );
+    }
 
     return (
         <Portal
