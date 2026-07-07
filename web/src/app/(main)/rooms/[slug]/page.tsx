@@ -126,32 +126,49 @@ export default function Room() {
 
 function RoomXs() {
     return (
-        <Stack spacing={2} sx={{ height: '100%', overflow: 'hidden' }}>
-            <RoomInfo />
-            <Timer />
-            <PlayerInfo />
+        <Box
+            sx={{
+                width: '100%',
+                height: '100%',
+                overflowY: 'auto',
+            }}
+        >
             <Box
-                sx={{
-                    width: '100%',
-                    flex: '1 1 auto',
-                    minHeight: '400px',
-                    overflow: 'hidden',
-                }}
+                sx={{ position: 'relative', height: '100%' }}
+                className="board-wrapper"
             >
                 <Board />
             </Box>
-            <Box sx={{ flex: '0 0 auto' }}>
+            <Paper
+                sx={{
+                    p: 1.5,
+
+                    background: (theme) =>
+                        alpha(theme.palette.background.paper, 0.5),
+                    mb: 1,
+                }}
+            >
                 <PlayerList />
-            </Box>
+                <Box sx={{ my: 2, border: 1, borderColor: 'divider' }} />
+                <SettingsPanel />
+                <Box sx={{ my: 2, border: 1, borderColor: 'divider' }} />
+                <Box>
+                    <Typography variant="h6">Timer Controls</Typography>
+                    <TimingMethodSelector />
+                    <TimerControls />
+                </Box>
+                <Box sx={{ my: 2, border: 1, borderColor: 'divider' }} />
+            </Paper>
             <Box
                 sx={{
-                    height: '300px',
-                    flex: '0 0 auto',
+                    position: 'relative',
+                    height: '100%',
                 }}
+                className="relative h-full"
             >
                 <RoomChat />
             </Box>
-        </Stack>
+        </Box>
     );
 }
 

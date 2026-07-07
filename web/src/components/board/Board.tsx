@@ -1,4 +1,4 @@
-import { Box } from '@mui/material';
+import { Box, useMediaQuery, useTheme } from '@mui/material';
 import { useContext } from 'react';
 import { AutoSizer } from 'react-virtualized-auto-sizer';
 import { RoomContext } from '../../context/RoomContext';
@@ -6,6 +6,9 @@ import Cell from './Cell';
 
 export default function Board() {
     const { board, revealCard } = useContext(RoomContext);
+
+    const theme = useTheme();
+    const isXSmall = useMediaQuery(theme.breakpoints.only('xs'));
 
     const rows = board.height;
     const cols = board.width;
@@ -28,7 +31,7 @@ export default function Board() {
                     flex: '1 1 auto',
                     height: '100%',
                     textAlign: 'center',
-                    p: 3,
+                    p: isXSmall ? 1 : 3,
                 }}
             >
                 <AutoSizer
