@@ -157,93 +157,102 @@ function RoomXs() {
 
 function RoomSm() {
     return (
-        <Stack spacing={2} sx={{ height: '100%', overflow: 'hidden' }}>
-            <Box sx={{ flex: '0 0 auto' }}>
-                <RoomInfo />
-            </Box>
-            <Box sx={{ flex: '0 0 auto' }}>
-                <Timer />
-            </Box>
-            <Box sx={{ flex: '0 0 auto' }}>
-                <PlayerInfo />
-            </Box>
+        <Box
+            sx={{
+                width: '100%',
+                height: '100%',
+                overflowY: 'auto',
+            }}
+        >
             <Box
-                sx={{
-                    width: '100%',
-                    flex: '1 1 auto',
-                    minHeight: '400px',
-                    overflow: 'hidden',
-                }}
+                sx={{ position: 'relative', height: '100%' }}
+                className="board-wrapper"
             >
                 <Board />
             </Box>
-            <Box sx={{ flex: '0 0 auto' }}>
-                <PlayerList />
+            <Box sx={{ display: 'flex', height: '100%', gap: 1 }}>
+                <Paper
+                    sx={{
+                        p: 1.5,
+
+                        background: (theme) =>
+                            alpha(theme.palette.background.paper, 0.5),
+                        width: '50%',
+                    }}
+                >
+                    <PlayerList />
+                    <Box sx={{ my: 2, border: 1, borderColor: 'divider' }} />
+                    <SettingsPanel />
+                    <Box sx={{ my: 2, border: 1, borderColor: 'divider' }} />
+                    <Box>
+                        <Typography variant="h6">Timer Controls</Typography>
+                        <TimingMethodSelector />
+                        <TimerControls />
+                    </Box>
+                    <Box sx={{ my: 2, border: 1, borderColor: 'divider' }} />
+                </Paper>
+                <Box
+                    sx={{
+                        position: 'relative',
+                        height: '100%',
+                        flexGrow: 1,
+                        width: '50%',
+                    }}
+                    className="relative h-full"
+                >
+                    <RoomChat />
+                </Box>
             </Box>
-            <Box
-                sx={{
-                    height: '300px',
-                    flex: '0 0 auto',
-                }}
-            >
-                <RoomChat />
-            </Box>
-        </Stack>
+        </Box>
     );
 }
 
 function RoomMd() {
     return (
-        <Stack spacing={2} sx={{ height: '100%', overflow: 'hidden' }}>
+        <Box
+            sx={{
+                width: '100%',
+                height: '100%',
+                overflow: 'hidden',
+                display: 'grid',
+                gridTemplateColumns: '1fr 350px',
+                gridTemplateRows: 'auto',
+            }}
+        >
             <Box
+                sx={{ position: 'relative', height: '100%' }}
+                className="board-wrapper"
+            >
+                <Board />
+            </Box>
+            <Paper
                 sx={{
                     display: 'flex',
-                    columnGap: 2,
-                    flex: '0 0 auto',
+                    flexDirection: 'column',
+                    p: 1.5,
+
+                    background: (theme) =>
+                        alpha(theme.palette.background.paper, 0.5),
                 }}
             >
-                <Box sx={{ flex: 1 }}>
-                    <RoomInfo />
+                <PlayerList />
+                <Box sx={{ my: 2, border: 1, borderColor: 'divider' }} />
+                <SettingsPanel />
+                <Box sx={{ my: 2, border: 1, borderColor: 'divider' }} />
+                <Box>
+                    <Typography variant="h6">Timer Controls</Typography>
+                    <TimingMethodSelector />
+                    <TimerControls />
                 </Box>
-                <Box sx={{ flex: '0 0 auto' }}>
-                    <Timer />
-                </Box>
-            </Box>
-            <Box sx={{ flex: '0 0 auto' }}>
-                <PlayerInfo />
-            </Box>
-            <Box
-                sx={{
-                    display: 'flex',
-                    columnGap: 1,
-                    flex: '1 1 auto',
-                    minHeight: '400px',
-                    overflow: 'hidden',
-                }}
-            >
+                <Box sx={{ my: 2, border: 1, borderColor: 'divider' }} />
                 <Box
-                    sx={{
-                        flex: '1 1 auto',
-                        minWidth: 0,
-                        minHeight: '400px',
-                        overflow: 'hidden',
-                    }}
+                    sx={{ position: 'relative', height: '100%' }}
+                    className="relative h-full"
                 >
-                    <Board />
+                    <RoomChat />
                 </Box>
-                <Box sx={{ flex: '0 0 auto', minWidth: '200px' }}>
-                    <PlayerList />
-                </Box>
-            </Box>
-            <Box
-                sx={{
-                    height: '300px',
-                    flex: '0 0 auto',
-                }}
-            >
-                <RoomChat />
-            </Box>
-        </Stack>
+            </Paper>
+        </Box>
     );
 }
 

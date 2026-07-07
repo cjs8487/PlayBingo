@@ -1,5 +1,12 @@
 import { ExpandLess, ExpandMore } from '@mui/icons-material';
-import { Box, Button, Portal, Typography } from '@mui/material';
+import {
+    Box,
+    Button,
+    Portal,
+    Typography,
+    useMediaQuery,
+    useTheme,
+} from '@mui/material';
 import { useState } from 'react';
 import { useRoomContext } from '../../context/RoomContext';
 import ConnectionState from './ConnectionState';
@@ -8,122 +15,133 @@ import Timer from './timer/Timer';
 export default function RoomHeader() {
     const { roomData } = useRoomContext();
 
+    const theme = useTheme();
+
     const [collapsed, setCollapsed] = useState(false);
+    const canCollapse = useMediaQuery(theme.breakpoints.up('lg'));
 
     if (!roomData) {
         return null;
     }
 
-    const portalContent = collapsed ? (
-        <Box
-            sx={{
-                display: 'flex',
-                alignItems: 'center',
-                columnGap: 1,
-            }}
-        >
-            <ConnectionState collapsed />
+    const portalContent =
+        canCollapse && collapsed ? (
             <Box
                 sx={{
-                    position: 'absolute',
-                    left: 0,
-                    textAlign: 'center',
-                    width: '100%',
-                    zIndex: -1,
+                    display: 'flex',
+                    alignItems: 'center',
+                    columnGap: 1,
                 }}
             >
-                <Timer />
-            </Box>
-            <Button
-                sx={{
-                    position: 'absolute',
-                    top: '100%',
-                    left: '50%',
-                    transform: 'translateX(-50%) translateY(-50%)',
-                }}
-                variant="contained"
-                size="small"
-                onClick={() => setCollapsed(false)}
-            >
-                <ExpandMore fontSize="small" />
-            </Button>
-        </Box>
-    ) : (
-        <Box
-            sx={{
-                position: 'relative',
-                gridColumn: '1 / -1',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                px: 3,
-                py: 1,
-                borderTop: 1,
-                borderColor: 'divider',
-            }}
-        >
-            <Box sx={{ flexGrow: 1 }} className="grow">
-                <Typography variant="h5" className="mb-0.5 text-lg">
-                    {roomData.name}
-                </Typography>
-                <Typography variant="subtitle1" className="mb-1.5 flex text-xs">
-                    <div>
-                        {roomData.game} ({roomData.variant})
-                    </div>
-                </Typography>
+                <ConnectionState collapsed />
                 <Box
-                    sx={{ display: 'flex', alignItems: 'center' }}
-                    className="flex text-xs"
+                    sx={{
+                        position: 'absolute',
+                        left: 0,
+                        textAlign: 'center',
+                        width: '100%',
+                        zIndex: -1,
+                    }}
                 >
-                    <Typography
-                        variant="body2"
-                        sx={{
-                            borderRight: 1,
-                            borderColor: 'divider',
-                            pr: 1,
-                            mr: 1,
-                        }}
-                    >
-                        {roomData.slug}
-                    </Typography>
-                    <Typography
-                        variant="body2"
-                        sx={{
-                            borderRight: 1,
-                            borderColor: 'divider',
-                            pr: 1,
-                            mr: 1,
-                        }}
-                    >
-                        {roomData.mode}
-                    </Typography>
-                    <Typography variant="body2">{roomData.seed}</Typography>
+                    <Timer />
                 </Box>
+                {canCollapse && (
+                    <Button
+                        sx={{
+                            position: 'absolute',
+                            top: '100%',
+                            left: '50%',
+                            transform: 'translateX(-50%) translateY(-50%)',
+                        }}
+                        variant="contained"
+                        size="small"
+                        onClick={() => setCollapsed(false)}
+                    >
+                        <ExpandMore fontSize="small" />
+                    </Button>
+                )}
             </Box>
+        ) : (
             <Box
                 sx={{
-                    position: 'absolute',
-                    textAlign: 'center',
+                    position: 'relative',
+                    gridColumn: '1 / -1',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    px: 3,
+                    py: 1,
+                    borderTop: 1,
+                    borderColor: 'divider',
                 }}
             >
-                <Timer />
+                <Box sx={{ flexGrow: 1 }} className="grow">
+                    <Typography variant="h5" className="mb-0.5 text-lg">
+                        {roomData.name}
+                    </Typography>
+                    <Typography
+                        variant="subtitle1"
+                        className="mb-1.5 flex text-xs"
+                    >
+                        <div>
+                            {roomData.game} ({roomData.variant})
+                        </div>
+                    </Typography>
+                    <Box
+                        sx={{ display: 'flex', alignItems: 'center' }}
+                        className="flex text-xs"
+                    >
+                        <Typography
+                            variant="body2"
+                            sx={{
+                                borderRight: 1,
+                                borderColor: 'divider',
+                                pr: 1,
+                                mr: 1,
+                            }}
+                        >
+                            {roomData.slug}
+                        </Typography>
+                        <Typography
+                            variant="body2"
+                            sx={{
+                                borderRight: 1,
+                                borderColor: 'divider',
+                                pr: 1,
+                                mr: 1,
+                            }}
+                        >
+                            {roomData.mode}
+                        </Typography>
+                        <Typography variant="body2">{roomData.seed}</Typography>
+                    </Box>
+                </Box>
+                <Box
+                    sx={{
+                        position: 'absolute',
+                        textAlign: 'center',
+                    }}
+                >
+                    <Timer />
+                </Box>
+                <ConnectionState />
+                {canCollapse && (
+                    <Button
+                        sx={{
+                            position: 'absolute',
+                            top: '100%',
+                            left: '50%',
+                            transform: 'translateX(-50%) translateY(-50%)',
+                        }}
+                        variant="contained"
+                        size="small"
+                        onClick={() => setCollapsed(true)}
+                    >
+                        <ExpandLess fontSize="small" />
+                    </Button>
+                )}
             </Box>
-            <ConnectionState />
-            <Button
-                sx={{
-                    position: 'absolute',
-                    top: '100%',
-                    left: '50%',
-                    transform: 'translateX(-50%) translateY(-50%)',
-                }}
-                variant="contained"
-                size="small"
-                onClick={() => setCollapsed(true)}
-            >
-                <ExpandLess fontSize="small" />
-            </Button>
-        </Box>
-    );
+        );
 
     return (
         <Portal
