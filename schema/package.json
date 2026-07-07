@@ -11,6 +11,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@playbingo/shared": "file:../shared",
     "json-schema-to-typescript": "^15.0.4",
     "zod": "^4.3.6"
   },
