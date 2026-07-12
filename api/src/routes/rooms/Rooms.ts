@@ -402,8 +402,10 @@ async function getOrLoadRoom(slug: string): Promise<Room | null> {
         } = action.payload as any;
 
         const player = newRoom.getAllPlayers().find(p => p.id === playerId)!;
-
-        const team = newRoom.teams.get(player.teamId);
+        let team: Team | undefined;
+        if (player.teamId) {
+            team = newRoom.teams.get(player.teamId)
+        }
 
         switch (action.action) {
             case 'JOIN':
@@ -416,6 +418,9 @@ async function getOrLoadRoom(slug: string): Promise<Room | null> {
                 newRoom.sendChat([{ contents: nickname, color }, ' has left.']);
                 break;
             case 'MARK':
+                if (!team) {
+                    break;
+                }
                 if (!team.hasMarked(row, col)) {
                     newRoom.board[row][col].completedPlayers.push(playerId);
                     newRoom.board[row][col].completedPlayers.sort((a, b) =>
@@ -430,6 +435,9 @@ async function getOrLoadRoom(slug: string): Promise<Room | null> {
                 }
                 break;
             case 'UNMARK':
+                if (!team) {
+                    break;
+                }
                 if (team.hasMarked(row, col)) {
                     newRoom.board[row][col].completedPlayers = newRoom.board[
                         row

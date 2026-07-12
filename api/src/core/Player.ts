@@ -135,6 +135,7 @@ export default class Player {
         return {
             id: this.id,
             nickname: this.nickname,
+            teamId: this.teamId || '',
             color: this.color,
             raceStatus: raceUser
                 ? {

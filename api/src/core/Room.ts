@@ -466,6 +466,7 @@ export default class Room {
                 this,
                 auth.playerId,
                 action.payload.nickname,
+                auth.teamId || null,
                 undefined,
                 auth.isMonitor,
                 auth.isSpectating
@@ -512,7 +513,7 @@ export default class Room {
 
         player.addConnection(auth.uuid, socket);
         addJoinAction(this.id, player.nickname, player.color).then();
-        createUpdatePlayer(this.id, player, auth.isSpectating).then();
+        createUpdatePlayer(this.id, player).then();
         return {
             action: 'connected',
             board: {
@@ -696,7 +697,7 @@ export default class Room {
             color,
         ).then();
         player.color = color;
-        createUpdatePlayer(this.id, player, false).then();
+        createUpdatePlayer(this.id, player).then();
         this.sendChat([
             { contents: player.nickname, color: player.color },
             ' has changed their color to ',

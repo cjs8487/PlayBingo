@@ -117,7 +117,7 @@ export const disconnectRoomFromRacetime = (slug: string) => {
     });
 };
 
-export const createUpdatePlayer = async (room: string, player: Player, isSpectator: boolean) => {
+export const createUpdatePlayer = async (room: string, player: Player) => {
     return prisma.player.upsert({
         where: { key_roomId: { key: player.id, roomId: room } },
         create: {
@@ -128,7 +128,9 @@ export const createUpdatePlayer = async (room: string, player: Player, isSpectat
             user: player.userId
                 ? { connect: { id: player.userId } }
                 : undefined,
-            spectator: isSpectator,
+            team: player.teamId
+                ? { connect: { id: player.teamId } }
+                : undefined,
             monitor: player.monitor,
             finishedAt: player.finishedAt,
         },
@@ -138,8 +140,10 @@ export const createUpdatePlayer = async (room: string, player: Player, isSpectat
             user: player.userId
                 ? { connect: { id: player.userId } }
                 : { disconnect: true },
-            spectator: isSpectator,
             monitor: player.monitor,
+            team: player.teamId
+                ? { connect: { id: player.teamId } }
+                : { disconnect: true },
             finishedAt: player.finishedAt ?? null,
         },
     });
