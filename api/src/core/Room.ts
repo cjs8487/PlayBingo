@@ -417,7 +417,7 @@ export default class Room {
         );
     }
 
-    getPlayers(): { teams: TeamData[]; spectators: PlayerData[] } {
+    getPlayerData(): { teams: TeamData[]; spectators: PlayerData[] } {
         const teams: TeamData[] = [];
         this.teams.forEach((team) => teams.push(team.toClientData()));
         const spectators: PlayerData[] = [];
@@ -465,32 +465,37 @@ export default class Room {
                 return { action: 'unauthorized' };
             }
         } else if (action.payload) {
-            player = new Player(
-                this,
-                auth.playerId,
-                action.payload.nickname,
-                auth.teamId || null,
-                undefined,
-                auth.isMonitor,
-                auth.isSpectating
-                    ? () => this.spectatorObfuscateBoard()
-                    : () => playerTeam!.obfuscateBoard(),
-                auth.userId,
-            );
-            if (auth.isSpectating) {
-                this.spectators.set(auth.playerId, player);
-            } else {
-                if (auth.teamId && this.teams.get(auth.teamId)) {
-                    playerTeam = this.teams.get(auth.teamId);
-                } else {
-                    playerTeam = new Team(
-                        this,
-                        randomUUID(),
-                        `Team ${action.payload.nickname}`,
-                    );
-                }
+            const teamId = auth.isSpectating ? undefined : randomUUID();
+            if (!auth.isSpectating) {
+                playerTeam = new Team(
+                    this,
+                    teamId!,
+                    `Team ${action.payload.nickname}`,
+                );
+                player = new Player(
+                    this,
+                    auth.playerId,
+                    action.payload.nickname,
+                    undefined,
+                    auth.isMonitor,
+                    playerTeam.obfuscateBoard,
+                    teamId,
+                    auth.userId,
+                );
                 playerTeam!.addPlayer(player);
                 this.teams.set(playerTeam!.id, playerTeam!);
+            } else {
+                player = new Player(
+                    this,
+                    auth.playerId,
+                    action.payload.nickname,
+                    undefined,
+                    auth.isMonitor,
+                    this.spectatorObfuscateBoard,
+                    teamId,
+                    auth.userId,
+                );
+                this.spectators.set(auth.playerId, player);
             }
             newPlayer = true;
         } else {
@@ -517,7 +522,9 @@ export default class Room {
 
         player.addConnection(auth.uuid, socket);
         addJoinAction(this.id, player.nickname, player.color).then();
-        createUpdateTeam(this.id, playerTeam!).then();
+        if (playerTeam) {
+            createUpdateTeam(this.id, playerTeam).then();
+        }
         createUpdatePlayer(this.id, player).then();
         return {
             action: 'connected',
@@ -560,7 +567,7 @@ export default class Room {
                 finishedAt: this.raceHandler?.getEndTime(),
                 raceHandler: this.raceHandler?.key(),
             },
-            players: this.getPlayers(),
+            players: this.getPlayerData(),
         };
     }
 
@@ -589,11 +596,27 @@ export default class Room {
         }
         player.teamId = team.id;
         team.addPlayer(player);
+        createUpdatePlayer(this.id, player).then();
+        if (oldTeam) {
+            createUpdateTeam(this.id, oldTeam).then();
+        }
+        if (team) {
+            createUpdateTeam(this.id, team).then();
+        }
+        this.sendChat([
+            {
+                contents: team.players.size > 1 ? team.name : player.nickname,
+                color: player.color,
+            },
+            ` joined ${team.name}`,
+        ]);
         return {
             action: 'joinedTeam',
             team: {
                 ...team,
-                players: Array.from(team.players, ([_, player]) => player.toClientData()),
+                players: Array.from(team.players, ([_, player]) =>
+                    player.toClientData(),
+                ),
             },
         };
     }
@@ -916,7 +939,7 @@ export default class Room {
         this.logInfo('Dispatching race data update');
         this.sendServerMessage({
             action: 'syncRaceData',
-            players: this.getPlayers(),
+            players: this.getPlayerData(),
             racetimeConnection: {
                 gameActive: this.racetimeEligible,
                 url: (this.raceHandler as RacetimeHandler).url,
@@ -964,7 +987,7 @@ export default class Room {
         updateInactivity: boolean = true,
     ) {
         this.getAllPlayers().forEach((player) => {
-            player.sendMessage({ ...message, players: this.getPlayers() });
+            player.sendMessage({ ...message, players: this.getPlayerData() });
         });
 
         if (updateInactivity) {

@@ -360,10 +360,10 @@ async function getOrLoadRoom(slug: string): Promise<Room | null> {
                 newRoom,
                 dbPlayer.key,
                 dbPlayer.nickname,
-                null,
                 dbPlayer.color,
                 dbPlayer.monitor,
                 newRoom.spectatorObfuscateBoard,
+                undefined,
                 dbPlayer.userId ?? undefined,
             );
             player.finishedAt = dbPlayer.finishedAt?.toISOString();
@@ -380,10 +380,10 @@ async function getOrLoadRoom(slug: string): Promise<Room | null> {
             newRoom,
             dbPlayer.key,
             dbPlayer.nickname,
-            team.id,
             dbPlayer.color,
             dbPlayer.monitor,
             team.obfuscateBoard,
+            team.id,
             dbPlayer.userId ?? undefined,
         )
         team.players.set(player.id, player);
