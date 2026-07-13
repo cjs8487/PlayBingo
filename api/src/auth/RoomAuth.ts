@@ -13,7 +13,6 @@ export type RoomTokenPayload = {
     roomSlug: string;
     uuid: string;
     playerId: string;
-    teamId?: string;
     userId?: string;
 } & Permissions;
 
@@ -31,7 +30,6 @@ export const createRoomToken = (
         userId,
         isSpectating: !!isSpectating,
         isMonitor: !!isMonitor,
-        teamId: room.getTeamForPlayer(playerKey)?.id,
         playerId: `${userId ? 'user' : 'session'}:${playerKey}`,
     };
     const token = sign(payload, roomTokenSecret);
