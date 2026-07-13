@@ -106,6 +106,12 @@ roomWebSocketServer.on('connection', (ws, req) => {
                     ws.send(JSON.stringify(unmarkResult));
                 }
                 break;
+            case 'joinTeam':
+                const joinTeamResult = room.handleJoinTeam(action, payload);
+                if (joinTeamResult) {
+                    ws.send(JSON.stringify(joinTeamResult));
+                }
+                break;
             case 'chat':
                 const chatResult = room.handleChat(action, payload);
                 if (chatResult) {
