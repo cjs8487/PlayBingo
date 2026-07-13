@@ -2,6 +2,7 @@ import { BingoMode, RaceHandler, RoomActionType } from '@prisma/client';
 import { prisma } from './Database';
 import { JsonObject } from '@prisma/client/runtime/library';
 import Player from '../core/Player';
+import Team from '../core/Team';
 
 export const createRoom = (
     slug: string,
@@ -145,6 +146,20 @@ export const createUpdatePlayer = async (room: string, player: Player) => {
                 ? { connect: { id: player.teamId } }
                 : { disconnect: true },
             finishedAt: player.finishedAt ?? null,
+        },
+    });
+};
+
+export const createUpdateTeam = async (room: string, team: Team) => {
+    return prisma.team.upsert({
+        where: { id_roomId: { id: team.id, roomId: room } },
+        create: {
+            key: team.id,
+            name: team.name,
+            room: { connect: { id: room } },
+        },
+        update: {
+            name: team.name,
         },
     });
 };

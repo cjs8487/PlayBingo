@@ -1,4 +1,5 @@
 import { GeneratorSettings } from '@playbingo/shared';
+import { randomUUID } from 'crypto';
 import {
     ChangeColorAction,
     ChangeRaceHandlerAction,
@@ -14,6 +15,7 @@ import {
     ServerMessage,
     UnmarkAction,
     SetChatEnabledAction,
+    JoinTeamAction,
 } from '@playbingo/types';
 import { BingoMode } from '@prisma/client';
 import { WebSocket } from 'ws';
@@ -32,6 +34,7 @@ import {
     addMarkAction,
     addUnmarkAction,
     createUpdatePlayer,
+    createUpdateTeam,
     setRoomBoard,
     updateRaceHandler,
 } from '../database/Rooms';
@@ -482,11 +485,12 @@ export default class Room {
                 } else {
                     playerTeam = new Team(
                         this,
-                        '',
+                        randomUUID(),
                         `Team ${action.payload.nickname}`,
                     );
                 }
                 playerTeam!.addPlayer(player);
+                this.teams.set(playerTeam!.id, playerTeam!);
             }
             newPlayer = true;
         } else {
@@ -513,6 +517,7 @@ export default class Room {
 
         player.addConnection(auth.uuid, socket);
         addJoinAction(this.id, player.nickname, player.color).then();
+        createUpdateTeam(this.id, playerTeam!).then();
         createUpdatePlayer(this.id, player).then();
         return {
             action: 'connected',
@@ -559,6 +564,40 @@ export default class Room {
         };
     }
 
+    handleJoinTeam(
+        action: JoinTeamAction,
+        auth: RoomTokenPayload,
+    ): ServerMessage {
+        let player = this.getAllPlayers().find((p) => p.id === auth.playerId);
+        if (!player) {
+            return { action: 'unauthorized' };
+        }
+        const team = this.teams.get(action.payload.teamId);
+        if (!team) {
+            return { action: 'unauthorized' };
+        }
+        const oldTeam = this.getTeamForPlayer(player.id);
+        if (oldTeam) {
+            oldTeam.removePlayer(player.id);
+            if (oldTeam.players.size === 0) {
+                oldTeam.destroy();
+                this.teams.delete(oldTeam.id);
+            }
+        } else {
+            // player was spectator before
+            this.spectators.delete(player.id);
+        }
+        player.teamId = team.id;
+        team.addPlayer(player);
+        return {
+            action: 'joinedTeam',
+            team: {
+                ...team,
+                players: Array.from(team.players, ([_, player]) => player.toClientData()),
+            },
+        };
+    }
+
     handleLeave(
         action: LeaveAction,
         auth: RoomTokenPayload,
@@ -601,9 +640,7 @@ export default class Room {
         action: ChatAction,
         auth: RoomTokenPayload,
     ): ServerMessage | undefined {
-        const player = this.getAllPlayers().find(
-            (p) => p.id === auth.playerId,
-        );
+        const player = this.getAllPlayers().find((p) => p.id === auth.playerId);
         if (!player) {
             return { action: 'unauthorized' };
         }
@@ -671,7 +708,10 @@ export default class Room {
         team.unmark(unRow, unCol);
         this.sendCellUpdate(unRow, unCol);
         this.sendChat([
-            { contents: team.players.size > 1 ? team.name : player.nickname, color: player.color },
+            {
+                contents: team.players.size > 1 ? team.name : player.nickname,
+                color: player.color,
+            },
             ` unmarked ${this.board[unRow][unCol].goal.goal} (${unRow},${unCol})`,
         ]);
         addUnmarkAction(this.id, player.id, unRow, unCol).then();
@@ -682,7 +722,7 @@ export default class Room {
         action: ChangeColorAction,
         auth: RoomTokenPayload,
     ): ServerMessage | undefined {
-        const player = this.getAllPlayers().find(p => p.id === auth.playerId);
+        const player = this.getAllPlayers().find((p) => p.id === auth.playerId);
         if (!player) {
             return { action: 'unauthorized' };
         }
@@ -813,7 +853,9 @@ export default class Room {
     }
 
     handleRevealCard(payload: RoomTokenPayload) {
-        const player = this.getAllPlayers().find(p => p.id === payload.playerId);
+        const player = this.getAllPlayers().find(
+            (p) => p.id === payload.playerId,
+        );
         if (!player) {
             return null;
         }
@@ -951,7 +993,7 @@ export default class Room {
                     team.goalComplete = true;
                     team.players.values().forEach((player) => {
                         this.raceHandler?.playerFinished(player);
-                    })
+                    });
                 }
                 if (team.goalComplete && team.goalCount < goalsNeeded) {
                     this.sendChat([
@@ -965,7 +1007,7 @@ export default class Room {
                     team.goalComplete = false;
                     team.players.values().forEach((player) => {
                         this.raceHandler?.playerUnfinshed(player);
-                    })
+                    });
                 }
             } else {
                 if (this.bingoMode === BingoMode.LINES) {
@@ -984,14 +1026,11 @@ export default class Room {
                             ' has completed a line!',
                         ]);
                     }
-                    if (
-                        linesComplete >= this.lineCount &&
-                        !team.goalComplete
-                    ) {
+                    if (linesComplete >= this.lineCount && !team.goalComplete) {
                         team.goalComplete = true;
                         team.players.values().forEach((player) => {
                             this.raceHandler?.playerFinished(player).then();
-                        })
+                        });
                         this.sendChat([
                             {
                                 contents: team.name,
@@ -1006,7 +1045,7 @@ export default class Room {
                         team.goalComplete = false;
                         team.players.values().forEach((player) => {
                             this.raceHandler?.playerUnfinshed(player).then();
-                        })
+                        });
                         this.sendChat([
                             {
                                 contents: team.name,
@@ -1024,7 +1063,7 @@ export default class Room {
                         team.goalComplete = true;
                         team.players.values().forEach((player) => {
                             this.raceHandler?.playerFinished(player);
-                        })
+                        });
                         this.sendChat([
                             {
                                 contents: team.name,
@@ -1036,7 +1075,7 @@ export default class Room {
                         team.goalComplete = false;
                         team.players.values().forEach((player) => {
                             this.raceHandler?.playerUnfinshed(player);
-                        })
+                        });
                         this.sendChat([
                             {
                                 contents: team.name,
@@ -1089,8 +1128,8 @@ export default class Room {
             return false;
         }
 
-        const player = this.getAllPlayers().find(p =>
-            p.id === `${isSession ? 'session' : 'user'}:${user}`,
+        const player = this.getAllPlayers().find(
+            (p) => p.id === `${isSession ? 'session' : 'user'}:${user}`,
         );
         if (player) {
             return {
@@ -1122,7 +1161,9 @@ export default class Room {
     }
 
     joinRaceRoom(racetimeId: string, authToken: RoomTokenPayload) {
-        const player = this.getAllPlayers().find(p => p.id === authToken.playerId);
+        const player = this.getAllPlayers().find(
+            (p) => p.id === authToken.playerId,
+        );
         if (!player) {
             this.logWarn('Unable to find a player for a verified room token');
             return false;
@@ -1132,7 +1173,9 @@ export default class Room {
     }
 
     leaveRaceRoom(authToken: RoomTokenPayload) {
-        const player = this.getAllPlayers().find(p => p.id === authToken.playerId);
+        const player = this.getAllPlayers().find(
+            (p) => p.id === authToken.playerId,
+        );
         if (!player) {
             this.logWarn('Unable to find a player for a verified room token');
             return false;
@@ -1146,7 +1189,9 @@ export default class Room {
     }
 
     readyPlayer(roomAuth: RoomTokenPayload) {
-        const player = this.getAllPlayers().find(p => p.id === roomAuth.playerId);
+        const player = this.getAllPlayers().find(
+            (p) => p.id === roomAuth.playerId,
+        );
         if (!player) {
             this.logWarn('Unable to find a player for a verified room token');
             return false;
@@ -1156,7 +1201,9 @@ export default class Room {
     }
 
     unreadyPlayer(roomAuth: RoomTokenPayload) {
-        const player = this.getAllPlayers().find(p => p.id === roomAuth.playerId);
+        const player = this.getAllPlayers().find(
+            (p) => p.id === roomAuth.playerId,
+        );
         if (!player) {
             this.logWarn(
                 'Unable to find an identity for a verified room token',

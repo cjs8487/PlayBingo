@@ -43,6 +43,19 @@
         {
             "required": [
                 "action",
+                "team"
+            ],
+            "additionalProperties": false,
+            "properties": {
+                "action": "joinedTeam",
+                "team": {
+                    "$ref": "./Team.json"
+                }
+            }
+        },
+        {
+            "required": [
+                "action",
                 "row",
                 "col",
                 "cell"

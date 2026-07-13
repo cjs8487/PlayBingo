@@ -31,6 +31,7 @@ export const createRoomToken = (
         userId,
         isSpectating: !!isSpectating,
         isMonitor: !!isMonitor,
+        teamId: room.getTeamForPlayer(playerKey)?.id,
         playerId: `${userId ? 'user' : 'session'}:${playerKey}`,
     };
     const token = sign(payload, roomTokenSecret);
