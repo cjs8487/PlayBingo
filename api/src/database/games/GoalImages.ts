@@ -1,4 +1,3 @@
-import e from 'cors';
 import { prisma } from '../Database';
 
 export const gameSlugForImage = async (id: string) => {
