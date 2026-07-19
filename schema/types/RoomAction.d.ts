@@ -11,6 +11,7 @@
 export type RoomAction = (
   | JoinAction
   | LeaveAction
+  | JoinTeamAction
   | ChatAction
   | MarkAction
   | UnmarkAction
@@ -37,6 +38,12 @@ export interface JoinAction {
 }
 export interface LeaveAction {
   action: "leave";
+}
+export interface JoinTeamAction {
+  action: "joinTeam";
+  payload: {
+    teamId: string;
+  };
 }
 export interface ChatAction {
   action: "chat";

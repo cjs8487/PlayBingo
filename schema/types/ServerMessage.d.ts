@@ -14,6 +14,10 @@ export type ServerMessage = (
       message: ChatMessage;
     }
   | {
+      action: "joinedTeam";
+      team: Team;
+    }
+  | {
       action: "cellUpdate";
       row: number;
       col: number;
@@ -42,7 +46,10 @@ export type ServerMessage = (
     }
   | {
       action: "syncRaceData";
-      players: Player[];
+      players: {
+        teams: Team[];
+        spectators: Player[];
+      };
       racetimeConnection: RacetimeConnection;
     }
   | {
@@ -57,7 +64,10 @@ export type ServerMessage = (
       startTime: string;
     }
 ) & {
-  players?: Player[];
+  players?: {
+    teams: Team[];
+    spectators: Player[];
+  };
   connectedPlayer?: Player;
 };
 export type ChatMessage = (
@@ -70,6 +80,36 @@ export type ChatMessage = (
 export type Cell = RevealedCell | HiddenCell;
 export type Board = RevealedBoard | HiddenBoard;
 
+export interface Team {
+  id: string;
+  name: string;
+  goalCount: number;
+  players: Player[];
+}
+export interface Player {
+  id: string;
+  nickname: string;
+  color: string;
+  raceStatus: RaceStatusDisconnected | RaceStatusConnected;
+  monitor: boolean;
+  showInRoom: boolean;
+  teamId: string;
+}
+export interface RaceStatusDisconnected {
+  connected: false;
+}
+export interface RaceStatusConnected {
+  connected: true;
+  /**
+   * Username connected to this player for the race, if it is separate from PlayBingo
+   */
+  username: string;
+  ready?: boolean;
+  /**
+   * Race finish time (ISO 8601 duration)
+   */
+  finishTime?: string;
+}
 export interface RevealedCell {
   goal: Goal;
   completedPlayers: string[];
@@ -181,29 +221,4 @@ export interface RacetimeConnection {
    * ISO 8601 duration string representing the amount of time between ready and start
    */
   startDelay?: string;
-}
-export interface Player {
-  id: string;
-  nickname: string;
-  color: string;
-  goalCount: number;
-  raceStatus: RaceStatusDisconnected | RaceStatusConnected;
-  spectator: boolean;
-  monitor: boolean;
-  showInRoom: boolean;
-}
-export interface RaceStatusDisconnected {
-  connected: false;
-}
-export interface RaceStatusConnected {
-  connected: true;
-  /**
-   * Username connected to this player for the race, if it is separate from PlayBingo
-   */
-  username: string;
-  ready?: boolean;
-  /**
-   * Race finish time (ISO 8601 duration)
-   */
-  finishTime?: string;
 }
