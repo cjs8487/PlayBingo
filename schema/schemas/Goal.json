@@ -2,19 +2,86 @@
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "type": "object",
     "additionalProperties": false,
-    "required": ["id", "goal", "description"],
+    "required": [
+        "id",
+        "goal",
+        "description"
+    ],
     "description": "A single objective for a bingo game.",
     "properties": {
-        "id": {"type": "string"},
-        "goal": {"type": "string"},
-        "description": {"type": ["string", "null"]},
-        "difficulty": {"type": ["number", "null"]},
-        "categories": {"type": "array", "items": {"$ref": "./Category.json"}},
-        "tags": {"type": "array", "items": {"$ref": "./GoalTag.json"}},
+        "id": {
+            "type": "string"
+        },
+        "goal": {
+            "type": "string"
+        },
+        "description": {
+            "type": [
+                "string",
+                "null"
+            ]
+        },
+        "difficulty": {
+            "type": [
+                "number",
+                "null"
+            ]
+        },
+        "categories": {
+            "type": "array",
+            "items": {
+                "$ref": "./Category.json"
+            }
+        },
+        "tags": {
+            "type": "array",
+            "items": {
+                "$ref": "./GoalTag.json"
+            }
+        },
         "meta": {
-            "type": ["object", "null"],
+            "type": [
+                "object",
+                "null"
+            ],
             "description": "Optional metadata for goal auto-tracking and additional properties",
             "additionalProperties": true
+        },
+        "image": {
+            "anyOf": [
+                {
+                    "$ref": "./GoalImage.json"
+                },
+                {
+                    "type": "null"
+                }
+            ]
+        },
+        "secondaryImage": {
+            "anyOf": [
+                {
+                    "$ref": "./GoalImage.json"
+                },
+                {
+                    "type": "null"
+                }
+            ]
+        },
+        "imageTag": {
+            "anyOf": [
+                {
+                    "$ref": "./GoalImageTag.json"
+                },
+                {
+                    "type": "null"
+                }
+            ]
+        },
+        "count": {
+            "type": [
+                "number",
+                "null"
+            ]
         }
     }
 }

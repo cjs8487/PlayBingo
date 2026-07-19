@@ -15,6 +15,10 @@ const createBoard = (): Cell[][] =>
             description: '',
             tags: [],
             meta: {},
+            goalImageId: '',
+            secondaryGoalImageId: '',
+            goalImageTagId: '',
+            count: 0,
         })),
         5,
     );

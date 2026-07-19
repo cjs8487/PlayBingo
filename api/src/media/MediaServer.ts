@@ -4,6 +4,9 @@ import fileUpload, { UploadedFile } from 'express-fileupload';
 import { rm } from 'fs/promises';
 import path from 'path';
 import { isOwner, slugForMedia } from '../database/games/Games';
+import { logError } from '../Logger';
+
+const BYTE_CONVERSION = 1024;
 
 const mediaServer = Router();
 
@@ -58,7 +61,12 @@ export const deleteFile = async (workflow: string, id: string) => {
     try {
         await rm(path.resolve('media', workflow, id));
         return true;
-    } catch {
+    } catch (e: any) {
+        if ('message' in e) {
+            logError(e.message);
+        } else {
+            logError('Unknown error deleting file');
+        }
         return false;
     }
 };
@@ -82,7 +90,11 @@ mediaServer.post('/', (req, res) => {
         res.status(400).send('Too many files uploaded');
         return;
     }
-    if (file.size > 1024 * 1024) {
+    const maxSize =
+        workflow === 'goalImage'
+            ? 100 * BYTE_CONVERSION
+            : BYTE_CONVERSION * BYTE_CONVERSION;
+    if (file.size > maxSize) {
         res.sendStatus(400);
     }
 

@@ -29,7 +29,21 @@ const getTags = async (slug: string): Promise<GoalTag[]> => {
         return res.json();
     }
 };
+async function getImages(slug: string) {
+    const res = await serverGet(`/api/games/${slug}/images`);
+    if (!res.ok) {
+        return [];
+    }
+    return res.json();
+}
 
+async function getImageTags(slug: string) {
+    const res = await serverGet(`/api/games/${slug}/imageTags`);
+    if (!res.ok) {
+        return [];
+    }
+    return res.json();
+}
 interface Props {
     params: Promise<{ slug: string }>;
 }
@@ -45,6 +59,8 @@ export default async function GameGoals({ params }: Props) {
     }
 
     const tags = await getTags(slug);
+    const images = await getImages(slug);
+    const imageTags = await getImageTags(slug);
 
     return (
         <GoalManagerContextProvider
@@ -52,6 +68,8 @@ export default async function GameGoals({ params }: Props) {
             canModerate={canModerate}
             categories={categories}
             tags={tags}
+            images={images}
+            imageTags={imageTags}
         >
             <GoalManagement />
         </GoalManagerContextProvider>
