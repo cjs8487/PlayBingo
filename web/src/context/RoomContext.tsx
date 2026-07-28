@@ -101,7 +101,7 @@ export const RoomContext = createContext<RoomContext>({
     showGoalDetails: false,
     showCounters: false,
     colorMap: {},
-    showImages: false,
+    showImages: true,
     async connect() {
         return { success: false };
     },
@@ -189,7 +189,7 @@ export function RoomContextProvider({
         setShowCounters((curr) => !curr);
     }, []);
 
-    const [showImages, setShowImages] = useState(false);
+    const [showImages, setShowImages] = useState(true);
     const toggleImages = useCallback(() => {
         setShowImages((curr) => !curr);
     }, []);
