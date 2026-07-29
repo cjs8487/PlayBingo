@@ -84,16 +84,20 @@ goals.post('/:id', async (req, res) => {
         meta: JSON.parse(meta),
     };
 
-    if (difficulty === 0) {
-        input.difficulty = null;
-    } else if (difficulty > 0) {
-        input.difficulty = difficulty;
+    if (difficulty !== undefined) {
+        if (difficulty === '') {
+            input.difficulty = null;
+        } else if (difficulty > 0) {
+            input.difficulty = difficulty;
+        }
     }
 
-    if (count === 0) {
-        input.count = null;
-    } else if (count > 0) {
-        input.count = count;
+    if (count !== undefined) {
+        if (count === '') {
+            input.count = null;
+        } else {
+            input.count = count;
+        }
     }
 
     if (categories) {

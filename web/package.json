@@ -11,6 +11,7 @@
         "ts:watch": "npm run ts -- --watch"
     },
     "dependencies": {
+        "@base-ui/react": "^1.6.0",
         "@codemirror/lang-json": "^6.0.2",
         "@codemirror/lint": "^6.9.2",
         "@emotion/cache": "^11.14.0",

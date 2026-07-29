@@ -43,7 +43,8 @@ export default function NumberInput({
     required,
     size,
 }: NumberInputProps) {
-    const [{ value }, meta, helpers] = useField<number>(name);
+    const [{ value: val }, meta, helpers] = useField<number | ''>(name);
+    const value = val === '' ? 0 : val;
     const setValue = useCallback(
         (v: number) => {
             if (required && Number.isNaN(v)) return;
@@ -55,10 +56,10 @@ export default function NumberInput({
         [min, max, helpers, required],
     );
     const decrement = useCallback(() => {
-        setValue(value - 1);
+        setValue((value ?? 0) - 1);
     }, [value, setValue]);
     const increment = useCallback(() => {
-        setValue(value + 1);
+        setValue((value ?? 0) + 1);
     }, [value, setValue]);
 
     return (
@@ -66,9 +67,15 @@ export default function NumberInput({
             id={id}
             label={label}
             inputMode="numeric"
-            value={value}
+            value={val}
             disabled={disabled}
-            onChange={(e) => setValue(Number(e.target.value))}
+            onChange={(e) => {
+                if (e.target.value === '') {
+                    helpers.setValue('');
+                } else {
+                    setValue(Number(e.target.value));
+                }
+            }}
             sx={{ p: 0 }}
             size={size}
             slotProps={{

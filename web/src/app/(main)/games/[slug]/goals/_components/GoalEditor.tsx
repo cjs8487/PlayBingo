@@ -401,7 +401,7 @@ export default function GoalEditor({
                                     }}
                                 />
                             )}
-                            {count && (
+                            {count !== undefined && (
                                 <Typography
                                     sx={{
                                         position: 'absolute',
