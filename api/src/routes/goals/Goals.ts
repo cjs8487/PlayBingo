@@ -123,40 +123,48 @@ goals.post('/:id', async (req, res) => {
             })),
         };
     }
-    if (image) {
-        input.image = {
-            connect: {
-                id: image,
-            },
-        };
-    } else {
-        input.image = {
-            disconnect: true,
-        };
+    if (image !== undefined) {
+        if (image !== '' && image !== null) {
+            input.image = {
+                connect: {
+                    id: image,
+                },
+            };
+        } else {
+            input.image = {
+                disconnect: true,
+            };
+        }
     }
 
-    if (secondaryImage) {
-        input.secondaryImage = {
-            connect: {
-                id: secondaryImage,
-            },
-        };
-    } else {
-        input.secondaryImage = {
-            disconnect: true,
-        };
+    console.log(secondaryImage);
+
+    if (secondaryImage !== undefined) {
+        if (secondaryImage !== '' && secondaryImage !== null) {
+            input.secondaryImage = {
+                connect: {
+                    id: secondaryImage,
+                },
+            };
+        } else {
+            input.secondaryImage = {
+                disconnect: true,
+            };
+        }
     }
 
-    if (imageTag) {
-        input.imageTag = {
-            connect: {
-                id: imageTag,
-            },
-        };
-    } else {
-        input.imageTag = {
-            disconnect: true,
-        };
+    if (imageTag !== undefined) {
+        if (imageTag) {
+            input.imageTag = {
+                connect: {
+                    id: imageTag,
+                },
+            };
+        } else {
+            input.imageTag = {
+                disconnect: true,
+            };
+        }
     }
 
     const success = await editGoal(id, input);
