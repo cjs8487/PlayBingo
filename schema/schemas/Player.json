@@ -6,11 +6,10 @@
         "id",
         "nickname",
         "color",
-        "goalCount",
         "raceStatus",
-        "spectator",
         "monitor",
-        "showInRoom"
+        "showInRoom",
+        "teamId"
     ],
     "properties": {
         "id": {
@@ -22,9 +21,6 @@
         "color": {
             "type": "string"
         },
-        "goalCount": {
-            "type": "number"
-        },
         "raceStatus": {
             "oneOf": [
                 {
@@ -35,14 +31,14 @@
                 }
             ]
         },
-        "spectator": {
-            "type": "boolean"
-        },
         "monitor": {
             "type": "boolean"
         },
         "showInRoom": {
             "type": "boolean"
+        },
+        "teamId": {
+            "type": "string"
         }
     },
     "$defs": {

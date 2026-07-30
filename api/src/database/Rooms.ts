@@ -2,6 +2,7 @@ import { BingoMode, RaceHandler, RoomActionType } from '@prisma/client';
 import { prisma } from './Database';
 import { JsonObject } from '@prisma/client/runtime/library';
 import Player from '../core/Player';
+import Team from '../core/Team';
 
 export const createRoom = (
     slug: string,
@@ -102,7 +103,7 @@ export const getAllRooms = () => {
 export const getRoomFromSlug = (slug: string) => {
     return prisma.room.findUnique({
         where: { slug },
-        include: { history: true, game: true, players: true },
+        include: { history: true, game: true, players: true, teams: true },
     });
 };
 
@@ -128,7 +129,9 @@ export const createUpdatePlayer = async (room: string, player: Player) => {
             user: player.userId
                 ? { connect: { id: player.userId } }
                 : undefined,
-            spectator: player.spectator,
+            team: player.teamId
+                ? { connect: { id: player.teamId } }
+                : undefined,
             monitor: player.monitor,
             finishedAt: player.finishedAt,
         },
@@ -138,9 +141,25 @@ export const createUpdatePlayer = async (room: string, player: Player) => {
             user: player.userId
                 ? { connect: { id: player.userId } }
                 : { disconnect: true },
-            spectator: player.spectator,
             monitor: player.monitor,
+            team: player.teamId
+                ? { connect: { id: player.teamId } }
+                : { disconnect: true },
             finishedAt: player.finishedAt ?? null,
+        },
+    });
+};
+
+export const createUpdateTeam = async (room: string, team: Team) => {
+    return prisma.team.upsert({
+        where: { id_roomId: { id: team.id, roomId: room } },
+        create: {
+            key: team.id,
+            name: team.name,
+            room: { connect: { id: room } },
+        },
+        update: {
+            name: team.name,
         },
     });
 };

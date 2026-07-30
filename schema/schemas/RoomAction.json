@@ -10,6 +10,7 @@
     "anyOf": [
         {"$ref": "#/$defs/JoinAction"},
         {"$ref": "#/$defs/LeaveAction"},
+        {"$ref": "#/$defs/JoinTeamAction"},
         {"$ref": "#/$defs/ChatAction"},
         {"$ref": "#/$defs/MarkAction"},
         {"$ref": "#/$defs/UnmarkAction"},
@@ -42,6 +43,20 @@
             "additionalProperties": false,
             "properties": {
                 "action": "leave"
+            }
+        },
+        "JoinTeamAction": {
+            "required": ["action", "payload"],
+            "additionalProperties": false,
+            "properties": {
+                "action": "joinTeam",
+                "payload": {
+                    "required": ["teamId"],
+                    "additionalProperties": false,
+                    "properties": {
+                        "teamId": {"type": "string"}
+                    }
+                }
             }
         },
         "ChatAction": {

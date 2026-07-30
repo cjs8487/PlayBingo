@@ -1,13 +1,14 @@
 import {
-    HiddenCell,
     Player as PlayerClientData,
-    RevealedCell,
     ServerMessage,
+    HiddenCell,
+    RevealedCell
 } from '@playbingo/types';
 import { OPEN, WebSocket } from 'ws';
 import { RoomTokenPayload } from '../auth/RoomAuth';
-import { computeRevealedMask, rowColToMask } from '../util/RoomUtils';
 import Room from './Room';
+
+export type BoardViewProvider = () => (RevealedCell | HiddenCell)[][];
 
 /**
  * Represents a player connected to a room. While largely just a data class, this
@@ -35,21 +36,10 @@ export default class Player {
     /** The players chosen color */
     color: string;
     userId?: string;
-    /** If the player is in spectator mode or not */
-    spectator: boolean;
     /** If the player has permission to perform monitor actions in the room */
     monitor: boolean;
-
-    /** Bitset of the goals the player has marked */
-    markedGoals: bigint;
-    /** The number of goals the player has marked */
-    goalCount: number;
-    /** Whether or not the player has completed the goal of the room */
-    goalComplete: boolean;
-    linesComplete: number;
-    /** Bitset of goals that are revealed for the player in exploration based
-     * modes */
-    exploredGoals: bigint;
+    /** Parent Team Id, undefined if spectator */
+    teamId?: string;
 
     /** Open connections for the player, mapped by the id in the auth token that
      * is authorized for the connection */
@@ -57,27 +47,25 @@ export default class Player {
 
     finishedAt?: string;
 
+    getBoardView: BoardViewProvider;
+
     constructor(
         room: Room,
         id: string,
         nickname: string,
         color: string = 'blue',
-        spectator: boolean,
         monitor: boolean,
-        userId?: string,
+        getBoardView: BoardViewProvider,
+        teamId?: string,
+        userId?: string
     ) {
         this.room = room;
         ((this.id = id), (this.nickname = nickname));
+        this.teamId = teamId;
         this.color = color;
-        this.spectator = spectator;
         this.monitor = monitor;
         this.userId = userId;
-
-        this.markedGoals = 0n;
-        this.goalCount = 0;
-        this.goalComplete = false;
-        this.linesComplete = 0;
-        this.exploredGoals = 0n;
+        this.getBoardView = getBoardView;
 
         this.connections = new Map<string, WebSocket>();
     }
@@ -147,15 +135,14 @@ export default class Player {
         return {
             id: this.id,
             nickname: this.nickname,
+            teamId: this.teamId || '',
             color: this.color,
-            goalCount: this.goalCount,
             raceStatus: raceUser
                 ? {
                       connected: true,
                       ...raceUser,
                   }
                 : { connected: false },
-            spectator: this.spectator,
             monitor: this.monitor,
             showInRoom: this.showInRoom(),
         };
@@ -177,19 +164,19 @@ export default class Player {
                 action: 'syncBoard',
                 board: {
                     hidden: false,
-                    board: this.obfuscateBoard(),
+                    board: this.getBoardView(),
                     width: this.room.board[0].length,
                     height: this.room.board.length,
                 },
             };
         } else if (message.action === 'syncBoard' && this.room.exploration) {
             if (!message.board.hidden) {
-                message.board.board = this.obfuscateBoard();
+                message.board.board = this.getBoardView();
             }
             finalMessage = message;
         } else if (message.action === 'connected') {
             if (!message.board.hidden) {
-                message.board.board = this.obfuscateBoard();
+                message.board.board = this.getBoardView();
             }
             finalMessage = message;
         } else {
@@ -211,86 +198,6 @@ export default class Player {
     showInRoom() {
         return this.connections.size > 0;
     }
-
-    //#region Goal Tracking
-    mark(row: number, col: number) {
-        const mask = rowColToMask(row, col, this.room.board[0].length);
-        if ((this.markedGoals & mask) === 0n) {
-            this.markedGoals |= mask;
-            this.goalCount++;
-            if (this.room.exploration) {
-                this.exploredGoals = this.getRevealedMask();
-            }
-        }
-    }
-
-    unmark(row: number, col: number) {
-        const mask = rowColToMask(row, col, this.room.board[0].length);
-        if ((this.markedGoals & mask) !== 0n) {
-            this.markedGoals &= ~mask;
-            this.goalCount--;
-            if (this.room.exploration) {
-                this.exploredGoals = this.getRevealedMask();
-            }
-        }
-    }
-
-    hasMarked(row: number, col: number): boolean {
-        const mask = rowColToMask(row, col, this.room.board[0].length);
-        return (this.markedGoals & mask) !== 0n;
-    }
-
-    hasRevealed(row: number, col: number): boolean {
-        const mask = rowColToMask(row, col, this.room.board[0].length);
-        return (this.exploredGoals & mask) !== 0n;
-    }
-
-    getRevealedMask(): bigint {
-        return (
-            computeRevealedMask(
-                this.markedGoals,
-                this.room.board[0].length,
-                this.room.board.length,
-            ) | this.room.alwaysRevealedMask
-        );
-    }
-
-    obfuscateBoard() {
-        if (this.spectator) {
-            this.exploredGoals = 0n;
-            this.room.players.forEach((player) => {
-                if (!player.spectator) {
-                    this.exploredGoals |= player.getRevealedMask();
-                }
-            });
-        } else {
-            this.exploredGoals = this.getRevealedMask();
-        }
-        return this.room.board.map((row, rowIndex) =>
-            row.map((cell, colIndex) =>
-                this.hasRevealed(rowIndex, colIndex)
-                    ? ({
-                          revealed: true,
-                          goal: cell.goal,
-                          completedPlayers: cell.completedPlayers,
-                      } as RevealedCell)
-                    : ({
-                          revealed: false,
-                          completedPlayers: cell.completedPlayers,
-                      } as HiddenCell),
-            ),
-        );
-    }
-
-    /**
-     * Checks if this player has completed a set of goals on the board
-     *
-     * @param mask The bitmask containing the goals to check for
-     */
-    hasCompletedGoals(mask: bigint) {
-        return (this.markedGoals & mask) === mask;
-    }
-    //#endregion
 
     //#region Races
     async joinRace() {
