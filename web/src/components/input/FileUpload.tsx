@@ -136,6 +136,7 @@ export default function FormikFileUpload({
         accept: {
             'image/jpeg': [],
             'image/png': [],
+            'image/webp': [],
         },
         maxSize,
     });
