@@ -1,8 +1,21 @@
 import { Palette } from '@mui/icons-material';
-import { Box, IconButton, InputAdornment, TextField } from '@mui/material';
+import {
+    Box,
+    IconButton,
+    InputAdornment,
+    Paper,
+    TextField,
+} from '@mui/material';
+import {
+    EditableInput,
+    EditableInputRGBA,
+    hexToHsva,
+    hsvaToHex,
+    Hue,
+    Saturation,
+} from '@uiw/react-color';
 import { useField } from 'formik';
-import { useCallback, useRef, useState } from 'react';
-import { ColorResult, SketchPicker } from 'react-color';
+import { useRef, useState } from 'react';
 import { useClickAway } from 'react-use';
 
 interface Props {
@@ -18,13 +31,6 @@ export default function FormikColorSelect({ name, label, size }: Props) {
 
     const [picker, setPicker] = useState(false);
     const pickerRef = useRef<HTMLDivElement>(null);
-
-    const changeColor = useCallback(
-        (color: ColorResult) => {
-            setValue(color.hex);
-        },
-        [setValue],
-    );
 
     useClickAway(pickerRef, () => {
         setPicker(false);
@@ -80,7 +86,58 @@ export default function FormikColorSelect({ name, label, size }: Props) {
                         overflowY: 'visible',
                     }}
                 >
-                    <SketchPicker color={value} onChange={changeColor} />
+                    <Paper
+                        sx={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: 1,
+                            p: 1,
+                        }}
+                    >
+                        <Saturation
+                            hsva={hexToHsva(value)}
+                            onChange={(hsva) => {
+                                setValue(hsvaToHex(hsva));
+                            }}
+                            radius={12}
+                        />
+                        <Hue
+                            hue={hexToHsva(value).h}
+                            onChange={(hue) => {
+                                setValue(
+                                    hsvaToHex({
+                                        ...hexToHsva(value),
+                                        h: hue.h,
+                                    }),
+                                );
+                            }}
+                            width={'90%'}
+                            radius={12}
+                        />
+                        <Box
+                            sx={{
+                                display: 'flex',
+                                justifyContent: 'center',
+                                px: 1,
+                            }}
+                        >
+                            <EditableInput
+                                value={value}
+                                onChange={(e, value) => {
+                                    setValue(`${value}`);
+                                }}
+                                label="Hex"
+                                placement="bottom"
+                            />
+                            <EditableInputRGBA
+                                hsva={hexToHsva(value)}
+                                aProps={false}
+                                onChange={(color) => setValue(color.hex)}
+                            />
+                        </Box>
+                    </Paper>
                 </Box>
             )}
         </Box>
