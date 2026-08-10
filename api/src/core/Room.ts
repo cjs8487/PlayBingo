@@ -482,7 +482,7 @@ export default class Room {
                     teamId,
                     auth.userId,
                 );
-                playerTeam!.addPlayer(player);
+                playerTeam.addPlayer(player);
                 this.teams.set(playerTeam!.id, playerTeam!);
             } else {
                 player = new Player(
@@ -575,7 +575,7 @@ export default class Room {
         action: JoinTeamAction,
         auth: RoomTokenPayload,
     ): ServerMessage {
-        let player = this.getAllPlayers().find((p) => p.id === auth.playerId);
+        const player = this.getAllPlayers().find((p) => p.id === auth.playerId);
         if (!player) {
             return { action: 'unauthorized' };
         }
@@ -612,12 +612,7 @@ export default class Room {
         ]);
         return {
             action: 'joinedTeam',
-            team: {
-                ...team,
-                players: Array.from(team.players, ([_, player]) =>
-                    player.toClientData(),
-                ),
-            },
+            team: team.toClientData(),
         };
     }
 
