@@ -31,22 +31,24 @@ export default function Credits() {
                 PlayBingo would not be possible without the contributions our
                 community.
             </Typography>
-            {contributors.map((contributor) => (
-                <Box key={contributor.name} sx={{ pb: 2 }}>
-                    <Box>{contributor.name} </Box>
-                    <Box>
-                        <Link href={contributor.github}>
-                            <GitHub />
-                        </Link>
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                {contributors.map((contributor) => (
+                    <Box key={contributor.name} sx={{ pb: 2 }}>
+                        <Box sx={{ pb: 1 }}>{contributor.name}</Box>
+                        <Box>
+                            <Link href={contributor.github}>
+                                <GitHub />
+                            </Link>
+                        </Box>
                     </Box>
-                </Box>
-            ))}
+                ))}
+            </Box>
             <Box sx={{ pb: 4 }}>
                 <Typography>
-                    A special shoutout to all the community members who have
-                    helped make PlayBingo better by providing feedback, finding
-                    bugs, and working with us to make PlayBingo the best it can
-                    be.
+                    An additional, special rhanks to all the community members
+                    who have helped make PlayBingo better by providing feedback,
+                    finding bugs, and working with us to make PlayBingo the best
+                    it can be.
                 </Typography>
             </Box>
             <Box>
