@@ -42,6 +42,8 @@ export enum ConnectionStatus {
     CLOSED, // connection was manually closed, and the user is completely disconnected
 }
 
+const notificationSound = new Audio('/goal_ping.ogg');
+
 interface CardRegenerateOptions {
     seed?: number;
     generationMode?: string;
@@ -264,7 +266,28 @@ export function RoomContextProvider({
                             !payload.cell
                         )
                             return;
-                        onCellUpdate(payload.row, payload.col, payload.cell);
+                        if (!board.hidden) {
+                            const newMarks =
+                                payload.cell.completedPlayers.filter(
+                                    (player) =>
+                                        !board.board[payload.row][
+                                            payload.col
+                                        ].completedPlayers.includes(player),
+                                );
+                            if (
+                                newMarks.length > 0 &&
+                                (newMarks.length > 1 ||
+                                    newMarks[0] !== connectedPlayer?.id)
+                            ) {
+                                notificationSound.play();
+                            }
+
+                            onCellUpdate(
+                                payload.row,
+                                payload.col,
+                                payload.cell,
+                            );
+                        }
                         break;
                     case 'syncBoard':
                         if (!payload.board) return;

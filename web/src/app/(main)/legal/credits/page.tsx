@@ -49,6 +49,23 @@ export default function Credits() {
                     be.
                 </Typography>
             </Box>
+            <Box>
+                <Typography sx={{ pb: 1 }}>
+                    PlayBingo makes use of parts of the following works made
+                    available under the Creative Commons license.
+                </Typography>
+                <Typography variant="h5" sx={{ pb: 1 }}>
+                    Sound Effects
+                </Typography>
+                <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+                    <Link
+                        href="https://lolurio.itch.io/lolurios-free-cozy-ui-sfx"
+                        style={{ color: 'inherit' }}
+                    >
+                        UI Sound Effects by lolurio (CC BY 4.0)
+                    </Link>
+                </Box>
+            </Box>
         </Container>
     );
 }
