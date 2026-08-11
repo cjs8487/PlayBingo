@@ -85,6 +85,10 @@ function LargeFooter() {
                         | All Rights Reserved |{' '}
                         <Link href="/legal/privacy" component={NextLink}>
                             Privacy Policy
+                        </Link>{' '}
+                        |{' '}
+                        <Link href="/legal/credits" component={NextLink}>
+                            Credits
                         </Link>
                     </Typography>
                 </Box>
