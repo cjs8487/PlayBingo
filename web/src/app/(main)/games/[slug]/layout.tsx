@@ -226,7 +226,7 @@ export default async function GameLayout({
                         gap: 1,
                     }}
                 >
-                    <SidebarButtons slug={slug} variants={variants ?? []} />
+                    <SidebarButtons game={game} variants={variants ?? []} />
                 </Box>
             </Box>
             <GameTabs gameData={game} />

@@ -10,19 +10,169 @@ import {
     Menu,
     MenuItem,
     Tooltip,
-    Typography,
 } from '@mui/material';
-import { Goal, Variant } from '@playbingo/types';
+import { Game, Goal, Variant } from '@playbingo/types';
 import { ReactNode, useCallback, useState } from 'react';
+import AutoSizer from 'react-virtualized-auto-sizer';
 import RoomCreateForm from '../../../../../components/RoomCreateForm';
-import { alertError } from '../../../../../lib/Utils';
 import TextFit from '../../../../../components/TextFit';
+import { alertError } from '../../../../../lib/Utils';
+
+interface SampleBoardDisplayProps {
+    gameName: string;
+    board: Goal[][];
+    boardRows: number;
+    boardCols: number;
+    close: () => void;
+    seed?: string;
+    variant?: string;
+}
+
+function SampleBoardDisplay({
+    gameName,
+    board,
+    boardRows,
+    boardCols,
+    close,
+    seed,
+    variant,
+}: SampleBoardDisplayProps) {
+    return (
+        <>
+            <DialogTitle>
+                {gameName} {variant ? `${variant}` : ''} Sample Board ({seed})
+            </DialogTitle>
+            <IconButton
+                aria-label="close"
+                onClick={close}
+                sx={{
+                    position: 'absolute',
+                    right: 8,
+                    top: 8,
+                }}
+            >
+                <Close />
+            </IconButton>
+            <DialogContent sx={{}}>
+                <AutoSizer
+                    style={{
+                        border: 1,
+                        borderColor: 'divider',
+                        height: '100%',
+                    }}
+                >
+                    {({ width, height }) => {
+                        // Maintain square cells by constraining board size
+                        const aspectRatio = boardCols / boardRows;
+                        let boardWidth = width;
+                        let boardHeight = width / aspectRatio;
+                        let leftMargin = 0;
+                        let topMargin = 0;
+
+                        if (boardHeight > height && width > 400) {
+                            boardHeight = height;
+                            boardWidth = height * aspectRatio;
+                        }
+
+                        const minBoardSize = Math.min(300);
+                        if (boardWidth < minBoardSize) {
+                            boardWidth = minBoardSize;
+                            boardHeight = minBoardSize / aspectRatio;
+                        }
+
+                        if (boardWidth < width) {
+                            leftMargin = (width - boardWidth) / 2;
+                        }
+
+                        if (boardHeight < height) {
+                            topMargin = (height - boardHeight) / 2;
+                        }
+
+                        return (
+                            <Box
+                                sx={{
+                                    width: boardWidth,
+                                    height: boardHeight,
+                                    display: 'grid',
+                                    gridTemplateRows: `repeat(${boardRows}, ${boardHeight / boardRows}px)`,
+                                    gridTemplateColumns: `repeat(${boardCols}, ${boardWidth / boardCols}px)`,
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    textAlign: 'center',
+                                    ml: `${leftMargin}px`,
+                                    mt: `${topMargin}px`,
+                                }}
+                            >
+                                {board.map((row) =>
+                                    row.map((goal) => (
+                                        <Tooltip
+                                            key={goal.id}
+                                            title={
+                                                <>
+                                                    <Box sx={{ pb: 1.5 }}>
+                                                        {goal.description}
+                                                    </Box>
+                                                    {goal.difficulty && (
+                                                        <Box>
+                                                            Difficulty:{' '}
+                                                            {goal.difficulty}
+                                                        </Box>
+                                                    )}
+                                                    {goal.categories &&
+                                                        goal.categories.length >
+                                                            0 && (
+                                                            <Box>
+                                                                Categories:{' '}
+                                                                {goal.categories
+                                                                    .map(
+                                                                        (c) =>
+                                                                            c.name,
+                                                                    )
+                                                                    .join(', ')}
+                                                            </Box>
+                                                        )}
+                                                </>
+                                            }
+                                        >
+                                            <Box
+                                                sx={{
+                                                    position: 'relative',
+                                                    aspectRatio: '1 / 1',
+                                                    flexGrow: 1,
+                                                    border: 1,
+                                                    borderColor: 'divider',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                    width: '100%',
+                                                    height: '100%',
+                                                }}
+                                            >
+                                                <TextFit
+                                                    text={goal.goal}
+                                                    sx={{
+                                                        textAlign: 'center',
+                                                        p: 1,
+                                                    }}
+                                                />
+                                            </Box>
+                                        </Tooltip>
+                                    )),
+                                )}
+                            </Box>
+                        );
+                    }}
+                </AutoSizer>
+            </DialogContent>
+        </>
+    );
+}
 
 interface Props {
-    slug: string;
+    game: Game;
     variants: Variant[];
 }
-export default function SidebarButtons({ slug, variants }: Props) {
+export default function SidebarButtons({ game, variants }: Props) {
     const [showDialog, setShowDialog] = useState(false);
     const [showSampleBoard, setShowSampleBoard] = useState(false);
     const [dialogContent, setDialogContent] = useState<ReactNode>(null);
@@ -33,6 +183,8 @@ export default function SidebarButtons({ slug, variants }: Props) {
     const [sampleHeight, setSampleHeight] = useState(5);
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const open = Boolean(anchorEl);
+
+    const { slug, name: gameName } = game;
 
     const handleClose = () => {
         setAnchorEl(null);
@@ -148,97 +300,21 @@ export default function SidebarButtons({ slug, variants }: Props) {
                     </MenuItem>
                 ))}
             </Menu>
-            <Dialog open={showDialog} onClose={() => setShowDialog(false)}>
+            <Dialog
+                open={showDialog}
+                onClose={() => setShowDialog(false)}
+                fullScreen={showSampleBoard}
+            >
                 {showSampleBoard ? (
-                    <>
-                        <DialogTitle>Sample Board</DialogTitle>
-                        <IconButton
-                            aria-label="close"
-                            onClick={() => setShowDialog(false)}
-                            sx={{
-                                position: 'absolute',
-                                right: 8,
-                                top: 8,
-                            }}
-                        >
-                            <Close />
-                        </IconButton>
-                        <DialogContent>
-                            <Typography sx={{ mb: 1 }}>
-                                Seed: {sampleSeed}
-                            </Typography>
-                            {sampleVariant && (
-                                <Typography sx={{ mb: 1 }}>
-                                    Variant: {sampleVariant}
-                                </Typography>
-                            )}
-                            <Box
-                                sx={{
-                                    display: 'grid',
-                                    gridTemplateRows: `repeat(${sampleHeight}, 1fr)`,
-                                    gridTemplateColumns: `repeat(${sampleWidth}, 1fr)`,
-                                    border: 1,
-                                    borderColor: 'divider',
-                                    width: '100%',
-                                    aspectRatio: '1 / 1',
-                                }}
-                            >
-                                {sampleBoard.map((row) =>
-                                    row.map((goal) => (
-                                        <Tooltip
-                                            key={goal.id}
-                                            title={
-                                                <>
-                                                    <Box sx={{ pb: 1.5 }}>
-                                                        {goal.description}
-                                                    </Box>
-                                                    {goal.difficulty && (
-                                                        <Box>
-                                                            Difficulty:{' '}
-                                                            {goal.difficulty}
-                                                        </Box>
-                                                    )}
-                                                    {goal.categories &&
-                                                        goal.categories.length >
-                                                            0 && (
-                                                            <Box>
-                                                                Categories:{' '}
-                                                                {goal.categories
-                                                                    .map(
-                                                                        (c) =>
-                                                                            c.name,
-                                                                    )
-                                                                    .join(', ')}
-                                                            </Box>
-                                                        )}
-                                                </>
-                                            }
-                                        >
-                                            <Box
-                                                sx={{
-                                                    border: 1,
-                                                    borderColor: 'divider',
-                                                    aspectRatio: '1 / 1',
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    justifyContent: 'center',
-                                                    width: '100%',
-                                                    height: '100%',
-                                                }}
-                                            >
-                                                <TextFit
-                                                    text={goal.goal}
-                                                    sx={{
-                                                        textAlign: 'center',
-                                                    }}
-                                                />
-                                            </Box>
-                                        </Tooltip>
-                                    )),
-                                )}
-                            </Box>
-                        </DialogContent>
-                    </>
+                    <SampleBoardDisplay
+                        gameName={gameName}
+                        board={sampleBoard}
+                        boardCols={sampleWidth}
+                        boardRows={sampleHeight}
+                        close={() => setShowDialog(false)}
+                        seed={sampleSeed}
+                        variant={sampleVariant}
+                    />
                 ) : (
                     dialogContent
                 )}
