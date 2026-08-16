@@ -55,6 +55,8 @@ import { deleteFile, saveFile } from '../../media/MediaServer';
 import variants from './Variants';
 import goalImages from './GoalImages';
 import imageTags from './ImageTags';
+import { getImage } from '../../database/games/GoalImages';
+import { getTag } from '../../database/games/ImageTags';
 
 const games = Router();
 
@@ -748,15 +750,7 @@ games.get('/:slug/sampleBoard', async (req, res) => {
         return;
     }
     res.status(200).send({
-        board: generator.board.map((row) =>
-            row.map((goal) => ({
-                id: goal.id,
-                goal: goal.goal,
-                description: goal.description,
-                categories: goal.categories,
-                difficulty: goal.difficulty,
-            })),
-        ),
+        board: generator.board,
         width: generator.board[0].length,
         height: generator.board.length,
         seed: generator.seed,

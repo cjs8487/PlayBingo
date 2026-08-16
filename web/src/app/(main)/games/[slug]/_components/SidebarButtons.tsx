@@ -3,6 +3,7 @@ import { ArrowDropDown, Close, Refresh } from '@mui/icons-material';
 import {
     Box,
     Button,
+    Chip,
     Dialog,
     DialogContent,
     DialogTitle,
@@ -10,13 +11,16 @@ import {
     Menu,
     MenuItem,
     Tooltip,
+    Typography,
 } from '@mui/material';
 import { Game, Goal, Variant } from '@playbingo/types';
 import { ReactNode, useCallback, useState } from 'react';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import RoomCreateForm from '../../../../../components/RoomCreateForm';
 import TextFit from '../../../../../components/TextFit';
-import { alertError } from '../../../../../lib/Utils';
+import { alertError, getMediaForWorkflow } from '../../../../../lib/Utils';
+import Image from 'next/image';
+import { Image as ImageIcon, HideImage } from '@mui/icons-material';
 
 interface SampleBoardDisplayProps {
     gameName: string;
@@ -39,6 +43,7 @@ function SampleBoardDisplay({
     seed,
     variant,
 }: SampleBoardDisplayProps) {
+    const [showImages, setShowImages] = useState(true);
     return (
         <>
             <DialogTitle>
@@ -54,6 +59,12 @@ function SampleBoardDisplay({
                     top: 8,
                 }}
             >
+                <IconButton
+                    aria-label="show images"
+                    onClick={() => setShowImages(!showImages)}
+                >
+                    {showImages ? <HideImage /> : <ImageIcon />}
+                </IconButton>
                 <IconButton aria-label="regenerate" onClick={regenerate}>
                     <Refresh />
                 </IconButton>
@@ -117,6 +128,15 @@ function SampleBoardDisplay({
                                             key={goal.id}
                                             title={
                                                 <>
+                                                    <Box
+                                                        sx={{
+                                                            pb: 1,
+                                                            fontSize: 18,
+                                                            fontWeight: 'bold',
+                                                        }}
+                                                    >
+                                                        {goal?.goal}
+                                                    </Box>
                                                     <Box sx={{ pb: 1.5 }}>
                                                         {goal.description}
                                                     </Box>
@@ -156,13 +176,114 @@ function SampleBoardDisplay({
                                                     height: '100%',
                                                 }}
                                             >
-                                                <TextFit
-                                                    text={goal.goal}
-                                                    sx={{
-                                                        textAlign: 'center',
-                                                        p: 1,
-                                                    }}
-                                                />
+                                                {showImages && goal.image ? (
+                                                    <Box
+                                                        sx={{
+                                                            position:
+                                                                'relative',
+                                                            width: '100%',
+                                                            height: '100%',
+                                                        }}
+                                                    >
+                                                        <Box
+                                                            sx={{
+                                                                p: 2,
+                                                                width: '100%',
+                                                                height: '100%',
+                                                                boxSizing:
+                                                                    'border-box',
+                                                            }}
+                                                        >
+                                                            <Box
+                                                                sx={{
+                                                                    position:
+                                                                        'relative',
+                                                                    width: '100%',
+                                                                    height: '100%',
+                                                                }}
+                                                            ></Box>
+                                                            <Image
+                                                                src={getMediaForWorkflow(
+                                                                    'goalImage',
+                                                                    goal.image
+                                                                        .mediaFile,
+                                                                )}
+                                                                alt=""
+                                                                fill
+                                                                style={{
+                                                                    objectFit:
+                                                                        'contain',
+                                                                }}
+                                                            />
+                                                            {goal.secondaryImage && (
+                                                                <Image
+                                                                    src={getMediaForWorkflow(
+                                                                        'goalImage',
+                                                                        goal
+                                                                            .secondaryImage
+                                                                            .mediaFile,
+                                                                    )}
+                                                                    alt=""
+                                                                    width={25}
+                                                                    height={25}
+                                                                    style={{
+                                                                        objectFit:
+                                                                            'contain',
+                                                                        position:
+                                                                            'absolute',
+                                                                        top: 0,
+                                                                        left: 0,
+                                                                    }}
+                                                                />
+                                                            )}
+                                                            {goal.imageTag && (
+                                                                <Chip
+                                                                    label={
+                                                                        goal
+                                                                            .imageTag
+                                                                            .label
+                                                                    }
+                                                                    sx={{
+                                                                        position:
+                                                                            'absolute',
+                                                                        top: 0,
+                                                                        right: 0,
+                                                                        backgroundColor:
+                                                                            goal
+                                                                                .imageTag
+                                                                                .color,
+                                                                        opacity: 0.9,
+                                                                    }}
+                                                                    size="small"
+                                                                />
+                                                            )}
+                                                            {goal.count && (
+                                                                <Typography
+                                                                    sx={{
+                                                                        position:
+                                                                            'absolute',
+                                                                        bottom: -8,
+                                                                        right: 0,
+                                                                        filter: 'drop-shadow(2px 2px 2px rgba(0,0,0,0))',
+                                                                        textShadow:
+                                                                            '2px 2px black',
+                                                                        fontSize: 24,
+                                                                    }}
+                                                                >
+                                                                    {goal.count}
+                                                                </Typography>
+                                                            )}
+                                                        </Box>
+                                                    </Box>
+                                                ) : (
+                                                    <TextFit
+                                                        text={goal.goal}
+                                                        sx={{
+                                                            textAlign: 'center',
+                                                            p: 1,
+                                                        }}
+                                                    />
+                                                )}
                                             </Box>
                                         </Tooltip>
                                     )),
