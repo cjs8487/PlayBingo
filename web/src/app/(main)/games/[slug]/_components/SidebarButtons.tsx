@@ -1,5 +1,5 @@
 'use client';
-import { ArrowDropDown, Close } from '@mui/icons-material';
+import { ArrowDropDown, Close, Refresh } from '@mui/icons-material';
 import {
     Box,
     Button,
@@ -24,6 +24,7 @@ interface SampleBoardDisplayProps {
     boardRows: number;
     boardCols: number;
     close: () => void;
+    regenerate: () => void;
     seed?: string;
     variant?: string;
 }
@@ -34,6 +35,7 @@ function SampleBoardDisplay({
     boardRows,
     boardCols,
     close,
+    regenerate,
     seed,
     variant,
 }: SampleBoardDisplayProps) {
@@ -42,17 +44,23 @@ function SampleBoardDisplay({
             <DialogTitle>
                 {gameName} {variant ? `${variant}` : ''} Sample Board ({seed})
             </DialogTitle>
-            <IconButton
-                aria-label="close"
-                onClick={close}
+            <Box
                 sx={{
+                    display: 'flex',
+                    justifyContent: 'center',
+
                     position: 'absolute',
                     right: 8,
                     top: 8,
                 }}
             >
-                <Close />
-            </IconButton>
+                <IconButton aria-label="regenerate" onClick={regenerate}>
+                    <Refresh />
+                </IconButton>
+                <IconButton aria-label="close" onClick={close}>
+                    <Close />
+                </IconButton>
+            </Box>
             <DialogContent sx={{}}>
                 <AutoSizer
                     style={{
@@ -202,7 +210,6 @@ export default function SidebarButtons({ game, variants }: Props) {
             const {
                 board,
                 seed,
-                variant,
                 width,
                 height,
             }: {
@@ -214,7 +221,7 @@ export default function SidebarButtons({ game, variants }: Props) {
             } = await res.json();
             setSampleBoard(board);
             setSampleSeed(seed);
-            setSampleVariant(variant);
+            setSampleVariant(variantId);
             setSampleWidth(width);
             setSampleHeight(height);
             handleClose();
@@ -257,6 +264,8 @@ export default function SidebarButtons({ game, variants }: Props) {
         },
         [openSampleBoard, variants],
     );
+
+    const variantName = variants.find((v) => v.id === sampleVariant)?.name;
 
     return (
         <>
@@ -312,8 +321,9 @@ export default function SidebarButtons({ game, variants }: Props) {
                         boardCols={sampleWidth}
                         boardRows={sampleHeight}
                         close={() => setShowDialog(false)}
+                        regenerate={() => generateSampleBoard(sampleVariant)}
                         seed={sampleSeed}
-                        variant={sampleVariant}
+                        variant={variantName}
                     />
                 ) : (
                     dialogContent
