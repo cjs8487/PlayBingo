@@ -32,6 +32,7 @@ import { GenerationFailedError } from '../../core/generation/GenerationFailedErr
 import RacetimeHandler from '../../core/integration/races/RacetimeHandler';
 import LocalTimer from '../../core/integration/races/LocalTimer';
 import { error } from 'console';
+import { getModeString } from '../../util/RoomUtils';
 
 const MIN_ROOM_GOALS_REQUIRED = 25;
 const rooms = Router();
@@ -467,7 +468,7 @@ rooms.get('/:slug', async (req, res) => {
             status: (room.raceHandler as RacetimeHandler).data?.status
                 .verbose_value,
         },
-        mode: room.bingoMode,
+        mode: getModeString(room.bingoMode, room.lineCount),
         variant: room.variantName,
         chatEnabled: room.chatEnabled,
     };
