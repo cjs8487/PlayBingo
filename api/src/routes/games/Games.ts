@@ -303,7 +303,16 @@ games.get('/:slug/goals', async (req, res) => {
 
 games.post('/:slug/goals', async (req, res) => {
     const { slug } = req.params;
-    const { goal, description, categories, difficulty } = req.body;
+    const {
+        goal,
+        description,
+        categories,
+        difficulty,
+        image,
+        secondaryImage,
+        tag,
+        count,
+    } = req.body;
     let difficultyNum: number | undefined = undefined;
     if (difficulty) {
         difficultyNum = Number(difficulty);
@@ -322,6 +331,10 @@ games.post('/:slug/goals', async (req, res) => {
         description,
         categories,
         difficultyNum,
+        image,
+        secondaryImage,
+        tag,
+        count,
     );
     res.status(200).json(newGoal);
 });

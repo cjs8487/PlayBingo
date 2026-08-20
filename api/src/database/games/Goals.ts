@@ -42,6 +42,10 @@ export const createGoal = async (
     description?: string,
     categories?: string[],
     difficulty?: number,
+    image?: string,
+    secondaryImage?: string,
+    imageTag?: string,
+    count?: number,
 ) => {
     const gameId = (await gameForSlug(gameSlug))?.id;
     if (!gameId) {
@@ -68,6 +72,12 @@ export const createGoal = async (
             },
             difficulty,
             game: { connect: { slug: gameSlug } },
+            image: image ? { connect: { id: image } } : undefined,
+            secondaryImage: secondaryImage
+                ? { connect: { id: secondaryImage } }
+                : undefined,
+            imageTag: imageTag ? { connect: { id: imageTag } } : undefined,
+            count: count ? count : null,
         },
     });
 };

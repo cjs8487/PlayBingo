@@ -137,8 +137,6 @@ goals.post('/:id', async (req, res) => {
         }
     }
 
-    console.log(secondaryImage);
-
     if (secondaryImage !== undefined) {
         if (secondaryImage !== '' && secondaryImage !== null) {
             input.secondaryImage = {
