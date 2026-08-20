@@ -359,6 +359,17 @@ export default class Room {
             this.board = listToBoard(goalList, 5);
         }
 
+        // reset board aware state
+        this.players.values().forEach((player) => {
+            player.markedGoals = 0n;
+            player.goalCount = 0;
+            player.goalComplete = false;
+            player.linesComplete = 0;
+            player.exploredGoals = 0n;
+            player.finishedAt = undefined;
+        });
+        this.raceHandler.resetTimer();
+
         this.sendSyncBoard();
         setRoomBoard(
             this.id,
