@@ -17,7 +17,7 @@ import {
 import { BoardSizeOptions } from '@playbingo/shared';
 import { Game, Goal, Variant } from '@playbingo/types';
 import { ReactNode, useCallback, useState } from 'react';
-import AutoSizer from 'react-virtualized-auto-sizer';
+import { AutoSizer } from 'react-virtualized-auto-sizer';
 import RoomCreateForm from '../../../../../components/RoomCreateForm';
 import TextFit from '../../../../../components/TextFit';
 import { alertError, getMediaForWorkflow } from '../../../../../lib/Utils';
@@ -119,8 +119,11 @@ function SampleBoardDisplay({
                         borderColor: 'divider',
                         height: '100%',
                     }}
-                >
-                    {({ width, height }) => {
+
+                    renderProp={({ width, height }) => {
+                        if (!width || !height) {
+                            return null;
+                        }
                         // Maintain square cells by constraining board size
                         const aspectRatio = boardCols / boardRows;
                         let boardWidth = width;
@@ -331,7 +334,7 @@ function SampleBoardDisplay({
                             </Box>
                         );
                     }}
-                </AutoSizer>
+                />
             </DialogContent>
         </>
     );
