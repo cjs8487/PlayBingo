@@ -231,7 +231,15 @@ export const getGoalList = async (ids: string[]) => {
         return [];
     }
     const goals = await prisma.goal.findMany({
-        where: { id: { in: ids } },
+        where: {
+            id: { in: ids },
+        },
+        include: {
+            categories: true,
+            image: true,
+            secondaryImage: true,
+            imageTag: true,
+        },
     });
     const map = new Map(goals.map((goal) => [goal.id, goal]));
     return ids.map((id) => map.get(id)).filter((v) => !!v);
