@@ -487,10 +487,10 @@ rooms.get('/:slug', async (req, res) => {
     res.status(200).json(roomData);
 });
 
-rooms.post('/:slug/authorize', (req, res) => {
+rooms.post('/:slug/authorize', async (req, res) => {
     const { slug } = req.params;
     const { password, spectator } = req.body;
-    const room = allRooms.get(slug);
+    const room = await getOrLoadRoom(slug);
     if (!room) {
         res.sendStatus(404);
         return;
@@ -527,7 +527,7 @@ rooms.post('/:slug/actions', async (req, res) => {
         return;
     }
 
-    const room = allRooms.get(slug);
+    const room = await getOrLoadRoom(slug);
     if (!room) {
         logInfo(`Unable to find room to take action on`);
         res.sendStatus(404);
