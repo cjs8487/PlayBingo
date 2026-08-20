@@ -84,6 +84,7 @@ export default function BoardCell({
         connectedPlayer,
         colorMap,
         showImages,
+        board,
     } = useRoomContext();
 
     const [wasRevealed, setWasRevealed] = useState(false);
@@ -158,7 +159,7 @@ export default function BoardCell({
 
     // calculations
     const colorPortion = 360 / completedPlayers.length;
-    const isStarred = starredGoals.includes(row * 5 + col);
+    const isStarred = starredGoals.includes(row * board.width + col);
     const colors = completedPlayers
         .map((player) => colorMap[player])
         .filter((c) => !!c);

@@ -509,14 +509,17 @@ export function RoomContextProvider({
     }, [roomData, authToken, connectedPlayer]);
     const toggleGoalStar = useCallback(
         (row: number, col: number) => {
-            const index = row * 5 + col;
+            if (!board) {
+                return;
+            }
+            const index = row * board.width + col;
             if (starredGoals.includes(index)) {
                 filter((idx) => idx !== index);
             } else {
                 push(index);
             }
         },
-        [starredGoals, push, filter],
+        [starredGoals, push, filter, board],
     );
     const revealCard = useCallback(() => {
         sendJsonMessage({ action: 'revealCard', authToken });
