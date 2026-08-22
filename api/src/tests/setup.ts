@@ -37,4 +37,5 @@ export const mockPlayerUpsert = jest
         userId: null,
         spectator: false,
         monitor: false,
+        finishedAt: null,
     });
