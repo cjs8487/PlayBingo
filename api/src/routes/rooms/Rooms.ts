@@ -21,7 +21,6 @@ import {
     createRoom,
     getFullRoomList,
     getRoomFromSlug,
-    setRoomBoard,
 } from '../../database/Rooms';
 import {
     gameForSlug,
@@ -250,6 +249,10 @@ rooms.post('/', async (req, res) => {
         dbRoom.boardHeight,
         !!teamsEnabled,
     );
+
+    // Subscribe the room to database event listeners
+    DatabaseEventListeners.getInstance().subscribe(room);
+
     const options: BoardGenerationOptions = {
         mode: BoardGenerationMode.RANDOM,
     } as BoardGenerationOptions; // necessary cast to avoid auto-narrowing
@@ -281,13 +284,8 @@ rooms.post('/', async (req, res) => {
     options.seed = seed;
     try {
         await room.generateBoard(options);
-        await setRoomBoard(
-            room.id,
-            room.board.flat().map((cell) => cell.goal.id),
-            room.boardWidth,
-            room.boardHeight,
-        );
     } catch (e) {
+        DatabaseEventListeners.getInstance().unsubscribe(room.id);
         if (e instanceof GenerationFailedError) {
             res.status(422).send(e.message);
             return;
@@ -296,9 +294,6 @@ rooms.post('/', async (req, res) => {
         return;
     }
     allRooms.set(slug, room);
-
-    // Subscribe the room to database event listeners
-    DatabaseEventListeners.getInstance().subscribe(room);
 
     const token = createRoomToken(
         room,
