@@ -216,6 +216,10 @@ rooms.post('/', async (req, res) => {
         '',
         generatorSettings,
     );
+
+    // Subscribe the room to database event listeners
+    DatabaseEventListeners.getInstance().subscribe(room);
+
     const options: BoardGenerationOptions = {
         mode: BoardGenerationMode.RANDOM,
     } as BoardGenerationOptions; // necessary cast to avoid auto-narrowing
@@ -256,9 +260,6 @@ rooms.post('/', async (req, res) => {
         return;
     }
     allRooms.set(slug, room);
-
-    // Subscribe the room to database event listeners
-    DatabaseEventListeners.getInstance().subscribe(room);
 
     const token = createRoomToken(
         room,
@@ -339,6 +340,7 @@ async function getOrLoadRoom(slug: string): Promise<Room | null> {
             })),
             generatorSettings.boardLayout.layout[0].length,
         );
+        console.log(generatorSettings?.boardLayout.layout[0].length);
     } else {
         newRoom.board = chunk(
             (await getGoalList(dbRoom.board)).map((goal) => ({
@@ -349,6 +351,8 @@ async function getOrLoadRoom(slug: string): Promise<Room | null> {
             5,
         );
     }
+    console.log(dbRoom);
+    console.log(newRoom.board);
     newRoom.computeVictoryMasks();
 
     dbRoom.players.forEach((dbPlayer) => {
