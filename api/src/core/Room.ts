@@ -556,11 +556,19 @@ export default class Room extends EventEmitter {
         };
     }
 
+    /**
+     * Handles a leave action
+     * @param action The action object from the protocol
+     * @param auth The room token payload representing the requestors
+     * authorization to perform this action
+     * @param token The token from the request
+     * @returns
+     */
     handleLeave(
         action: LeaveAction,
         auth: RoomTokenPayload,
         token: string,
-    ): ServerMessage {
+    ): boolean {
         let player: Player | undefined = undefined;
         for (const p of this.players.values()) {
             if (p.closeConnection(auth.uuid)) {
@@ -569,7 +577,7 @@ export default class Room extends EventEmitter {
             }
         }
         if (!player) {
-            return { action: 'unauthorized' };
+            return false;
         }
         const hasLeft = !player.hasConnections();
         const timestamp = new Date();
@@ -588,7 +596,7 @@ export default class Room extends EventEmitter {
             }
         }
         invalidateToken(token);
-        return { action: 'disconnected' };
+        return true;
     }
 
     handleChat(

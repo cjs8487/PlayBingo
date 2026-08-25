@@ -79,7 +79,11 @@ roomWebSocketServer.on('connection', (socket, req) => {
 
         switch (action.action) {
             case 'leave':
-                ws.send(room.handleLeave(action, payload, action.authToken));
+                ws.send({
+                    action: room.handleLeave(action, payload, action.authToken)
+                        ? 'disconnected'
+                        : 'unauthorized',
+                });
                 ws.close();
                 break;
             case 'mark':
