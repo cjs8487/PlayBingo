@@ -5,7 +5,7 @@ import { randomInt } from 'crypto';
 import { Router } from 'express';
 import { logError, logInfo, logWarn } from '../../Logger';
 import { createRoomToken, verifyRoomToken } from '../../auth/RoomAuth';
-import { DatabaseEventListeners } from '../../core/DatabaseEventListeners';
+import { subscribe } from '../../core/DatabaseEventListeners';
 import Player from '../../core/Player';
 import Room, {
     BoardGenerationMode,
@@ -218,7 +218,7 @@ rooms.post('/', async (req, res) => {
     );
 
     // Subscribe the room to database event listeners
-    DatabaseEventListeners.getInstance().subscribe(room);
+    subscribe(room);
 
     const options: BoardGenerationOptions = {
         mode: BoardGenerationMode.RANDOM,
@@ -451,7 +451,7 @@ async function getOrLoadRoom(slug: string): Promise<Room | null> {
     allRooms.set(slug, newRoom);
 
     // Subscribe the room to database event listeners
-    DatabaseEventListeners.getInstance().subscribe(newRoom);
+    subscribe(newRoom);
 
     return newRoom;
 }
