@@ -11,7 +11,7 @@ import {
 } from '@playbingo/types';
 import { WebSocket } from 'ws';
 import { RoomTokenPayload } from '../../auth/RoomAuth';
-import { DatabaseEventListeners } from '../../core/DatabaseEventListeners';
+import { subscribe, unsubscribe } from '../../core/DatabaseEventListeners';
 import Room from '../../core/Room';
 import {
     addMarkAction,
@@ -255,13 +255,12 @@ describe('Room team workflows', () => {
             payload: { enabled: true },
         } as SetTeamsEnabledAction);
 
-        const databaseListeners = DatabaseEventListeners.getInstance();
-        databaseListeners.subscribe(room);
+        subscribe(room);
         room.handleMark(
             { action: 'mark', payload: { row: 1, col: 1 } } as MarkAction,
             auth('alice'),
         );
-        databaseListeners.unsubscribe(room.id);
+        unsubscribe(room.id);
         expect(addMarkAction).toHaveBeenCalledWith(
             'room-id',
             'alice',

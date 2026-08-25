@@ -98,7 +98,8 @@ export type BoardGenerationOptions =
     | BoardGenerationOptionsSRLv5
     | BoardGenerationOptionsDifficulty;
 
-interface RoomEvents {
+export interface RoomEvents {
+    'room:closed': () => void;
     'player:connected': (player: Player, timestamp: Date) => void;
     'player:chat': (player: Player, message: string, timestamp: Date) => void;
     'players:join': (player: Player) => void;
@@ -1544,6 +1545,7 @@ export default class Room extends EventEmitter {
             });
         });
         allRooms.delete(this.slug);
+        this.emit('room:closed');
     }
 
     revealCardForPlayer(player: Player) {

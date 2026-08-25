@@ -6,152 +6,149 @@ import {
     addUnmarkAction,
     setRoomBoard,
 } from '../database/Rooms';
-import Room from './Room';
+import type Room from './Room';
+import type { RoomEvents } from './Room';
 
-/**
- * Singleton class that handles database operations in response to Room events
- */
-export class DatabaseEventListeners {
-    private static instance: DatabaseEventListeners;
-    private roomListeners: Map<string, Room> = new Map();
+const roomListeners = new Map<string, () => void>();
 
-    private constructor() {}
-
-    static getInstance(): DatabaseEventListeners {
-        if (!DatabaseEventListeners.instance) {
-            DatabaseEventListeners.instance = new DatabaseEventListeners();
-        }
-        return DatabaseEventListeners.instance;
+export function subscribe(room: Room): void {
+    if (roomListeners.has(room.id)) {
+        return;
     }
 
-    /**
-     * Subscribe a room to database event listeners
-     */
-    subscribe(room: Room): void {
-        if (this.roomListeners.has(room.id)) {
-            return; // Already subscribed
-        }
-
-        this.roomListeners.set(room.id, room);
-        this.setupEventListeners(room);
-    }
-
-    /**
-     * Unsubscribe a room from database event listeners
-     */
-    unsubscribe(roomId: string): void {
-        const room = this.roomListeners.get(roomId);
-        if (room) {
-            this.removeEventListeners(room);
-            this.roomListeners.delete(roomId);
-        }
-    }
-
-    private setupEventListeners(room: Room): void {
-        room.on('player:connected', (player, timestamp) => {
-            this.persist(
-                room,
-                addJoinAction(
-                    room.id,
-                    player.id,
-                    player.nickname,
-                    player.teamId,
-                    timestamp,
-                ),
-            );
-        });
-        room.on('players:leave', (player, timestamp) => {
-            this.persist(
-                room,
-                addLeaveAction(
-                    room.id,
-                    player.id,
-                    player.nickname,
-                    player.teamId,
-                    timestamp,
-                ),
-            );
-        });
-        room.on('player:chat', (player, message, timestamp) => {
-            this.persist(
-                room,
-                addChatAction(
-                    room.id,
-                    player.id,
-                    player.nickname,
-                    message,
-                    timestamp,
-                ),
-            );
-        });
-        room.on('board:goalMarked', (_cell, row, col, player, timestamp) => {
-            if (player.teamId) {
-                this.persist(
-                    room,
-                    addMarkAction(
-                        room.id,
-                        player.id,
-                        player.teamId,
-                        row,
-                        col,
-                        timestamp,
-                    ),
-                );
-            }
-        });
-        room.on('board:goalUnmarked', (_cell, row, col, player, timestamp) => {
-            if (player.teamId) {
-                this.persist(
-                    room,
-                    addUnmarkAction(
-                        room.id,
-                        player.id,
-                        player.teamId,
-                        row,
-                        col,
-                        timestamp,
-                    ),
-                );
-            }
-        });
-        room.on('board:regenerated', (board, _options, persist) => {
-            persist?.(
-                setRoomBoard(
-                    room.id,
-                    board.flat().map((cell) => cell.goal.id),
-                    room.boardWidth,
-                    room.boardHeight,
-                ),
-            );
-        });
-    }
-
-    private persist(room: Room, operation: Promise<unknown>) {
-        operation.catch((error) =>
-            room.logError(`Failed to persist room event - ${error}`),
+    const onClose = () => unsubscribe(room.id);
+    const onPlayerConnected: RoomEvents['player:connected'] = (
+        player,
+        timestamp,
+    ) => {
+        persistAction(
+            room,
+            addJoinAction(
+                room.id,
+                player.id,
+                player.nickname,
+                player.teamId,
+                timestamp,
+            ),
         );
-    }
+    };
+    const onPlayersLeave: RoomEvents['players:leave'] = (player, timestamp) => {
+        persistAction(
+            room,
+            addLeaveAction(
+                room.id,
+                player.id,
+                player.nickname,
+                player.teamId,
+                timestamp,
+            ),
+        );
+    };
+    const onPlayerChat: RoomEvents['player:chat'] = (
+        player,
+        message,
+        timestamp,
+    ) => {
+        persistAction(
+            room,
+            addChatAction(
+                room.id,
+                player.id,
+                player.nickname,
+                message,
+                timestamp,
+            ),
+        );
+    };
+    const onBoardGoalMarked: RoomEvents['board:goalMarked'] = (
+        _cell,
+        row,
+        col,
+        player,
+        timestamp,
+    ) => {
+        if (player.teamId) {
+            persistAction(
+                room,
+                addMarkAction(
+                    room.id,
+                    player.id,
+                    player.teamId,
+                    row,
+                    col,
+                    timestamp,
+                ),
+            );
+        }
+    };
+    const onBoardGoalUnmarked: RoomEvents['board:goalUnmarked'] = (
+        _cell,
+        row,
+        col,
+        player,
+        timestamp,
+    ) => {
+        if (player.teamId) {
+            persistAction(
+                room,
+                addUnmarkAction(
+                    room.id,
+                    player.id,
+                    player.teamId,
+                    row,
+                    col,
+                    timestamp,
+                ),
+            );
+        }
+    };
+    const onBoardRegenerated: RoomEvents['board:regenerated'] = (
+        board,
+        _options,
+        persist,
+    ) => {
+        persist?.(
+            setRoomBoard(
+                room.id,
+                board.flat().map((cell) => cell.goal.id),
+                room.boardWidth,
+                room.boardHeight,
+            ),
+        );
+    };
+    room.on('player:connected', onPlayerConnected);
+    room.on('players:leave', onPlayersLeave);
+    room.on('player:chat', onPlayerChat);
+    room.on('board:goalMarked', onBoardGoalMarked);
+    room.on('board:goalUnmarked', onBoardGoalUnmarked);
+    room.on('board:regenerated', onBoardRegenerated);
+    room.once('room:closed', onClose);
+    roomListeners.set(room.id, () => {
+        room.off('player:connected', onPlayerConnected);
+        room.off('players:leave', onPlayersLeave);
+        room.off('player:chat', onPlayerChat);
+        room.off('board:goalMarked', onBoardGoalMarked);
+        room.off('board:goalUnmarked', onBoardGoalUnmarked);
+        room.off('board:regenerated', onBoardRegenerated);
+        room.off('room:closed', onClose);
+    });
+}
 
-    private removeEventListeners(room: Room): void {
-        room.removeAllListeners('player:connected');
-        room.removeAllListeners('players:leave');
-        room.removeAllListeners('player:chat');
-        room.removeAllListeners('board:goalMarked');
-        room.removeAllListeners('board:goalUnmarked');
-        room.removeAllListeners('board:regenerated');
-    }
+export function unsubscribe(roomId: string): void {
+    roomListeners.get(roomId)?.();
+    roomListeners.delete(roomId);
+}
 
-    /**
-     * Get the list of currently subscribed rooms
-     */
-    getSubscribedRooms(): string[] {
-        return Array.from(this.roomListeners.keys());
-    }
+function persistAction(room: Room, operation: Promise<unknown>) {
+    operation.catch((error) =>
+        room.logError(`Failed to persist room event - ${error}`),
+    );
+}
 
-    /**
-     * Check if a room is currently subscribed
-     */
-    isSubscribed(roomId: string): boolean {
-        return this.roomListeners.has(roomId);
-    }
+export function getSubscribedRooms(): string[] {
+    return Array.from(roomListeners.keys());
+}
+
+export function isSubscribed(roomId: string): boolean {
+    return roomListeners.has(roomId);
 }
