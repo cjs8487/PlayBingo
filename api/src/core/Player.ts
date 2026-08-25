@@ -103,21 +103,9 @@ export default class Player {
         this.connections.set(id, socket);
     }
 
-    /**
-     * Removes the connection associated with the specified key from this
-     * player
-     *
-     * @param id The auth token UUID for the connection
-     * @returns true if the connection belonged to this player
-     */
-    closeConnection(id: string) {
-        const socket = this.connections.get(id);
-        if (socket) {
-            socket.close();
-            this.connections.delete(id);
-            return true;
-        }
-        return false;
+    /** Removes a connection so the transport can send its leave response before closing. */
+    removeConnection(id: string) {
+        return this.connections.delete(id);
     }
 
     /**

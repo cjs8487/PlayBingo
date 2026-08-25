@@ -857,18 +857,26 @@ export default class Room extends EventEmitter {
         };
     }
 
+    /**
+     * Handles a leave action
+     * @param action The action object from the protocol
+     * @param auth The room token payload representing the requestors
+     * authorization to perform this action
+     * @param token The token from the request
+     * @returns Whether a connection was removed
+     */
     handleLeave(
         action: LeaveAction,
         auth: RoomTokenPayload,
         token: string,
-    ): ServerMessage {
-        // closeConnection reports whether it owned the connection, so find
+    ): boolean {
+        // removeConnection reports whether it owned the connection, so find
         // stops as soon as the owning player has cleaned it up
         const player = this.getAllPlayers().find((p) =>
-            p.closeConnection(auth.uuid),
+            p.removeConnection(auth.uuid),
         );
         if (!player) {
-            return { action: 'unauthorized' };
+            return false;
         }
         const hasLeft = !player.hasConnections();
         const timestamp = new Date();
@@ -876,7 +884,7 @@ export default class Room extends EventEmitter {
             this.handleDisconnectedPlayer(player, timestamp);
         }
         invalidateToken(token);
-        return { action: 'disconnected' };
+        return true;
     }
 
     private handleDisconnectedPlayer(player: Player, timestamp: Date) {
