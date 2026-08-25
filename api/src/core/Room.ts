@@ -627,7 +627,6 @@ export default class Room extends EventEmitter {
             a.localeCompare(b),
         );
         player.mark(row, col);
-        this.sendCellUpdate(row, col);
         const timestamp = new Date();
         this.emit(
             'board:goalMarked',
@@ -665,7 +664,6 @@ export default class Room extends EventEmitter {
             unCol
         ].completedPlayers.filter((playerId) => playerId !== player.id);
         player.unmark(unRow, unCol);
-        this.sendCellUpdate(unRow, unCol);
         const timestamp = new Date();
         this.emit(
             'board:goalUnmarked',

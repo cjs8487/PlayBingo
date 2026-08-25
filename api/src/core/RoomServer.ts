@@ -1,4 +1,4 @@
-import { RoomAction } from '@playbingo/types';
+import { RoomAction, ServerMessage } from '@playbingo/types';
 import { WebSocketServer } from 'ws';
 import {
     createRoomToken,
@@ -8,6 +8,7 @@ import {
 import { roomCleanupInterval } from '../Environment';
 import { logInfo, logWarn } from '../Logger';
 import Room from './Room';
+import Player from './Player';
 
 export const roomWebSocketServer: WebSocketServer = new WebSocketServer({
     noServer: true,
@@ -188,6 +189,35 @@ roomWebSocketServer.on('connection', (ws, req) => {
                 'Received a close frame for a websocket connection, but there was no matching socket associated with a room',
             );
         }
+    });
+
+    // subscribe to room events
+    const room = allRooms.get(slug);
+    if (!room) {
+        return;
+    }
+    room.on('players:join', (player: Player) => {
+        ws.send(JSON.stringify({ action: 'players:join', payload: player }));
+    });
+    room.on('board:goalMarked', (cell, row, col, player) => {
+        ws.send(
+            JSON.stringify({
+                action: 'cellUpdate',
+                row,
+                col,
+                cell,
+            } as ServerMessage),
+        );
+    });
+    room.on('board:goalUnmarked', (cell, row, col, player) => {
+        ws.send(
+            JSON.stringify({
+                action: 'cellUpdate',
+                row,
+                col,
+                cell,
+            } as ServerMessage),
+        );
     });
 });
 
