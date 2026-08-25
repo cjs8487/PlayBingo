@@ -1,4 +1,4 @@
-import { RoomAction } from '@playbingo/types';
+import { Cell, RoomAction } from '@playbingo/types';
 import { WebSocketServer } from 'ws';
 import {
     createRoomToken,
@@ -52,6 +52,8 @@ roomWebSocketServer.on('connection', (ws, req) => {
     //     5 * 60 * 1000,
     // );
 
+    let unsubscribe: (() => void) | undefined;
+
     // handlers
     ws.on('message', (message) => {
         const messageString = message.toString();
@@ -74,8 +76,33 @@ roomWebSocketServer.on('connection', (ws, req) => {
             return;
         }
         if (action.action === 'join') {
+            const result = room.handleJoin(action, payload, ws);
+            ws.send(JSON.stringify(result));
+            if (result.action !== 'connected') return;
             clearTimeout(timeout);
-            ws.send(JSON.stringify(room.handleJoin(action, payload, ws)));
+            unsubscribe?.();
+            const player = room.getPlayerById(payload.playerId);
+            const onCellUpdate = (cell: Cell, row: number, col: number) => {
+                if (player && !player.boardHidden) {
+                    player.sendMessage(
+                        {
+                            action: 'cellUpdate',
+                            row,
+                            col,
+                            cell,
+                            players: room.getPlayerData(),
+                        },
+                        ws,
+                    );
+                }
+            };
+            room.on('board:goalMarked', onCellUpdate);
+            room.on('board:goalUnmarked', onCellUpdate);
+            unsubscribe = () => {
+                room.off('board:goalMarked', onCellUpdate);
+                room.off('board:goalUnmarked', onCellUpdate);
+            };
+            return;
         }
 
         // helpers
@@ -168,6 +195,8 @@ roomWebSocketServer.on('connection', (ws, req) => {
         }
     });
     ws.on('close', (code, reason) => {
+        clearTimeout(timeout);
+        unsubscribe?.();
         // cleanup
         // attempt to close the connection from the room, in case the connection
         // is closed unexpectedly without a leave message

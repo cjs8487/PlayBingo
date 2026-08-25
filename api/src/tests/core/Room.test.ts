@@ -6,7 +6,6 @@ import {
     MarkAction,
     NewCardAction,
     RevealedCell,
-    ServerMessage,
     UnmarkAction,
 } from '@playbingo/types';
 import { mockDeep, mockReset } from 'jest-mock-extended';
@@ -323,26 +322,7 @@ describe('Board Control', () => {
         });
 
         it('Sends a cell message update', () => {
-            const playerSendSpy = jest.spyOn(
-                room.getPlayerById(mockTokenPayload.playerId)!,
-                'sendMessage',
-            );
-            const player2SendSpy = jest.spyOn(
-                room.getPlayerById(mockTokenPayloadPlayer2.playerId)!,
-                'sendMessage',
-            );
             room.handleMark(mockMarkAction, mockTokenPayload);
-            const cellUpdateMessage: ServerMessage = {
-                action: 'cellUpdate',
-                row: mockMarkAction.payload.row,
-                col: mockMarkAction.payload.col,
-                cell: room.board[mockMarkAction.payload.row][
-                    mockMarkAction.payload.col
-                ],
-                players: room.getPlayerData(),
-            };
-            expect(playerSendSpy).toHaveBeenCalledWith(cellUpdateMessage);
-            expect(player2SendSpy).toHaveBeenCalledWith(cellUpdateMessage);
             expect(emitSpy).toHaveBeenCalledTimes(2);
             expect(emitSpy.mock.calls[0][0]).toBe('board:goalMarked');
         });
@@ -393,26 +373,7 @@ describe('Board Control', () => {
         });
 
         it('Sends a cell message update', () => {
-            const playerSendSpy = jest.spyOn(
-                room.getPlayerById(mockTokenPayload.playerId)!,
-                'sendMessage',
-            );
-            const player2SendSpy = jest.spyOn(
-                room.getPlayerById(mockTokenPayloadPlayer2.playerId)!,
-                'sendMessage',
-            );
             room.handleUnmark(mockUnmarkAction, mockTokenPayload);
-            const cellUpdateMessage: ServerMessage = {
-                action: 'cellUpdate',
-                row: mockMarkAction.payload.row,
-                col: mockMarkAction.payload.col,
-                cell: room.board[mockMarkAction.payload.row][
-                    mockMarkAction.payload.col
-                ],
-                players: room.getPlayerData(),
-            };
-            expect(playerSendSpy).toHaveBeenCalledWith(cellUpdateMessage);
-            expect(player2SendSpy).toHaveBeenCalledWith(cellUpdateMessage);
             expect(emitSpy).toHaveBeenCalledTimes(2);
             expect(emitSpy.mock.calls[0][0]).toBe('board:goalUnmarked');
         });

@@ -165,7 +165,7 @@ export default class Player {
         };
     }
 
-    sendMessage(message: ServerMessage) {
+    sendMessage(message: ServerMessage, connection?: WebSocket) {
         let finalMessage: ServerMessage;
         if (message.action === 'cellUpdate' && this.room.exploration) {
             if (!message.cell.revealed) {
@@ -208,7 +208,10 @@ export default class Player {
         }
 
         this.connections.forEach((socket) => {
-            if (socket.readyState === OPEN) {
+            if (
+                (!connection || connection === socket) &&
+                socket.readyState === OPEN
+            ) {
                 socket.send(
                     JSON.stringify({
                         ...finalMessage,
