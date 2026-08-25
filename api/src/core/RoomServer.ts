@@ -8,6 +8,7 @@ import {
 import { roomCleanupInterval } from '../Environment';
 import { logInfo, logWarn } from '../Logger';
 import Room from './Room';
+import PlayBingoSocket from './PlayBingoSocket';
 
 export const roomWebSocketServer: WebSocketServer = new WebSocketServer({
     noServer: true,
@@ -24,9 +25,10 @@ const cleanupInterval = setInterval(() => {
     });
 }, roomCleanupInterval);
 
-roomWebSocketServer.on('connection', (ws, req) => {
+roomWebSocketServer.on('connection', (socket, req) => {
+    const ws = new PlayBingoSocket(socket);
     if (!req.url) {
-        ws.send(JSON.stringify({ action: 'unauthorized' }));
+        ws.send({ action: 'unauthorized' });
         ws.close();
         return;
     }
@@ -36,7 +38,7 @@ roomWebSocketServer.on('connection', (ws, req) => {
 
     // create timeout for uninitialized connections
     const timeout = setTimeout(() => {
-        ws.send(JSON.stringify({ action: 'unauthorized' }));
+        ws.send({ action: 'unauthorized' });
         ws.close();
     }, 60 * 1000);
 
@@ -55,29 +57,20 @@ roomWebSocketServer.on('connection', (ws, req) => {
     let unsubscribe: (() => void) | undefined;
 
     // handlers
-    ws.on('message', (message) => {
-        const messageString = message.toString();
-
-        if (messageString === 'ping') {
-            ws.send('pong');
-            // pingTimeout.refresh();
-            return;
-        }
-
-        const action: RoomAction = JSON.parse(messageString);
+    ws.onMessage((action: RoomAction) => {
         const payload = verifyRoomToken(action.authToken, slug);
         if (!payload) {
-            ws.send(JSON.stringify({ action: 'unauthorized' }));
+            ws.send({ action: 'unauthorized' });
             return;
         }
         const room = allRooms.get(payload.roomSlug);
         if (!room) {
-            ws.send(JSON.stringify({ action: 'unauthorized' }));
+            ws.send({ action: 'unauthorized' });
             return;
         }
         if (action.action === 'join') {
             const result = room.handleJoin(action, payload, ws);
-            ws.send(JSON.stringify(result));
+            ws.send(result);
             if (result.action !== 'connected') return;
             clearTimeout(timeout);
             unsubscribe?.();
@@ -107,40 +100,37 @@ roomWebSocketServer.on('connection', (ws, req) => {
 
         // helpers
         if (!hasPermission(action.action, payload)) {
-            return ws.send(JSON.stringify({ action: 'forbidden' }));
+            ws.send({ action: 'forbidden' });
+            return;
         }
 
         switch (action.action) {
             case 'leave':
-                ws.send(
-                    JSON.stringify(
-                        room.handleLeave(action, payload, action.authToken),
-                    ),
-                );
+                ws.send(room.handleLeave(action, payload, action.authToken));
                 ws.close();
                 break;
             case 'mark':
                 const markResult = room.handleMark(action, payload);
                 if (markResult) {
-                    ws.send(JSON.stringify(markResult));
+                    ws.send(markResult);
                 }
                 break;
             case 'unmark':
                 const unmarkResult = room.handleUnmark(action, payload);
                 if (unmarkResult) {
-                    ws.send(JSON.stringify(unmarkResult));
+                    ws.send(unmarkResult);
                 }
                 break;
             case 'joinTeam':
                 const joinTeamResult = room.handleJoinTeam(action, payload);
                 if (joinTeamResult) {
-                    ws.send(JSON.stringify(joinTeamResult));
+                    ws.send(joinTeamResult);
                 }
                 break;
             case 'chat':
                 const chatResult = room.handleChat(action, payload);
                 if (chatResult) {
-                    ws.send(JSON.stringify(chatResult));
+                    ws.send(chatResult);
                 }
                 break;
             case 'changeColor':
@@ -149,7 +139,7 @@ roomWebSocketServer.on('connection', (ws, req) => {
                     payload,
                 );
                 if (changeColorResult) {
-                    ws.send(JSON.stringify(changeColorResult));
+                    ws.send(changeColorResult);
                 }
                 break;
             case 'newCard':
@@ -194,7 +184,7 @@ roomWebSocketServer.on('connection', (ws, req) => {
                 break;
         }
     });
-    ws.on('close', (code, reason) => {
+    ws.onClose((code, reason) => {
         clearTimeout(timeout);
         unsubscribe?.();
         // cleanup

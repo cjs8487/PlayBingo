@@ -9,7 +9,7 @@ import {
     ServerMessage,
     UnmarkAction,
 } from '@playbingo/types';
-import { WebSocket } from 'ws';
+import { PlayBingoSocketLike } from '../../core/PlayBingoSocket';
 import { RoomTokenPayload } from '../../auth/RoomAuth';
 import { subscribe, unsubscribe } from '../../core/DatabaseEventListeners';
 import Room from '../../core/Room';
@@ -86,7 +86,11 @@ const auth = (playerId: string, isSpectating = false): RoomTokenPayload => ({
 });
 
 const socket = () =>
-    ({ readyState: 0, send: jest.fn() }) as unknown as WebSocket;
+    ({
+        readyState: 0,
+        send: jest.fn(),
+        close: jest.fn(),
+    }) as PlayBingoSocketLike;
 
 const joinAction = (nickname: string) =>
     ({ action: 'join', payload: { nickname } }) as JoinAction;
@@ -370,11 +374,15 @@ describe('Room team workflows', () => {
         expect(aliceTeam.players.has('bob')).toBe(false);
     });
     const openSocket = () =>
-        ({ readyState: 1, send: jest.fn() }) as unknown as WebSocket;
+        ({
+            readyState: 1,
+            send: jest.fn(),
+            close: jest.fn(),
+        }) as PlayBingoSocketLike;
 
-    const boardMessages = (connection: WebSocket) =>
+    const boardMessages = (connection: PlayBingoSocketLike) =>
         (connection.send as jest.Mock).mock.calls
-            .map(([raw]) => JSON.parse(raw as string) as ServerMessage)
+            .map(([raw]) => raw as ServerMessage)
             .filter((message) => message.action === 'syncBoard');
 
     it('syncs the new exploration view to every connection after changing teams', () => {

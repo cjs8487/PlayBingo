@@ -1,11 +1,12 @@
 import {
-    Player as PlayerClientData,
-    ServerMessage,
     HiddenCell,
+    Player as PlayerClientData,
     RevealedCell,
+    ServerMessage,
 } from '@playbingo/types';
-import { OPEN, WebSocket } from 'ws';
+import { OPEN } from 'ws';
 import { RoomTokenPayload } from '../auth/RoomAuth';
+import { PlayBingoSocketLike } from './PlayBingoSocket';
 import Room from './Room';
 
 /**
@@ -39,7 +40,7 @@ export default class Player {
 
     /** Open connections for the player, mapped by the id in the auth token that
      * is authorized for the connection */
-    connections: Map<string, WebSocket>;
+    connections: Map<string, PlayBingoSocketLike>;
 
     finishedAt?: string;
     /** Whether the card is hidden for this player. */
@@ -61,7 +62,7 @@ export default class Player {
         this.boardHidden = room.hideCard;
         this.userId = userId;
 
-        this.connections = new Map<string, WebSocket>();
+        this.connections = new Map<string, PlayBingoSocketLike>();
     }
 
     /**
@@ -98,7 +99,7 @@ export default class Player {
      * @param id The auth token UUID for the connection
      * @param socket The socket the connection communicates over
      */
-    addConnection(id: string, socket: WebSocket) {
+    addConnection(id: string, socket: PlayBingoSocketLike) {
         this.connections.set(id, socket);
     }
 
@@ -125,7 +126,7 @@ export default class Player {
      * @param ws The websocket that closed
      * @returns true if this player owned the socket and it was cleaned up
      */
-    handleSocketClose(ws: WebSocket) {
+    handleSocketClose(ws: PlayBingoSocketLike) {
         let socketKey;
         this.connections.forEach((socket, id) => {
             if (socket === ws) {
@@ -165,7 +166,7 @@ export default class Player {
         };
     }
 
-    sendMessage(message: ServerMessage, connection?: WebSocket) {
+    sendMessage(message: ServerMessage, connection?: PlayBingoSocketLike) {
         let finalMessage: ServerMessage;
         if (message.action === 'cellUpdate' && this.room.exploration) {
             if (!message.cell.revealed) {
@@ -212,12 +213,10 @@ export default class Player {
                 (!connection || connection === socket) &&
                 socket.readyState === OPEN
             ) {
-                socket.send(
-                    JSON.stringify({
-                        ...finalMessage,
-                        connectedPlayer: this.toClientData(),
-                    }),
-                );
+                socket.send({
+                    ...finalMessage,
+                    connectedPlayer: this.toClientData(),
+                });
             }
         });
     }

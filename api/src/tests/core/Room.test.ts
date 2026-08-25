@@ -9,7 +9,7 @@ import {
     UnmarkAction,
 } from '@playbingo/types';
 import { mockDeep, mockReset } from 'jest-mock-extended';
-import WebSocket from 'ws';
+import { PlayBingoSocketLike } from '../../core/PlayBingoSocket';
 import { RoomTokenPayload } from '../../auth/RoomAuth';
 import Player from '../../core/Player';
 import Room from '../../core/Room';
@@ -48,8 +48,8 @@ mockTokenPayloadPlayer2.isSpectating = false;
 const mockTokenPayloadSpectator = mockDeep<RoomTokenPayload>();
 mockTokenPayloadSpectator.playerId = 'spectator';
 mockTokenPayloadSpectator.isSpectating = true;
-const mockSocket = mockDeep<WebSocket>();
-const mockSocket2 = mockDeep<WebSocket>();
+const mockSocket = mockDeep<PlayBingoSocketLike>();
+const mockSocket2 = mockDeep<PlayBingoSocketLike>();
 
 let emitSpy: jest.SpyInstance;
 const flushRoomWrites = () =>

@@ -23,7 +23,6 @@ import { BingoMode, Category } from '@prisma/client';
 import EventEmitter from 'events';
 import { DateTime } from 'luxon';
 import { randomUUID } from 'node:crypto';
-import { WebSocket } from 'ws';
 import { roomCleanupInactive } from '../Environment';
 import { logDebug, logError, logInfo, logWarn } from '../Logger';
 import {
@@ -40,6 +39,7 @@ import {
     listToBoard,
     rowColToMask,
 } from '../util/RoomUtils';
+import { PlayBingoSocketLike } from './PlayBingoSocket';
 import Player from './Player';
 import { allRooms } from './RoomServer';
 import Team from './Team';
@@ -714,7 +714,7 @@ export default class Room extends EventEmitter {
     handleJoin(
         action: JoinAction,
         auth: RoomTokenPayload,
-        socket: WebSocket,
+        socket: PlayBingoSocketLike,
     ): ServerMessage {
         let player = this.getPlayerById(auth.playerId);
         let playerTeam = player?.teamId
@@ -1080,7 +1080,7 @@ export default class Room extends EventEmitter {
         this.sendRoomData();
     }
 
-    handleSocketClose(ws: WebSocket) {
+    handleSocketClose(ws: PlayBingoSocketLike) {
         // handleSocketClose reports whether it owned the socket, so find stops
         // as soon as the owning player has cleaned it up
         const player = this.getAllPlayers().find((p) =>
