@@ -812,6 +812,54 @@ describe('Full Generation', () => {
         expect(board1).toStrictEqual(board2);
     });
 
+    it('uses the complete seeded random stream when placing random goals', () => {
+        const randomGoals = goals.slice(0, 25);
+        const randomGenerator = new BoardGenerator(
+            randomGoals,
+            categories,
+            {
+                goalFilters: [],
+                goalTransformation: [],
+                boardLayout: { mode: 'random' },
+                restrictions: [],
+                adjustments: [],
+            },
+        );
+
+        randomGenerator.reset(12345);
+        randomGenerator.generateBoard();
+
+        const boardGoals = randomGenerator.board.flat().map((goal) => goal.id);
+        expect(new Set(boardGoals).size).toBe(25);
+        expect(boardGoals).toEqual([
+            '2',
+            '5',
+            '1',
+            '16',
+            '22',
+            '10',
+            '21',
+            '17',
+            '4',
+            '13',
+            '24',
+            '7',
+            '14',
+            '3',
+            '23',
+            '11',
+            '0',
+            '20',
+            '8',
+            '19',
+            '12',
+            '18',
+            '9',
+            '15',
+            '6',
+        ]);
+    });
+
     it('Generates the same board given the same seed (SRLv5)', () => {
         const generator = new BoardGenerator(goals, categories, {
             goalFilters: [],

@@ -6,6 +6,8 @@ import {
 } from './BoardLayoutGenerator';
 import { GenerationFailedError } from './GenerationFailedError';
 import { GeneratorGoal } from './GeneratorCore';
+import prand from 'pure-rand';
+import type { RandomGenerator } from 'pure-rand/types/RandomGenerator';
 import { createGlobalAdjustment, GlobalAdjustment } from './GlobalAdjustments';
 import { createPruner, GoalListPruner } from './GoalListPruner';
 import { createTransformer, GoalListTransformer } from './GoalListTransformer';
@@ -32,6 +34,7 @@ export class BoardGenerator {
 
     // core generation elements
     seed: number;
+    rng: RandomGenerator;
     allGoals: GeneratorGoal[] = [];
     categories: Category[];
     goals: GeneratorGoal[] = [];
@@ -72,6 +75,7 @@ export class BoardGenerator {
         );
 
         this.seed = seed ?? Math.ceil(999999 * Math.random());
+        this.rng = prand.xoroshiro128plus(this.seed);
         categories.forEach((cat) => {
             this.categoryMaxes[cat.id] = cat.max <= 0 ? -1 : cat.max;
             this.categoriesById[cat.id] = cat;
@@ -102,6 +106,7 @@ export class BoardGenerator {
 
     async reset(seed?: number) {
         this.seed = seed ?? Math.ceil(999999 * Math.random());
+        this.rng = prand.xoroshiro128plus(this.seed);
         this.goals = [...this.allGoals];
         this.layout = [];
         this.board = [];
@@ -220,7 +225,10 @@ export class BoardGenerator {
         this.placementRestrictions.forEach(
             (f) => (finalList = f(this, row, col, finalList)),
         );
-        shuffle(finalList, this.seed);
+        // Keep one seeded random stream for the whole board. Recreating the
+        // PRNG from the board seed for every cell correlates the choices as
+        // the candidate list shrinks, which biases particular board cells.
+        shuffle(finalList, undefined, this.rng);
         return finalList;
     }
 

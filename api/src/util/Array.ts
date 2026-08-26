@@ -1,4 +1,5 @@
 import prand from 'pure-rand';
+import type { RandomGenerator } from 'pure-rand/types/RandomGenerator';
 
 /**
  * Breaks an array in chunks of a fixed size. If the array size is not a
@@ -23,9 +24,13 @@ export const chunk = <T>(array: T[], groupSize: number) => {
  * Shuffle an array in place with Fisher-Yates
  * @param array the array to shuffle
  */
-export const shuffle = (array: unknown[], seedIn?: number) => {
+export const shuffle = (
+    array: unknown[],
+    seedIn?: number,
+    rngIn?: RandomGenerator,
+) => {
     const seed = seedIn ?? Date.now() ^ (Math.random() * 0x100000000);
-    const rng = prand.xoroshiro128plus(seed);
+    const rng = rngIn ?? prand.xoroshiro128plus(seed);
 
     for (let i = array.length - 1; i > 0; i--) {
         const j = prand.unsafeUniformIntDistribution(0, i, rng);
