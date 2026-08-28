@@ -181,6 +181,7 @@ export interface RoomData {
   variant: string;
   mode: string;
   seed: number;
+  teamsEnabled: boolean;
   startedAt?: string;
   finishedAt?: string;
   raceHandler?: "LOCAL" | "RACETIME";

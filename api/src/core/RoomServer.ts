@@ -143,21 +143,10 @@ roomWebSocketServer.on('connection', (ws, req) => {
                     payload.playerId.split(':')[1],
                     payload.userId,
                 );
-                let team: Team | undefined;
-                let player: Player | undefined;
-                room.teams.forEach((t) => {
-                    t.players.forEach((p) => {
-                        if (p.id === payload.playerId) {
-                            team = t;
-                            player = p;
-                        }
-                    });
-                });
-                room.spectators.forEach((p) => {
-                    if (p.id === payload.playerId) {
-                        player = p;
-                    }
-                });
+                const player = room.getPlayerById(payload.playerId);
+                const team = player
+                    ? room.getTeamForPlayer(player.id)
+                    : undefined;
                 if (player) {
                     if (action.payload.spectate) {
                         if (team) {

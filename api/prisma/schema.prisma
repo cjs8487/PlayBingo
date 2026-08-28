@@ -172,6 +172,7 @@ model Room {
   variantId        String?
   exploration      Boolean      @default(false)
   explorationStart String?
+  teamsEnabled     Boolean      @default(false)
   raceHandler      RaceHandler?
   startedAt        DateTime?
   finishedAt       DateTime?

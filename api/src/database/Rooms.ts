@@ -16,6 +16,7 @@ export const createRoom = (
     variant?: string,
     explorationStart?: string,
     seed?: number,
+    teamsEnabled: boolean = false,
 ) => {
     return prisma.room.create({
         data: {
@@ -31,6 +32,7 @@ export const createRoom = (
             exploration: !!explorationStart,
             explorationStart,
             seed,
+            teamsEnabled,
         },
     });
 };

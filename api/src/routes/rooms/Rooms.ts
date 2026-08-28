@@ -83,6 +83,7 @@ rooms.post('/', async (req, res) => {
         exploration,
         explorationStart,
         explorationStartCount,
+        teamsEnabled,
     } = req.body;
     const seed = req.body.seed ?? Math.ceil(999999 * Math.random());
 
@@ -192,6 +193,7 @@ rooms.post('/', async (req, res) => {
                 : explorationStart
             : undefined,
         seed,
+        !!teamsEnabled,
     );
     const room = new Room(
         name,
@@ -215,6 +217,7 @@ rooms.post('/', async (req, res) => {
             : undefined,
         '',
         generatorSettings,
+        !!teamsEnabled,
     );
     const options: BoardGenerationOptions = {
         mode: BoardGenerationMode.RANDOM,
@@ -325,6 +328,7 @@ async function getOrLoadRoom(slug: string): Promise<Room | null> {
         dbRoom.explorationStart ?? undefined,
         dbRoom.racetimeRoom ?? '',
         generatorSettings,
+        dbRoom.teamsEnabled,
     );
 
     if (generatorSettings?.boardLayout.mode === 'custom') {
@@ -404,7 +408,7 @@ async function getOrLoadRoom(slug: string): Promise<Room | null> {
             player: playerId,
         } = action.payload as any;
 
-        const player = newRoom.getAllPlayers().find(p => p.id === playerId)!;
+        const player = newRoom.getPlayerById(playerId)!;
         let team: Team | undefined;
         if (player.teamId) {
             team = newRoom.teams.get(player.teamId)
@@ -514,6 +518,7 @@ rooms.get('/:slug', async (req, res) => {
         mode: room.bingoMode,
         variant: room.variantName,
         chatEnabled: room.chatEnabled,
+        teamsEnabled: room.teamsEnabled,
     };
 
     const userKey = req.session.user ?? req.session.id;
