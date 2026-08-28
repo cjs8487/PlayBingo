@@ -58,6 +58,7 @@ export default class Team {
         return {
             id: this.id,
             name: this.name,
+            color: this.color,
             players: Array.from(this.players.values()).map((player) =>
                 player.toClientData(),
             ),

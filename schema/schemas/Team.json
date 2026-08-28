@@ -5,6 +5,7 @@
     "required": [
         "id",
         "name",
+        "color",
         "goalCount",
         "players"
     ],
@@ -13,6 +14,9 @@
             "type": "string"
         },
         "name": {
+            "type": "string"
+        },
+        "color": {
             "type": "string"
         },
         "goalCount": {
