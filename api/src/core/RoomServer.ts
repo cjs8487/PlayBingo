@@ -183,6 +183,9 @@ roomWebSocketServer.on('connection', (ws, req) => {
             case 'setChatEnabled':
                 room.handleSetChatEnabled(action);
                 break;
+            case 'setTeamsEnabled':
+                room.handleSetTeamsEnabled(action);
+                break;
         }
     });
     ws.on('close', (code, reason) => {
