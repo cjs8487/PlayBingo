@@ -80,6 +80,7 @@ export const hasPermission = (
         case 'resetTimer':
             return payload.isMonitor;
         case 'setChatEnabled':
+        case 'setTeamsEnabled':
             return payload.isMonitor;
         default:
             return true;

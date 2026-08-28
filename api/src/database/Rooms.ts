@@ -192,3 +192,6 @@ export const updateRaceHandler = async (
         data: { raceHandler },
     });
 };
+
+export const updateTeamsEnabled = async (room: string, teamsEnabled: boolean) =>
+    prisma.room.update({ where: { id: room }, data: { teamsEnabled } });

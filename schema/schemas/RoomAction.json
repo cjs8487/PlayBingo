@@ -21,7 +21,8 @@
         {"$ref": "#/$defs/StartTimerAction"},
         {"$ref": "#/$defs/ChangeRaceHandlerAction"},
         {"$ref": "#/$defs/ResetTimerAction"},
-        {"$ref": "#/$defs/SetChatEnabledAction"}
+        {"$ref": "#/$defs/SetChatEnabledAction"},
+        {"$ref": "#/$defs/SetTeamsEnabledAction"}
     ],
     "$defs": {
         "JoinAction": {
@@ -181,6 +182,20 @@
             "additionalProperties": false,
             "properties": {
                 "action": "setChatEnabled",
+                "payload": {
+                    "required": ["enabled"],
+                    "additionalProperties": false,
+                    "properties": {
+                        "enabled": {"type": "boolean"}
+                    }
+                }
+            }
+        },
+        "SetTeamsEnabledAction": {
+            "required": ["action", "payload"],
+            "additionalProperties": false,
+            "properties": {
+                "action": "setTeamsEnabled",
                 "payload": {
                     "required": ["enabled"],
                     "additionalProperties": false,

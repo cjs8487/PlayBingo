@@ -16,6 +16,7 @@ import {
     UnmarkAction,
     SetChatEnabledAction,
     JoinTeamAction,
+    SetTeamsEnabledAction,
 } from '@playbingo/types';
 import { BingoMode } from '@prisma/client';
 import { WebSocket } from 'ws';
@@ -37,6 +38,7 @@ import {
     createUpdateTeam,
     setRoomBoard,
     updateRaceHandler,
+    updateTeamsEnabled,
 } from '../database/Rooms';
 import { isStaff } from '../database/Users';
 import {
@@ -888,6 +890,12 @@ export default class Room {
 
     handleSetChatEnabled(action: SetChatEnabledAction) {
         this.chatEnabled = action.payload.enabled;
+        this.sendRoomData();
+    }
+
+    handleSetTeamsEnabled(action: SetTeamsEnabledAction) {
+        this.teamsEnabled = action.payload.enabled;
+        updateTeamsEnabled(this.id, this.teamsEnabled).then();
         this.sendRoomData();
     }
     //#endregion
