@@ -2,6 +2,9 @@
 -- Legacy Player.color and Player.spectator data are retained for a later migration.
 ALTER TABLE "Player" ADD COLUMN "teamId" TEXT;
 
+-- AlterTable
+ALTER TABLE "Room" ADD COLUMN "teamsEnabled" BOOLEAN NOT NULL DEFAULT false;
+
 -- CreateTable
 CREATE TABLE "Team" (
     "id" TEXT NOT NULL,
