@@ -70,7 +70,7 @@ import Team from './Team';
 
 export type HiddenCell = {
     revealed: false;
-    completedPlayers: string[];
+    completedTeams: string[];
 };
 
 export enum BoardGenerationMode {
@@ -278,11 +278,11 @@ export default class Room {
                     ? ({
                           revealed: true,
                           goal: cell.goal,
-                          completedPlayers: cell.completedPlayers,
+                          completedTeams: cell.completedTeams,
                       } as RevealedCell)
                     : ({
                           revealed: false,
-                          completedPlayers: cell.completedPlayers,
+                          completedTeams: cell.completedTeams,
                       } as HiddenCell);
             }),
         );
@@ -315,7 +315,7 @@ export default class Room {
             this.board = generator.board.map((row) =>
                 row.map((goal) => ({
                     goal: goal,
-                    completedPlayers: [],
+                    completedTeams: [],
                     revealed: true,
                 })),
             );
@@ -442,41 +442,28 @@ export default class Room {
         auth: RoomTokenPayload,
         socket: WebSocket,
     ): ServerMessage {
-        let player: Player | undefined;
-        let playerTeam: Team | undefined;
+        let player = this.getAllPlayers().find(
+            (player) => player.id === auth.playerId,
+        );
+        let playerTeam = auth.isSpectating
+            ? undefined
+            : player
+              ? this.getTeamForPlayer(player.id)
+              : undefined;
         let newPlayer = false;
-        let playerIsAuthed = false;
-        if (!auth.isSpectating) {
-            this.teams.forEach((team) => {
-                if (team.players.has(auth.playerId)) {
-                    playerIsAuthed = true;
-                    playerTeam = team;
-                    player = team.players.get(auth.playerId);
-                }
-            });
-        } else {
-            player = this.spectators.get(auth.playerId);
-            if (player) {
-                playerIsAuthed = true;
-            }
-        }
-        if (playerIsAuthed) {
-            if (!player) {
-                return { action: 'unauthorized' };
-            }
-        } else if (action.payload) {
+        if (!player && action.payload) {
             const teamId = auth.isSpectating ? undefined : randomUUID();
             if (!auth.isSpectating) {
                 playerTeam = new Team(
                     this,
                     teamId!,
                     `Team ${action.payload.nickname}`,
+                    'blue',
                 );
                 player = new Player(
                     this,
                     auth.playerId,
                     action.payload.nickname,
-                    undefined,
                     auth.isMonitor,
                     playerTeam.obfuscateBoard,
                     teamId,
@@ -489,7 +476,6 @@ export default class Room {
                     this,
                     auth.playerId,
                     action.payload.nickname,
-                    undefined,
                     auth.isMonitor,
                     this.spectatorObfuscateBoard,
                     teamId,
@@ -498,13 +484,8 @@ export default class Room {
                 this.spectators.set(auth.playerId, player);
             }
             newPlayer = true;
-        } else {
-            if (!playerIsAuthed) {
-                return { action: 'unauthorized' };
-            }
         }
 
-        // I don't think this is necessary anymore, but I'm mainly putting it here for type safety
         if (!player || (!auth.isSpectating && !playerTeam)) {
             return { action: 'unauthorized' };
         }
@@ -514,14 +495,14 @@ export default class Room {
                 this.sendChat(`${player.nickname} is now spectating`);
             } else {
                 this.sendChat([
-                    { contents: player.nickname, color: player.color },
+                    { contents: player.nickname, color: playerTeam!.color },
                     ` has joined playing for ${playerTeam!.name}.`,
                 ]);
             }
         }
 
         player.addConnection(auth.uuid, socket);
-        addJoinAction(this.id, player.nickname, player.color).then();
+        addJoinAction(this.id, player.nickname).then();
         if (playerTeam) {
             createUpdateTeam(this.id, playerTeam).then();
         }
@@ -606,7 +587,7 @@ export default class Room {
         this.sendChat([
             {
                 contents: team.players.size > 1 ? team.name : player.nickname,
-                color: player.color,
+                color: team.color,
             },
             ` joined ${team.name}`,
         ]);
@@ -641,11 +622,15 @@ export default class Room {
                     this.teams.delete(playerTeam.id);
                 }
             }
-            this.sendChat([
-                { contents: player.nickname, color: player.color },
-                ' has left.',
-            ]);
-            addLeaveAction(this.id, player.nickname, player.color).then();
+            if (playerTeam) {
+                this.sendChat([
+                    { contents: player.nickname, color: playerTeam.color },
+                    ' has left.',
+                ]);
+            } else {
+                this.sendChat(`${player.nickname} has left.`);
+            }
+            addLeaveAction(this.id, player.nickname).then();
             if (this.getAllPlayers().length === 0) {
                 this.close();
             }
@@ -668,7 +653,6 @@ export default class Room {
         addChatAction(
             this.id,
             player.nickname,
-            player.color,
             chatMessage,
         ).then();
     }
@@ -688,11 +672,11 @@ export default class Room {
 
         if (
             this.bingoMode === BingoMode.LOCKOUT &&
-            this.board[row][col].completedPlayers.length > 0
+            this.board[row][col].completedTeams.length > 0
         )
             return;
-        this.board[row][col].completedPlayers.push(player.id);
-        this.board[row][col].completedPlayers.sort((a, b) =>
+        this.board[row][col].completedTeams.push(team.id);
+        this.board[row][col].completedTeams.sort((a, b) =>
             a.localeCompare(b),
         );
         team.mark(row, col);
@@ -700,7 +684,7 @@ export default class Room {
         this.sendChat([
             {
                 contents: team.players.size > 1 ? team.name : player.nickname,
-                color: player.color,
+                color: team.color,
             },
             ` marked ${this.board[row][col].goal.goal} (${row},${col})`,
         ]);
@@ -720,15 +704,15 @@ export default class Room {
         const { row: unRow, col: unCol } = action.payload;
         if (unRow === undefined || unCol === undefined) return;
         if (!team.hasMarked(unRow, unCol)) return;
-        this.board[unRow][unCol].completedPlayers = this.board[unRow][
+        this.board[unRow][unCol].completedTeams = this.board[unRow][
             unCol
-        ].completedPlayers.filter((playerId) => playerId !== player.id);
+        ].completedTeams.filter((teamId) => teamId !== team.id);
         team.unmark(unRow, unCol);
         this.sendCellUpdate(unRow, unCol);
         this.sendChat([
             {
                 contents: team.players.size > 1 ? team.name : player.nickname,
-                color: player.color,
+                color: team.color,
             },
             ` unmarked ${this.board[unRow][unCol].goal.goal} (${unRow},${unCol})`,
         ]);
@@ -748,17 +732,16 @@ export default class Room {
         if (!color) {
             return;
         }
-        addChangeColorAction(
-            this.id,
-            player.nickname,
-            player.color,
-            color,
-        ).then();
-        player.color = color;
-        createUpdatePlayer(this.id, player).then();
+        const team = this.getTeamForPlayer(player.id);
+        if (!team) {
+            return { action: 'unauthorized' };
+        }
+        addChangeColorAction(this.id, team.name, team.color, color).then();
+        team.color = color;
+        createUpdateTeam(this.id, team).then();
         this.sendChat([
-            { contents: player.nickname, color: player.color },
-            ' has changed their color to ',
+            { contents: team.name, color: team.color },
+            ' has changed its color to ',
             { contents: color, color },
         ]);
     }
@@ -805,18 +788,21 @@ export default class Room {
 
     handleSocketClose(ws: WebSocket) {
         let player: Player | undefined;
-        for (const p of this.getAllPlayers()) {
-            if (p.handleSocketClose(ws)) {
-                player = p;
-            }
-        }
+        this.getAllPlayers().forEach((p) => {
+            if (p.handleSocketClose(ws)) player = p;
+        });
         if (player) {
             if (!player.hasConnections()) {
-                this.sendChat([
-                    { contents: player.nickname, color: player.color },
-                    ' has left.',
-                ]);
-                addLeaveAction(this.id, player.nickname, player.color).then();
+                const team = this.getTeamForPlayer(player.id);
+                if (team) {
+                    this.sendChat([
+                        { contents: player.nickname, color: team.color },
+                        ' has left.',
+                    ]);
+                } else {
+                    this.sendChat(`${player.nickname} has left.`);
+                }
+                addLeaveAction(this.id, player.nickname).then();
                 if (this.getAllPlayers().length === 0) {
                     this.close();
                 }
@@ -1003,8 +989,7 @@ export default class Room {
                     this.sendChat([
                         {
                             contents: team.name,
-                            // TODO: Which color should this be?
-                            color: 'white',
+                            color: team.color,
                         },
                         ' has achieved lockout!',
                     ]);
@@ -1017,8 +1002,7 @@ export default class Room {
                     this.sendChat([
                         {
                             contents: team.name,
-                            // TODO: Which color should this be?
-                            color: 'white',
+                            color: team.color,
                         },
                         ' no longer has lockout.',
                     ]);
@@ -1038,8 +1022,7 @@ export default class Room {
                         this.sendChat([
                             {
                                 contents: team.name,
-                                // TODO: Which color should this be?
-                                color: 'white',
+                                color: team.color,
                             },
                             ' has completed a line!',
                         ]);
@@ -1052,7 +1035,7 @@ export default class Room {
                         this.sendChat([
                             {
                                 contents: team.name,
-                                color: 'white',
+                                color: team.color,
                             },
                             ' has completed the goal!',
                         ]);
@@ -1067,7 +1050,7 @@ export default class Room {
                         this.sendChat([
                             {
                                 contents: team.name,
-                                color: 'white',
+                                color: team.color,
                             },
                             ' has no longer completed the goal.',
                         ]);
@@ -1085,7 +1068,7 @@ export default class Room {
                         this.sendChat([
                             {
                                 contents: team.name,
-                                color: 'white',
+                                color: team.color,
                             },
                             ' has achieved blackout!',
                         ]);
@@ -1097,7 +1080,7 @@ export default class Room {
                         this.sendChat([
                             {
                                 contents: team.name,
-                                color: 'white',
+                                color: team.color,
                             },
                             ' no longer has blackout.',
                         ]);
@@ -1288,13 +1271,15 @@ export default class Room {
     }
 
     revealCardForPlayer(player: Player) {
-        this.sendChat([
-            {
-                contents: player.nickname,
-                color: player.color,
-            },
-            ' has revealed the card.',
-        ]);
+        const team = this.getTeamForPlayer(player.id);
+        if (team) {
+            this.sendChat([
+                { contents: player.nickname, color: team.color },
+                ' has revealed the card.',
+            ]);
+        } else {
+            this.sendChat(`${player.nickname} has revealed the card.`);
+        }
         player.sendMessage({
             action: 'syncBoard',
             board: {

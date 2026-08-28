@@ -331,7 +331,7 @@ async function getOrLoadRoom(slug: string): Promise<Room | null> {
         newRoom.board = chunk(
             (await getGoalList(dbRoom.board)).map((goal) => ({
                 goal: goal,
-                completedPlayers: [],
+                completedTeams: [],
                 revealed: true,
             })),
             generatorSettings.boardLayout.layout[0].length,
@@ -340,7 +340,7 @@ async function getOrLoadRoom(slug: string): Promise<Room | null> {
         newRoom.board = chunk(
             (await getGoalList(dbRoom.board)).map((goal) => ({
                 goal: goal,
-                completedPlayers: [],
+                completedTeams: [],
                 revealed: true,
             })),
             5,
@@ -349,7 +349,12 @@ async function getOrLoadRoom(slug: string): Promise<Room | null> {
     newRoom.computeVictoryMasks();
 
     dbRoom.teams.forEach((dbTeam) => {
-        const team = new Team(newRoom, dbTeam.key, dbTeam.name);
+        const team = new Team(
+            newRoom,
+            dbTeam.key,
+            dbTeam.name,
+            dbTeam.color,
+        );
         newRoom.teams.set(team.id, team);
     })
 
@@ -360,7 +365,6 @@ async function getOrLoadRoom(slug: string): Promise<Room | null> {
                 newRoom,
                 dbPlayer.key,
                 dbPlayer.nickname,
-                dbPlayer.color,
                 dbPlayer.monitor,
                 newRoom.spectatorObfuscateBoard,
                 undefined,
@@ -380,7 +384,6 @@ async function getOrLoadRoom(slug: string): Promise<Room | null> {
             newRoom,
             dbPlayer.key,
             dbPlayer.nickname,
-            dbPlayer.color,
             dbPlayer.monitor,
             team.obfuscateBoard,
             team.id,
@@ -422,14 +425,14 @@ async function getOrLoadRoom(slug: string): Promise<Room | null> {
                     break;
                 }
                 if (!team.hasMarked(row, col)) {
-                    newRoom.board[row][col].completedPlayers.push(playerId);
-                    newRoom.board[row][col].completedPlayers.sort((a, b) =>
+                    newRoom.board[row][col].completedTeams.push(team.id);
+                    newRoom.board[row][col].completedTeams.sort((a, b) =>
                         a.localeCompare(b),
                     );
                     team.mark(row, col);
                     newRoom.sendCellUpdate(row, col);
                     newRoom.sendChat([
-                        { contents: player.nickname, color: player.color },
+                        { contents: team.name, color: team.color },
                         ` marked ${newRoom.board[row][col].goal.goal} (${row},${col})`,
                     ]);
                 }
@@ -439,13 +442,13 @@ async function getOrLoadRoom(slug: string): Promise<Room | null> {
                     break;
                 }
                 if (team.hasMarked(row, col)) {
-                    newRoom.board[row][col].completedPlayers = newRoom.board[
+                    newRoom.board[row][col].completedTeams = newRoom.board[
                         row
-                    ][col].completedPlayers.filter((p) => p !== playerId);
+                    ][col].completedTeams.filter((teamId) => teamId !== team.id);
                     team.unmark(row, col);
                     newRoom.sendCellUpdate(row, col);
                     newRoom.sendChat([
-                        { contents: player.nickname, color: player.color },
+                        { contents: team.name, color: team.color },
                         ` unmarked ${newRoom.board[row][col].goal.goal} (${row},${col})`,
                     ]);
                 }
@@ -454,6 +457,9 @@ async function getOrLoadRoom(slug: string): Promise<Room | null> {
                 newRoom.sendChat(`${nickname}: ${message}`);
                 break;
             case 'CHANGECOLOR':
+                if (team) {
+                    team.color = newColor;
+                }
                 newRoom.sendChat([
                     { contents: nickname, color: oldColor },
                     ' has changed their color to ',

@@ -13,6 +13,8 @@ export default class Team {
      * The name of the team
      */
     name: string;
+    /** The color used to display this team's marks */
+    color: string;
     /**
      * The players on the team
      */
@@ -29,9 +31,9 @@ export default class Team {
      * modes */
     exploredGoals: bigint;
 
-    constructor(room: Room, id: string, name: string) {
+    constructor(room: Room, id: string, name: string, color: string = 'blue') {
         this.room = room;
-        ((this.id = id), (this.name = name));
+        ((this.id = id), (this.name = name), (this.color = color));
         this.players = new Map<string, Player>();
         this.markedGoals = 0n;
         this.goalCount = 0;
@@ -56,6 +58,7 @@ export default class Team {
         return {
             id: this.id,
             name: this.name,
+            color: this.color,
             players: Array.from(this.players.values()).map((player) =>
                 player.toClientData(),
             ),
@@ -114,11 +117,11 @@ export default class Team {
                     ? ({
                           revealed: true,
                           goal: cell.goal,
-                          completedPlayers: cell.completedPlayers,
+                          completedTeams: cell.completedTeams,
                       } as RevealedCell)
                     : ({
                           revealed: false,
-                          completedPlayers: cell.completedPlayers,
+                          completedTeams: cell.completedTeams,
                       } as HiddenCell),
             ),
         );

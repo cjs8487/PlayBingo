@@ -49,11 +49,11 @@ const addRoomAction = (
     });
 };
 
-export const addJoinAction = (room: string, nickname: string, color: string) =>
-    addRoomAction(room, RoomActionType.JOIN, { nickname, color });
+export const addJoinAction = (room: string, nickname: string) =>
+    addRoomAction(room, RoomActionType.JOIN, { nickname });
 
-export const addLeaveAction = (room: string, nickname: string, color: string) =>
-    addRoomAction(room, RoomActionType.LEAVE, { nickname, color });
+export const addLeaveAction = (room: string, nickname: string) =>
+    addRoomAction(room, RoomActionType.LEAVE, { nickname });
 
 export const addMarkAction = (
     room: string,
@@ -72,18 +72,17 @@ export const addUnmarkAction = (
 export const addChatAction = (
     room: string,
     nickname: string,
-    color: string,
     message: string,
-) => addRoomAction(room, RoomActionType.CHAT, { nickname, color, message });
+) => addRoomAction(room, RoomActionType.CHAT, { nickname, message });
 
 export const addChangeColorAction = (
     room: string,
-    nickname: string,
+    teamName: string,
     oldColor: string,
     newColor: string,
 ) =>
     addRoomAction(room, RoomActionType.CHANGECOLOR, {
-        nickname,
+        teamName,
         oldColor,
         newColor,
     });
@@ -124,7 +123,6 @@ export const createUpdatePlayer = async (room: string, player: Player) => {
         create: {
             key: player.id,
             nickname: player.nickname,
-            color: player.color,
             room: { connect: { id: room } },
             user: player.userId
                 ? { connect: { id: player.userId } }
@@ -132,12 +130,12 @@ export const createUpdatePlayer = async (room: string, player: Player) => {
             team: player.teamId
                 ? { connect: { id: player.teamId } }
                 : undefined,
+            spectator: !player.teamId,
             monitor: player.monitor,
             finishedAt: player.finishedAt,
         },
         update: {
             nickname: player.nickname,
-            color: player.color,
             user: player.userId
                 ? { connect: { id: player.userId } }
                 : { disconnect: true },
@@ -145,6 +143,7 @@ export const createUpdatePlayer = async (room: string, player: Player) => {
             team: player.teamId
                 ? { connect: { id: player.teamId } }
                 : { disconnect: true },
+            spectator: !player.teamId,
             finishedAt: player.finishedAt ?? null,
         },
     });
@@ -156,10 +155,12 @@ export const createUpdateTeam = async (room: string, team: Team) => {
         create: {
             key: team.id,
             name: team.name,
+            color: team.color,
             room: { connect: { id: room } },
         },
         update: {
             name: team.name,
+            color: team.color,
         },
     });
 };

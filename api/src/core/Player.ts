@@ -33,8 +33,6 @@ export default class Player {
     id: string;
     /** Player display name */
     nickname: string;
-    /** The players chosen color */
-    color: string;
     userId?: string;
     /** If the player has permission to perform monitor actions in the room */
     monitor: boolean;
@@ -53,7 +51,6 @@ export default class Player {
         room: Room,
         id: string,
         nickname: string,
-        color: string = 'blue',
         monitor: boolean,
         getBoardView: BoardViewProvider,
         teamId?: string,
@@ -62,7 +59,6 @@ export default class Player {
         this.room = room;
         ((this.id = id), (this.nickname = nickname));
         this.teamId = teamId;
-        this.color = color;
         this.monitor = monitor;
         this.userId = userId;
         this.getBoardView = getBoardView;
@@ -136,7 +132,6 @@ export default class Player {
             id: this.id,
             nickname: this.nickname,
             teamId: this.teamId || '',
-            color: this.color,
             raceStatus: raceUser
                 ? {
                       connected: true,

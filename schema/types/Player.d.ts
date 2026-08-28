@@ -8,7 +8,6 @@
 export interface Player {
   id: string;
   nickname: string;
-  color: string;
   raceStatus: RaceStatusDisconnected | RaceStatusConnected;
   monitor: boolean;
   showInRoom: boolean;

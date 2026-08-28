@@ -181,6 +181,7 @@ model Team {
   id        String    @id @unique @default(cuid(2))
   key       String
   name      String
+  color     String    @default("blue")
   room      Room      @relation(fields: [roomId], references: [id])
   roomId    String
   players   Player[]
@@ -197,7 +198,10 @@ model Player {
   team       Team?      @relation(fields: [teamId, roomId], references: [id, roomId])
   teamId     String?
   nickname   String
+  /// @deprecated Use Team.color. Retained temporarily to preserve existing data.
   color      String    @default("blue")
+  /// @deprecated Use teamId to distinguish players from spectators. Retained temporarily for data migration compatibility.
+  spectator  Boolean
   monitor    Boolean   @default(false)
   roomId     String
   userId     String?

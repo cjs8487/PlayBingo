@@ -83,13 +83,13 @@ export type Board = RevealedBoard | HiddenBoard;
 export interface Team {
   id: string;
   name: string;
+  color: string;
   goalCount: number;
   players: Player[];
 }
 export interface Player {
   id: string;
   nickname: string;
-  color: string;
   raceStatus: RaceStatusDisconnected | RaceStatusConnected;
   monitor: boolean;
   showInRoom: boolean;
@@ -112,7 +112,7 @@ export interface RaceStatusConnected {
 }
 export interface RevealedCell {
   goal: Goal;
-  completedPlayers: string[];
+  completedTeams: string[];
   revealed: true;
 }
 /**
@@ -151,7 +151,7 @@ export interface GoalTag {
 }
 export interface HiddenCell {
   revealed: false;
-  completedPlayers: string[];
+  completedTeams: string[];
 }
 export interface RevealedBoard {
   board: Cell[][];

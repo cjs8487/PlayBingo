@@ -14,7 +14,6 @@ const createPlayer = (team?: Team) =>
         room,
         'test',
         'Test Player',
-        'blue',
         false,
         team ? team.obfuscateBoard : room.spectatorObfuscateBoard,
         team?.id,

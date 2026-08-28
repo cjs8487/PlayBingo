@@ -16,7 +16,7 @@ export interface RevealedBoard {
 }
 export interface RevealedCell {
   goal: Goal;
-  completedPlayers: string[];
+  completedTeams: string[];
   revealed: true;
 }
 /**
@@ -55,7 +55,7 @@ export interface GoalTag {
 }
 export interface HiddenCell {
   revealed: false;
-  completedPlayers: string[];
+  completedTeams: string[];
 }
 export interface HiddenBoard {
   hidden: true;

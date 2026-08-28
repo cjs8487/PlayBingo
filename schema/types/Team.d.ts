@@ -8,13 +8,13 @@
 export interface Team {
   id: string;
   name: string;
+  color: string;
   goalCount: number;
   players: Player[];
 }
 export interface Player {
   id: string;
   nickname: string;
-  color: string;
   raceStatus: RaceStatusDisconnected | RaceStatusConnected;
   monitor: boolean;
   showInRoom: boolean;

@@ -1,4 +1,5 @@
 -- AlterTable
+-- Legacy Player.color and Player.spectator data are retained for a later migration.
 ALTER TABLE "Player" ADD COLUMN "teamId" TEXT;
 
 -- CreateTable
@@ -6,6 +7,7 @@ CREATE TABLE "Team" (
     "id" TEXT NOT NULL,
     "key" TEXT NOT NULL,
     "name" TEXT NOT NULL,
+    "color" TEXT NOT NULL DEFAULT 'blue',
     "roomId" TEXT NOT NULL,
 
     CONSTRAINT "Team_pkey" PRIMARY KEY ("id")
