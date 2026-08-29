@@ -303,6 +303,16 @@ games.get('/:slug/goals', async (req, res) => {
 
 games.post('/:slug/goals', async (req, res) => {
     const { slug } = req.params;
+
+    if (!req.session.user) {
+        res.sendStatus(401);
+        return;
+    }
+    if (!(await isModerator(slug, req.session.user))) {
+        res.sendStatus(403);
+        return;
+    }
+
     const {
         goal,
         description,
