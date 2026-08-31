@@ -7,8 +7,7 @@
         "nickname",
         "raceStatus",
         "monitor",
-        "showInRoom",
-        "teamId"
+        "showInRoom"
     ],
     "properties": {
         "id": {
