@@ -17,6 +17,8 @@
         "db:update-defaults": "tsx scripts/update-prisma-defaults.ts",
         "docker:up": "docker compose up -d",
         "docker:down": "docker compose down",
+        "lint": "eslint .",
+        "lint:fix": "eslint . --fix",
         "test": "jest --forceExit",
         "prod:start": "node ./build/src/main.js",
         "db:data-migration": "tsx prisma/migrations/20260102221138_make_discrete_resource_model/data-migration.ts"
@@ -81,6 +83,7 @@
         "ts-node": "^10.9.2",
         "tsc-watch": "^7.2.0",
         "tsx": "^4.21.0",
-        "typescript": "^5.9.3"
+        "typescript": "^5.9.3",
+        "typescript-eslint": "^8.68.0"
     }
 }
