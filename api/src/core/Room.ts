@@ -12,6 +12,7 @@ import {
     Player as PlayerData,
     Team as TeamData,
     RevealedCell,
+    RoomData,
     ServerMessage,
     UnmarkAction,
     SetChatEnabledAction,
@@ -256,30 +257,130 @@ export default class Room {
     }
 
     getAllPlayers(): Player[] {
-        const players = this.teams
-            .values()
-            .flatMap((team) => team.players.values());
-        return [...this.spectators.values(), ...players];
+        const players: Player[] = [...this.spectators.values()];
+        this.teams.forEach((team) => {
+            team.players.forEach((player) => players.push(player));
+        });
+        return players;
     }
 
     getPlayerById(playerId: string): Player | undefined {
         return this.getAllPlayers().find((player) => player.id === playerId);
     }
 
-    getPlayerDisplayName(player: Player, team?: Team): string {
-        return this.teamsEnabled && team ? team.name : player.nickname;
+    getTeamForPlayer(playerId: string): Team | undefined {
+        return Array.from(this.teams.values()).find((team) =>
+            team.players.has(playerId),
+        );
     }
 
-    getTeamDisplayName(team: Team): string {
-        if (this.teamsEnabled) {
-            return team.name;
+    /** Creates a new single player team owned by the given player */
+    createTeamForPlayer(player: Player): Team {
+        const team = new Team(
+            this,
+            randomUUID(),
+            this.teamsEnabled ? `${player.nickname}'s Team` : player.nickname,
+            'blue',
+        );
+        team.addPlayer(player);
+        player.teamId = team.id;
+        this.teams.set(team.id, team);
+        return team;
+    }
+
+    /**
+     * Removes a player from their current team, deleting the team if they were
+     * its last member.
+     *
+     * @returns The team the player was removed from, if it still exists
+     */
+    removePlayerFromTeam(player: Player): Team | undefined {
+        const team = this.getTeamForPlayer(player.id);
+        player.teamId = undefined;
+        if (!team) {
+            return undefined;
         }
-        return team.players.values().next().value?.nickname ?? team.name;
+        team.removePlayer(player.id);
+        if (team.players.size === 0) {
+            this.deleteTeam(team.id);
+            return undefined;
+        }
+        return team;
+    }
+
+    /**
+     * Moves a player between playing and spectating, creating or tearing down
+     * their team as needed.
+     *
+     * @returns true if the player's participation actually changed
+     */
+    setPlayerSpectating(player: Player, spectating: boolean) {
+        const isSpectating = this.spectators.has(player.id);
+        if (isSpectating === spectating) {
+            return false;
+        }
+        const timestamp = new Date();
+        if (spectating) {
+            const oldTeam = this.removePlayerFromTeam(player);
+            this.spectators.set(player.id, player);
+            this.sendChat(`${player.nickname} is now spectating`, timestamp);
+            if (oldTeam) {
+                createUpdateTeam(this.id, oldTeam).then();
+            }
+            createUpdatePlayer(this.id, player).then();
+        } else {
+            this.spectators.delete(player.id);
+            const team = this.createTeamForPlayer(player);
+            this.sendChat(
+                [
+                    { contents: player.nickname, color: team.color },
+                    this.teamsEnabled
+                        ? ` is now playing for ${team.name}.`
+                        : ' is now playing.',
+                ],
+                timestamp,
+            );
+            this.persistPlayer(player);
+        }
+        return true;
     }
 
     deleteTeam(teamId: string) {
         this.teams.get(teamId)?.destroy();
-        this.teams.delete(teamId);
+        if (!this.teams.delete(teamId)) {
+            return;
+        }
+        // the team no longer exists, so clients can't resolve it from the cell
+        let boardChanged = false;
+        this.board.forEach((row) => {
+            row.forEach((cell) => {
+                const index = cell.completedTeams.indexOf(teamId);
+                if (index >= 0) {
+                    cell.completedTeams.splice(index, 1);
+                    boardChanged = true;
+                }
+            });
+        });
+        if (boardChanged) {
+            this.sendSyncBoard();
+        }
+    }
+
+    /**
+     * Writes a player and their team to the database. The team is written
+     * first, since the player record references it.
+     */
+    private persistPlayer(player: Player) {
+        const team = this.getTeamForPlayer(player.id);
+        if (!team) {
+            createUpdatePlayer(this.id, player).then();
+            return;
+        }
+        createUpdateTeam(this.id, team)
+            .then(() => createUpdatePlayer(this.id, player))
+            .catch((e) =>
+                this.logError(`Failed to persist player state - ${e}`),
+            );
     }
 
     spectatorObfuscateBoard(): (RevealedCell | HiddenCell)[][] {
@@ -431,16 +532,7 @@ export default class Room {
         }
 
         // reset board aware state
-        this.teams.values().forEach((team) => {
-            team.markedGoals = 0n;
-            team.goalCount = 0;
-            team.goalComplete = false;
-            team.linesComplete = 0;
-            team.exploredGoals = 0n;
-            team.players.forEach((player) => {
-                player.finishedAt = undefined;
-            });
-        });
+        this.teams.forEach((team) => team.reset());
         this.raceHandler.resetTimer();
 
         this.sendSyncBoard();
@@ -460,13 +552,34 @@ export default class Room {
         return { teams, spectators };
     }
 
-    getTeamForPlayer(playerId: string): Team | undefined {
-        for (const team of this.teams.values()) {
-            if (team.players.has(playerId)) {
-                return team;
-            }
-        }
-        return undefined;
+    getRoomData(): RoomData {
+        return {
+            game: this.game,
+            slug: this.slug,
+            name: this.name,
+            gameSlug: this.gameSlug,
+            newGenerator: this.newGenerator,
+            seed: this.seed,
+            racetimeConnection:
+                'url' in this.raceHandler
+                    ? {
+                          gameActive: this.racetimeEligible,
+                          url: (this.raceHandler as RacetimeHandler).url,
+                          startDelay:
+                              (this.raceHandler as RacetimeHandler).data
+                                  ?.start_delay ?? undefined,
+                          status: (this.raceHandler as RacetimeHandler).data
+                              ?.status.verbose_value,
+                      }
+                    : undefined,
+            mode: getModeString(this.bingoMode, this.lineCount),
+            variant: this.variantName,
+            teamsEnabled: this.teamsEnabled,
+            chatEnabled: this.chatEnabled,
+            startedAt: this.raceHandler?.getStartTime(),
+            finishedAt: this.raceHandler?.getEndTime(),
+            raceHandler: this.raceHandler?.key(),
+        };
     }
 
     //#region Handlers
@@ -476,76 +589,58 @@ export default class Room {
         socket: WebSocket,
     ): ServerMessage {
         let player = this.getPlayerById(auth.playerId);
-        let playerTeam = auth.isSpectating
-            ? undefined
-            : player
-              ? this.getTeamForPlayer(player.id)
-              : undefined;
+        let playerTeam = player ? this.getTeamForPlayer(player.id) : undefined;
         let newPlayer = false;
         if (!player && action.payload) {
-            const teamId = auth.isSpectating ? undefined : randomUUID();
-            if (!auth.isSpectating) {
-                playerTeam = new Team(
-                    this,
-                    teamId!,
-                    `Team ${action.payload.nickname}`,
-                    'blue',
-                );
-                player = new Player(
-                    this,
-                    auth.playerId,
-                    action.payload.nickname,
-                    auth.isMonitor,
-                    playerTeam.obfuscateBoard,
-                    teamId,
-                    auth.userId,
-                );
-                playerTeam.addPlayer(player);
-                this.teams.set(playerTeam!.id, playerTeam!);
+            player = new Player(
+                this,
+                auth.playerId,
+                action.payload.nickname,
+                auth.isMonitor,
+                undefined,
+                auth.userId,
+            );
+            if (auth.isSpectating) {
+                this.spectators.set(player.id, player);
             } else {
-                player = new Player(
-                    this,
-                    auth.playerId,
-                    action.payload.nickname,
-                    auth.isMonitor,
-                    this.spectatorObfuscateBoard,
-                    teamId,
-                    auth.userId,
-                );
-                this.spectators.set(auth.playerId, player);
+                playerTeam = this.createTeamForPlayer(player);
             }
             newPlayer = true;
         }
 
-        // I don't think this is necessary anymore, but I'm mainly putting it here for type safety
-        if (!player || (!auth.isSpectating && !playerTeam)) {
+        if (!player) {
             return { action: 'unauthorized' };
         }
 
         const timestamp = new Date();
         if (newPlayer) {
-            if (auth.isSpectating) {
+            if (playerTeam) {
                 this.sendChat(
-                    `${player.nickname} is now spectating`,
+                    [
+                        { contents: player.nickname, color: playerTeam.color },
+                        this.teamsEnabled
+                            ? ` has joined playing for ${playerTeam.name}.`
+                            : ' has joined.',
+                    ],
                     timestamp,
                 );
             } else {
                 this.sendChat(
-                    [
-                        { contents: player.nickname, color: playerTeam!.color },
-                        ` has joined playing for ${playerTeam!.name}.`,
-                    ],
+                    `${player.nickname} is now spectating`,
                     timestamp,
                 );
             }
         }
 
         player.addConnection(auth.uuid, socket);
-        addJoinAction(this.id, player.nickname, timestamp).then();
-        if (playerTeam) {
-            createUpdateTeam(this.id, playerTeam).then();
-        }
-        createUpdatePlayer(this.id, player).then();
+        addJoinAction(
+            this.id,
+            player.id,
+            player.nickname,
+            playerTeam?.id,
+            timestamp,
+        ).then();
+        this.persistPlayer(player);
         return {
             action: 'connected',
             board: {
@@ -562,32 +657,7 @@ export default class Room {
             },
             chatHistory: this.chatHistory,
             connectedPlayer: player.toClientData(),
-            roomData: {
-                game: this.game,
-                slug: this.slug,
-                name: this.name,
-                gameSlug: this.gameSlug,
-                newGenerator: this.newGenerator,
-                seed: this.seed,
-                racetimeConnection: this.raceHandler
-                    ? 'url' in this.raceHandler
-                        ? {
-                              gameActive: this.racetimeEligible,
-                              url: (this.raceHandler as RacetimeHandler).url,
-                              startDelay: (this.raceHandler as RacetimeHandler)
-                                  .data?.start_delay,
-                              status: (this.raceHandler as RacetimeHandler).data
-                                  ?.status.verbose_value,
-                          }
-                        : undefined
-                    : { gameActive: this.racetimeEligible, url: undefined },
-                mode: getModeString(this.bingoMode, this.lineCount),
-                variant: this.variantName,
-                teamsEnabled: this.teamsEnabled,
-                startedAt: this.raceHandler?.getStartTime(),
-                finishedAt: this.raceHandler?.getEndTime(),
-                raceHandler: this.raceHandler?.key(),
-            },
+            roomData: this.getRoomData(),
             players: this.getPlayerData(),
         };
     }
@@ -607,33 +677,21 @@ export default class Room {
         if (!team) {
             return { action: 'unauthorized' };
         }
-        const oldTeam = this.getTeamForPlayer(player.id);
-        if (oldTeam) {
-            oldTeam.removePlayer(player.id);
-            if (oldTeam.players.size === 0) {
-                oldTeam.destroy();
-                this.teams.delete(oldTeam.id);
-            }
-        } else {
-            // player was spectator before
-            this.spectators.delete(player.id);
-        }
+        const oldTeam = this.removePlayerFromTeam(player);
+        this.spectators.delete(player.id);
         player.teamId = team.id;
         team.addPlayer(player);
-        createUpdatePlayer(this.id, player).then();
         if (oldTeam) {
             createUpdateTeam(this.id, oldTeam).then();
         }
-        if (team) {
-            createUpdateTeam(this.id, team).then();
-        }
+        this.persistPlayer(player);
         this.sendChat(
             [
                 {
                     contents: player.nickname,
                     color: team.color,
                 },
-                ` joined ${team.name}`,
+                ` joined ${team.getDisplayName()}`,
             ],
             new Date(),
         );
@@ -648,50 +706,56 @@ export default class Room {
         auth: RoomTokenPayload,
         token: string,
     ): ServerMessage {
-        let player: Player | undefined = undefined;
-        for (const p of this.getAllPlayers()) {
-            if (p.closeConnection(auth.uuid)) {
-                player = p;
-                break;
-            }
-        }
+        // closeConnection reports whether it owned the connection, so find
+        // stops as soon as the owning player has cleaned it up
+        const player = this.getAllPlayers().find((p) =>
+            p.closeConnection(auth.uuid),
+        );
         if (!player) {
             return { action: 'unauthorized' };
         }
         const hasLeft = !player.hasConnections();
         const timestamp = new Date();
         if (hasLeft) {
-            const playerTeam = this.getTeamForPlayer(player.id);
-            if (playerTeam) {
-                playerTeam.removePlayer(player.id);
-                if (playerTeam.players.size === 0) {
-                    playerTeam.destroy();
-                    this.teams.delete(playerTeam.id);
-                }
-                this.sendChat(
-                    [
-                        { contents: player.nickname, color: playerTeam.color },
-                        ' has left.',
-                    ],
-                    timestamp,
-                );
-            } else {
-                this.sendChat(`${player.nickname} has left.`, timestamp);
-            }
-            addLeaveAction(this.id, player.nickname, timestamp).then();
-            if (this.getAllPlayers().length === 0) {
-                this.close();
-            }
+            this.removePlayer(player, timestamp);
         }
         invalidateToken(token);
         return { action: 'disconnected' };
+    }
+
+    /** Removes a fully disconnected player from the room */
+    private removePlayer(player: Player, timestamp: Date) {
+        const playerTeam = this.getTeamForPlayer(player.id);
+        this.removePlayerFromTeam(player);
+        this.spectators.delete(player.id);
+        if (playerTeam) {
+            this.sendChat(
+                [
+                    { contents: player.nickname, color: playerTeam.color },
+                    ' has left.',
+                ],
+                timestamp,
+            );
+        } else {
+            this.sendChat(`${player.nickname} has left.`, timestamp);
+        }
+        addLeaveAction(
+            this.id,
+            player.id,
+            player.nickname,
+            playerTeam?.id,
+            timestamp,
+        ).then();
+        if (this.getAllPlayers().length === 0) {
+            this.close();
+        }
     }
 
     handleChat(
         action: ChatAction,
         auth: RoomTokenPayload,
     ): ServerMessage | undefined {
-        const player = this.getAllPlayers().find((p) => p.id === auth.playerId);
+        const player = this.getPlayerById(auth.playerId);
         if (!player) {
             return { action: 'unauthorized' };
         }
@@ -699,7 +763,13 @@ export default class Room {
         if (!chatMessage) return;
         const timestamp = new Date();
         this.sendChat(`${player.nickname}: ${chatMessage}`, timestamp);
-        addChatAction(this.id, player.nickname, chatMessage, timestamp).then();
+        addChatAction(
+            this.id,
+            player.id,
+            player.nickname,
+            chatMessage,
+            timestamp,
+        ).then();
     }
 
     handleMark(
@@ -728,14 +798,14 @@ export default class Room {
         this.sendChat(
             [
                 {
-                    contents: this.getPlayerDisplayName(player, team),
+                    contents: player.getDisplayName(),
                     color: team.color,
                 },
                 ` marked ${this.board[row][col].goal.goal} (${row},${col})`,
             ],
             timestamp,
         );
-        addMarkAction(this.id, player.id, row, col, timestamp).then();
+        addMarkAction(this.id, player.id, team.id, row, col, timestamp).then();
         this.checkWinConditions();
     }
 
@@ -760,14 +830,21 @@ export default class Room {
         this.sendChat(
             [
                 {
-                    contents: this.getPlayerDisplayName(player, team),
+                    contents: player.getDisplayName(),
                     color: team.color,
                 },
                 ` unmarked ${this.board[unRow][unCol].goal.goal} (${unRow},${unCol})`,
             ],
             timestamp,
         );
-        addUnmarkAction(this.id, player.id, unRow, unCol, timestamp).then();
+        addUnmarkAction(
+            this.id,
+            player.id,
+            team.id,
+            unRow,
+            unCol,
+            timestamp,
+        ).then();
         this.checkWinConditions();
     }
 
@@ -790,6 +867,8 @@ export default class Room {
         const timestamp = new Date();
         addChangeColorAction(
             this.id,
+            player.id,
+            team.id,
             team.name,
             team.color,
             color,
@@ -799,7 +878,10 @@ export default class Room {
         createUpdateTeam(this.id, team).then();
         this.sendChat(
             [
-                { contents: this.getTeamDisplayName(team), color: team.color },
+                {
+                    contents: player.getDisplayName(),
+                    color: team.color,
+                },
                 ' has changed their color to ',
                 { contents: color, color },
             ],
@@ -848,54 +930,26 @@ export default class Room {
     }
 
     handleSocketClose(ws: WebSocket) {
-        let player: Player | undefined;
-        for (const p of this.getAllPlayers()) {
-            if (p.handleSocketClose(ws)) {
-                player = p;
-            }
+        // handleSocketClose reports whether it owned the socket, so find stops
+        // as soon as the owning player has cleaned it up
+        const player = this.getAllPlayers().find((p) =>
+            p.handleSocketClose(ws),
+        );
+        if (!player) {
+            return false;
         }
-        const timestamp = new Date();
-        if (player) {
-            if (!player.hasConnections()) {
-                const team = this.getTeamForPlayer(player.id);
-                if (team) {
-                    this.sendChat(
-                        [
-                            { contents: player.nickname, color: team.color },
-                            ' has left.',
-                        ],
-                        timestamp,
-                    );
-                } else {
-                    this.sendChat(`${player.nickname} has left.`, timestamp);
-                }
-                addLeaveAction(this.id, player.nickname, timestamp).then();
-                if (this.getAllPlayers().length === 0) {
-                    this.close();
-                }
-            }
-            return true;
+        if (!player.hasConnections()) {
+            this.removePlayer(player, new Date());
         }
-        return false;
+        return true;
     }
 
     async handleRacetimeRoomCreated(url: string) {
         this.sendServerMessage({
             action: 'updateRoomData',
             roomData: {
-                game: this.game,
-                slug: this.slug,
-                name: this.name,
-                gameSlug: this.gameSlug,
-                seed: this.seed,
-                racetimeConnection: {
-                    url,
-                },
-                newGenerator: this.newGenerator,
-                mode: getModeString(this.bingoMode, this.lineCount),
-                variant: this.variantName,
-                teamsEnabled: this.teamsEnabled,
-                raceHandler: this.raceHandler?.key(),
+                ...this.getRoomData(),
+                racetimeConnection: { url },
             },
         });
         this.sendChat(`Racetime.gg room created ${url}`, new Date());
@@ -908,19 +962,8 @@ export default class Room {
         this.sendServerMessage({
             action: 'updateRoomData',
             roomData: {
-                game: this.game,
-                slug: this.slug,
-                name: this.name,
-                gameSlug: this.gameSlug,
-                seed: this.seed,
-                racetimeConnection: {
-                    url: undefined,
-                },
-                newGenerator: this.newGenerator,
-                mode: getModeString(this.bingoMode, this.lineCount),
-                variant: this.variantName,
-                teamsEnabled: this.teamsEnabled,
-                raceHandler: this.raceHandler?.key(),
+                ...this.getRoomData(),
+                racetimeConnection: { url: undefined },
             },
         });
     }
@@ -1040,33 +1083,7 @@ export default class Room {
     sendRoomData() {
         this.sendServerMessage({
             action: 'updateRoomData',
-            roomData: {
-                game: this.game,
-                slug: this.slug,
-                name: this.name,
-                gameSlug: this.gameSlug,
-                racetimeConnection:
-                    'url' in this.raceHandler
-                        ? {
-                              gameActive: this.racetimeEligible,
-                              url: (this.raceHandler as RacetimeHandler).url,
-                              startDelay:
-                                  (this.raceHandler as RacetimeHandler).data
-                                      ?.start_delay ?? undefined,
-                              status: (this.raceHandler as RacetimeHandler).data
-                                  ?.status.verbose_value,
-                          }
-                        : undefined,
-                newGenerator: this.newGenerator,
-                mode: getModeString(this.bingoMode, this.lineCount),
-                variant: this.variantName,
-                seed: this.seed,
-                teamsEnabled: this.teamsEnabled,
-                startedAt: this.raceHandler?.getStartTime(),
-                finishedAt: this.raceHandler?.getEndTime(),
-                raceHandler: this.raceHandler?.key(),
-                chatEnabled: this.chatEnabled,
-            },
+            roomData: this.getRoomData(),
         });
     }
 
@@ -1086,6 +1103,32 @@ export default class Room {
         }
     }
 
+    /** Sends a chat message attributed to a team */
+    private sendTeamChat(team: Team, message: string, timestamp: Date) {
+        this.sendChat(
+            [
+                {
+                    contents: team.getDisplayName(),
+                    color: team.color,
+                },
+                message,
+            ],
+            timestamp,
+        );
+    }
+
+    /** Marks a team, and every player on it, as finished or unfinished */
+    private setTeamComplete(team: Team, complete: boolean) {
+        team.goalComplete = complete;
+        team.players.forEach((player) => {
+            if (complete) {
+                this.raceHandler?.playerFinished(player);
+            } else {
+                this.raceHandler?.playerUnfinshed(player);
+            }
+        });
+    }
+
     private checkWinConditions() {
         const timestamp = new Date();
         this.teams.forEach((team) => {
@@ -1094,38 +1137,20 @@ export default class Room {
                     (this.board.length * this.board[0].length) / 2,
                 );
                 if (!team.goalComplete && team.goalCount >= goalsNeeded) {
-                    this.sendChat(
-                        [
-                            {
-                                contents: team.name,
-                                // TODO: Which color should this be?
-                                color: 'white',
-                            },
-                            ' has achieved lockout!',
-                        ],
+                    this.sendTeamChat(
+                        team,
+                        ' has achieved lockout!',
                         timestamp,
                     );
-                    team.goalComplete = true;
-                    team.players.values().forEach((player) => {
-                        this.raceHandler?.playerFinished(player);
-                    });
+                    this.setTeamComplete(team, true);
                 }
                 if (team.goalComplete && team.goalCount < goalsNeeded) {
-                    this.sendChat(
-                        [
-                            {
-                                contents: team.name,
-                                // TODO: Which color should this be?
-                                color: 'white',
-                            },
-                            ' no longer has lockout.',
-                        ],
+                    this.sendTeamChat(
+                        team,
+                        ' no longer has lockout.',
                         timestamp,
                     );
-                    team.goalComplete = false;
-                    team.players.values().forEach((player) => {
-                        this.raceHandler?.playerUnfinshed(player);
-                    });
+                    this.setTeamComplete(team, false);
                 }
             } else {
                 if (this.bingoMode === BingoMode.LINES) {
@@ -1135,49 +1160,27 @@ export default class Room {
                         0,
                     );
                     if (linesComplete > team.linesComplete) {
-                        this.sendChat(
-                            [
-                                {
-                                    contents: team.name,
-                                    // TODO: Which color should this be?
-                                    color: 'white',
-                                },
-                                ' has completed a line!',
-                            ],
+                        this.sendTeamChat(
+                            team,
+                            ' has completed a line!',
                             timestamp,
                         );
                     }
                     if (linesComplete >= this.lineCount && !team.goalComplete) {
-                        team.goalComplete = true;
-                        team.players.values().forEach((player) => {
-                            this.raceHandler?.playerFinished(player).then();
-                        });
-                        this.sendChat(
-                            [
-                                {
-                                    contents: team.name,
-                                    color: 'white',
-                                },
-                                ' has completed the goal!',
-                            ],
+                        this.setTeamComplete(team, true);
+                        this.sendTeamChat(
+                            team,
+                            ' has completed the goal!',
                             timestamp,
                         );
                     } else if (
                         linesComplete < this.lineCount &&
                         team.goalComplete
                     ) {
-                        team.goalComplete = false;
-                        team.players.values().forEach((player) => {
-                            this.raceHandler?.playerUnfinshed(player).then();
-                        });
-                        this.sendChat(
-                            [
-                                {
-                                    contents: team.name,
-                                    color: 'white',
-                                },
-                                ' has no longer completed the goal.',
-                            ],
+                        this.setTeamComplete(team, false);
+                        this.sendTeamChat(
+                            team,
+                            ' has no longer completed the goal.',
                             timestamp,
                         );
                     }
@@ -1187,33 +1190,17 @@ export default class Room {
                         team.hasCompletedGoals(mask),
                     );
                     if (complete && !team.goalComplete) {
-                        team.goalComplete = true;
-                        team.players.values().forEach((player) => {
-                            this.raceHandler?.playerFinished(player);
-                        });
-                        this.sendChat(
-                            [
-                                {
-                                    contents: team.name,
-                                    color: 'white',
-                                },
-                                ' has achieved blackout!',
-                            ],
+                        this.setTeamComplete(team, true);
+                        this.sendTeamChat(
+                            team,
+                            ' has achieved blackout!',
                             timestamp,
                         );
                     } else if (!complete && team.goalComplete) {
-                        team.goalComplete = false;
-                        team.players.values().forEach((player) => {
-                            this.raceHandler?.playerUnfinshed(player);
-                        });
-                        this.sendChat(
-                            [
-                                {
-                                    contents: team.name,
-                                    color: 'white',
-                                },
-                                ' no longer has blackout.',
-                            ],
+                        this.setTeamComplete(team, false);
+                        this.sendTeamChat(
+                            team,
+                            ' no longer has blackout.',
                             timestamp,
                         );
                     }
@@ -1261,8 +1248,8 @@ export default class Room {
             return false;
         }
 
-        const player = this.getAllPlayers().find(
-            (p) => p.id === `${isSession ? 'session' : 'user'}:${user}`,
+        const player = this.getPlayerById(
+            `${isSession ? 'session' : 'user'}:${user}`,
         );
         if (player) {
             return {
@@ -1294,9 +1281,7 @@ export default class Room {
     }
 
     joinRaceRoom(racetimeId: string, authToken: RoomTokenPayload) {
-        const player = this.getAllPlayers().find(
-            (p) => p.id === authToken.playerId,
-        );
+        const player = this.getPlayerById(authToken.playerId);
         if (!player) {
             this.logWarn('Unable to find a player for a verified room token');
             return false;
@@ -1306,9 +1291,7 @@ export default class Room {
     }
 
     leaveRaceRoom(authToken: RoomTokenPayload) {
-        const player = this.getAllPlayers().find(
-            (p) => p.id === authToken.playerId,
-        );
+        const player = this.getPlayerById(authToken.playerId);
         if (!player) {
             this.logWarn('Unable to find a player for a verified room token');
             return false;
@@ -1322,9 +1305,7 @@ export default class Room {
     }
 
     readyPlayer(roomAuth: RoomTokenPayload) {
-        const player = this.getAllPlayers().find(
-            (p) => p.id === roomAuth.playerId,
-        );
+        const player = this.getPlayerById(roomAuth.playerId);
         if (!player) {
             this.logWarn('Unable to find a player for a verified room token');
             return false;
@@ -1334,9 +1315,7 @@ export default class Room {
     }
 
     unreadyPlayer(roomAuth: RoomTokenPayload) {
-        const player = this.getAllPlayers().find(
-            (p) => p.id === roomAuth.playerId,
-        );
+        const player = this.getPlayerById(roomAuth.playerId);
         if (!player) {
             this.logWarn(
                 'Unable to find an identity for a verified room token',

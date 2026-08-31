@@ -32,7 +32,6 @@ import { GenerationFailedError } from '../../core/generation/GenerationFailedErr
 import RacetimeHandler from '../../core/integration/races/RacetimeHandler';
 import LocalTimer from '../../core/integration/races/LocalTimer';
 import { error } from 'console';
-import { getModeString } from '../../util/RoomUtils';
 import Team from '../../core/Team';
 
 const MIN_ROOM_GOALS_REQUIRED = 25;
@@ -354,27 +353,27 @@ async function getOrLoadRoom(slug: string): Promise<Room | null> {
     newRoom.computeVictoryMasks();
 
     dbRoom.teams.forEach((dbTeam) => {
-        const team = new Team(newRoom, dbTeam.key, dbTeam.name, dbTeam.color);
+        const team = new Team(newRoom, dbTeam.id, dbTeam.name, dbTeam.color);
         newRoom.teams.set(team.id, team);
     });
 
     dbRoom.players.forEach((dbPlayer) => {
-        // Player is spectator, no need to add a team
+        const player = new Player(
+            newRoom,
+            dbPlayer.key,
+            dbPlayer.nickname,
+            dbPlayer.monitor,
+            dbPlayer.teamId ?? undefined,
+            dbPlayer.userId ?? undefined,
+        );
+        player.finishedAt = dbPlayer.finishedAt?.toISOString();
+
+        // Player is a spectator, no need to add them to a team
         if (!dbPlayer.teamId) {
-            const player = new Player(
-                newRoom,
-                dbPlayer.key,
-                dbPlayer.nickname,
-                dbPlayer.monitor,
-                newRoom.spectatorObfuscateBoard,
-                undefined,
-                dbPlayer.userId ?? undefined,
-            );
-            player.finishedAt = dbPlayer.finishedAt?.toISOString();
             newRoom.spectators.set(player.id, player);
             return;
         }
-        // player is not spectator and is on a team
+
         const team = newRoom.teams.get(dbPlayer.teamId);
         if (!team) {
             // This really shouldn't happen, this is mostly here for type safety
@@ -382,18 +381,7 @@ async function getOrLoadRoom(slug: string): Promise<Room | null> {
                 `Team for player ${dbPlayer.nickname} not found, please report this to a developer.`,
             );
         }
-
-        const player = new Player(
-            newRoom,
-            dbPlayer.key,
-            dbPlayer.nickname,
-            dbPlayer.monitor,
-            team.obfuscateBoard,
-            team.id,
-            dbPlayer.userId ?? undefined,
-        );
-        player.finishedAt = dbPlayer.finishedAt?.toISOString();
-        team.players.set(player.id, player);
+        team.addPlayer(player);
     });
 
     switch (dbRoom.raceHandler) {
@@ -415,7 +403,6 @@ async function getOrLoadRoom(slug: string): Promise<Room | null> {
     dbRoom.history.forEach((action) => {
         const {
             nickname,
-            color,
             newColor,
             oldColor,
             row,
@@ -425,22 +412,26 @@ async function getOrLoadRoom(slug: string): Promise<Room | null> {
         } = action.payload as any;
         const { timestamp } = action;
 
-        const player = newRoom.getPlayerById(playerId)!;
-        let team: Team | undefined;
-        if (player.teamId) {
-            team = newRoom.teams.get(player.teamId);
-        }
+        const player = playerId ? newRoom.getPlayerById(playerId) : undefined;
+        const team = player ? newRoom.getTeamForPlayer(player.id) : undefined;
+        const actor = player ? player.getDisplayName() : nickname;
 
         switch (action.action) {
             case 'JOIN':
                 newRoom.sendChat(
-                    [{ contents: nickname, color }, ' has joined.'],
+                    [
+                        { contents: nickname, color: team?.color ?? 'white' },
+                        ' has joined.',
+                    ],
                     timestamp,
                 );
                 break;
             case 'LEAVE':
                 newRoom.sendChat(
-                    [{ contents: nickname, color }, ' has left.'],
+                    [
+                        { contents: nickname, color: team?.color ?? 'white' },
+                        ' has left.',
+                    ],
                     timestamp,
                 );
                 break;
@@ -457,7 +448,7 @@ async function getOrLoadRoom(slug: string): Promise<Room | null> {
                     newRoom.sendCellUpdate(row, col);
                     newRoom.sendChat(
                         [
-                            { contents: team.name, color: team.color },
+                            { contents: actor, color: team.color },
                             ` marked ${newRoom.board[row][col].goal.goal} (${row},${col})`,
                         ],
                         timestamp,
@@ -476,7 +467,7 @@ async function getOrLoadRoom(slug: string): Promise<Room | null> {
                     newRoom.sendCellUpdate(row, col);
                     newRoom.sendChat(
                         [
-                            { contents: team.name, color: team.color },
+                            { contents: actor, color: team.color },
                             ` unmarked ${newRoom.board[row][col].goal.goal} (${row},${col})`,
                         ],
                         timestamp,
@@ -492,7 +483,7 @@ async function getOrLoadRoom(slug: string): Promise<Room | null> {
                 }
                 newRoom.sendChat(
                     [
-                        { contents: nickname, color: oldColor },
+                        { contents: actor, color: oldColor },
                         ' has changed their color to ',
                         { contents: newColor, color: newColor },
                     ],
@@ -515,25 +506,7 @@ rooms.get('/:slug', async (req, res) => {
         return;
     }
 
-    const roomData: RoomData = {
-        game: room.game,
-        slug: room.slug,
-        name: room.name,
-        gameSlug: room.gameSlug,
-        newGenerator: room.newGenerator,
-        seed: room.seed,
-        racetimeConnection: {
-            gameActive: room.racetimeEligible,
-            url: (room.raceHandler as RacetimeHandler).url,
-            startDelay: (room.raceHandler as RacetimeHandler).data?.start_delay,
-            status: (room.raceHandler as RacetimeHandler).data?.status
-                .verbose_value,
-        },
-        mode: getModeString(room.bingoMode, room.lineCount),
-        variant: room.variantName,
-        chatEnabled: room.chatEnabled,
-        teamsEnabled: room.teamsEnabled,
-    };
+    const roomData: RoomData = room.getRoomData();
 
     const userKey = req.session.user ?? req.session.id;
     const perms = await room.canAutoAuthenticate(userKey, !req.session.user);

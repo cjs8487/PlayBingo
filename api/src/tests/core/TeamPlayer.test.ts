@@ -10,14 +10,7 @@ room.board = [Array(5).fill(mock<RevealedCell>()), [], [], [], []];
 const createTeam = () => new Team(room, 'test', 'Test Team');
 
 const createPlayer = (team?: Team) =>
-    new Player(
-        room,
-        'test',
-        'Test Player',
-        false,
-        team ? team.obfuscateBoard : room.spectatorObfuscateBoard,
-        team?.id,
-    );
+    new Player(room, 'test', 'Test Player', false, team?.id);
 
 describe('Goal Tracking', () => {
     beforeEach(() => {
@@ -86,9 +79,7 @@ describe('Goal Tracking', () => {
         const unmarked = Array.from(Array(25), (_, index) => index).filter(
             (index) => !toMark.includes(index),
         );
-        toMark.forEach((index) =>
-            team.mark(index % 5, Math.floor(index / 5)),
-        );
+        toMark.forEach((index) => team.mark(index % 5, Math.floor(index / 5)));
         toMark.forEach((index) =>
             expect(
                 team.hasMarked(index % 5, Math.floor(index / 5)),

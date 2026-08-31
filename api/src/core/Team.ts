@@ -50,6 +50,30 @@ export default class Team {
         this.players.delete(id);
     }
 
+    /**
+     * The name to display this team under. Teams still own marks when the room
+     * has teams disabled, so in that case the sole member's nickname is used
+     * instead of the team name.
+     */
+    getDisplayName(): string {
+        if (this.room.teamsEnabled) {
+            return this.name;
+        }
+        return this.players.values().next().value?.nickname ?? this.name;
+    }
+
+    /** Clears all board derived state, for use when a new card is generated */
+    reset() {
+        this.markedGoals = 0n;
+        this.goalCount = 0;
+        this.goalComplete = false;
+        this.linesComplete = 0;
+        this.exploredGoals = 0n;
+        this.players.forEach((player) => {
+            player.finishedAt = undefined;
+        });
+    }
+
     destroy() {
         this.players.clear();
     }
@@ -62,7 +86,7 @@ export default class Team {
             players: Array.from(this.players.values()).map((player) =>
                 player.toClientData(),
             ),
-            goalCount: this.goalCount
+            goalCount: this.goalCount,
         };
     }
 

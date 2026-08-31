@@ -55,35 +55,65 @@ const addRoomAction = (
 
 export const addJoinAction = (
     room: string,
+    player: string,
     nickname: string,
+    team: string | undefined,
     timestamp: Date,
-) => addRoomAction(room, RoomActionType.JOIN, { nickname }, timestamp);
+) =>
+    addRoomAction(
+        room,
+        RoomActionType.JOIN,
+        { player, nickname, team: team ?? null },
+        timestamp,
+    );
 
 export const addLeaveAction = (
     room: string,
+    player: string,
     nickname: string,
+    team: string | undefined,
     timestamp: Date,
-) => addRoomAction(room, RoomActionType.LEAVE, { nickname }, timestamp);
+) =>
+    addRoomAction(
+        room,
+        RoomActionType.LEAVE,
+        { player, nickname, team: team ?? null },
+        timestamp,
+    );
 
 export const addMarkAction = (
     room: string,
     player: string,
-    row: number,
-    col: number,
-    timestamp: Date,
-) => addRoomAction(room, RoomActionType.MARK, { player, row, col }, timestamp);
-
-export const addUnmarkAction = (
-    room: string,
-    player: string,
+    team: string,
     row: number,
     col: number,
     timestamp: Date,
 ) =>
-    addRoomAction(room, RoomActionType.UNMARK, { player, row, col }, timestamp);
+    addRoomAction(
+        room,
+        RoomActionType.MARK,
+        { player, team, row, col },
+        timestamp,
+    );
+
+export const addUnmarkAction = (
+    room: string,
+    player: string,
+    team: string,
+    row: number,
+    col: number,
+    timestamp: Date,
+) =>
+    addRoomAction(
+        room,
+        RoomActionType.UNMARK,
+        { player, team, row, col },
+        timestamp,
+    );
 
 export const addChatAction = (
     room: string,
+    player: string,
     nickname: string,
     message: string,
     timestamp: Date,
@@ -91,12 +121,14 @@ export const addChatAction = (
     addRoomAction(
         room,
         RoomActionType.CHAT,
-        { nickname, message },
+        { player, nickname, message },
         timestamp,
     );
 
 export const addChangeColorAction = (
     room: string,
+    player: string,
+    team: string,
     teamName: string,
     oldColor: string,
     newColor: string,
@@ -106,6 +138,8 @@ export const addChangeColorAction = (
         room,
         RoomActionType.CHANGECOLOR,
         {
+            player,
+            team,
             teamName,
             oldColor,
             newColor,
@@ -179,6 +213,9 @@ export const createUpdateTeam = async (room: string, team: Team) => {
     return prisma.team.upsert({
         where: { id_roomId: { id: team.id, roomId: room } },
         create: {
+            // the in memory id is the source of truth so that players can be
+            // connected to their team by id
+            id: team.id,
             key: team.id,
             name: team.name,
             color: team.color,
