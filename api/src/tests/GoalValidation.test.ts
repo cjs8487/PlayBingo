@@ -29,7 +29,7 @@ describe('GoalValidation', () => {
     it('should allow deeply nested objects under byte limit', () => {
       // Create a deeply nested object that's still under byte limit
       function makeDeepObject(depth: number) {
-        let obj: any = {};
+        const obj: any = {};
         let cur = obj;
         for (let i = 0; i < depth; i++) {
           cur.a = {};
@@ -146,7 +146,7 @@ describe('GoalValidation', () => {
     it('should handle depth bomb with recursive traversal (safe for 4KB payloads)', () => {
       // Create a depth bomb that would crash recursive implementations
       function makeDepthBomb(depth: number) {
-        let obj: any = {};
+        const obj: any = {};
         let cur = obj;
         for (let i = 0; i < depth; i++) {
           cur.a = {};

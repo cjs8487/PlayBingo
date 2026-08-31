@@ -33,7 +33,9 @@ export default class Team {
 
     constructor(room: Room, id: string, name: string, color: string = 'blue') {
         this.room = room;
-        ((this.id = id), (this.name = name), (this.color = color));
+        this.id = id;
+        this.name = name;
+        this.color = color;
         this.players = new Map<string, Player>();
         this.markedGoals = 0n;
         this.goalCount = 0;

@@ -52,7 +52,8 @@ export default class Player {
         userId?: string,
     ) {
         this.room = room;
-        ((this.id = id), (this.nickname = nickname));
+        this.id = id;
+        this.nickname = nickname;
         this.teamId = teamId;
         this.monitor = monitor;
         this.userId = userId;

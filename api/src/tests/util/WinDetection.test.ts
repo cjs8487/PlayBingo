@@ -38,7 +38,7 @@ const boardToBitset = (board: Cell[][], color: string) => {
 const standardBoardLines = computeLineMasks(5, 5);
 
 const countLines = (board: Cell[][], color: string) => {
-    let count = 0;
+    const count = 0;
     const bitset = boardToBitset(board, color);
     return standardBoardLines.reduce(
         (sum, mask) => (hasLineCompletion(bitset, mask) ? sum + 1 : sum),
