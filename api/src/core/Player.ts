@@ -8,8 +8,6 @@ import { OPEN, WebSocket } from 'ws';
 import { RoomTokenPayload } from '../auth/RoomAuth';
 import Room from './Room';
 
-type BoardViewProvider = () => (RevealedCell | HiddenCell)[][];
-
 /**
  * Represents a player connected to a room. While largely just a data class, this
  * class offers utilities to make keeping track of players, identities, and their
@@ -45,14 +43,11 @@ export default class Player {
 
     finishedAt?: string;
 
-    getBoardView: BoardViewProvider;
-
     constructor(
         room: Room,
         id: string,
         nickname: string,
         monitor: boolean,
-        getBoardView: BoardViewProvider,
         teamId?: string,
         userId?: string,
     ) {
@@ -61,9 +56,32 @@ export default class Player {
         this.teamId = teamId;
         this.monitor = monitor;
         this.userId = userId;
-        this.getBoardView = getBoardView;
 
         this.connections = new Map<string, WebSocket>();
+    }
+
+    /**
+     * The board as this player is allowed to see it. Resolved from the player's
+     * current team so that it stays correct when they change teams or toggle
+     * between playing and spectating.
+     */
+    getBoardView(): (RevealedCell | HiddenCell)[][] {
+        const team = this.room.getTeamForPlayer(this.id);
+        return team
+            ? team.obfuscateBoard()
+            : this.room.spectatorObfuscateBoard();
+    }
+
+    /**
+     * The name to attribute an action by this player to. When teams are enabled
+     * the player is qualified with their team so that the individual
+     * responsible for the action is never lost.
+     */
+    getDisplayName(): string {
+        const team = this.room.getTeamForPlayer(this.id);
+        return this.room.teamsEnabled && team
+            ? `${team.name} (${this.nickname})`
+            : this.nickname;
     }
 
     doesTokenMatch(token: RoomTokenPayload) {
