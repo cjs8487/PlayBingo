@@ -8,8 +8,6 @@ import {
 import { roomCleanupInterval } from '../Environment';
 import { logInfo, logWarn } from '../Logger';
 import Room from './Room';
-import Team from './Team';
-import Player from './Player';
 
 export const roomWebSocketServer: WebSocketServer = new WebSocketServer({
     noServer: true,
@@ -144,31 +142,12 @@ roomWebSocketServer.on('connection', (ws, req) => {
                     payload.userId,
                 );
                 const player = room.getPlayerById(payload.playerId);
-                const team = player
-                    ? room.getTeamForPlayer(player.id)
-                    : undefined;
                 if (player) {
-                    if (action.payload.spectate) {
-                        if (team) {
-                            team.removePlayer(player.id);
-                            if (team.players.size === 0) {
-                                team.destroy();
-                                room.teams.delete(team.id);
-                            }
-                        }
-                        player.sendMessage({
-                            action: 'reauthenticate',
-                            authToken: newToken,
-                        });
-                        room.sendChat(`${player.nickname} is now spectating`, new Date());
-                        break;
-                    } else {
-                        player.sendMessage({
-                            action: 'reauthenticate',
-                            authToken: newToken,
-                        });
-                        room.sendChat(`${player.nickname} is now playing`, new Date());
-                    }
+                    player.sendMessage({
+                        action: 'reauthenticate',
+                        authToken: newToken,
+                    });
+                    room.setPlayerSpectating(player, action.payload.spectate);
                 }
                 break;
             case 'startTimer':
