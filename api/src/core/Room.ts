@@ -9,6 +9,7 @@ import {
     LeaveAction,
     MarkAction,
     NewCardAction,
+    Cell,
     Player as PlayerData,
     Team as TeamData,
     RevealedCell,
@@ -71,11 +72,6 @@ import LocalTimer from './integration/races/LocalTimer';
 import RaceHandler from './integration/races/RaceHandler';
 import RacetimeHandler, { RaceData } from './integration/races/RacetimeHandler';
 import Team from './Team';
-
-export type HiddenCell = {
-    revealed: false;
-    completedTeams: string[];
-};
 
 export enum BoardGenerationMode {
     RANDOM = 'Random',
@@ -295,7 +291,7 @@ export default class Room {
      * @returns The team the player was removed from, if it still exists
      */
     removePlayerFromTeam(player: Player): Team | undefined {
-        const team = this.getTeamForPlayer(player.id);
+        const team = player.teamId ? this.teams.get(player.teamId) : undefined;
         player.teamId = undefined;
         if (!team) {
             return undefined;
@@ -346,10 +342,14 @@ export default class Room {
     }
 
     deleteTeam(teamId: string) {
-        this.teams.get(teamId)?.destroy();
-        if (!this.teams.delete(teamId)) {
+        let team = this.teams.get(teamId);
+        if (!team) {
             return;
         }
+        this.sendTeamChat(team, `${team.name} has been disbanded.`, new Date());
+        team.destroy();
+        team = undefined;
+        this.teams.delete(teamId);
         // the team no longer exists, so clients can't resolve it from the cell
         let boardChanged = false;
         this.board.forEach((row) => {
@@ -371,7 +371,7 @@ export default class Room {
      * first, since the player record references it.
      */
     private persistPlayer(player: Player) {
-        const team = this.getTeamForPlayer(player.id);
+        const team = player.teamId ? this.teams.get(player.teamId) : undefined;
         if (!team) {
             createUpdatePlayer(this.id, player).then();
             return;
@@ -383,7 +383,7 @@ export default class Room {
             );
     }
 
-    spectatorObfuscateBoard(): (RevealedCell | HiddenCell)[][] {
+    spectatorObfuscateBoard(): Cell[][] {
         let exploredGoals = 0n;
         this.teams.forEach((team) => {
             exploredGoals |= team.getRevealedMask();
@@ -396,15 +396,11 @@ export default class Room {
                     this.board[0].length,
                 );
                 return (exploredGoals & mask) !== 0n
-                    ? ({
-                          revealed: true,
-                          goal: cell.goal,
-                          completedTeams: cell.completedTeams,
-                      } as RevealedCell)
-                    : ({
+                    ? cell
+                    : {
                           revealed: false,
                           completedTeams: cell.completedTeams,
-                      } as HiddenCell);
+                      };
             }),
         );
     }
@@ -589,7 +585,9 @@ export default class Room {
         socket: WebSocket,
     ): ServerMessage {
         let player = this.getPlayerById(auth.playerId);
-        let playerTeam = player ? this.getTeamForPlayer(player.id) : undefined;
+        let playerTeam = player?.teamId
+            ? this.teams.get(player.teamId)
+            : undefined;
         let newPlayer = false;
         if (!player && action.payload) {
             player = new Player(
@@ -725,7 +723,9 @@ export default class Room {
 
     /** Removes a fully disconnected player from the room */
     private removePlayer(player: Player, timestamp: Date) {
-        const playerTeam = this.getTeamForPlayer(player.id);
+        const playerTeam = player.teamId
+            ? this.teams.get(player.teamId)
+            : undefined;
         this.removePlayerFromTeam(player);
         this.spectators.delete(player.id);
         if (playerTeam) {
@@ -860,7 +860,7 @@ export default class Room {
         if (!color) {
             return;
         }
-        const team = this.getTeamForPlayer(player.id);
+        const team = player.teamId ? this.teams.get(player.teamId) : undefined;
         if (!team) {
             return { action: 'unauthorized' };
         }
@@ -1382,7 +1382,7 @@ export default class Room {
     }
 
     revealCardForPlayer(player: Player) {
-        const team = this.getTeamForPlayer(player.id);
+        const team = player.teamId ? this.teams.get(player.teamId) : undefined;
         const timestamp = new Date();
         if (team) {
             this.sendChat(

@@ -413,7 +413,9 @@ async function getOrLoadRoom(slug: string): Promise<Room | null> {
         const { timestamp } = action;
 
         const player = playerId ? newRoom.getPlayerById(playerId) : undefined;
-        const team = player ? newRoom.getTeamForPlayer(player.id) : undefined;
+        const team = player?.teamId
+            ? newRoom.teams.get(player.teamId)
+            : undefined;
         const actor = player ? player.getDisplayName() : nickname;
 
         switch (action.action) {

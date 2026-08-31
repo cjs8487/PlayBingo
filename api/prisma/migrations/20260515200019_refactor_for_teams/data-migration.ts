@@ -20,7 +20,7 @@ async function main() {
                 if (!player.spectator) {
                     const team = await tx.team.create({
                         data: {
-                            name: `${player.nickname}'s Team`,
+                            name: player.nickname,
                             key: player.id,
                             roomId: player.roomId,
                         },
