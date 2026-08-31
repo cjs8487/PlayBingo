@@ -18,7 +18,7 @@ export interface Player {
   raceStatus: RaceStatusDisconnected | RaceStatusConnected;
   monitor: boolean;
   showInRoom: boolean;
-  teamId: string;
+  teamId?: string;
 }
 export interface RaceStatusDisconnected {
   connected: false;
