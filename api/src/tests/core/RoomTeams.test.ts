@@ -240,7 +240,7 @@ describe('Room team workflows', () => {
         const player = room.getPlayerById('alice')!;
         const team = room.getTeamForPlayer('alice')!;
 
-        expect(player.getDisplayName()).toBe("Alice's Team (Alice)");
+        expect(player.getDisplayName()).toBe("Alice (Alice's Team)");
         room.handleSetTeamsEnabled({
             action: 'setTeamsEnabled',
             payload: { enabled: false },
@@ -265,7 +265,7 @@ describe('Room team workflows', () => {
         );
         expect(room.chatHistory).toContainEqual([
             chatTimestamp,
-            { contents: "Alice's Team (Alice)", color: 'blue' },
+            { contents: "Alice (Alice's Team)", color: 'blue' },
             ' marked Goal (1,1)',
         ]);
     });
