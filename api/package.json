@@ -11,7 +11,7 @@
         "build": "tsc --sourceMap false",
         "db:reset": "prisma migrate reset",
         "db:pre-migrate": "npm run db:update-defaults",
-        "db:migrate": "npm run db:pre-migrate && prisma migrate dev",
+        "db:migrate": "npm run db:pre-migrate && prisma migrate deploy",
         "db:seed": "prisma db seed",
         "db:generate-client": "prisma generate",
         "db:update-defaults": "tsx scripts/update-prisma-defaults.ts",
@@ -28,7 +28,7 @@
     "dependencies": {
         "@playbingo/shared": "file:../shared",
         "@prisma/client": "^6.19.3",
-        "@redocly/cli": "^2.49.0",
+        "@redocly/cli": "^2.49.1",
         "@types/cors": "^2.8.19",
         "better-sqlite3": "^12.11.1",
         "better-sqlite3-session-store": "^0.1.0",
@@ -40,7 +40,7 @@
         "express-session": "^1.19.0",
         "jsonwebtoken": "^9.0.3",
         "luxon": "^3.7.2",
-        "nodemailer": "^9.0.6",
+        "nodemailer": "^9.1.1",
         "nodemailer-express-handlebars": "^6.1.2",
         "prisma": "^6.19.3",
         "prisma-json-types-generator": "^3.6.2",
@@ -75,15 +75,15 @@
         "eslint-config-prettier": "^10.1.8",
         "eslint-import-resolver-typescript": "^4.4.5",
         "eslint-plugin-import": "^2.32.0",
-        "jest": "^30.5.0",
+        "jest": "^30.5.1",
         "jest-mock-extended": "^4.0.1",
         "prettier": "^3.9.6",
         "supertest": "^7.2.2",
         "ts-jest": "^29.4.12",
         "ts-node": "^10.9.2",
-        "typescript-eslint": "^8.68.0"
         "tsc-watch": "^7.2.1",
         "tsx": "^4.23.13",
-        "typescript": "^5.9.3"
+        "typescript": "^5.9.3",
+        "typescript-eslint": "^8.69.0"
     }
 }
