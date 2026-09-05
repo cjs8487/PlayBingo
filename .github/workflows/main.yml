@@ -50,7 +50,7 @@ jobs:
 
             - name: Migrate DB Schema
               working-directory: ./api
-              run: npm run db:migrate
+              run: npm run db:migrate:ci
 
             - name: Run tests
               working-directory: ./api
