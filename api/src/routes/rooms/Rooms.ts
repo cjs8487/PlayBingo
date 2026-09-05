@@ -32,7 +32,7 @@ import { GenerationFailedError } from '../../core/generation/GenerationFailedErr
 import RacetimeHandler from '../../core/integration/races/RacetimeHandler';
 import LocalTimer from '../../core/integration/races/LocalTimer';
 import { error } from 'console';
-import { getModeString } from '../../util/RoomUtils';
+import Team from '../../core/Team';
 
 const MIN_ROOM_GOALS_REQUIRED = 25;
 const rooms = Router();
@@ -83,6 +83,7 @@ rooms.post('/', async (req, res) => {
         exploration,
         explorationStart,
         explorationStartCount,
+        teamsEnabled,
     } = req.body;
     const seed = req.body.seed ?? Math.ceil(999999 * Math.random());
 
@@ -192,6 +193,7 @@ rooms.post('/', async (req, res) => {
                 : explorationStart
             : undefined,
         seed,
+        !!teamsEnabled,
     );
     const room = new Room(
         name,
@@ -215,6 +217,7 @@ rooms.post('/', async (req, res) => {
             : undefined,
         '',
         generatorSettings,
+        !!teamsEnabled,
     );
     const options: BoardGenerationOptions = {
         mode: BoardGenerationMode.RANDOM,
@@ -271,7 +274,7 @@ rooms.post('/', async (req, res) => {
 });
 
 async function getOrLoadRoom(slug: string): Promise<Room | null> {
-    let room = allRooms.get(slug);
+    const room = allRooms.get(slug);
     if (room) return room;
 
     const dbRoom = await getRoomFromSlug(slug);
@@ -325,13 +328,14 @@ async function getOrLoadRoom(slug: string): Promise<Room | null> {
         dbRoom.explorationStart ?? undefined,
         dbRoom.racetimeRoom ?? '',
         generatorSettings,
+        dbRoom.teamsEnabled,
     );
 
     if (generatorSettings?.boardLayout.mode === 'custom') {
         newRoom.board = chunk(
             (await getGoalList(dbRoom.board)).map((goal) => ({
                 goal: goal,
-                completedPlayers: [],
+                completedTeams: [],
                 revealed: true,
             })),
             generatorSettings.boardLayout.layout[0].length,
@@ -340,7 +344,7 @@ async function getOrLoadRoom(slug: string): Promise<Room | null> {
         newRoom.board = chunk(
             (await getGoalList(dbRoom.board)).map((goal) => ({
                 goal: goal,
-                completedPlayers: [],
+                completedTeams: [],
                 revealed: true,
             })),
             5,
@@ -348,18 +352,36 @@ async function getOrLoadRoom(slug: string): Promise<Room | null> {
     }
     newRoom.computeVictoryMasks();
 
+    dbRoom.teams.forEach((dbTeam) => {
+        const team = new Team(newRoom, dbTeam.id, dbTeam.name, dbTeam.color);
+        newRoom.teams.set(team.id, team);
+    });
+
     dbRoom.players.forEach((dbPlayer) => {
         const player = new Player(
             newRoom,
             dbPlayer.key,
             dbPlayer.nickname,
-            dbPlayer.color,
-            dbPlayer.spectator,
             dbPlayer.monitor,
+            dbPlayer.teamId ?? undefined,
             dbPlayer.userId ?? undefined,
         );
         player.finishedAt = dbPlayer.finishedAt?.toISOString();
-        newRoom.players.set(player.id, player);
+
+        // Player is a spectator, no need to add them to a team
+        if (!dbPlayer.teamId) {
+            newRoom.spectators.set(player.id, player);
+            return;
+        }
+
+        const team = newRoom.teams.get(dbPlayer.teamId);
+        if (!team) {
+            // This really shouldn't happen, this is mostly here for type safety
+            throw new Error(
+                `Team for player ${dbPlayer.nickname} not found, please report this to a developer.`,
+            );
+        }
+        team.addPlayer(player);
     });
 
     switch (dbRoom.raceHandler) {
@@ -381,7 +403,6 @@ async function getOrLoadRoom(slug: string): Promise<Room | null> {
     dbRoom.history.forEach((action) => {
         const {
             nickname,
-            color,
             newColor,
             oldColor,
             row,
@@ -391,32 +412,45 @@ async function getOrLoadRoom(slug: string): Promise<Room | null> {
         } = action.payload as any;
         const { timestamp } = action;
 
-        const player = newRoom.players.get(playerId)!;
+        const player = playerId ? newRoom.getPlayerById(playerId) : undefined;
+        const team = player?.teamId
+            ? newRoom.teams.get(player.teamId)
+            : undefined;
+        const actor = player ? player.getDisplayName() : nickname;
 
         switch (action.action) {
             case 'JOIN':
                 newRoom.sendChat(
-                    [{ contents: nickname, color }, ' has joined.'],
+                    [
+                        { contents: nickname, color: team?.color ?? 'white' },
+                        ' has joined.',
+                    ],
                     timestamp,
                 );
                 break;
             case 'LEAVE':
                 newRoom.sendChat(
-                    [{ contents: nickname, color }, ' has left.'],
+                    [
+                        { contents: nickname, color: team?.color ?? 'white' },
+                        ' has left.',
+                    ],
                     timestamp,
                 );
                 break;
             case 'MARK':
-                if (!player.hasMarked(row, col)) {
-                    newRoom.board[row][col].completedPlayers.push(playerId);
-                    newRoom.board[row][col].completedPlayers.sort((a, b) =>
+                if (!team) {
+                    break;
+                }
+                if (!team.hasMarked(row, col)) {
+                    newRoom.board[row][col].completedTeams.push(team.id);
+                    newRoom.board[row][col].completedTeams.sort((a, b) =>
                         a.localeCompare(b),
                     );
-                    player.mark(row, col);
+                    team.mark(row, col);
                     newRoom.sendCellUpdate(row, col);
                     newRoom.sendChat(
                         [
-                            { contents: player.nickname, color: player.color },
+                            { contents: actor, color: team.color },
                             ` marked ${newRoom.board[row][col].goal.goal} (${row},${col})`,
                         ],
                         timestamp,
@@ -424,15 +458,18 @@ async function getOrLoadRoom(slug: string): Promise<Room | null> {
                 }
                 break;
             case 'UNMARK':
-                if (player.hasMarked(row, col)) {
-                    newRoom.board[row][col].completedPlayers = newRoom.board[
-                        row
-                    ][col].completedPlayers.filter((p) => p !== playerId);
-                    player.unmark(row, col);
+                if (!team) {
+                    break;
+                }
+                if (team.hasMarked(row, col)) {
+                    newRoom.board[row][col].completedTeams = newRoom.board[row][
+                        col
+                    ].completedTeams.filter((teamId) => teamId !== team.id);
+                    team.unmark(row, col);
                     newRoom.sendCellUpdate(row, col);
                     newRoom.sendChat(
                         [
-                            { contents: player.nickname, color: player.color },
+                            { contents: actor, color: team.color },
                             ` unmarked ${newRoom.board[row][col].goal.goal} (${row},${col})`,
                         ],
                         timestamp,
@@ -443,9 +480,12 @@ async function getOrLoadRoom(slug: string): Promise<Room | null> {
                 newRoom.sendChat(`${nickname}: ${message}`, timestamp);
                 break;
             case 'CHANGECOLOR':
+                if (team) {
+                    team.color = newColor;
+                }
                 newRoom.sendChat(
                     [
-                        { contents: nickname, color: oldColor },
+                        { contents: actor, color: oldColor },
                         ' has changed their color to ',
                         { contents: newColor, color: newColor },
                     ],
@@ -468,24 +508,7 @@ rooms.get('/:slug', async (req, res) => {
         return;
     }
 
-    const roomData: RoomData = {
-        game: room.game,
-        slug: room.slug,
-        name: room.name,
-        gameSlug: room.gameSlug,
-        newGenerator: room.newGenerator,
-        seed: room.seed,
-        racetimeConnection: {
-            gameActive: room.racetimeEligible,
-            url: (room.raceHandler as RacetimeHandler).url,
-            startDelay: (room.raceHandler as RacetimeHandler).data?.start_delay,
-            status: (room.raceHandler as RacetimeHandler).data?.status
-                .verbose_value,
-        },
-        mode: getModeString(room.bingoMode, room.lineCount),
-        variant: room.variantName,
-        chatEnabled: room.chatEnabled,
-    };
+    const roomData: RoomData = room.getRoomData();
 
     const userKey = req.session.user ?? req.session.id;
     const perms = await room.canAutoAuthenticate(userKey, !req.session.user);

@@ -5,6 +5,13 @@
  * and run json-schema-to-typescript to regenerate this file.
  */
 
+export interface Team {
+  id: string;
+  name: string;
+  color: string;
+  goalCount: number;
+  players: Player[];
+}
 export interface Player {
   id: string;
   nickname: string;

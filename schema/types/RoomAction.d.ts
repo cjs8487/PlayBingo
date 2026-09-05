@@ -11,6 +11,7 @@
 export type RoomAction = (
   | JoinAction
   | LeaveAction
+  | JoinTeamAction
   | ChatAction
   | MarkAction
   | UnmarkAction
@@ -22,6 +23,7 @@ export type RoomAction = (
   | ChangeRaceHandlerAction
   | ResetTimerAction
   | SetChatEnabledAction
+  | SetTeamsEnabledAction
 ) & {
   /**
    * JWT for the room obtained from the server
@@ -37,6 +39,12 @@ export interface JoinAction {
 }
 export interface LeaveAction {
   action: "leave";
+}
+export interface JoinTeamAction {
+  action: "joinTeam";
+  payload: {
+    teamId: string;
+  };
 }
 export interface ChatAction {
   action: "chat";
@@ -93,6 +101,12 @@ export interface ResetTimerAction {
 }
 export interface SetChatEnabledAction {
   action: "setChatEnabled";
+  payload: {
+    enabled: boolean;
+  };
+}
+export interface SetTeamsEnabledAction {
+  action: "setTeamsEnabled";
   payload: {
     enabled: boolean;
   };
