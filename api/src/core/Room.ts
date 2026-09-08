@@ -666,7 +666,10 @@ export default class Room extends EventEmitter {
         this.teams.forEach((team) => team.reset());
         this.raceHandler.resetTimer();
 
-        this.sendSyncBoard();
+        this.getAllPlayers().forEach((player) => {
+            player.boardHidden = this.hideCard;
+        });
+        this.markActive();
         this.emit('board:regenerated', this.board, options, new Date());
     }
 
@@ -1054,12 +1057,6 @@ export default class Room extends EventEmitter {
             // the board from the previous settings
             this.generateBoard(this.lastGenerationMode);
         }
-        this.emit(
-            'board:regenerated',
-            this.board,
-            this.lastGenerationMode,
-            new Date(),
-        );
     }
 
     handleStartTimer() {
@@ -1173,6 +1170,7 @@ export default class Room extends EventEmitter {
         if (!this.chatEnabled) {
             return;
         }
+        this.markActive();
         if (typeof message === 'string') {
             const timestamp = this.getTimestamp(eventTimestamp);
             if (timestamp) {
@@ -1182,7 +1180,6 @@ export default class Room extends EventEmitter {
             } else {
                 this.chatHistory.push([message]);
             }
-            this.sendServerMessage({ action: 'chat', message: [message] });
             this.emit('chatSent', [message], eventTimestamp);
         } else {
             const timestamp = this.getTimestamp(eventTimestamp);
@@ -1190,28 +1187,30 @@ export default class Room extends EventEmitter {
                 message.unshift(`[${this.getTimestamp(eventTimestamp)}] `);
             }
             this.chatHistory.push(message);
-            this.sendServerMessage({ action: 'chat', message: message });
             this.emit('chatSent', message, eventTimestamp);
         }
     }
 
     sendSystemMessage(message: string) {
-        const timestamp = this.getTimestamp(new Date());
+        const eventTimestamp = new Date();
+        const timestamp = this.getTimestamp(eventTimestamp);
         if (timestamp) {
             this.chatHistory.push([`[${timestamp}] ${message}`]);
         } else {
             this.chatHistory.push([message]);
         }
-        this.sendServerMessage({ action: 'chat', message: [message] }, false);
+        this.emit('system:message', [message], eventTimestamp);
     }
 
     sendCellUpdate(row: number, col: number) {
-        this.sendServerMessage({
-            action: 'cellUpdate',
+        this.markActive();
+        this.emit(
+            'board:cellUpdate',
+            this.board[row][col],
             row,
             col,
-            cell: this.board[row][col],
-        });
+            new Date(),
+        );
     }
 
     sendSyncBoard() {
@@ -1249,20 +1248,18 @@ export default class Room extends EventEmitter {
         });
     }
 
-    private sendServerMessage(
-        message: ServerMessage,
-        updateInactivity: boolean = true,
-    ) {
+    private sendServerMessage(message: ServerMessage) {
         this.getAllPlayers().forEach((player) => {
             player.sendMessage({ ...message, players: this.getPlayerData() });
         });
+        this.markActive();
+    }
 
-        if (updateInactivity) {
-            this.lastMessage = Date.now();
-            this.inactivityWarningTimeout?.refresh();
-            clearTimeout(this.closeTimeout);
-            this.closeTimeout = undefined;
-        }
+    private markActive() {
+        this.lastMessage = Date.now();
+        this.inactivityWarningTimeout?.refresh();
+        clearTimeout(this.closeTimeout);
+        this.closeTimeout = undefined;
     }
 
     /** Sends a chat message attributed to a team */
@@ -1561,16 +1558,8 @@ export default class Room extends EventEmitter {
                 timestamp,
             );
         }
+        player.boardHidden = false;
         this.emit('board:revealed', player, timestamp);
-        player.sendMessage({
-            action: 'syncBoard',
-            board: {
-                hidden: false,
-                board: this.board,
-                width: this.boardWidth,
-                height: this.boardHeight,
-            },
-        });
     }
 
     revealCardForAllPlayers() {
