@@ -1,4 +1,6 @@
 import {
+    Cell,
+    ChatMessage,
     HiddenCell,
     Player as PlayerClientData,
     RevealedCell,
@@ -56,6 +58,9 @@ export default class Player {
      * is authorized for the connection */
     connections: Map<string, PlayBingoSocketLike>;
 
+    /** Removes this player's listeners from the room while disconnected. */
+    private unsubscribeFromRoom?: () => void;
+
     finishedAt?: string;
 
     constructor(
@@ -94,6 +99,9 @@ export default class Player {
      * @param socket The socket the connection communicates over
      */
     addConnection(id: string, socket: PlayBingoSocketLike) {
+        if (!this.hasConnections()) {
+            this.subscribeToRoom();
+        }
         this.connections.set(id, socket);
     }
 
@@ -109,6 +117,10 @@ export default class Player {
         if (socket) {
             socket.close();
             this.connections.delete(id);
+            if (!this.hasConnections()) {
+                this.unsubscribeFromRoom?.();
+                this.unsubscribeFromRoom = undefined;
+            }
             return true;
         }
         return false;
@@ -129,6 +141,10 @@ export default class Player {
         });
         if (socketKey) {
             this.connections.delete(socketKey);
+            if (!this.hasConnections()) {
+                this.unsubscribeFromRoom?.();
+                this.unsubscribeFromRoom = undefined;
+            }
             return true;
         }
         return false;
@@ -136,6 +152,83 @@ export default class Player {
 
     hasConnections() {
         return this.connections.size > 0;
+    }
+
+    /**
+     * Routes room events through the player so messages are adapted for the
+     * player before being fanned out to each of their connections.
+     */
+    private subscribeToRoom() {
+        const onGoalMarked = (cell: Cell, row: number, col: number) => {
+            this.sendMessage({ action: 'cellUpdate', row, col, cell });
+        };
+        const onGoalUnmarked = (cell: Cell, row: number, col: number) => {
+            this.sendMessage({ action: 'cellUpdate', row, col, cell });
+        };
+        const onCellUpdate = (cell: Cell, row: number, col: number) => {
+            this.sendMessage({ action: 'cellUpdate', row, col, cell });
+        };
+        const onBoardRegenerated = (board: RevealedCell[][]) => {
+            this.sendMessage({
+                action: 'syncBoard',
+                board: {
+                    width: board[0]?.length ?? 0,
+                    height: board.length,
+                    ...(this.room.hideCard
+                        ? { hidden: true }
+                        : { hidden: false, board }),
+                },
+            });
+        };
+        const onBoardRevealed = (player: Player) => {
+            if (player !== this) {
+                return;
+            }
+            this.sendMessage({
+                action: 'syncBoard',
+                board: {
+                    hidden: false,
+                    board: this.room.board,
+                    width: this.room.board[0]?.length ?? 0,
+                    height: this.room.board.length,
+                },
+            });
+        };
+        const onChatSent = (message: ChatMessage) => {
+            this.sendMessage({
+                action: 'chat',
+                message,
+                players: this.room.getPlayers(),
+            });
+        };
+        const onSystemMessage = (message: ChatMessage) => {
+            this.sendMessage({
+                action: 'chat',
+                message,
+                players: this.room.getPlayers(),
+            });
+        };
+
+        this.room.on('board:goalMarked', onGoalMarked);
+        this.room.on('board:goalUnmarked', onGoalUnmarked);
+        this.room.on('board:cellUpdate', onCellUpdate);
+        this.room.on('board:regenerated', onBoardRegenerated);
+        this.room.on('board:revealed', onBoardRevealed);
+        this.room.on('chatSent', onChatSent);
+        this.room.on('system:message', onSystemMessage);
+        // TODO: PROTOCOL V2 - implement discrete events for player list
+        // this.room.on('players:join', onPlayersJoin);
+        // this.room.on('players:leave', onPlayersLeave);
+
+        this.unsubscribeFromRoom = () => {
+            this.room.off('board:goalMarked', onGoalMarked);
+            this.room.off('board:goalUnmarked', onGoalUnmarked);
+            this.room.off('board:cellUpdate', onCellUpdate);
+            this.room.off('board:regenerated', onBoardRegenerated);
+            this.room.off('board:revealed', onBoardRevealed);
+            this.room.off('chatSent', onChatSent);
+            this.room.off('system:message', onSystemMessage);
+        };
     }
 
     /**

@@ -1,9 +1,4 @@
-import {
-    Cell,
-    ChatMessage,
-    RevealedCell,
-    RoomAction,
-} from '@playbingo/types';
+import { RoomAction } from '@playbingo/types';
 import { WebSocketServer } from 'ws';
 import {
     createRoomToken,
@@ -12,8 +7,7 @@ import {
 } from '../auth/RoomAuth';
 import { roomCleanupInterval } from '../Environment';
 import { logInfo, logWarn } from '../Logger';
-import Room, { BoardGenerationOptions } from './Room';
-import Player from './Player';
+import Room from './Room';
 import PlayBingoSocket from './PlayBingoSocket';
 
 export const roomWebSocketServer: WebSocketServer = new WebSocketServer({
@@ -30,93 +24,6 @@ const cleanupInterval = setInterval(() => {
         }
     });
 }, roomCleanupInterval);
-
-const subscribeToRoom = (room: Room, ws: PlayBingoSocket) => {
-    const onGoalMarked = (
-        cell: Cell,
-        row: number,
-        col: number,
-        player: Player,
-    ) => {
-        ws.send({ action: 'cellUpdate', row, col, cell });
-    };
-
-    const onGoalUnmarked = (
-        cell: Cell,
-        row: number,
-        col: number,
-        player: Player,
-    ) => {
-        ws.send({ action: 'cellUpdate', row, col, cell });
-    };
-
-    const onCellUpdate = (cell: Cell, row: number, col: number) => {
-        ws.send({ action: 'cellUpdate', row, col, cell });
-    };
-
-    const onBoardRegenerated = (
-        board: RevealedCell[][],
-        options: BoardGenerationOptions,
-    ) => {
-        ws.send({
-            action: 'syncBoard',
-            board: {
-                width: board[0]?.length ?? 0,
-                height: board.length,
-                ...(room.hideCard ? { hidden: true } : { hidden: false, board }),
-            },
-        });
-    };
-
-    const onBoardRevealed = (player: Player) => {
-        ws.send({
-            action: 'syncBoard',
-            board: {
-                hidden: false,
-                board: room.board,
-                width: room.board[0]?.length ?? 0,
-                height: room.board.length,
-            },
-        });
-    };
-
-    const onChatSent = (message: ChatMessage) => {
-        ws.send({
-            action: 'chat',
-            message,
-            players: room.getPlayers(),
-        });
-    };
-
-    const onSystemMessage = (message: ChatMessage) => {
-        ws.send({
-            action: 'chat',
-            message,
-            players: room.getPlayers(),
-        });
-    };
-
-    room.on('board:goalMarked', onGoalMarked);
-    room.on('board:goalUnmarked', onGoalUnmarked);
-    room.on('board:cellUpdate', onCellUpdate);
-    room.on('board:regenerated', onBoardRegenerated);
-    room.on('board:revealed', onBoardRevealed);
-    room.on('chatSent', onChatSent);
-    room.on('system:message', onSystemMessage);
-    // TODO: PROTOCOL V2 - implement discrete events for player list
-    // room.on('players:join', onPlayersJoin);
-    // room.on('players:leave', onPlayersLeave);
-
-    return () => {
-        room.off('board:goalMarked', onGoalMarked);
-        room.off('board:goalUnmarked', onGoalUnmarked);
-        room.off('board:cellUpdate', onCellUpdate);
-        room.off('board:regenerated', onBoardRegenerated);
-        room.off('board:revealed', onBoardRevealed);
-        room.off('chatSent', onChatSent);
-        room.off('system:message', onSystemMessage);
-    };
-}
 
 roomWebSocketServer.on('connection', (socket, req) => {
     const ws = new PlayBingoSocket(socket);
@@ -147,8 +54,6 @@ roomWebSocketServer.on('connection', (socket, req) => {
     //     5 * 60 * 1000,
     // );
 
-    let unsubscribe: (() => void) | undefined;
-
     // handlers
     ws.onMessage((action: RoomAction) => {
         const payload = verifyRoomToken(action.authToken, slug);
@@ -164,9 +69,6 @@ roomWebSocketServer.on('connection', (socket, req) => {
         if (action.action === 'join') {
             clearTimeout(timeout);
             ws.send(room.handleJoin(action, payload, ws));
-            if (!unsubscribe) {
-                unsubscribe = subscribeToRoom(room, ws);
-            }
         }
 
         // helpers
@@ -177,8 +79,6 @@ roomWebSocketServer.on('connection', (socket, req) => {
 
         switch (action.action) {
             case 'leave':
-                unsubscribe?.();
-                unsubscribe = undefined;
                 ws.send({
                     action: room.handleLeave(action, payload, action.authToken)
                         ? 'disconnected'
@@ -266,8 +166,6 @@ roomWebSocketServer.on('connection', (socket, req) => {
         }
     });
     ws.onClose((code, reason) => {
-        unsubscribe?.();
-        unsubscribe = undefined;
         // cleanup
         // attempt to close the connection from the room, in case the connection
         // is closed unexpectedly without a leave message

@@ -1,7 +1,10 @@
 import { mock } from 'jest-mock-extended';
+import { OPEN } from 'ws';
 import Player from '../../core/Player';
 import Room from '../../core/Room';
 import { RevealedCell } from '@playbingo/types';
+import { PlayBingoSocketLike } from '../../core/PlayBingoSocket';
+import RaceHandler from '../../core/integration/races/RaceHandler';
 
 const room = mock<Room>();
 room.board = [Array(5).fill(mock<RevealedCell>()), [], [], [], []];
@@ -103,6 +106,77 @@ describe('Goal Tracking', () => {
         expect(player.hasCompletedGoals(row1Mask)).toBeTruthy();
         expect(player.hasCompletedGoals(col1Mask)).toBeTruthy();
         expect(player.hasCompletedGoals(row2Mask)).toBeFalsy();
+    });
+});
+
+describe('Room event subscriptions', () => {
+    const createConnectedPlayer = () => {
+        const subscribedRoom = mock<Room>();
+        subscribedRoom.board = [
+            Array(5).fill(mock<RevealedCell>()),
+            [],
+            [],
+            [],
+            [],
+        ];
+        subscribedRoom.exploration = false;
+        subscribedRoom.alwaysRevealedMask = 0n;
+        subscribedRoom.raceHandler = mock<RaceHandler>();
+        subscribedRoom.getPlayers.mockReturnValue([]);
+        const player = new Player(
+            subscribedRoom,
+            'test',
+            'Test Player',
+            'blue',
+            false,
+            false,
+        );
+        const socket = mock<PlayBingoSocketLike>();
+        socket.readyState = OPEN;
+        player.addConnection('connection-1', socket);
+        return { player, room: subscribedRoom, socket };
+    };
+
+    it('fans room events out through all player connections', () => {
+        const {
+            player,
+            room: subscribedRoom,
+            socket,
+        } = createConnectedPlayer();
+        const secondSocket = mock<PlayBingoSocketLike>();
+        secondSocket.readyState = OPEN;
+        player.addConnection('connection-2', secondSocket);
+        const cell = mock<RevealedCell>();
+        const goalMarkedListener = subscribedRoom.on.mock.calls.find(
+            ([event]) => event === 'board:goalMarked',
+        )?.[1];
+
+        goalMarkedListener?.(cell, 2, 3, player);
+
+        expect(socket.send).toHaveBeenCalledWith(
+            expect.objectContaining({
+                action: 'cellUpdate',
+                row: 2,
+                col: 3,
+                cell,
+                connectedPlayer: expect.objectContaining({ id: player.id }),
+            }),
+        );
+        expect(secondSocket.send).toHaveBeenCalledTimes(1);
+        expect(subscribedRoom.on).toHaveBeenCalledTimes(7);
+    });
+
+    it('unsubscribes only after the last player connection closes', () => {
+        const { player, room: subscribedRoom } = createConnectedPlayer();
+        const secondSocket = mock<PlayBingoSocketLike>();
+        secondSocket.readyState = OPEN;
+        player.addConnection('connection-2', secondSocket);
+
+        player.closeConnection('connection-1');
+        expect(subscribedRoom.off).not.toHaveBeenCalled();
+
+        player.closeConnection('connection-2');
+        expect(subscribedRoom.off).toHaveBeenCalledTimes(7);
     });
 });
 
