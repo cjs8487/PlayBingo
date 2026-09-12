@@ -327,6 +327,28 @@ describe('Board Control', () => {
             expect(emitSpy.mock.calls[0][0]).toBe('board:goalMarked');
         });
 
+        it('Sends a cell update to connected players', () => {
+            const player = room.getPlayerById(mockTokenPayload.playerId)!;
+            const otherPlayer = room.getPlayerById(
+                mockTokenPayloadPlayer2.playerId,
+            )!;
+            const sendPlayer = jest.spyOn(player, 'sendMessage');
+            const sendOtherPlayer = jest.spyOn(otherPlayer, 'sendMessage');
+            const { row, col } = mockMarkAction.payload;
+
+            room.handleMark(mockMarkAction, mockTokenPayload);
+
+            const message = {
+                action: 'cellUpdate',
+                row,
+                col,
+                cell: room.board[row][col],
+                players: room.getPlayerData(),
+            };
+            expect(sendPlayer).toHaveBeenCalledWith(message);
+            expect(sendOtherPlayer).toHaveBeenCalledWith(message);
+        });
+
         it('Sends a chat message', () => {
             const sendChatSpy = jest.spyOn(room, 'sendChat');
             const player = room.getPlayerById(mockTokenPayload.playerId)!;
@@ -376,6 +398,28 @@ describe('Board Control', () => {
             room.handleUnmark(mockUnmarkAction, mockTokenPayload);
             expect(emitSpy).toHaveBeenCalledTimes(2);
             expect(emitSpy.mock.calls[0][0]).toBe('board:goalUnmarked');
+        });
+
+        it('Sends a cell update to connected players', () => {
+            const player = room.getPlayerById(mockTokenPayload.playerId)!;
+            const otherPlayer = room.getPlayerById(
+                mockTokenPayloadPlayer2.playerId,
+            )!;
+            const sendPlayer = jest.spyOn(player, 'sendMessage');
+            const sendOtherPlayer = jest.spyOn(otherPlayer, 'sendMessage');
+            const { row, col } = mockUnmarkAction.payload;
+
+            room.handleUnmark(mockUnmarkAction, mockTokenPayload);
+
+            const message = {
+                action: 'cellUpdate',
+                row,
+                col,
+                cell: room.board[row][col],
+                players: room.getPlayerData(),
+            };
+            expect(sendPlayer).toHaveBeenCalledWith(message);
+            expect(sendOtherPlayer).toHaveBeenCalledWith(message);
         });
 
         it('Sends a chat message', () => {

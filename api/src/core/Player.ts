@@ -1,4 +1,6 @@
 import {
+    Cell,
+    ChatMessage,
     HiddenCell,
     Player as PlayerClientData,
     RevealedCell,
@@ -41,6 +43,8 @@ export default class Player {
     /** Open connections for the player, mapped by the id in the auth token that
      * is authorized for the connection */
     connections: Map<string, PlayBingoSocketLike>;
+
+    private unsubscribeFromRoom?: () => void;
 
     finishedAt?: string;
     /** Whether the card is hidden for this player. */
@@ -100,12 +104,22 @@ export default class Player {
      * @param socket The socket the connection communicates over
      */
     addConnection(id: string, socket: PlayBingoSocketLike) {
+        if (!this.hasConnections()) {
+            this.subscribeToRoom();
+        }
+        const previous = this.connections.get(id);
         this.connections.set(id, socket);
+        if (previous !== socket) previous?.close();
     }
 
     /** Removes a connection so the transport can send its leave response before closing. */
     removeConnection(id: string) {
-        return this.connections.delete(id);
+        const removed = this.connections.delete(id);
+        if (removed && !this.hasConnections()) {
+            this.unsubscribeFromRoom?.();
+            this.unsubscribeFromRoom = undefined;
+        }
+        return removed;
     }
 
     /**
@@ -122,14 +136,70 @@ export default class Player {
             }
         });
         if (socketKey) {
-            this.connections.delete(socketKey);
-            return true;
+            return this.removeConnection(socketKey);
         }
         return false;
     }
 
     hasConnections() {
         return this.connections.size > 0;
+    }
+
+    private subscribeToRoom() {
+        const room = this.room;
+        const onCellUpdate = (cell: Cell, row: number, col: number) => {
+            if (!this.boardHidden) {
+                this.sendMessage({
+                    action: 'cellUpdate',
+                    row,
+                    col,
+                    cell,
+                    players: room.getPlayerData(),
+                });
+            }
+        };
+        const syncBoard = () => {
+            this.sendMessage({
+                action: 'syncBoard',
+                board: {
+                    width: room.boardWidth,
+                    height: room.boardHeight,
+                    ...(this.boardHidden
+                        ? { hidden: true }
+                        : { hidden: false, board: room.board }),
+                },
+                players: room.getPlayerData(),
+            });
+        };
+        const onBoardRegenerated = syncBoard;
+        const onBoardRevealed = (revealedPlayer: Player) => {
+            if (revealedPlayer === this) syncBoard();
+        };
+        const onChatSent = (message: ChatMessage) => {
+            this.sendMessage({
+                action: 'chat',
+                message,
+                players: room.getPlayerData(),
+            });
+        };
+
+        room.on('board:goalMarked', onCellUpdate);
+        room.on('board:goalUnmarked', onCellUpdate);
+        room.on('board:cellUpdate', onCellUpdate);
+        room.on('board:regenerated', onBoardRegenerated);
+        room.on('board:revealed', onBoardRevealed);
+        room.on('chatSent', onChatSent);
+        room.on('system:message', onChatSent);
+
+        this.unsubscribeFromRoom = () => {
+            room.off('board:goalMarked', onCellUpdate);
+            room.off('board:goalUnmarked', onCellUpdate);
+            room.off('board:cellUpdate', onCellUpdate);
+            room.off('board:regenerated', onBoardRegenerated);
+            room.off('board:revealed', onBoardRevealed);
+            room.off('chatSent', onChatSent);
+            room.off('system:message', onChatSent);
+        };
     }
 
     /**
@@ -154,7 +224,7 @@ export default class Player {
         };
     }
 
-    sendMessage(message: ServerMessage, connection?: PlayBingoSocketLike) {
+    sendMessage(message: ServerMessage) {
         let finalMessage: ServerMessage;
         if (message.action === 'cellUpdate' && this.room.exploration) {
             if (!message.cell.revealed) {
@@ -197,10 +267,7 @@ export default class Player {
         }
 
         this.connections.forEach((socket) => {
-            if (
-                (!connection || connection === socket) &&
-                socket.readyState === OPEN
-            ) {
+            if (socket.readyState === OPEN) {
                 socket.send({
                     ...finalMessage,
                     connectedPlayer: this.toClientData(),

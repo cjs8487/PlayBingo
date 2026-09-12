@@ -1,4 +1,4 @@
-import { Cell, ChatMessage, RoomAction } from '@playbingo/types';
+import { RoomAction } from '@playbingo/types';
 import { WebSocketServer } from 'ws';
 import {
     createRoomToken,
@@ -8,7 +8,6 @@ import {
 import { roomCleanupInterval } from '../Environment';
 import { logInfo, logWarn } from '../Logger';
 import Room from './Room';
-import Player from './Player';
 import PlayBingoSocket from './PlayBingoSocket';
 
 export const roomWebSocketServer: WebSocketServer = new WebSocketServer({
@@ -25,68 +24,6 @@ const cleanupInterval = setInterval(() => {
         }
     });
 }, roomCleanupInterval);
-
-const subscribeToRoom = (player: Player, ws: PlayBingoSocket) => {
-    const room = player.room;
-    const onCellUpdate = (cell: Cell, row: number, col: number) => {
-        if (!player.boardHidden) {
-            player.sendMessage(
-                {
-                    action: 'cellUpdate',
-                    row,
-                    col,
-                    cell,
-                    players: room.getPlayerData(),
-                },
-                ws,
-            );
-        }
-    };
-    const syncBoard = () => {
-        player.sendMessage(
-            {
-                action: 'syncBoard',
-                board: {
-                    width: room.boardWidth,
-                    height: room.boardHeight,
-                    ...(player.boardHidden
-                        ? { hidden: true }
-                        : { hidden: false, board: room.board }),
-                },
-                players: room.getPlayerData(),
-            },
-            ws,
-        );
-    };
-    const onBoardRegenerated = syncBoard;
-    const onBoardRevealed = (revealedPlayer: Player) => {
-        if (revealedPlayer === player) syncBoard();
-    };
-    const onChatSent = (message: ChatMessage) => {
-        player.sendMessage(
-            { action: 'chat', message, players: room.getPlayerData() },
-            ws,
-        );
-    };
-
-    room.on('board:goalMarked', onCellUpdate);
-    room.on('board:goalUnmarked', onCellUpdate);
-    room.on('board:cellUpdate', onCellUpdate);
-    room.on('board:regenerated', onBoardRegenerated);
-    room.on('board:revealed', onBoardRevealed);
-    room.on('chatSent', onChatSent);
-    room.on('system:message', onChatSent);
-
-    return () => {
-        room.off('board:goalMarked', onCellUpdate);
-        room.off('board:goalUnmarked', onCellUpdate);
-        room.off('board:cellUpdate', onCellUpdate);
-        room.off('board:regenerated', onBoardRegenerated);
-        room.off('board:revealed', onBoardRevealed);
-        room.off('chatSent', onChatSent);
-        room.off('system:message', onChatSent);
-    };
-};
 
 roomWebSocketServer.on('connection', (socket, req) => {
     const ws = new PlayBingoSocket(socket);
@@ -117,8 +54,6 @@ roomWebSocketServer.on('connection', (socket, req) => {
     //     5 * 60 * 1000,
     // );
 
-    let unsubscribe: (() => void) | undefined;
-
     // handlers
     ws.onMessage((action: RoomAction) => {
         const payload = verifyRoomToken(action.authToken, slug);
@@ -136,9 +71,6 @@ roomWebSocketServer.on('connection', (socket, req) => {
             ws.send(result);
             if (result.action !== 'connected') return;
             clearTimeout(timeout);
-            unsubscribe?.();
-            const player = room.getPlayerById(payload.playerId);
-            if (player) unsubscribe = subscribeToRoom(player, ws);
             return;
         }
 
@@ -150,8 +82,6 @@ roomWebSocketServer.on('connection', (socket, req) => {
 
         switch (action.action) {
             case 'leave':
-                unsubscribe?.();
-                unsubscribe = undefined;
                 ws.send({
                     action: room.handleLeave(action, payload, action.authToken)
                         ? 'disconnected'
@@ -236,7 +166,6 @@ roomWebSocketServer.on('connection', (socket, req) => {
     });
     ws.onClose((code, reason) => {
         clearTimeout(timeout);
-        unsubscribe?.();
         // cleanup
         // attempt to close the connection from the room, in case the connection
         // is closed unexpectedly without a leave message
