@@ -34,47 +34,61 @@ export default function PlayerList() {
                             borderColor: team.color,
                             boxShadow: `0 0 6px ${team.color}`,
                             mb: 2,
+                            display: 'flex',
                         }}
                     >
                         <Box
                             sx={{
-                                p: 1,
+                                alignSelf: 'stretch',
                                 display: 'flex',
                                 alignItems: 'center',
-                                justifyContent: 'space-between',
+                                backgroundColor: team.color,
+                                mr: 1,
+                                px: 1.5,
                             }}
                         >
-                            <Typography sx={{ flexGrow: 1 }}>
-                                {team.name}
-                            </Typography>
                             <Typography>{team.goalCount}</Typography>
                         </Box>
-                        {members.map((player) => (
+                        <Box sx={{ p: 0.5, flexGrow: 1 }}>
                             <Box
-                                key={player.id}
                                 sx={{
-                                    p: 1,
-                                    ml: 2,
                                     display: 'flex',
                                     alignItems: 'center',
                                     justifyContent: 'space-between',
+                                    borderBottom: 1,
+                                    borderColor: 'divider',
                                 }}
                             >
-                                <Typography sx={{ flexGrow: 1 }}>
-                                    {player.nickname}
+                                <Typography sx={{ flexGrow: 1, pb: 0.5 }}>
+                                    {team.name}
                                 </Typography>
-                                <PlayerRaceSummary
-                                    raceHandler={roomData.raceHandler}
-                                    player={player}
-                                />
-                                {player.monitor && (
-                                    <Sword
-                                        fontSize="small"
-                                        sx={{ color: 'green', ml: 2 }}
-                                    />
-                                )}
                             </Box>
-                        ))}
+                            {members.map((player) => (
+                                <Box
+                                    key={player.id}
+                                    sx={{
+                                        p: 1,
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'space-between',
+                                    }}
+                                >
+                                    <Typography sx={{ flexGrow: 1 }}>
+                                        {player.nickname}
+                                    </Typography>
+                                    <PlayerRaceSummary
+                                        raceHandler={roomData.raceHandler}
+                                        player={player}
+                                    />
+                                    {player.monitor && (
+                                        <Sword
+                                            fontSize="small"
+                                            sx={{ color: 'green', ml: 2 }}
+                                        />
+                                    )}
+                                </Box>
+                            ))}
+                        </Box>
                     </Box>
                 );
             })}
