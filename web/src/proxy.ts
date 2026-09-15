@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 export function proxy(request: NextRequest) {
+    console.log(request.url);
     const headers = new Headers(request.headers);
     headers.set('Content-Type', 'application/json');
     return NextResponse.rewrite(
