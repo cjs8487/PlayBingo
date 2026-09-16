@@ -5,7 +5,7 @@ export function proxy(request: NextRequest) {
     const headers = new Headers(request.headers);
     headers.set('Content-Type', 'application/json');
     return NextResponse.rewrite(
-        `${process.env.NEXT_PUBLIC_API_PATH}/${request.nextUrl.pathname}${
+        `${process.env.NEXT_PUBLIC_API_PATH}${request.nextUrl.pathname}${
             request.nextUrl.search ? `?${request.nextUrl.search}` : ''
         }`,
         { request: { headers } },
