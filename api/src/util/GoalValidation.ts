@@ -19,7 +19,9 @@ const DANGEROUS_KEYS = new Set([
  * Check for dangerous keys in the meta object.
  * Simple recursive check - safe for 4KB payloads.
  */
-function checkDangerousKeys(meta: Prisma.JsonValue): string | null {
+function checkDangerousKeys(
+    meta: PrismaJson.GoalMeta | Prisma.JsonValue,
+): string | null {
     if (meta === null || meta === undefined || typeof meta !== 'object') {
         return null;
     }
@@ -34,7 +36,7 @@ function checkDangerousKeys(meta: Prisma.JsonValue): string | null {
         // Check object keys
         for (const [key, value] of Object.entries(meta) as [
             string,
-            Prisma.JsonValue,
+            PrismaJson.GoalMeta | Prisma.JsonValue,
         ][]) {
             if (DANGEROUS_KEYS.has(key)) {
                 return `Goal meta contains forbidden key "${key}"`;
@@ -52,7 +54,7 @@ function checkDangerousKeys(meta: Prisma.JsonValue): string | null {
  * Validate meta with all guards and early exits.
  */
 export function validateGoalMeta(
-    meta: Prisma.JsonValue,
+    meta: PrismaJson.GoalMeta | Prisma.JsonValue,
 ): GoalMetaValidationResult {
     // Allow null/undefined values
     if (meta === null || meta === undefined) {
