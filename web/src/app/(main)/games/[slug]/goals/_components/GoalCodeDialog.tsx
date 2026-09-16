@@ -50,6 +50,7 @@ export default function GoalCodeDialog({
             'description',
             'categories',
             'difficulty',
+            'meta',
         ];
 
         const goalsForExport = ordered.map((g) => {
