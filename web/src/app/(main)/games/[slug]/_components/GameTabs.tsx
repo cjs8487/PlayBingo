@@ -78,7 +78,7 @@ export default function GameTabs({
             {tabs.map((page, index) => (
                 <Paper
                     key={page}
-                    elevation={page === segment ? 1 : 0}
+                    elevation={page === segment ? 2 : 0}
                     sx={{
                         border: 2,
                         borderBottom: page === segment ? 0 : 2,
@@ -93,7 +93,7 @@ export default function GameTabs({
                             display: page === segment ? 'block' : 'none',
                             width: '100%',
                             height: 4,
-                            background: 'white',
+                            background: (theme) => theme.palette.accent.main,
                             borderRadius: 1,
                             borderBottomLeftRadius: 0,
                             borderBottomRightRadius: 0,
@@ -110,8 +110,8 @@ export default function GameTabs({
                                 borderBottomRightRadius: 0,
                                 textTransform: 'uppercase',
                                 fontSize: '0.875rem',
-                                fontWeight: 500,
-                                color: 'accent.main',
+                                fontWeight: 800,
+                                color: 'primary.main',
                                 pointerEvents: 'none',
                                 cursor: 'default',
                                 userSelect: 'none',
