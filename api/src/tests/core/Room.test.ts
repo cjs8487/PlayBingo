@@ -14,7 +14,7 @@ import WebSocket from 'ws';
 import { RoomTokenPayload } from '../../auth/RoomAuth';
 import Player from '../../core/Player';
 import Room from '../../core/Room';
-import { addChangeColorAction, createUpdatePlayer } from '../../database/Rooms';
+import { createUpdatePlayer } from '../../database/Rooms';
 
 jest.mock('../../database/Rooms');
 
@@ -456,7 +456,13 @@ describe('handleChangeColor', () => {
             ],
             new Date(),
         );
-        expect(addChangeColorAction).toHaveBeenCalledTimes(1);
+        expect(emitSpy).toHaveBeenCalledWith(
+            'player:colorChanged',
+            player,
+            'red',
+            'blue',
+            new Date(),
+        );
         expect(emitSpy).toHaveBeenCalledTimes(2);
         expect(emitSpy.mock.calls[0][0]).toBe('player:colorChanged');
         expect(emitSpy.mock.calls[1][0]).toBe('chatSent');

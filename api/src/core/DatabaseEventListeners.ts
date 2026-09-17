@@ -1,4 +1,5 @@
 import {
+    addChangeColorAction,
     addChatAction,
     addJoinAction,
     addLeaveAction,
@@ -105,6 +106,7 @@ export function subscribe(room: Room): void {
     const onBoardRegenerated: RoomEvents['board:regenerated'] = (
         board,
         _options,
+        _timestamp,
         persist,
     ) => {
         persist?.(
@@ -116,6 +118,29 @@ export function subscribe(room: Room): void {
             ),
         );
     };
+    const onColorChanged: RoomEvents['player:colorChanged'] = (
+        player,
+        color,
+        oldColor,
+        timestamp,
+    ) => {
+        const team = room.getTeamForPlayer(player.id);
+        if (team) {
+            persistAction(
+                room,
+                addChangeColorAction(
+                    room.id,
+                    player.id,
+                    team.id,
+                    team.name,
+                    oldColor,
+                    color,
+                    timestamp,
+                ),
+            );
+        }
+    };
+    room.on('player:colorChanged', onColorChanged);
     room.on('player:connected', onPlayerConnected);
     room.on('players:leave', onPlayersLeave);
     room.on('player:chat', onPlayerChat);
@@ -124,6 +149,7 @@ export function subscribe(room: Room): void {
     room.on('board:regenerated', onBoardRegenerated);
     room.once('room:closed', onClose);
     roomListeners.set(room.id, () => {
+        room.off('player:colorChanged', onColorChanged);
         room.off('player:connected', onPlayerConnected);
         room.off('players:leave', onPlayersLeave);
         room.off('player:chat', onPlayerChat);
