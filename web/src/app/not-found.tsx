@@ -67,7 +67,7 @@ const titles = [
     },
     {
         title: "The RNG wasn't in your favor.",
-        subtitle: "The poage you're looking for must be a rare drop.",
+        subtitle: "The page you're looking for must be a rare drop.",
     },
     { title: 'Wrong item equipped', subtitle: 'Try using a different URL.' },
     {
