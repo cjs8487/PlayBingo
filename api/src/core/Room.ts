@@ -86,29 +86,41 @@ export type BoardGenerationOptions =
     | BoardGenerationOptionsDifficulty;
 
 interface RoomEvents {
-    'players:join': (player: Player) => void;
-    'players:leave': (player: Player) => void;
-    'player:colorChanged': (player: Player, newColor: string) => void;
-    'board:cellUpdate': (cell: Cell, row: number, col: number) => void;
+    'players:join': (player: Player, timestamp: Date) => void;
+    'players:leave': (player: Player, timestamp: Date) => void;
+    'player:colorChanged': (
+        player: Player,
+        newColor: string,
+        timestamp: Date,
+    ) => void;
+    'board:cellUpdate': (
+        cell: Cell,
+        row: number,
+        col: number,
+        timestamp: Date,
+    ) => void;
     'board:goalMarked': (
         cell: Cell,
         row: number,
         col: number,
         player: Player,
+        timestamp: Date,
     ) => void;
     'board:goalUnmarked': (
         cell: Cell,
         row: number,
         col: number,
         player: Player,
+        timestamp: Date,
     ) => void;
     'board:regenerated': (
         board: RevealedCell[][],
         options: BoardGenerationOptions,
+        timestamp: Date,
     ) => void;
-    'board:revealed': (player: Player) => void;
-    chatSent: (message: ChatMessage) => void;
-    'system:message': (message: ChatMessage) => void;
+    'board:revealed': (player: Player, timestamp: Date) => void;
+    chatSent: (message: ChatMessage, timestamp: Date) => void;
+    'system:message': (message: ChatMessage, timestamp: Date) => void;
 }
 
 /**
@@ -436,7 +448,7 @@ export default class Room extends EventEmitter {
         this.raceHandler.resetTimer();
 
         this.sendSyncBoard();
-        this.emit('board:regenerated', this.board, options);
+        this.emit('board:regenerated', this.board, options, new Date());
     }
 
     getPlayers(): PlayerData[] {
@@ -481,7 +493,7 @@ export default class Room extends EventEmitter {
 
         const timestamp = new Date();
         if (newPlayer) {
-            this.emit('players:join', player);
+            this.emit('players:join', player, timestamp);
             if (auth.isSpectating) {
                 this.sendChat(
                     `${player.nickname} is now spectating`,
@@ -570,7 +582,7 @@ export default class Room extends EventEmitter {
                 timestamp,
             );
 
-            this.emit('players:leave', player);
+            this.emit('players:leave', player, timestamp);
             if (this.players.size === 0) {
                 this.close();
             }
@@ -616,8 +628,15 @@ export default class Room extends EventEmitter {
         );
         player.mark(row, col);
         this.sendCellUpdate(row, col);
-        this.emit('board:goalMarked', this.board[row][col], row, col, player);
         const timestamp = new Date();
+        this.emit(
+            'board:goalMarked',
+            this.board[row][col],
+            row,
+            col,
+            player,
+            timestamp,
+        );
         this.sendChat(
             [
                 {
@@ -647,14 +666,15 @@ export default class Room extends EventEmitter {
         ].completedPlayers.filter((playerId) => playerId !== player.id);
         player.unmark(unRow, unCol);
         this.sendCellUpdate(unRow, unCol);
+        const timestamp = new Date();
         this.emit(
             'board:goalUnmarked',
             this.board[unRow][unCol],
             unRow,
             unCol,
             player,
+            timestamp,
         );
-        const timestamp = new Date();
         this.sendChat(
             [
                 { contents: player.nickname, color: player.color },
@@ -681,7 +701,7 @@ export default class Room extends EventEmitter {
         const timestamp = new Date();
 
         player.color = color;
-        this.emit('player:colorChanged', player, color);
+        this.emit('player:colorChanged', player, color, timestamp);
         this.sendChat(
             [
                 { contents: player.nickname, color: player.color },
@@ -704,7 +724,12 @@ export default class Room extends EventEmitter {
             // the board from the previous settings
             this.generateBoard(this.lastGenerationMode);
         }
-        this.emit('board:regenerated', this.board, this.lastGenerationMode);
+        this.emit(
+            'board:regenerated',
+            this.board,
+            this.lastGenerationMode,
+            new Date(),
+        );
     }
 
     handleStartTimer() {
@@ -809,6 +834,7 @@ export default class Room extends EventEmitter {
             return null;
         }
         this.revealCardForPlayer(player);
+        const timestamp = new Date();
         this.sendChat(
             [
                 {
@@ -817,9 +843,9 @@ export default class Room extends EventEmitter {
                 },
                 ' has revealed the card.',
             ],
-            new Date(),
+            timestamp,
         );
-        this.emit('board:revealed', player);
+        this.emit('board:revealed', player, timestamp);
         player.sendMessage({
             action: 'syncBoard',
             board: {
@@ -872,7 +898,7 @@ export default class Room extends EventEmitter {
                 this.chatHistory.push([message]);
             }
             this.sendServerMessage({ action: 'chat', message: [message] });
-            this.emit('chatSent', [message]);
+            this.emit('chatSent', [message], eventTimestamp);
         } else {
             const timestamp = this.getTimestamp(eventTimestamp);
             if (timestamp) {
@@ -880,7 +906,7 @@ export default class Room extends EventEmitter {
             }
             this.chatHistory.push(message);
             this.sendServerMessage({ action: 'chat', message: message });
-            this.emit('chatSent', message);
+            this.emit('chatSent', message, eventTimestamp);
         }
     }
 

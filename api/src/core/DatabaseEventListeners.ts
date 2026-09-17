@@ -41,19 +41,19 @@ export function unsubscribe(roomId: string): void {
 
 function setupEventListeners(room: Room): void {
     // Listen for player join events
-    room.on('players:join', async (player: Player) => {
-        await addJoinAction(room.id, player.nickname, player.color);
+    room.on('players:join', async (player: Player, timestamp) => {
+        await addJoinAction(room.id, player.nickname, player.color, timestamp);
         await createUpdatePlayer(room.id, player);
     });
 
     // Listen for player leave events
-    room.on('players:leave', async (player: Player) => {
-        await addLeaveAction(room.id, player.nickname, player.color);
+    room.on('players:leave', async (player: Player, timestamp) => {
+        await addLeaveAction(room.id, player.nickname, player.color, timestamp);
     });
 
     // Listen for chat events
-    room.on('chatSent', async (chatMessage: ChatMessage) => {
-        await handleChatEvent(chatMessage, room);
+    room.on('chatSent', async (chatMessage: ChatMessage, timestamp) => {
+        await handleChatEvent(chatMessage, room, timestamp);
     });
 
     // Listen for player color change events
@@ -62,12 +62,12 @@ function setupEventListeners(room: Room): void {
     });
 
     // Listen for board events
-    room.on('board:goalMarked', async (cell, row, col, player) => {
-        await addMarkAction(room.id, player.id, row, col);
+    room.on('board:goalMarked', async (cell, row, col, player, timestamp) => {
+        await addMarkAction(room.id, player.id, row, col, timestamp);
     });
 
-    room.on('board:goalUnmarked', async (cell, row, col, player) => {
-        await addUnmarkAction(room.id, player.id, row, col);
+    room.on('board:goalUnmarked', async (cell, row, col, player, timestamp) => {
+        await addUnmarkAction(room.id, player.id, row, col, timestamp);
     });
 
     room.on('board:regenerated', async (board, options) => {
@@ -94,14 +94,12 @@ function removeEventListeners(room: Room): void {
 async function handleChatEvent(
     chatMessage: ChatMessage,
     room: Room,
+    timestamp: Date,
 ): Promise<void> {
     // Extract player info from chat message if possible
     if (Array.isArray(chatMessage) && chatMessage.length > 0) {
         const firstElement = chatMessage[0];
-        if (
-            typeof firstElement === 'object' &&
-            'contents' in firstElement
-        ) {
+        if (typeof firstElement === 'object' && 'contents' in firstElement) {
             // This is a formatted chat message with player info
             const messageText = chatMessage
                 .map((part) =>
@@ -122,6 +120,7 @@ async function handleChatEvent(
                         player.nickname,
                         player.color,
                         message,
+                        timestamp,
                     );
                 }
             }
