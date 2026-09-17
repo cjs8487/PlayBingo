@@ -79,13 +79,7 @@ export function useJSONForm<T extends ZodObject>(
 }
 
 export type JSONValue =
-    | string
-    | number
-    | boolean
-    | object
-    | JSONValue[]
-    | null
-    | undefined;
+    string | number | boolean | object | JSONValue[] | null | undefined;
 
 /** A light JSON Schema type; we only use a subset of fields */
 export type JSONSchema = {
@@ -517,6 +511,7 @@ export function JsonSchemaRenderer({
                                     borderColor: error
                                         ? 'error.main'
                                         : 'divider',
+                                    boxShadow: 'none',
                                 }}
                             >
                                 <Typography
@@ -611,6 +606,7 @@ export function JsonSchemaRenderer({
                                         borderColor: error
                                             ? 'error.main'
                                             : 'divider',
+                                        boxShadow: 'none',
                                     }}
                                 >
                                     <CardContent>
