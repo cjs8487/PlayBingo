@@ -1,0 +1,13 @@
+export const addChangeColorAction = jest.fn().mockResolvedValue(undefined);
+export const addChatAction = jest.fn().mockResolvedValue(undefined);
+export const addJoinAction = jest.fn().mockResolvedValue(undefined);
+export const addLeaveAction = jest.fn().mockResolvedValue(undefined);
+export const addMarkAction = jest.fn().mockResolvedValue(undefined);
+export const addUnmarkAction = jest.fn().mockResolvedValue(undefined);
+export const createUpdatePlayer = jest.fn().mockResolvedValue(undefined);
+export const createUpdateTeam = jest.fn().mockResolvedValue(undefined);
+export const setRoomBoard = jest.fn().mockResolvedValue(undefined);
+export const updateFinishTime = jest.fn().mockResolvedValue(undefined);
+export const updateRaceHandler = jest.fn().mockResolvedValue(undefined);
+export const updateStartTime = jest.fn().mockResolvedValue(undefined);
+export const updateTeamsEnabled = jest.fn().mockResolvedValue(undefined);

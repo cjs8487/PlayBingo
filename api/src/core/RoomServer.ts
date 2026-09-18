@@ -104,6 +104,12 @@ roomWebSocketServer.on('connection', (ws, req) => {
                     ws.send(JSON.stringify(unmarkResult));
                 }
                 break;
+            case 'joinTeam':
+                const joinTeamResult = room.handleJoinTeam(action, payload);
+                if (joinTeamResult) {
+                    ws.send(JSON.stringify(joinTeamResult));
+                }
+                break;
             case 'chat':
                 const chatResult = room.handleChat(action, payload);
                 if (chatResult) {
@@ -135,26 +141,13 @@ roomWebSocketServer.on('connection', (ws, req) => {
                     payload.playerId.split(':')[1],
                     payload.userId,
                 );
-                const player = room.players.get(payload.playerId);
+                const player = room.getPlayerById(payload.playerId);
                 if (player) {
-                    player.spectator = action.payload.spectate;
                     player.sendMessage({
                         action: 'reauthenticate',
                         authToken: newToken,
                     });
-                    if (player.spectator) {
-                        player.markedGoals = 0n;
-                        player.goalCount = 0;
-                        room.sendChat(
-                            `${player.nickname} is now spectating`,
-                            new Date(),
-                        );
-                    } else {
-                        room.sendChat(
-                            `${player.nickname} is now playing`,
-                            new Date(),
-                        );
-                    }
+                    room.setPlayerSpectating(player, action.payload.spectate);
                 }
                 break;
             case 'startTimer':
@@ -168,6 +161,9 @@ roomWebSocketServer.on('connection', (ws, req) => {
                 break;
             case 'setChatEnabled':
                 room.handleSetChatEnabled(action);
+                break;
+            case 'setTeamsEnabled':
+                room.handleSetTeamsEnabled(action);
                 break;
         }
     });

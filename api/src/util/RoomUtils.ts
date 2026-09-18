@@ -10,7 +10,7 @@ export const listToBoard = (
     return chunk(
         list.map((g) => ({
             goal: g,
-            completedPlayers: [],
+            completedTeams: [],
             revealed: true,
         })),
         length,

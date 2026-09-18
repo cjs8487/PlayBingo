@@ -12,4 +12,5 @@ export * from './types/Player';
 export * from './types/RoomAction';
 export * from './types/RoomData';
 export * from './types/ServerMessage';
+export * from './types/Team';
 export * from './types/User';

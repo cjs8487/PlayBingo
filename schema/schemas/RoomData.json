@@ -10,7 +10,8 @@
         "newGenerator",
         "variant",
         "mode",
-        "seed"
+        "seed",
+        "teamsEnabled"
     ],
     "description": "Basic information about a room",
     "properties": {
@@ -44,6 +45,9 @@
         },
         "seed": {
             "type": "number"
+        },
+        "teamsEnabled": {
+            "type": "boolean"
         },
         "startedAt": {
             "type": "string"
