@@ -9,7 +9,8 @@ import {
     ServerMessage,
     UnmarkAction,
 } from '@playbingo/types';
-import { PlayBingoSocketLike } from '../../core/PlayBingoSocket';
+import { mock } from 'jest-mock-extended';
+import Connection from '../../core/connection/Connection';
 import { RoomTokenPayload } from '../../auth/RoomAuth';
 import { subscribe, unsubscribe } from '../../core/DatabaseEventListeners';
 import Room from '../../core/Room';
@@ -85,12 +86,7 @@ const auth = (playerId: string, isSpectating = false): RoomTokenPayload => ({
     isMonitor: true,
 });
 
-const socket = () =>
-    ({
-        readyState: 0,
-        send: jest.fn(),
-        close: jest.fn(),
-    }) as PlayBingoSocketLike;
+const socket = () => mock<Connection>();
 
 const joinAction = (nickname: string) =>
     ({ action: 'join', payload: { nickname } }) as JoinAction;
@@ -373,14 +369,9 @@ describe('Room team workflows', () => {
         expect(aliceTeam.players.has('alice')).toBe(true);
         expect(aliceTeam.players.has('bob')).toBe(false);
     });
-    const openSocket = () =>
-        ({
-            readyState: 1,
-            send: jest.fn(),
-            close: jest.fn(),
-        }) as PlayBingoSocketLike;
+    const openSocket = () => mock<Connection>();
 
-    const boardMessages = (connection: PlayBingoSocketLike) =>
+    const boardMessages = (connection: Connection) =>
         (connection.send as jest.Mock).mock.calls
             .map(([raw]) => raw as ServerMessage)
             .filter((message) => message.action === 'syncBoard');

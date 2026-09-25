@@ -1,5 +1,7 @@
 import { RoomAction, ServerMessage } from '@playbingo/types';
-import { RawData, WebSocket } from 'ws';
+import { OPEN, RawData, WebSocket } from 'ws';
+import type Room from '../Room';
+import Connection from './Connection';
 
 /**
  * The WebSocket protocol used by a PlayBingo room.
@@ -8,8 +10,13 @@ import { RawData, WebSocket } from 'ws';
  * anything in `send`. Keeping that boundary here means the rest of the room
  * code can only send and receive protocol messages.
  */
-export default class PlayBingoSocket {
-    constructor(private readonly socket: WebSocket) {}
+export default class PlayBingoSocket extends Connection {
+    constructor(
+        room: Room,
+        private readonly socket: WebSocket,
+    ) {
+        super(room);
+    }
 
     get readyState() {
         return this.socket.readyState;
@@ -48,18 +55,10 @@ export default class PlayBingoSocket {
     }
 
     send(message: ServerMessage): void {
-        this.socket.send(JSON.stringify(message));
+        if (this.readyState === OPEN) this.socket.send(JSON.stringify(message));
     }
 
     close(code?: number, reason?: string | Buffer): void {
         this.socket.close(code, reason);
     }
 }
-
-export type PlayBingoSocketLike = {
-    readyState: number;
-    send(message: ServerMessage): void;
-    close(code?: number, reason?: string | Buffer): void;
-};
-
-export { PlayBingoSocket };

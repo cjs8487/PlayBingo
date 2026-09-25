@@ -8,7 +8,7 @@ import {
 import { roomCleanupInterval } from '../Environment';
 import { logInfo, logWarn } from '../Logger';
 import Room from './Room';
-import PlayBingoSocket from './PlayBingoSocket';
+import PlayBingoSocket from './connection/PlayBingoSocket';
 
 export const roomWebSocketServer: WebSocketServer = new WebSocketServer({
     noServer: true,
@@ -26,15 +26,21 @@ const cleanupInterval = setInterval(() => {
 }, roomCleanupInterval);
 
 roomWebSocketServer.on('connection', (socket, req) => {
-    const ws = new PlayBingoSocket(socket);
     if (!req.url) {
-        ws.send({ action: 'unauthorized' });
-        ws.close();
+        socket.close(4000, 'Bad Request');
         return;
     }
     const segments = req.url.split('/');
     segments.shift(); // remove leading empty segment
     const [, slug] = segments;
+
+    const room = allRooms.get(slug);
+    if (!room) {
+        socket.close(4001, 'Unknown room');
+        return;
+    }
+
+    const ws = new PlayBingoSocket(room, socket);
 
     // create timeout for uninitialized connections
     const timeout = setTimeout(() => {
@@ -61,8 +67,7 @@ roomWebSocketServer.on('connection', (socket, req) => {
             ws.send({ action: 'unauthorized' });
             return;
         }
-        const room = allRooms.get(payload.roomSlug);
-        if (!room) {
+        if (allRooms.get(payload.roomSlug) !== room) {
             ws.send({ action: 'unauthorized' });
             return;
         }
@@ -172,12 +177,7 @@ roomWebSocketServer.on('connection', (socket, req) => {
         logInfo(
             `[ws] Socket connection closed - ${code} - ${reason.toString()}`,
         );
-        let found = false;
-        allRooms.forEach((room) => {
-            if (found) return;
-            found = room.handleSocketClose(ws);
-        });
-        if (!found) {
+        if (!room.handleSocketClose(ws)) {
             logWarn(
                 'Received a close frame for a websocket connection, but there was no matching socket associated with a room',
             );

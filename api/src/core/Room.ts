@@ -39,10 +39,10 @@ import {
     listToBoard,
     rowColToMask,
 } from '../util/RoomUtils';
-import { PlayBingoSocketLike } from './PlayBingoSocket';
 import Player from './Player';
 import { allRooms } from './RoomServer';
 import Team from './Team';
+import Connection from './connection/Connection';
 import { BoardGenerator } from './generation/BoardGenerator';
 import { GenerationFailedError } from './generation/GenerationFailedError';
 import {
@@ -717,7 +717,7 @@ export default class Room extends EventEmitter {
     handleJoin(
         action: JoinAction,
         auth: RoomTokenPayload,
-        socket: PlayBingoSocketLike,
+        socket: Connection,
     ): ServerMessage {
         let player = this.getPlayerById(auth.playerId);
         let playerTeam = player?.teamId
@@ -1085,7 +1085,7 @@ export default class Room extends EventEmitter {
         this.sendRoomData();
     }
 
-    handleSocketClose(ws: PlayBingoSocketLike) {
+    handleSocketClose(ws: Connection) {
         // handleSocketClose reports whether it owned the socket, so find stops
         // as soon as the owning player has cleaned it up
         const player = this.getAllPlayers().find((p) =>
@@ -1528,7 +1528,11 @@ export default class Room extends EventEmitter {
     /**
      * Runs room level cleanup tasks and closes all open connections to the room
      */
+    private closing = false;
+
     close() {
+        if (this.closing) return;
+        this.closing = true;
         this.logInfo('Closing room.');
         this.sendSystemMessage('This room has been closed due to inactivity.');
         this.getAllPlayers().forEach((player) => {
