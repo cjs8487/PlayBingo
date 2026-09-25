@@ -10,7 +10,7 @@ import { OPEN } from 'ws';
 import { RoomTokenPayload } from '../auth/RoomAuth';
 import { computeRevealedMask, rowColToMask } from '../util/RoomUtils';
 import Room from './Room';
-import { PlayBingoSocketLike } from './PlayBingoSocket';
+import Connection from './connection/Connection';
 
 /**
  * Represents a player connected to a room. While largely just a data class, this
@@ -56,7 +56,7 @@ export default class Player {
 
     /** Open connections for the player, mapped by the id in the auth token that
      * is authorized for the connection */
-    connections: Map<string, PlayBingoSocketLike>;
+    connections: Map<string, Connection>;
 
     /** Removes this player's listeners from the room while disconnected. */
     private unsubscribeFromRoom?: () => void;
@@ -85,7 +85,7 @@ export default class Player {
         this.linesComplete = 0;
         this.exploredGoals = 0n;
 
-        this.connections = new Map<string, PlayBingoSocketLike>();
+        this.connections = new Map<string, Connection>();
     }
 
     doesTokenMatch(token: RoomTokenPayload) {
@@ -98,7 +98,7 @@ export default class Player {
      * @param id The auth token UUID for the connection
      * @param socket The socket the connection communicates over
      */
-    addConnection(id: string, socket: PlayBingoSocketLike) {
+    addConnection(id: string, socket: Connection) {
         if (!this.hasConnections()) {
             this.subscribeToRoom();
         }
@@ -113,9 +113,9 @@ export default class Player {
      * @returns true if the connection belonged to this player
      */
     closeConnection(id: string) {
-        const socket = this.connections.get(id);
-        if (socket) {
-            socket.close();
+        const connection = this.connections.get(id);
+        if (connection) {
+            connection.close();
             this.connections.delete(id);
             if (!this.hasConnections()) {
                 this.unsubscribeFromRoom?.();
@@ -132,7 +132,7 @@ export default class Player {
      * @param ws The websocket that closed
      * @returns true if this player owned the socket and it was cleaned up
      */
-    handleSocketClose(ws: PlayBingoSocketLike) {
+    handleSocketClose(ws: Connection) {
         let socketKey;
         this.connections.forEach((socket, id) => {
             if (socket === ws) {
@@ -290,13 +290,11 @@ export default class Player {
             finalMessage = message;
         }
 
-        this.connections.forEach((socket) => {
-            if (socket.readyState === OPEN) {
-                socket.send({
-                    ...finalMessage,
-                    connectedPlayer: this.toClientData(),
-                });
-            }
+        this.connections.forEach((connection) => {
+            connection.send({
+                ...finalMessage,
+                connectedPlayer: this.toClientData(),
+            });
         });
     }
 

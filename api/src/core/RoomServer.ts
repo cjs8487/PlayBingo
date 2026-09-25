@@ -8,7 +8,7 @@ import {
 import { roomCleanupInterval } from '../Environment';
 import { logInfo, logWarn } from '../Logger';
 import Room from './Room';
-import PlayBingoSocket from './PlayBingoSocket';
+import PlayBingoSocket from './connection/PlayBingoSocket';
 
 export const roomWebSocketServer: WebSocketServer = new WebSocketServer({
     noServer: true,
@@ -26,21 +26,26 @@ const cleanupInterval = setInterval(() => {
 }, roomCleanupInterval);
 
 roomWebSocketServer.on('connection', (socket, req) => {
-    const ws = new PlayBingoSocket(socket);
     if (!req.url) {
-        ws.send({ action: 'unauthorized' });
-        ws.close();
+        socket.close(4000, 'Bad Request');
         return;
     }
     const segments = req.url.split('/');
     segments.shift(); // remove leading empty segment
     const [, slug] = segments;
 
+    const room = allRooms.get(slug);
+    if (!room) {
+        socket.close(4001, 'Unknown room');
+        return;
+    }
+
     // create timeout for uninitialized connections
     const timeout = setTimeout(() => {
         ws.send({ action: 'unauthorized' });
         ws.close();
     }, 60 * 1000);
+    const ws = new PlayBingoSocket(room, socket);
 
     // const pingTimeout = setTimeout(
     //     () => {

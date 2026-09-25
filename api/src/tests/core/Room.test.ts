@@ -15,6 +15,7 @@ import { RoomTokenPayload } from '../../auth/RoomAuth';
 import Player from '../../core/Player';
 import Room from '../../core/Room';
 import { mockCreateRoomAction } from '../setup';
+import PlayBingoSocket from '../../core/connection/PlayBingoSocket';
 
 let room: Room;
 
@@ -46,8 +47,8 @@ mockTokenPayloadPlayer2.isSpectating = false;
 const mockTokenPayloadSpectator = mockDeep<RoomTokenPayload>();
 mockTokenPayloadSpectator.playerId = 'spectator';
 mockTokenPayloadSpectator.isSpectating = true;
-const mockSocket = mockDeep<WebSocket>();
-const mockSocket2 = mockDeep<WebSocket>();
+const mockSocket = mockDeep<PlayBingoSocket>();
+const mockSocket2 = mockDeep<PlayBingoSocket>();
 
 let emitSpy: jest.SpyInstance;
 

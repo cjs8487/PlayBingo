@@ -42,7 +42,6 @@ import {
     listToBoard,
     rowColToMask,
 } from '../util/RoomUtils';
-import { PlayBingoSocketLike } from './PlayBingoSocket';
 import Player from './Player';
 import { allRooms } from './RoomServer';
 import { BoardGenerator } from './generation/BoardGenerator';
@@ -55,6 +54,7 @@ import { generateSRLv5 } from './generation/SRLv5';
 import LocalTimer from './integration/races/LocalTimer';
 import RaceHandler from './integration/races/RaceHandler';
 import RacetimeHandler, { RaceData } from './integration/races/RacetimeHandler';
+import PlayBingoSocket from './connection/PlayBingoSocket';
 
 export enum BoardGenerationMode {
     RANDOM = 'Random',
@@ -463,7 +463,7 @@ export default class Room extends EventEmitter {
     handleJoin(
         action: JoinAction,
         auth: RoomTokenPayload,
-        socket: PlayBingoSocketLike,
+        socket: PlayBingoSocket,
     ): ServerMessage {
         let player: Player | undefined;
         let newPlayer = false;
@@ -764,7 +764,7 @@ export default class Room extends EventEmitter {
         this.sendRoomData();
     }
 
-    handleSocketClose(ws: PlayBingoSocketLike) {
+    handleSocketClose(ws: PlayBingoSocket) {
         let player: Player | undefined;
         for (const p of this.players.values()) {
             if (p.handleSocketClose(ws)) {
@@ -1299,7 +1299,9 @@ export default class Room extends EventEmitter {
         this.sendSystemMessage('This room has been closed due to inactivity.');
         this.players.forEach((player) => {
             player.connections.forEach((connection) => {
-                this.handleSocketClose(connection);
+                if (connection instanceof PlayBingoSocket) {
+                    this.handleSocketClose(connection);
+                }
                 connection.close(1001, 'Room is closing.');
             });
         });

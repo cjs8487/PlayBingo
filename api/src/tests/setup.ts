@@ -25,6 +25,7 @@ export const mockCreateRoomAction = jest
         action: 'JOIN',
         payload: 'test',
         roomId: 'test',
+        timestamp: new Date(),
     });
 export const mockPlayerUpsert = jest
     .spyOn(prisma.player, 'upsert')
