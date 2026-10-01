@@ -94,7 +94,7 @@ describe('POST /api/goals/upload/srlv5', () => {
         expect(createGoals).not.toHaveBeenCalled();
     });
 
-    it('Calls createGoals when inputs are valid', async () => {
+    it('200 and creates goals when inputs are valid', async () => {
         const res = await request(app)
             .post('/api/goals/upload/srlv5')
             .set('Cookie', cookie)
@@ -177,14 +177,14 @@ describe('POST /api/goals/upload/list', () => {
 
     it("404 if the game doesn't exist", async () => {
         const res = await request(app)
-            .post('/api/goals/upload/srlv5')
+            .post('/api/goals/upload/list')
             .set('Cookie', cookie)
             .send({ slug: 'invalid', goals: goalList });
         expect(res.status).toBe(404);
         expect(createGoals).not.toHaveBeenCalled();
     });
 
-    it('Calls createGoals when inputs are valid', async () => {
+    it('200 and creates goals when inputs are valid', async () => {
         const res = await request(app)
             .post('/api/goals/upload/list')
             .set('Cookie', cookie)
@@ -274,14 +274,36 @@ describe('POST /api/goals/upload/replace', () => {
 
     it("404 if the game doesn't exist", async () => {
         const res = await request(app)
-            .post('/api/goals/upload/srlv5')
+            .post('/api/goals/upload/replace')
             .set('Cookie', cookie)
             .send({ slug: 'invalid', goals: goalList });
         expect(res.status).toBe(404);
         expect(createGoals).not.toHaveBeenCalled();
     });
 
-    it('Calls createGoals when inputs are valid', async () => {
+    it('404 if replaceAllGoalsForGame returns false', async () => {
+        (replaceAllGoalsForGame as jest.Mock).mockResolvedValueOnce(false);
+        const res = await request(app)
+            .post('/api/goals/upload/replace')
+            .set('Cookie', cookie)
+            .send({ slug: 'game', goals: goalList });
+        expect(res.status).toBe(404);
+        expect(res.text).toBe('Game not found');
+    });
+
+    it('500 if replaceAllGoalsForGame throws error', async () => {
+        (replaceAllGoalsForGame as jest.Mock).mockRejectedValueOnce(
+            new Error('DB error'),
+        );
+        const res = await request(app)
+            .post('/api/goals/upload/replace')
+            .set('Cookie', cookie)
+            .send({ slug: 'game', goals: goalList });
+        expect(res.status).toBe(500);
+        expect(res.text).toBe('Failed to replace goals');
+    });
+
+    it('200 and replaces goals when inputs are valid', async () => {
         const res = await request(app)
             .post('/api/goals/upload/replace')
             .set('Cookie', cookie)

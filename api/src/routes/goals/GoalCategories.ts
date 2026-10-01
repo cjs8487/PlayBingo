@@ -26,11 +26,18 @@ goalCategories.post('/:id', async (req, res) => {
     }
 
     const { name, max } = req.body;
-    if (!name && !max) {
+    if (name === undefined && max === undefined) {
         res.status(400).send('Missing required fields');
         return;
     }
-    if (max !== undefined && Number.isNaN(max)) {
+    if (name !== undefined && (typeof name !== 'string' || !name.trim())) {
+        res.status(400).send('Invalid value for name');
+        return;
+    }
+    if (
+        max !== undefined &&
+        (typeof max !== 'number' || Number.isNaN(max))
+    ) {
         res.status(400).send('Invalid value for max');
         return;
     }

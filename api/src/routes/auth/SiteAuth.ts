@@ -25,6 +25,7 @@ siteAuth.post('/login', async (req, res, next) => {
     }
     if (typeof password !== 'string') {
         res.status(400).send('invalid password - unable to be parsed');
+        return;
     }
 
     const auth = await getSiteAuth(username);
@@ -40,15 +41,13 @@ siteAuth.post('/login', async (req, res, next) => {
 
     req.session.regenerate((genErr) => {
         if (genErr) {
-            next();
-            res.sendStatus(500);
+            next(genErr);
             return;
         }
         req.session.user = auth.id;
         req.session.save((saveErr) => {
             if (saveErr) {
-                next();
-                res.sendStatus(500);
+                next(saveErr);
                 return;
             }
             res.sendStatus(200);
@@ -87,7 +86,7 @@ siteAuth.post('/forgotPassword', async (req, res) => {
 
 siteAuth.post('/resetPassword', async (req, res) => {
     const { token, password } = req.body;
-    if (!token || !password) {
+    if (typeof token !== 'string' || typeof password !== 'string') {
         res.sendStatus(400);
         return;
     }

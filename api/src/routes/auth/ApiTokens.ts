@@ -49,7 +49,7 @@ tokens.post('/', async (req, res) => {
 
     const { name } = req.body;
 
-    if (!name) {
+    if (typeof name !== 'string' || !name.trim()) {
         res.sendStatus(400);
         return;
     }
@@ -87,9 +87,9 @@ tokens.post('/:id', async (req, res) => {
     }
     let token;
     if (active) {
-        token = activateToken(id);
+        token = await activateToken(id);
     } else {
-        token = deactivateToken(id);
+        token = await deactivateToken(id);
     }
     res.status(200).json(token);
 });

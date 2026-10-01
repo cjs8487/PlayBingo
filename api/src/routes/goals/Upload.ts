@@ -44,7 +44,7 @@ upload.post('/srlv5', async (req, res) => {
         return;
     }
 
-    if (!gameForSlug(slug)) {
+    if (!(await gameForSlug(slug))) {
         res.sendStatus(404);
         return;
     }
@@ -84,7 +84,7 @@ upload.post('/list', async (req, res) => {
         return;
     }
 
-    if (!gameForSlug(slug)) {
+    if (!(await gameForSlug(slug))) {
         res.sendStatus(404);
         return;
     }
@@ -131,7 +131,7 @@ upload.post('/replace', async (req, res) => {
         return;
     }
 
-    if (!gameForSlug(slug)) {
+    if (!(await gameForSlug(slug))) {
         res.sendStatus(404);
         return;
     }

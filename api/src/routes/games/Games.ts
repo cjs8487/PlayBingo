@@ -300,6 +300,16 @@ games.get('/:slug/goals', async (req, res) => {
 games.post('/:slug/goals', async (req, res) => {
     const { slug } = req.params;
     const { goal, description, categories, difficulty } = req.body;
+
+    if (!req.session.user) {
+        res.sendStatus(401);
+        return;
+    }
+    if (!(await isModerator(slug, req.session.user))) {
+        res.sendStatus(403);
+        return;
+    }
+
     let difficultyNum: number | undefined = undefined;
     if (difficulty) {
         difficultyNum = Number(difficulty);
@@ -352,7 +362,7 @@ games.post('/:slug/owners', async (req, res) => {
     const allUsersExist = (
         await Promise.all(
             users.map(async (user) => {
-                if (!getUser(user)) {
+                if (!(await getUser(user))) {
                     return false;
                 }
                 return true;
@@ -386,7 +396,8 @@ games.delete('/:slug/owners', async (req, res) => {
         res.status(400).send('Missing user');
         return;
     }
-    if (!getUser(user)) {
+
+    if (!(await getUser(user))) {
         res.sendStatus(404);
         return;
     }
@@ -397,6 +408,7 @@ games.delete('/:slug/owners', async (req, res) => {
     }
     if (game.owners.length <= 1) {
         res.status(400).send('Cannot remove the last owner of a game.');
+        return;
     }
 
     await removeOwner(slug, user);
@@ -427,7 +439,7 @@ games.post('/:slug/moderators', async (req, res) => {
     const allUsersExist = (
         await Promise.all(
             users.map(async (user) => {
-                if (!getUser(user)) {
+                if (!(await getUser(user))) {
                     return false;
                 }
                 return true;
@@ -461,7 +473,8 @@ games.delete('/:slug/moderators', async (req, res) => {
         res.status(400).send('Missing user');
         return;
     }
-    if (!getUser(user)) {
+
+    if (!(await getUser(user))) {
         res.sendStatus(404);
         return;
     }
@@ -633,15 +646,18 @@ games
         }
 
         const { name, max } = req.body;
-        if (!name && !max) {
+        if (typeof name !== 'string' || !name.trim()) {
             res.status(400).send('Missing required fields');
             return;
         }
-        if (max !== undefined && Number.isNaN(Number(max))) {
+        if (
+            max !== undefined &&
+            (typeof max !== 'number' || Number.isNaN(max))
+        ) {
             res.status(400).send('Invalid value for max');
             return;
         }
-        const cat = await createCategory(name, max);
+        const cat = await createCategory(name, slug, max);
         res.status(200).json(cat);
     });
 

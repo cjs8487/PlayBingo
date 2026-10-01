@@ -104,7 +104,7 @@ mediaServer.delete('/pending/:id', (req, res) => {
     res.sendStatus(200);
 });
 
-mediaServer.delete(':workflow/:id', async (req, res) => {
+mediaServer.delete('/:workflow/:id', async (req, res) => {
     if (!req.session.user) {
         res.sendStatus(401);
         return;

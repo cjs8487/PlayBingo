@@ -27,6 +27,15 @@ users.route('/:id').post(requiresApiToken, async (req, res) => {
     const { id } = req.params;
     const { username, email, avatar, shouldRemoveAvatar } = req.body;
 
+    if (!req.session.user) {
+        res.sendStatus(401);
+        return;
+    }
+    if (req.session.user !== id) {
+        res.sendStatus(403);
+        return;
+    }
+
     if (!username && !email) {
         res.status(400).send('Missing profile update data');
         return;

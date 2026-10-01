@@ -52,8 +52,9 @@ redirect.get('/racetime', async (req, res) => {
     if (!tokenRes.ok) {
         const data = (await tokenRes.json()) as RacetimeTokenErrorResponse;
         res.redirect(
-            `${clientUrl}?type=error&message=Unable to connect account - ${data.error}}`,
+            `${clientUrl}?type=error&message=Unable to connect account - ${data.error}`,
         );
+        return;
     }
 
     const data = (await tokenRes.json()) as RacetimeTokenResponse;
@@ -75,7 +76,7 @@ redirect.get('/racetime', async (req, res) => {
         full_name: string;
     };
 
-    createRacetimeConnection(user, userData.id, data.refresh_token);
+    await createRacetimeConnection(user, userData.id, data.refresh_token);
 
     res.redirect(
         `${clientUrl}?type=success&message=Successfully connected to racetime.gg user ${userData.full_name}`,

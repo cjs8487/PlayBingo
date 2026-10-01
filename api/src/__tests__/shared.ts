@@ -3,8 +3,8 @@ import { app } from '../main';
 import { isModerator, isOwner } from '../database/games/Games';
 import { mock } from 'jest-mock-extended';
 import { ApiToken } from '@prisma/client';
-import { prismaMock } from './setup';
 import { validateToken } from '../database/auth/ApiTokens';
+import { getUser } from '../database/Users';
 
 export const getTestSessionCookie = async (path: string) => {
     const res = await request(app).get(`/test/login/${path}`);
@@ -49,37 +49,50 @@ export const requiresGameOwner = (makeRequest: (cookie?: string) => Test) => {
             const res = await makeRequest();
             expect(res.status).toBe(401);
         });
-    });
 
-    it('403 when normal user', async () => {
-        const cookie = await getTestSessionCookie('player');
-        const res = await makeRequest(cookie);
-        expect(res.status).toBe(403);
-        expect(isModerator).not.toHaveBeenCalled();
-        expect(isOwner).toHaveBeenCalled();
-    });
-
-    it('403 when moderator', async () => {
-        const cookie = await getTestSessionCookie('gameMod');
-        const res = await makeRequest(cookie);
-        expect(res.status).toBe(403);
-        expect(isModerator).not.toHaveBeenCalled();
-        expect(isOwner).toHaveBeenCalled();
-    });
-};
-
-export const requiresStaff = (makeRequest: () => Test) => {
-    describe('Requires Staff', () => {
-        it('401 when no session', async () => {
-            const res = await makeRequest();
-            expect(res.status).toBe(401);
+        it('403 when normal user', async () => {
+            const cookie = await getTestSessionCookie('player');
+            const res = await makeRequest(cookie);
+            expect(res.status).toBe(403);
             expect(isModerator).not.toHaveBeenCalled();
+            expect(isOwner).toHaveBeenCalled();
+        });
+
+        it('403 when moderator', async () => {
+            const cookie = await getTestSessionCookie('gameMod');
+            const res = await makeRequest(cookie);
+            expect(res.status).toBe(403);
+            expect(isModerator).not.toHaveBeenCalled();
+            expect(isOwner).toHaveBeenCalled();
         });
     });
 };
 
-const revokedTokenPayload = mock<ApiToken>();
-revokedTokenPayload.revokedOn = new Date();
+export const requiresStaff = (makeRequest: (cookie?: string) => Test) => {
+    describe('Requires Staff', () => {
+        it('401 when no session', async () => {
+            const res = await makeRequest();
+            expect(res.status).toBe(401);
+        });
+
+        it('403 when the session user does not exist', async () => {
+            const cookie = await getTestSessionCookie('player');
+            (getUser as jest.Mock).mockResolvedValueOnce(null);
+            const res = await makeRequest(cookie);
+            expect(res.status).toBe(403);
+        });
+
+        it('403 when the session user is not staff', async () => {
+            const cookie = await getTestSessionCookie('player');
+            (getUser as jest.Mock).mockResolvedValueOnce({
+                id: 'test-user',
+                staff: false,
+            });
+            const res = await makeRequest(cookie);
+            expect(res.status).toBe(403);
+        });
+    });
+};
 
 export const mockValidTokenPayload = mock<ApiToken>();
 mockValidTokenPayload.active = true;

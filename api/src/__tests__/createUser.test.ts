@@ -29,7 +29,7 @@ describe('Basic Test to create a new user', () => {
 
     it('should create a new user when calling the corresponding route', async () => {
         prismaMock.user.findUnique.mockResolvedValue(null);
-        prismaMock.user.create.mockResolvedValue(mock<User>());
+        prismaMock.user.create.mockResolvedValue({ id: 'test-user-id' } as any);
         const res = await request(app)
             .post('/api/registration/register')
             .set('PlayBingo-Api-Key', 'token')

@@ -9,7 +9,7 @@ import { validateGoalMeta } from '../../util/GoalValidation';
 const goals = Router();
 
 goals.get('/:id', (req, res) => {
-    res.sendStatus(500);
+    res.sendStatus(405);
 });
 
 goals.post('/:id', async (req, res) => {
