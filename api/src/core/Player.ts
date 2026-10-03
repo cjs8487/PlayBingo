@@ -182,6 +182,12 @@ export default class Player {
             });
         };
 
+        const sendRoomInfoUpdate = () => {
+            this.sendMessage({
+                action: 'updateRoomData',
+                roomData: room.roomData,
+            });
+        };
         room.on('board:goalMarked', onCellUpdate);
         room.on('board:goalUnmarked', onCellUpdate);
         room.on('board:cellUpdate', onCellUpdate);
@@ -189,6 +195,13 @@ export default class Player {
         room.on('board:revealed', onBoardRevealed);
         room.on('chatSent', onChatSent);
         room.on('system:message', onChatSent);
+
+        // TODO: PROTOCOL V2 - implement discrete events for timer events
+        room.on('team:finished', sendRoomInfoUpdate);
+        room.on('team:unfinished', sendRoomInfoUpdate);
+        room.on('timer:started', sendRoomInfoUpdate);
+        room.on('timer:stopped', sendRoomInfoUpdate);
+        room.on('timer:reset', sendRoomInfoUpdate);
 
         this.unsubscribeFromRoom = () => {
             room.off('board:goalMarked', onCellUpdate);
@@ -198,6 +211,11 @@ export default class Player {
             room.off('board:revealed', onBoardRevealed);
             room.off('chatSent', onChatSent);
             room.off('system:message', onChatSent);
+            room.off('team:finished', sendRoomInfoUpdate);
+            room.off('team:unfinished', sendRoomInfoUpdate);
+            room.off('timer:started', sendRoomInfoUpdate);
+            room.off('timer:stopped', sendRoomInfoUpdate);
+            room.off('timer:reset', sendRoomInfoUpdate);
         };
     }
 

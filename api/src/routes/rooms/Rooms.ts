@@ -540,7 +540,7 @@ rooms.get('/:slug', async (req, res) => {
         return;
     }
 
-    const roomData: RoomData = room.getRoomData();
+    const roomData: RoomData = room.roomData;
 
     const userKey = req.session.user ?? req.session.id;
     const perms = await room.canAutoAuthenticate(userKey, !req.session.user);

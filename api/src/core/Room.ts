@@ -119,6 +119,8 @@ export interface RoomEvents {
         oldColor: string,
         timestamp: Date,
     ) => void;
+    'team:finished': (team: Team, timestamp: Date) => void;
+    'team:unfinished': (team: Team, timestamp: Date) => void;
     'board:cellUpdate': (
         cell: Cell,
         row: number,
@@ -146,6 +148,9 @@ export interface RoomEvents {
     ) => void;
     'board:revealed': (player: Player, timestamp: Date) => void;
     chatSent: (message: ChatMessage, timestamp: Date) => void;
+    'timer:started': (timestamp: Date) => void;
+    'timer:reset': (timestamp: Date) => void;
+    'timer:stopped': (timestamp: Date) => void;
     'system:message': (message: ChatMessage, timestamp: Date) => void;
 }
 
@@ -683,7 +688,7 @@ export default class Room extends EventEmitter {
         return { teams, spectators };
     }
 
-    getRoomData(): RoomData {
+    get roomData(): RoomData {
         return {
             game: this.game,
             slug: this.slug,
@@ -784,7 +789,7 @@ export default class Room extends EventEmitter {
             },
             chatHistory: this.chatHistory,
             connectedPlayer: player.toClientData(),
-            roomData: this.getRoomData(),
+            roomData: this.roomData,
             players: this.getPlayerData(),
         };
     }
@@ -1060,8 +1065,12 @@ export default class Room extends EventEmitter {
     }
 
     handleStartTimer() {
-        this.raceHandler?.startTimer();
-        this.sendRoomData();
+        const previous = this.raceHandler.getStartTime();
+        this.raceHandler.startTimer();
+        const startedAt = this.raceHandler.getStartTime();
+        if (startedAt && startedAt !== previous) {
+            this.emit('timer:started', new Date());
+        }
     }
 
     handleChangeRaceHandler(action: ChangeRaceHandlerAction) {
@@ -1082,7 +1091,7 @@ export default class Room extends EventEmitter {
 
     handleResetTimer() {
         this.raceHandler?.resetTimer();
-        this.sendRoomData();
+        this.emit('timer:reset', new Date());
     }
 
     handleSocketClose(ws: Connection) {
@@ -1105,7 +1114,7 @@ export default class Room extends EventEmitter {
         this.sendServerMessage({
             action: 'updateRoomData',
             roomData: {
-                ...this.getRoomData(),
+                ...this.roomData,
                 racetimeConnection: { url },
             },
         });
@@ -1119,7 +1128,7 @@ export default class Room extends EventEmitter {
         this.sendServerMessage({
             action: 'updateRoomData',
             roomData: {
-                ...this.getRoomData(),
+                ...this.roomData,
                 racetimeConnection: { url: undefined },
             },
         });
@@ -1244,7 +1253,7 @@ export default class Room extends EventEmitter {
     sendRoomData() {
         this.sendServerMessage({
             action: 'updateRoomData',
-            roomData: this.getRoomData(),
+            roomData: this.roomData,
         });
     }
 
@@ -1302,6 +1311,7 @@ export default class Room extends EventEmitter {
                         timestamp,
                     );
                     this.setTeamComplete(team, true);
+                    this.emit('team:finished', team, timestamp);
                 }
                 if (team.goalComplete && team.goalCount < goalsNeeded) {
                     this.sendTeamChat(
@@ -1310,6 +1320,7 @@ export default class Room extends EventEmitter {
                         timestamp,
                     );
                     this.setTeamComplete(team, false);
+                    this.emit('team:unfinished', team, timestamp);
                 }
             } else {
                 if (this.bingoMode === BingoMode.LINES) {
@@ -1332,6 +1343,7 @@ export default class Room extends EventEmitter {
                             ' has completed the goal!',
                             timestamp,
                         );
+                        this.emit('team:finished', team, timestamp);
                     } else if (
                         linesComplete < this.lineCount &&
                         team.goalComplete
@@ -1342,6 +1354,7 @@ export default class Room extends EventEmitter {
                             ' has no longer completed the goal.',
                             timestamp,
                         );
+                        this.emit('team:unfinished', team, timestamp);
                     }
                     team.linesComplete = linesComplete;
                 } else {
@@ -1355,6 +1368,7 @@ export default class Room extends EventEmitter {
                             ' has achieved blackout!',
                             timestamp,
                         );
+                        this.emit('team:finished', team, timestamp);
                     } else if (!complete && team.goalComplete) {
                         this.setTeamComplete(team, false);
                         this.sendTeamChat(
@@ -1362,6 +1376,7 @@ export default class Room extends EventEmitter {
                             ' no longer has blackout.',
                             timestamp,
                         );
+                        this.emit('team:unfinished', team, timestamp);
                     }
                 }
             }
@@ -1373,14 +1388,14 @@ export default class Room extends EventEmitter {
             }
         });
         this.completed = allComplete;
-        if (this.completed) {
-            this.raceHandler?.allPlayersFinished();
+        const previousEnd = this.raceHandler.getEndTime();
+        if (this.completed && !previousEnd) {
+            this.raceHandler.allPlayersFinished();
+            const finishedAt = this.raceHandler.getEndTime();
+            if (finishedAt) this.emit('timer:stopped', new Date(finishedAt));
+        } else if (!this.completed && previousEnd) {
+            this.raceHandler.allPlayersNotFinished();
             this.sendRoomData();
-        } else {
-            if (this.raceHandler?.getEndTime()) {
-                this.raceHandler?.allPlayersNotFinished();
-                this.sendRoomData();
-            }
         }
     }
 
