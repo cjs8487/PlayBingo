@@ -6,7 +6,6 @@ import {
     RevealedCell,
     ServerMessage,
 } from '@playbingo/types';
-import { OPEN } from 'ws';
 import { RoomTokenPayload } from '../auth/RoomAuth';
 import { computeRevealedMask, rowColToMask } from '../util/RoomUtils';
 import Room from './Room';
@@ -209,6 +208,13 @@ export default class Player {
             });
         };
 
+        const sendRoomInfoUpdate = () => {
+            this.sendMessage({
+                action: 'updateRoomData',
+                roomData: this.room.roomData,
+            });
+        };
+
         this.room.on('board:goalMarked', onGoalMarked);
         this.room.on('board:goalUnmarked', onGoalUnmarked);
         this.room.on('board:cellUpdate', onCellUpdate);
@@ -220,6 +226,13 @@ export default class Player {
         // this.room.on('players:join', onPlayersJoin);
         // this.room.on('players:leave', onPlayersLeave);
 
+        // TODO: PROTOCOL V2 - implement discrete events for timer events
+        this.room.on('player:finished', sendRoomInfoUpdate);
+        this.room.on('player:unfinished', sendRoomInfoUpdate);
+        this.room.on('timer:started', sendRoomInfoUpdate);
+        this.room.on('timer:stopped', sendRoomInfoUpdate);
+        this.room.on('timer:reset', sendRoomInfoUpdate);
+
         this.unsubscribeFromRoom = () => {
             this.room.off('board:goalMarked', onGoalMarked);
             this.room.off('board:goalUnmarked', onGoalUnmarked);
@@ -228,6 +241,11 @@ export default class Player {
             this.room.off('board:revealed', onBoardRevealed);
             this.room.off('chatSent', onChatSent);
             this.room.off('system:message', onSystemMessage);
+            this.room.off('player:finished', sendRoomInfoUpdate);
+            this.room.off('player:unfinished', sendRoomInfoUpdate);
+            this.room.off('timer:started', sendRoomInfoUpdate);
+            this.room.off('timer:stopped', sendRoomInfoUpdate);
+            this.room.off('timer:reset', sendRoomInfoUpdate);
         };
     }
 

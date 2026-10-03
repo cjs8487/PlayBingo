@@ -16,6 +16,7 @@ import Player from '../../core/Player';
 import Room from '../../core/Room';
 import { mockCreateRoomAction } from '../setup';
 import PlayBingoSocket from '../../core/connection/PlayBingoSocket';
+import RaceHandler from '../../core/integration/races/RaceHandler';
 
 let room: Room;
 
@@ -561,4 +562,93 @@ describe('readyPlayer and unreadyPlayer', () => {
 
         expect(result).toBe(false);
     });
+});
+
+describe('room state events', () => {
+    it('emits timer events after the timer state changes', () => {
+        let startedAt: string | undefined;
+        const raceHandler = mockDeep<RaceHandler>();
+        raceHandler.startTimer.mockImplementation(() => {
+            startedAt = '2024-01-02T03:04:05.000Z';
+        });
+        raceHandler.resetTimer.mockImplementation(() => {
+            startedAt = undefined;
+        });
+        raceHandler.getStartTime.mockImplementation(() => startedAt);
+        room.raceHandler = raceHandler;
+
+        room.handleStartTimer();
+        expect(emitSpy).toHaveBeenCalledWith('timer:started', new Date());
+        expect(room.roomData.startedAt).toBe('2024-01-02T03:04:05.000Z');
+
+        room.handleResetTimer();
+        expect(emitSpy).toHaveBeenCalledWith('timer:reset', new Date());
+        expect(room.roomData.startedAt).toBeUndefined();
+    });
+
+    it.each(['LINES', 'BLACKOUT', 'LOCKOUT'] as const)(
+        'emits finish and unfinish events for %s',
+        (mode) => {
+            room.bingoMode = mode;
+            room.board = [[mockDeep<RevealedCell>()]];
+            room.board[0][0].completedPlayers = [];
+            room.victoryMasks = [1n];
+            const player = new Player(
+                room,
+                'test',
+                'Test Player',
+                'blue',
+                false,
+                false,
+            );
+            room.players.set(player.id, player);
+
+            const finishedAt = '2024-01-02T03:04:05.000Z';
+            let endedAt: string | undefined;
+            const raceHandler = mockDeep<RaceHandler>();
+            raceHandler.playerFinished.mockImplementation(async (finished) => {
+                finished.finishedAt = finishedAt;
+            });
+            raceHandler.playerUnfinshed.mockImplementation(async (finished) => {
+                finished.finishedAt = undefined;
+            });
+            raceHandler.allPlayersFinished.mockImplementation(async () => {
+                endedAt = finishedAt;
+            });
+            raceHandler.allPlayersNotFinished.mockImplementation(async () => {
+                endedAt = undefined;
+            });
+            raceHandler.getEndTime.mockImplementation(() => endedAt);
+            room.raceHandler = raceHandler;
+
+            room.handleMark(
+                { payload: { row: 0, col: 0 } } as MarkAction,
+                mockTokenPayload,
+            );
+
+            expect(player.goalComplete).toBe(true);
+            expect(emitSpy).toHaveBeenCalledWith(
+                'player:finished',
+                player,
+                new Date(finishedAt),
+            );
+            expect(emitSpy).toHaveBeenCalledWith(
+                'timer:stopped',
+                new Date(finishedAt),
+            );
+            expect(room.roomData.finishedAt).toBe(finishedAt);
+
+            room.handleUnmark(
+                { payload: { row: 0, col: 0 } } as UnmarkAction,
+                mockTokenPayload,
+            );
+
+            expect(player.goalComplete).toBe(false);
+            expect(emitSpy).toHaveBeenCalledWith(
+                'player:unfinished',
+                player,
+                new Date(),
+            );
+        },
+    );
 });
