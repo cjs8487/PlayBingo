@@ -156,13 +156,15 @@ describe('Room event subscriptions', () => {
               ) => void)
             | undefined;
 
-        goalMarkedListener?.(cell, 2, 3, player, new Date());
+        const timestamp = new Date('2026-01-02T03:04:05.000Z');
+        goalMarkedListener?.(cell, 2, 3, player, timestamp);
 
         const expectedMessage = expect.objectContaining({
-            action: 'cellUpdate',
+            action: 'board:cellUpdate',
             row: 2,
             col: 3,
             cell,
+            timestamp: timestamp.toISOString(),
             connectedPlayer: expect.objectContaining({ id: player.id }),
         });
         expect(socket.send).toHaveBeenCalledWith(expectedMessage);
@@ -177,8 +179,11 @@ describe('Room event subscriptions', () => {
         'timer:stopped',
         'timer:reset',
     ])('sends current room data when %s occurs', (event) => {
-        const { player, room: subscribedRoom, socket } =
-            createConnectedPlayer();
+        const {
+            player,
+            room: subscribedRoom,
+            socket,
+        } = createConnectedPlayer();
         const roomData = { name: 'Updated Room' };
         Object.defineProperty(subscribedRoom, 'roomData', {
             configurable: true,

@@ -253,11 +253,12 @@ export function RoomContextProvider({
                     setConnectedPlayer(payload.connectedPlayer);
                 }
                 switch (payload.action) {
-                    case 'chat':
+                    case 'chatSent':
+                    case 'system:message':
                         if (!payload.message) return;
                         onChatMessage(payload.message);
                         break;
-                    case 'cellUpdate':
+                    case 'board:cellUpdate':
                         if (
                             payload.row === undefined ||
                             payload.col === undefined ||

@@ -10,11 +10,11 @@
  */
 export type ServerMessage = (
   | {
-      action: "chat";
+      action: "chatSent";
       message: ChatMessage;
     }
   | {
-      action: "cellUpdate";
+      action: "board:cellUpdate";
       row: number;
       col: number;
       cell: Cell;
@@ -53,12 +53,82 @@ export type ServerMessage = (
       authToken: string;
     }
   | {
-      action: "startTimer";
-      startTime: string;
+      action: "timer:started";
+    }
+  | {
+      action: "players:join";
+      player: Player;
+    }
+  | {
+      action: "players:leave";
+      player: Player;
+    }
+  | {
+      action: "player:finished";
+      player: Player;
+    }
+  | {
+      action: "player:unfinished";
+      player: Player;
+    }
+  | {
+      action: "board:revealed";
+      player: Player;
+    }
+  | {
+      action: "player:colorChanged";
+      player: Player;
+      newColor: string;
+    }
+  | {
+      action: "board:goalMarked";
+      cell: Cell;
+      row: number;
+      col: number;
+      player: Player;
+    }
+  | {
+      action: "board:goalUnmarked";
+      cell: Cell;
+      row: number;
+      col: number;
+      player: Player;
+    }
+  | {
+      action: "board:regenerated";
+      board: RevealedCell[][];
+      options:
+        | {
+            mode: "Random";
+            seed?: number;
+          }
+        | {
+            mode: "SRLv5";
+            seed?: number;
+          }
+        | {
+            mode: "Difficulty";
+            seed?: number;
+            difficulty: string;
+          };
+    }
+  | {
+      action: "system:message";
+      message: ChatMessage;
+    }
+  | {
+      action: "timer:reset";
+    }
+  | {
+      action: "timer:stopped";
     }
 ) & {
   players?: Player[];
   connectedPlayer?: Player;
+  /**
+   * ISO 8601 timestamp string in UTC, serialized for the WebSocket API
+   */
+  timestamp?: string;
 };
 export type ChatMessage = (
   | string

@@ -158,14 +158,49 @@ export default class Player {
      * player before being fanned out to each of their connections.
      */
     private subscribeToRoom() {
-        const onGoalMarked = (cell: Cell, row: number, col: number) => {
-            this.sendMessage({ action: 'cellUpdate', row, col, cell });
+        const onGoalMarked = (
+            cell: Cell,
+            row: number,
+            col: number,
+            _player: Player,
+            timestamp: Date,
+        ) => {
+            this.sendMessage({
+                action: 'board:cellUpdate',
+                row,
+                col,
+                cell,
+                timestamp: timestamp.toISOString(),
+            });
         };
-        const onGoalUnmarked = (cell: Cell, row: number, col: number) => {
-            this.sendMessage({ action: 'cellUpdate', row, col, cell });
+        const onGoalUnmarked = (
+            cell: Cell,
+            row: number,
+            col: number,
+            _player: Player,
+            timestamp: Date,
+        ) => {
+            this.sendMessage({
+                action: 'board:cellUpdate',
+                row,
+                col,
+                cell,
+                timestamp: timestamp.toISOString(),
+            });
         };
-        const onCellUpdate = (cell: Cell, row: number, col: number) => {
-            this.sendMessage({ action: 'cellUpdate', row, col, cell });
+        const onCellUpdate = (
+            cell: Cell,
+            row: number,
+            col: number,
+            timestamp: Date,
+        ) => {
+            this.sendMessage({
+                action: 'board:cellUpdate',
+                row,
+                col,
+                cell,
+                timestamp: timestamp.toISOString(),
+            });
         };
         const onBoardRegenerated = (board: RevealedCell[][]) => {
             this.sendMessage({
@@ -193,17 +228,19 @@ export default class Player {
                 },
             });
         };
-        const onChatSent = (message: ChatMessage) => {
+        const onChatSent = (message: ChatMessage, timestamp: Date) => {
             this.sendMessage({
-                action: 'chat',
+                action: 'chatSent',
                 message,
+                timestamp: timestamp.toISOString(),
                 players: this.room.getPlayers(),
             });
         };
-        const onSystemMessage = (message: ChatMessage) => {
+        const onSystemMessage = (message: ChatMessage, timestamp: Date) => {
             this.sendMessage({
-                action: 'chat',
+                action: 'system:message',
                 message,
+                timestamp: timestamp.toISOString(),
                 players: this.room.getPlayers(),
             });
         };
@@ -275,7 +312,7 @@ export default class Player {
 
     sendMessage(message: ServerMessage) {
         let finalMessage: ServerMessage;
-        if (message.action === 'cellUpdate' && this.room.exploration) {
+        if (message.action === 'board:cellUpdate' && this.room.exploration) {
             if (!message.cell.revealed) {
                 // currently should never happen, indicates that the room itself
                 // handled obfuscation of the cell rather than the player

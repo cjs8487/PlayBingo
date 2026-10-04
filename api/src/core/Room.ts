@@ -938,7 +938,11 @@ export default class Room extends EventEmitter {
             } else {
                 this.chatHistory.push([message]);
             }
-            this.sendServerMessage({ action: 'chat', message: [message] });
+            this.sendServerMessage({
+                action: 'chatSent',
+                message: [message],
+                timestamp: eventTimestamp.toISOString(),
+            });
             this.emit('chatSent', [message], eventTimestamp);
         } else {
             const timestamp = this.getTimestamp(eventTimestamp);
@@ -946,27 +950,40 @@ export default class Room extends EventEmitter {
                 message.unshift(`[${this.getTimestamp(eventTimestamp)}] `);
             }
             this.chatHistory.push(message);
-            this.sendServerMessage({ action: 'chat', message: message });
+            this.sendServerMessage({
+                action: 'chatSent',
+                message: message,
+                timestamp: eventTimestamp.toISOString(),
+            });
             this.emit('chatSent', message, eventTimestamp);
         }
     }
 
     sendSystemMessage(message: string) {
-        const timestamp = this.getTimestamp(new Date());
+        const eventTimestamp = new Date();
+        const timestamp = this.getTimestamp(eventTimestamp);
         if (timestamp) {
             this.chatHistory.push([`[${timestamp}] ${message}`]);
         } else {
             this.chatHistory.push([message]);
         }
-        this.sendServerMessage({ action: 'chat', message: [message] }, false);
+        this.sendServerMessage(
+            {
+                action: 'system:message',
+                message: [message],
+                timestamp: eventTimestamp.toISOString(),
+            },
+            false,
+        );
     }
 
     sendCellUpdate(row: number, col: number) {
         this.sendServerMessage({
-            action: 'cellUpdate',
+            action: 'board:cellUpdate',
             row,
             col,
             cell: this.board[row][col],
+            timestamp: new Date().toISOString(),
         });
     }
 
