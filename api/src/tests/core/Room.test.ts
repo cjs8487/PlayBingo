@@ -578,11 +578,14 @@ describe('room state events', () => {
         room.raceHandler = raceHandler;
 
         room.handleStartTimer();
-        expect(emitSpy).toHaveBeenCalledWith('timer:started', new Date());
+        expect(emitSpy).toHaveBeenCalledWith(
+            'timer:started',
+            new Date(startedAt!),
+        );
         expect(room.roomData.startedAt).toBe('2024-01-02T03:04:05.000Z');
 
         room.handleResetTimer();
-        expect(emitSpy).toHaveBeenCalledWith('timer:reset', new Date());
+        expect(emitSpy).toHaveBeenCalledWith('timer:reset');
         expect(room.roomData.startedAt).toBeUndefined();
     });
 
@@ -644,11 +647,7 @@ describe('room state events', () => {
             );
 
             expect(player.goalComplete).toBe(false);
-            expect(emitSpy).toHaveBeenCalledWith(
-                'player:unfinished',
-                player,
-                new Date(),
-            );
+            expect(emitSpy).toHaveBeenCalledWith('player:unfinished', player);
         },
     );
 });

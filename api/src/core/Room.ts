@@ -86,48 +86,40 @@ export type BoardGenerationOptions =
     | BoardGenerationOptionsSRLv5
     | BoardGenerationOptionsDifficulty;
 
-interface RoomEvents {
-    'players:join': (player: Player, timestamp: Date) => void;
-    'players:leave': (player: Player, timestamp: Date) => void;
-    'player:colorChanged': (
-        player: Player,
-        newColor: string,
-        timestamp: Date,
-    ) => void;
-    'player:finished': (player: Player, timestamp: Date) => void;
-    'player:unfinished': (player: Player, timestamp: Date) => void;
-    'board:cellUpdate': (
-        cell: Cell,
-        row: number,
-        col: number,
-        timestamp: Date,
-    ) => void;
-    'board:goalMarked': (
+interface RoomEventArguments {
+    'players:join': [player: Player];
+    'players:leave': [player: Player];
+    'player:colorChanged': [player: Player, newColor: string];
+    'player:finished': [player: Player, finishTime: Date];
+    'player:unfinished': [player: Player];
+    'board:cellUpdate': [cell: Cell, row: number, col: number];
+    'board:goalMarked': [cell: Cell, row: number, col: number, player: Player];
+    'board:goalUnmarked': [
         cell: Cell,
         row: number,
         col: number,
         player: Player,
-        timestamp: Date,
-    ) => void;
-    'board:goalUnmarked': (
-        cell: Cell,
-        row: number,
-        col: number,
-        player: Player,
-        timestamp: Date,
-    ) => void;
-    'board:regenerated': (
+    ];
+    'board:regenerated': [
         board: RevealedCell[][],
         options: BoardGenerationOptions,
-        timestamp: Date,
-    ) => void;
-    'board:revealed': (player: Player, timestamp: Date) => void;
-    chatSent: (message: ChatMessage, timestamp: Date) => void;
-    'timer:started': (timestamp: Date) => void;
-    'timer:reset': (timestamp: Date) => void;
-    'timer:stopped': (timestamp: Date) => void;
-    'system:message': (message: ChatMessage, timestamp: Date) => void;
+    ];
+    'board:revealed': [player: Player];
+    chatSent: [message: ChatMessage];
+    'timer:started': [startTime: Date];
+    'timer:reset': [];
+    'timer:stopped': [finishTime: Date];
+    'system:message': [message: ChatMessage];
 }
+
+type RoomEvents = {
+    [Event in keyof RoomEventArguments]: (
+        ...args: [...RoomEventArguments[Event], timestamp: Date]
+    ) => void;
+};
+
+type RoomEventArgs<Event extends keyof RoomEventArguments> =
+    RoomEventArguments[Event];
 
 /**
  * Represents a room in the PlayBingo service. A room is container for a single
@@ -343,9 +335,9 @@ export default class Room extends EventEmitter {
 
     emit<Event extends keyof RoomEvents>(
         event: Event,
-        ...args: Parameters<RoomEvents[Event]>
+        ...args: RoomEventArgs<Event>
     ): boolean {
-        return super.emit(event, ...args);
+        return super.emit(event, ...args, new Date());
     }
     //#endregion
 
@@ -483,7 +475,7 @@ export default class Room extends EventEmitter {
         this.raceHandler.resetTimer();
 
         this.sendSyncBoard();
-        this.emit('board:regenerated', this.board, options, new Date());
+        this.emit('board:regenerated', this.board, options);
     }
 
     getPlayers(): PlayerData[] {
@@ -528,7 +520,7 @@ export default class Room extends EventEmitter {
 
         const timestamp = new Date();
         if (newPlayer) {
-            this.emit('players:join', player, timestamp);
+            this.emit('players:join', player);
             if (auth.isSpectating) {
                 this.sendChat(
                     `${player.nickname} is now spectating`,
@@ -625,7 +617,7 @@ export default class Room extends EventEmitter {
                 timestamp,
             );
 
-            this.emit('players:leave', player, timestamp);
+            this.emit('players:leave', player);
             if (this.players.size === 0) {
                 this.close();
             }
@@ -677,7 +669,6 @@ export default class Room extends EventEmitter {
             row,
             col,
             player,
-            timestamp,
         );
         this.sendChat(
             [
@@ -714,7 +705,6 @@ export default class Room extends EventEmitter {
             unRow,
             unCol,
             player,
-            timestamp,
         );
         this.sendChat(
             [
@@ -742,7 +732,7 @@ export default class Room extends EventEmitter {
         const timestamp = new Date();
 
         player.color = color;
-        this.emit('player:colorChanged', player, color, timestamp);
+        this.emit('player:colorChanged', player, color);
         this.sendChat(
             [
                 { contents: player.nickname, color: player.color },
@@ -769,13 +759,12 @@ export default class Room extends EventEmitter {
             'board:regenerated',
             this.board,
             this.lastGenerationMode,
-            new Date(),
         );
     }
 
     handleStartTimer() {
         this.raceHandler?.startTimer();
-        this.emit('timer:started', new Date());
+        this.emit('timer:started');
     }
 
     handleChangeRaceHandler(action: ChangeRaceHandlerAction) {
@@ -796,7 +785,7 @@ export default class Room extends EventEmitter {
 
     handleResetTimer() {
         this.raceHandler?.resetTimer();
-        this.emit('timer:reset', new Date());
+        this.emit('timer:reset');
     }
 
     handleSocketClose(ws: PlayBingoSocket) {
@@ -886,7 +875,7 @@ export default class Room extends EventEmitter {
             ],
             timestamp,
         );
-        this.emit('board:revealed', player, timestamp);
+        this.emit('board:revealed', player);
         player.sendMessage({
             action: 'syncBoard',
             board: {
@@ -943,7 +932,7 @@ export default class Room extends EventEmitter {
                 message: [message],
                 timestamp: eventTimestamp.toISOString(),
             });
-            this.emit('chatSent', [message], eventTimestamp);
+            this.emit('chatSent', [message]);
         } else {
             const timestamp = this.getTimestamp(eventTimestamp);
             if (timestamp) {
@@ -955,7 +944,7 @@ export default class Room extends EventEmitter {
                 message: message,
                 timestamp: eventTimestamp.toISOString(),
             });
-            this.emit('chatSent', message, eventTimestamp);
+            this.emit('chatSent', message);
         }
     }
 
@@ -1047,6 +1036,7 @@ export default class Room extends EventEmitter {
                 if (!player.goalComplete && player.goalCount >= goalsNeeded) {
                     player.goalComplete = true;
                     this.raceHandler?.playerFinished(player);
+                    const finishTime = new Date(player.finishedAt!);
                     this.sendChat(
                         [
                             {
@@ -1055,13 +1045,9 @@ export default class Room extends EventEmitter {
                             },
                             ' has achieved lockout!',
                         ],
-                        new Date(player.finishedAt!),
+                        finishTime,
                     );
-                    this.emit(
-                        'player:finished',
-                        player,
-                        new Date(player.finishedAt!),
-                    );
+                    this.emit('player:finished', player, finishTime);
                 }
                 if (player.goalComplete && player.goalCount < goalsNeeded) {
                     player.goalComplete = false;
@@ -1077,7 +1063,7 @@ export default class Room extends EventEmitter {
                         ],
                         timestamp,
                     );
-                    this.emit('player:unfinished', player, timestamp);
+                    this.emit('player:unfinished', player);
                 }
             } else {
                 if (this.bingoMode === BingoMode.LINES) {
@@ -1105,6 +1091,7 @@ export default class Room extends EventEmitter {
                     ) {
                         player.goalComplete = true;
                         this.raceHandler?.playerFinished(player).then();
+                        const finishTime = new Date(player.finishedAt!);
                         this.sendChat(
                             [
                                 {
@@ -1113,13 +1100,9 @@ export default class Room extends EventEmitter {
                                 },
                                 ' has completed the goal!',
                             ],
-                            new Date(player.finishedAt!),
+                            finishTime,
                         );
-                        this.emit(
-                            'player:finished',
-                            player,
-                            new Date(player.finishedAt!),
-                        );
+                        this.emit('player:finished', player, finishTime);
                     } else if (
                         linesComplete < this.lineCount &&
                         player.goalComplete
@@ -1137,7 +1120,7 @@ export default class Room extends EventEmitter {
                             ],
                             timestamp,
                         );
-                        this.emit('player:unfinished', player, timestamp);
+                        this.emit('player:unfinished', player);
                     }
                     player.linesComplete = linesComplete;
                 } else {
@@ -1147,6 +1130,7 @@ export default class Room extends EventEmitter {
                     if (complete && !player.goalComplete) {
                         player.goalComplete = true;
                         this.raceHandler?.playerFinished(player);
+                        const finishTime = new Date(player.finishedAt!);
                         this.sendChat(
                             [
                                 {
@@ -1155,13 +1139,9 @@ export default class Room extends EventEmitter {
                                 },
                                 ' has achieved blackout!',
                             ],
-                            new Date(player.finishedAt!),
+                            finishTime,
                         );
-                        this.emit(
-                            'player:finished',
-                            player,
-                            new Date(player.finishedAt!),
-                        );
+                        this.emit('player:finished', player, finishTime);
                     } else if (!complete && player.goalComplete) {
                         player.goalComplete = false;
                         this.raceHandler?.playerUnfinshed(player);
@@ -1176,7 +1156,7 @@ export default class Room extends EventEmitter {
                             ],
                             timestamp,
                         );
-                        this.emit('player:unfinished', player, timestamp);
+                        this.emit('player:unfinished', player);
                     }
                 }
             }
@@ -1192,7 +1172,7 @@ export default class Room extends EventEmitter {
             this.raceHandler?.allPlayersFinished();
             this.emit(
                 'timer:stopped',
-                new Date(this.raceHandler.getEndTime() ?? ''),
+                new Date(this.raceHandler.getEndTime()!),
             );
         } else {
             if (this.raceHandler?.getEndTime()) {
