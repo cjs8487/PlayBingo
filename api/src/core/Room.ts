@@ -518,23 +518,8 @@ export default class Room extends EventEmitter {
             }
         }
 
-        const timestamp = new Date();
         if (newPlayer) {
             this.emit('players:join', player);
-            if (auth.isSpectating) {
-                this.sendChat(
-                    `${player.nickname} is now spectating`,
-                    timestamp,
-                );
-            } else {
-                this.sendChat(
-                    [
-                        { contents: player.nickname, color: player.color },
-                        ' has joined.',
-                    ],
-                    timestamp,
-                );
-            }
         }
 
         player.addConnection(auth.uuid, socket);
@@ -607,16 +592,7 @@ export default class Room extends EventEmitter {
             return false;
         }
         const hasLeft = !player.hasConnections();
-        const timestamp = new Date();
         if (hasLeft) {
-            this.sendChat(
-                [
-                    { contents: player.nickname, color: player.color },
-                    ' has left.',
-                ],
-                timestamp,
-            );
-
             this.emit('players:leave', player);
             if (this.players.size === 0) {
                 this.close();
@@ -662,24 +638,7 @@ export default class Room extends EventEmitter {
             a.localeCompare(b),
         );
         player.mark(row, col);
-        const timestamp = new Date();
-        this.emit(
-            'board:goalMarked',
-            this.board[row][col],
-            row,
-            col,
-            player,
-        );
-        this.sendChat(
-            [
-                {
-                    contents: player.nickname,
-                    color: player.color,
-                },
-                ` marked ${this.board[row][col].goal.goal} (${row},${col})`,
-            ],
-            timestamp,
-        );
+        this.emit('board:goalMarked', this.board[row][col], row, col, player);
         this.checkWinConditions();
     }
 
@@ -698,7 +657,6 @@ export default class Room extends EventEmitter {
             unCol
         ].completedPlayers.filter((playerId) => playerId !== player.id);
         player.unmark(unRow, unCol);
-        const timestamp = new Date();
         this.emit(
             'board:goalUnmarked',
             this.board[unRow][unCol],
@@ -706,14 +664,6 @@ export default class Room extends EventEmitter {
             unCol,
             player,
         );
-        this.sendChat(
-            [
-                { contents: player.nickname, color: player.color },
-                ` unmarked ${this.board[unRow][unCol].goal.goal} (${unRow},${unCol})`,
-            ],
-            timestamp,
-        );
-
         this.checkWinConditions();
     }
 
@@ -733,14 +683,6 @@ export default class Room extends EventEmitter {
 
         player.color = color;
         this.emit('player:colorChanged', player, color);
-        this.sendChat(
-            [
-                { contents: player.nickname, color: player.color },
-                ' has changed their color to ',
-                { contents: color, color },
-            ],
-            timestamp,
-        );
     }
 
     handleNewCard(action: NewCardAction) {
@@ -755,16 +697,12 @@ export default class Room extends EventEmitter {
             // the board from the previous settings
             this.generateBoard(this.lastGenerationMode);
         }
-        this.emit(
-            'board:regenerated',
-            this.board,
-            this.lastGenerationMode,
-        );
+        this.emit('board:regenerated', this.board, this.lastGenerationMode);
     }
 
     handleStartTimer() {
         this.raceHandler?.startTimer();
-        this.emit('timer:started');
+        this.emit('timer:started', new Date(this.raceHandler.getStartTime()!));
     }
 
     handleChangeRaceHandler(action: ChangeRaceHandlerAction) {
@@ -795,16 +733,8 @@ export default class Room extends EventEmitter {
                 player = p;
             }
         }
-        const timestamp = new Date();
         if (player) {
             if (!player.hasConnections()) {
-                this.sendChat(
-                    [
-                        { contents: player.nickname, color: player.color },
-                        ' has left.',
-                    ],
-                    timestamp,
-                );
                 if (this.players.size === 0) {
                     this.close();
                 }
@@ -864,17 +794,6 @@ export default class Room extends EventEmitter {
             return null;
         }
         this.revealCardForPlayer(player);
-        const timestamp = new Date();
-        this.sendChat(
-            [
-                {
-                    contents: player.nickname,
-                    color: player.color,
-                },
-                ' has revealed the card.',
-            ],
-            timestamp,
-        );
         this.emit('board:revealed', player);
         player.sendMessage({
             action: 'syncBoard',
@@ -1342,16 +1261,7 @@ export default class Room extends EventEmitter {
     }
 
     revealCardForPlayer(player: Player) {
-        this.sendChat(
-            [
-                {
-                    contents: player.nickname,
-                    color: player.color,
-                },
-                ' has revealed the card.',
-            ],
-            new Date(),
-        );
+        this.emit('board:revealed', player);
         player.sendMessage({
             action: 'syncBoard',
             board: {
