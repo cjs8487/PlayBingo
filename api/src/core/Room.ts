@@ -94,65 +94,56 @@ export interface BoardGenerationInputs {
     };
 }
 
-export interface RoomEvents {
-    'board:generationRequested': (
+interface RoomEventArguments {
+    'board:generationRequested': [
         options: BoardGenerationOptions,
         supply: (inputs: Promise<BoardGenerationInputs>) => void,
-    ) => void;
-    'player:membershipChanged': (player: Player, timestamp: Date) => void;
-    'team:renamed': (player: Player, team: Team, timestamp: Date) => void;
-    'race:playerChanged': (player: Player) => void;
-    'race:startChanged': (startedAt: string | null) => void;
-    'race:finishChanged': (finishedAt: string | null) => void;
-    'race:handlerChanged': (handler: ReturnType<RaceHandler['key']>) => void;
-    'room:teamsEnabledChanged': (enabled: boolean) => void;
-    'racetime:created': (url: string) => void;
-    'racetime:disconnected': () => void;
-    'room:closed': () => void;
-    'player:connected': (player: Player, timestamp: Date) => void;
-    'player:chat': (player: Player, message: string, timestamp: Date) => void;
-    'players:join': (player: Player, timestamp: Date) => void;
-    'players:leave': (player: Player, timestamp: Date) => void;
-    'player:colorChanged': (
-        player: Player,
-        newColor: string,
-        oldColor: string,
-        timestamp: Date,
-    ) => void;
-    'team:finished': (team: Team, timestamp: Date) => void;
-    'team:unfinished': (team: Team, timestamp: Date) => void;
-    'board:cellUpdate': (
-        cell: Cell,
-        row: number,
-        col: number,
-        timestamp: Date,
-    ) => void;
-    'board:goalMarked': (
+    ];
+    'player:membershipChanged': [player: Player];
+    'team:renamed': [player: Player, team: Team];
+    'race:playerChanged': [player: Player];
+    'race:startChanged': [startedAt: string | null];
+    'race:finishChanged': [finishedAt: string | null];
+    'race:handlerChanged': [handler: ReturnType<RaceHandler['key']>];
+    'room:teamsEnabledChanged': [enabled: boolean];
+    'racetime:created': [
+        url: string,
+        persist: (write: Promise<unknown>) => void,
+    ];
+    'racetime:disconnected': [];
+    'room:closed': [];
+    'player:connected': [player: Player];
+    'player:chat': [player: Player, message: string];
+    'players:join': [player: Player];
+    'players:leave': [player: Player];
+    'player:colorChanged': [player: Player, newColor: string, oldColor: string];
+    'team:finished': [team: Team];
+    'team:unfinished': [team: Team];
+    'board:cellUpdate': [cell: Cell, row: number, col: number];
+    'board:goalMarked': [cell: Cell, row: number, col: number, player: Player];
+    'board:goalUnmarked': [
         cell: Cell,
         row: number,
         col: number,
         player: Player,
-        timestamp: Date,
-    ) => void;
-    'board:goalUnmarked': (
-        cell: Cell,
-        row: number,
-        col: number,
-        player: Player,
-        timestamp: Date,
-    ) => void;
-    'board:regenerated': (
+    ];
+    'board:regenerated': [
         board: RevealedCell[][],
         options: BoardGenerationOptions,
-        timestamp: Date,
-    ) => void;
-    'board:revealed': (player: Player, timestamp: Date) => void;
-    chatSent: (message: ChatMessage, timestamp: Date) => void;
-    'timer:started': (timestamp: Date) => void;
-    'timer:reset': (timestamp: Date) => void;
-    'timer:stopped': (timestamp: Date) => void;
-    'system:message': (message: ChatMessage, timestamp: Date) => void;
+    ];
+    'board:revealed': [player: Player];
+    chatSent: [message: ChatMessage];
+    'timer:started': [];
+    'timer:reset': [];
+    'timer:stopped': [];
+    'system:message': [message: ChatMessage];
 }
+
+export type RoomEvents = {
+    [Event in keyof RoomEventArguments]: (
+        ...args: [...RoomEventArguments[Event], timestamp: Date]
+    ) => void;
+};
 
 /**
  * Represents a room in the PlayBingo service. A room is container for a single
@@ -372,9 +363,12 @@ export default class Room extends EventEmitter {
 
     emit<Event extends keyof RoomEvents>(
         event: Event,
-        ...args: Parameters<RoomEvents[Event]>
+        ...args: [...RoomEventArguments[Event], timestamp?: Date]
     ): boolean {
-        return super.emit(event, ...args);
+        // Event arguments carry their own data. A trailing Date overrides the emission time.
+        return args.at(-1) instanceof Date
+            ? super.emit(event, ...args)
+            : super.emit(event, ...args, new Date());
     }
     //#endregion
 
@@ -1069,7 +1063,7 @@ export default class Room extends EventEmitter {
         this.raceHandler.startTimer();
         const startedAt = this.raceHandler.getStartTime();
         if (startedAt && startedAt !== previous) {
-            this.emit('timer:started', new Date());
+            this.emit('timer:started', new Date(startedAt));
         }
     }
 
@@ -1091,7 +1085,7 @@ export default class Room extends EventEmitter {
 
     handleResetTimer() {
         this.raceHandler?.resetTimer();
-        this.emit('timer:reset', new Date());
+        this.emit('timer:reset');
     }
 
     handleSocketClose(ws: Connection) {
@@ -1213,13 +1207,7 @@ export default class Room extends EventEmitter {
 
     sendCellUpdate(row: number, col: number) {
         this.markActive();
-        this.emit(
-            'board:cellUpdate',
-            this.board[row][col],
-            row,
-            col,
-            new Date(),
-        );
+        this.emit('board:cellUpdate', this.board[row][col], row, col);
     }
 
     sendSyncBoard() {

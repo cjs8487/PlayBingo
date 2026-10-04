@@ -617,11 +617,14 @@ describe('room state events', () => {
         room.raceHandler = raceHandler;
 
         room.handleStartTimer();
-        expect(emitSpy).toHaveBeenCalledWith('timer:started', new Date());
+        expect(emitSpy).toHaveBeenCalledWith(
+            'timer:started',
+            new Date(startedAt!),
+        );
         expect(room.roomData.startedAt).toBe('2024-01-02T03:04:05.000Z');
 
         room.handleResetTimer();
-        expect(emitSpy).toHaveBeenCalledWith('timer:reset', new Date());
+        expect(emitSpy).toHaveBeenCalledWith('timer:reset');
         expect(room.roomData.startedAt).toBeUndefined();
     });
 
