@@ -340,7 +340,8 @@ describe('Board Control', () => {
             room.handleMark(mockMarkAction, mockTokenPayload);
 
             const message = {
-                action: 'cellUpdate',
+                action: 'board:cellUpdate',
+                timestamp: new Date().toISOString(),
                 row,
                 col,
                 cell: room.board[row][col],
@@ -413,7 +414,8 @@ describe('Board Control', () => {
             room.handleUnmark(mockUnmarkAction, mockTokenPayload);
 
             const message = {
-                action: 'cellUpdate',
+                action: 'board:cellUpdate',
+                timestamp: new Date().toISOString(),
                 row,
                 col,
                 cell: room.board[row][col],

@@ -146,16 +146,31 @@ export default class Player {
 
     private subscribeToRoom() {
         const room = this.room;
-        const onCellUpdate = (cell: Cell, row: number, col: number) => {
+        const onCellUpdate = (
+            cell: Cell,
+            row: number,
+            col: number,
+            timestamp: Date,
+        ) => {
             if (!this.boardHidden) {
                 this.sendMessage({
-                    action: 'cellUpdate',
+                    action: 'board:cellUpdate',
+                    timestamp: timestamp.toISOString(),
                     row,
                     col,
                     cell,
                     players: room.getPlayerData(),
                 });
             }
+        };
+        const onGoalChange: RoomEvents['board:goalMarked'] = (
+            cell,
+            row,
+            col,
+            _player,
+            timestamp,
+        ) => {
+            onCellUpdate(cell, row, col, timestamp);
         };
         const syncBoard = () => {
             this.sendMessage({
@@ -174,27 +189,36 @@ export default class Player {
         const onBoardRevealed = (revealedPlayer: Player) => {
             if (revealedPlayer === this) syncBoard();
         };
-        const onChatSent = (message: ChatMessage) => {
+        const sendChat = (
+            action: 'chatSent' | 'system:message',
+            message: ChatMessage,
+            timestamp: Date,
+        ) => {
             this.sendMessage({
-                action: 'chat',
+                action,
+                timestamp: timestamp.toISOString(),
                 message,
                 players: room.getPlayerData(),
             });
         };
 
+        const onChatSent = (message: ChatMessage, timestamp: Date) =>
+            sendChat('chatSent', message, timestamp);
+        const onSystemMessage = (message: ChatMessage, timestamp: Date) =>
+            sendChat('system:message', message, timestamp);
         const sendRoomInfoUpdate = () => {
             this.sendMessage({
                 action: 'updateRoomData',
                 roomData: room.roomData,
             });
         };
-        room.on('board:goalMarked', onCellUpdate);
-        room.on('board:goalUnmarked', onCellUpdate);
+        room.on('board:goalMarked', onGoalChange);
+        room.on('board:goalUnmarked', onGoalChange);
         room.on('board:cellUpdate', onCellUpdate);
         room.on('board:regenerated', onBoardRegenerated);
         room.on('board:revealed', onBoardRevealed);
         room.on('chatSent', onChatSent);
-        room.on('system:message', onChatSent);
+        room.on('system:message', onSystemMessage);
 
         // TODO: PROTOCOL V2 - implement discrete events for timer events
         room.on('team:finished', sendRoomInfoUpdate);
@@ -204,13 +228,13 @@ export default class Player {
         room.on('timer:reset', sendRoomInfoUpdate);
 
         this.unsubscribeFromRoom = () => {
-            room.off('board:goalMarked', onCellUpdate);
-            room.off('board:goalUnmarked', onCellUpdate);
+            room.off('board:goalMarked', onGoalChange);
+            room.off('board:goalUnmarked', onGoalChange);
             room.off('board:cellUpdate', onCellUpdate);
             room.off('board:regenerated', onBoardRegenerated);
             room.off('board:revealed', onBoardRevealed);
             room.off('chatSent', onChatSent);
-            room.off('system:message', onChatSent);
+            room.off('system:message', onSystemMessage);
             room.off('team:finished', sendRoomInfoUpdate);
             room.off('team:unfinished', sendRoomInfoUpdate);
             room.off('timer:started', sendRoomInfoUpdate);
@@ -243,7 +267,7 @@ export default class Player {
 
     sendMessage(message: ServerMessage) {
         let finalMessage: ServerMessage;
-        if (message.action === 'cellUpdate' && this.room.exploration) {
+        if (message.action === 'board:cellUpdate' && this.room.exploration) {
             if (!message.cell.revealed) {
                 // currently should never happen, indicates that the room itself
                 // handled obfuscation of the cell rather than the player
