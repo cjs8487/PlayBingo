@@ -115,7 +115,7 @@ describe('handleJoin', () => {
         expect(
             room.getPlayerById(mockTokenPayload.playerId)?.connections.size,
         ).toBe(1);
-        expect(emitSpy).toHaveBeenCalledTimes(3);
+        expect(emitSpy).toHaveBeenCalledTimes(2);
         expect(emitSpy.mock.calls[0][0]).toBe('players:join');
     });
 
@@ -138,11 +138,11 @@ describe('handleJoin', () => {
 
     it('Creates two new players when two new players join', async () => {
         room.handleJoin(mockJoinAction, mockTokenPayload, mockSocket);
-        expect(emitSpy).toHaveBeenCalledTimes(3);
+        expect(emitSpy).toHaveBeenCalledTimes(2);
         expect(emitSpy.mock.calls[0][0]).toBe('players:join');
         room.handleJoin(mockJoinAction, mockTokenPayloadPlayer2, mockSocket2);
-        expect(emitSpy).toHaveBeenCalledTimes(6);
-        expect(emitSpy.mock.calls[3][0]).toBe('players:join');
+        expect(emitSpy).toHaveBeenCalledTimes(4);
+        expect(emitSpy.mock.calls[2][0]).toBe('players:join');
         expect(room.getPlayerById(mockTokenPayload.playerId)).toBeDefined();
         expect(
             room.getPlayerById(mockTokenPayloadPlayer2.playerId),
@@ -159,53 +159,46 @@ describe('handleJoin', () => {
         expect(createUpdatePlayer).toHaveBeenCalledTimes(2);
     });
 
-    it('Sends join message for new players', () => {
-        const sendChatSpy = jest.spyOn(room, 'sendChat');
+    it('Emits join events for new players', () => {
+        const onJoin = jest.fn();
+        room.on('players:join', onJoin);
         mockJoinAction.payload = { nickname: 'player 1' };
         room.handleJoin(mockJoinAction, mockTokenPayload, mockSocket);
         mockJoinAction.payload = { nickname: 'player 2' };
         room.handleJoin(mockJoinAction, mockTokenPayloadPlayer2, mockSocket2);
-        expect(sendChatSpy).toHaveBeenCalledTimes(2);
-        expect(sendChatSpy).toHaveBeenCalledWith(
-            [
-                '[0:00:00] ',
-                { contents: 'player 1', color: 'blue' },
-                ' has joined.',
-            ],
+        expect(onJoin).toHaveBeenCalledTimes(2);
+        expect(onJoin).toHaveBeenCalledWith(
+            room.getPlayerById(mockTokenPayload.playerId),
             new Date(),
         );
-        expect(sendChatSpy).toHaveBeenCalledWith(
-            [
-                '[0:00:00] ',
-                { contents: 'player 2', color: 'blue' },
-                ' has joined.',
-            ],
+        expect(onJoin).toHaveBeenCalledWith(
+            room.getPlayerById(mockTokenPayloadPlayer2.playerId),
             new Date(),
         );
     });
 
-    it('Sends spectator join message for new spectators', () => {
-        const sendChatSpy = jest.spyOn(room, 'sendChat');
+    it('Emits a join event for a new spectator', () => {
+        const onJoin = jest.fn();
+        room.on('players:join', onJoin);
         mockJoinAction.payload = { nickname: 'spectator' };
         room.handleJoin(mockJoinAction, mockTokenPayloadSpectator, mockSocket);
-        expect(sendChatSpy).toHaveBeenCalledTimes(1);
-        expect(sendChatSpy).toHaveBeenCalledWith(
-            'spectator is now spectating',
+        expect(onJoin).toHaveBeenCalledWith(
+            room.spectators.get(mockTokenPayloadSpectator.playerId),
             new Date(),
         );
     });
 
-    it('Does not send join message for existing players', () => {
-        const sendChatSpy = jest.spyOn(room, 'sendChat');
+    it('Does not emit a join event when an existing player reconnects', () => {
+        const onJoin = jest.fn();
+        room.on('players:join', onJoin);
         room.handleJoin(mockJoinAction, mockTokenPayload, mockSocket);
         room.handleJoin(mockJoinAction, mockTokenPayload2, mockSocket2);
-        expect(sendChatSpy).toHaveBeenCalledTimes(1);
+        expect(onJoin).toHaveBeenCalledTimes(1);
     });
 });
 
 describe('handleLeave', () => {
     it('Removes a player from the room if it is their last connection', () => {
-        const sendChatSpy = jest.spyOn(room, 'sendChat');
         const player = new Player(room, 'test', 'Test Player', false);
         player.addConnection(mockTokenPayload.uuid, mockSocket);
         room.createTeamForPlayer(player);
@@ -214,19 +207,14 @@ describe('handleLeave', () => {
         room.handleLeave(mockLeaveAction, mockTokenPayload, 'test');
         expect(player.connections.size).toBe(0);
         expect(player.showInRoom()).toBe(false);
-        expect(sendChatSpy).toHaveBeenCalledTimes(1);
-        expect(sendChatSpy).toHaveBeenCalledWith(
-            [
-                '[0:00:00] ',
-                { contents: 'Test Player', color: 'blue' },
-                ' has left.',
-            ],
+        expect(emitSpy).toHaveBeenCalledWith(
+            'players:leave',
+            player,
             new Date(),
         );
     });
 
     it('Removes the connection from the player if it is not their last one', () => {
-        const sendChatSpy = jest.spyOn(room, 'sendChat');
         const player = new Player(room, 'test', 'Test Player', false);
         player.addConnection(mockTokenPayload.uuid, mockSocket);
         player.addConnection(mockTokenPayload2.uuid, mockSocket);
@@ -236,7 +224,6 @@ describe('handleLeave', () => {
         expect(player.connections.size).toBe(1);
         expect(player.showInRoom()).toBe(true);
         expect(emitSpy).not.toHaveBeenCalled();
-        expect(sendChatSpy).not.toHaveBeenCalled();
     });
     // TODO: POST REFACTOR CHECK FOR UNAUTHORIZED RESPONSE SINCE THE RETURN TYPE
     // OF ACTION HANDLERS WILL LIKELY CHANGE
@@ -293,7 +280,7 @@ describe('Board Control', () => {
             expect(completedTeams).toContain(
                 room.getTeamForPlayer(mockTokenPayload.playerId)!.id,
             );
-            expect(emitSpy).toHaveBeenCalledTimes(2);
+            expect(emitSpy).toHaveBeenCalledTimes(1);
             expect(emitSpy.mock.calls[0][0]).toBe('board:goalMarked');
             room.handleMark(mockMarkAction, mockTokenPayloadPlayer2);
             for (let i = 0; i < 5; i++) {
@@ -318,13 +305,13 @@ describe('Board Control', () => {
                     }
                 }
             }
-            expect(emitSpy).toHaveBeenCalledTimes(4);
-            expect(emitSpy.mock.calls[2][0]).toBe('board:goalMarked');
+            expect(emitSpy).toHaveBeenCalledTimes(2);
+            expect(emitSpy.mock.calls[1][0]).toBe('board:goalMarked');
         });
 
         it('Sends a cell message update', () => {
             room.handleMark(mockMarkAction, mockTokenPayload);
-            expect(emitSpy).toHaveBeenCalledTimes(2);
+            expect(emitSpy).toHaveBeenCalledTimes(1);
             expect(emitSpy.mock.calls[0][0]).toBe('board:goalMarked');
         });
 
@@ -351,25 +338,21 @@ describe('Board Control', () => {
             expect(sendOtherPlayer).toHaveBeenCalledWith(message);
         });
 
-        it('Sends a chat message', () => {
-            const sendChatSpy = jest.spyOn(room, 'sendChat');
+        it('Emits the mark event with the acting player', () => {
             const player = room.getPlayerById(mockTokenPayload.playerId)!;
             const { row, col } = mockMarkAction.payload;
+            const onGoalChange = jest.fn();
+            room.on('board:goalMarked', onGoalChange);
+
             room.handleMark(mockMarkAction, mockTokenPayload);
-            expect(sendChatSpy).toHaveBeenCalledTimes(1);
-            expect(sendChatSpy).toHaveBeenCalledWith(
-                [
-                    '[0:00:00] ',
-                    {
-                        contents: player.nickname,
-                        color: room.getTeamForPlayer(player.id)!.color,
-                    },
-                    ` marked ${room.board[row][col].goal.goal} (${row},${col})`,
-                ],
+
+            expect(onGoalChange).toHaveBeenCalledWith(
+                room.board[row][col],
+                row,
+                col,
+                player,
                 new Date(),
             );
-            expect(emitSpy).toHaveBeenCalledTimes(2);
-            expect(emitSpy.mock.calls[1][0]).toBe('chatSent');
         });
         // TODO: TEST UNAUTHORIZED
     });
@@ -398,7 +381,7 @@ describe('Board Control', () => {
 
         it('Sends a cell message update', () => {
             room.handleUnmark(mockUnmarkAction, mockTokenPayload);
-            expect(emitSpy).toHaveBeenCalledTimes(2);
+            expect(emitSpy).toHaveBeenCalledTimes(1);
             expect(emitSpy.mock.calls[0][0]).toBe('board:goalUnmarked');
         });
 
@@ -425,25 +408,21 @@ describe('Board Control', () => {
             expect(sendOtherPlayer).toHaveBeenCalledWith(message);
         });
 
-        it('Sends a chat message', () => {
-            const sendChatSpy = jest.spyOn(room, 'sendChat');
+        it('Emits the unmark event with the acting player', () => {
             const player = room.getPlayerById(mockTokenPayload.playerId)!;
-            const { row, col } = mockMarkAction.payload;
+            const { row, col } = mockUnmarkAction.payload;
+            const onGoalChange = jest.fn();
+            room.on('board:goalUnmarked', onGoalChange);
+
             room.handleUnmark(mockUnmarkAction, mockTokenPayload);
-            expect(sendChatSpy).toHaveBeenCalledTimes(1);
-            expect(sendChatSpy).toHaveBeenCalledWith(
-                [
-                    '[0:00:00] ',
-                    {
-                        contents: player.nickname,
-                        color: room.getTeamForPlayer(player.id)!.color,
-                    },
-                    ` unmarked ${room.board[row][col].goal.goal} (${row},${col})`,
-                ],
+
+            expect(onGoalChange).toHaveBeenCalledWith(
+                room.board[row][col],
+                row,
+                col,
+                player,
                 new Date(),
             );
-            expect(emitSpy).toHaveBeenCalledTimes(2);
-            expect(emitSpy.mock.calls[1][0]).toBe('chatSent');
         });
         // TODO: TEST UNAUTHORIZED
     });
@@ -456,8 +435,7 @@ describe('handleChangeColor', () => {
         room.createTeamForPlayer(player);
     });
 
-    it('Changes player color and sends chat message', () => {
-        const sendChatSpy = jest.spyOn(room, 'sendChat');
+    it('Changes team color and emits the change', () => {
         const mockChangeColorAction = mockDeep<ChangeColorAction>();
         mockChangeColorAction.payload = { color: 'red' };
 
@@ -465,15 +443,6 @@ describe('handleChangeColor', () => {
 
         const player = room.getPlayerById(mockTokenPayload.playerId)!;
         expect(room.getTeamForPlayer(player.id)!.color).toBe('red');
-        expect(sendChatSpy).toHaveBeenCalledWith(
-            [
-                '[0:00:00] ',
-                { contents: 'Test Player', color: 'red' },
-                ' has changed their color to ',
-                { contents: 'red', color: 'red' },
-            ],
-            new Date(),
-        );
         expect(emitSpy).toHaveBeenCalledWith(
             'player:colorChanged',
             player,
@@ -481,9 +450,8 @@ describe('handleChangeColor', () => {
             'blue',
             new Date(),
         );
-        expect(emitSpy).toHaveBeenCalledTimes(2);
+        expect(emitSpy).toHaveBeenCalledTimes(1);
         expect(emitSpy.mock.calls[0][0]).toBe('player:colorChanged');
-        expect(emitSpy.mock.calls[1][0]).toBe('chatSent');
     });
 
     it('Returns unauthorized for non-existent player', () => {

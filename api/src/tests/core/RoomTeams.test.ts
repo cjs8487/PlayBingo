@@ -119,23 +119,28 @@ describe('Room team workflows', () => {
 
         const room = createRoom();
         room.handleJoin(joinAction('Alice'), auth('alice'), socket());
+        const onReveal = jest.fn();
+        const onMark = jest.fn();
+        room.on('board:revealed', onReveal);
+        room.on('board:goalMarked', onMark);
         room.handleStartTimer();
-        expect(room.chatHistory).toContainEqual([
-            '[0:00:00] ',
-            { contents: 'Alice', color: 'blue' },
-            ' has revealed the card.',
-        ]);
+        expect(onReveal).toHaveBeenCalledWith(
+            room.getPlayerById('alice'),
+            new Date(),
+        );
 
         jest.setSystemTime(new Date(start.getTime() + 65_000));
         room.handleMark(
             { action: 'mark', payload: { row: 0, col: 0 } } as MarkAction,
             auth('alice'),
         );
-        expect(room.chatHistory).toContainEqual([
-            '[0:01:05] ',
-            { contents: 'Alice', color: 'blue' },
-            ' marked Goal (0,0)',
-        ]);
+        expect(onMark).toHaveBeenCalledWith(
+            room.board[0][0],
+            0,
+            0,
+            room.getPlayerById('alice'),
+            new Date(),
+        );
     });
 
     it('creates a team for a joining player and exposes team-owned state', async () => {
@@ -167,11 +172,7 @@ describe('Room team workflows', () => {
             'room-id',
             expect.objectContaining({ id: 'alice', teamId: team?.id }),
         );
-        expect(room.chatHistory).toContainEqual([
-            chatTimestamp,
-            { contents: 'Alice', color: 'blue' },
-            ' has joined.',
-        ]);
+        expect(room.getPlayerById('alice')?.getDisplayName()).toBe('Alice');
     });
 
     it('names the team after the player and announces it when teams are enabled', () => {
@@ -180,11 +181,9 @@ describe('Room team workflows', () => {
 
         const team = room.getTeamForPlayer('alice')!;
         expect(team.name).toBe("Alice's Team");
-        expect(room.chatHistory).toContainEqual([
-            chatTimestamp,
-            { contents: 'Alice', color: 'blue' },
-            " has joined playing for Alice's Team.",
-        ]);
+        expect(room.getPlayerById('alice')?.getDisplayName()).toBe(
+            "Alice (Alice's Team)",
+        );
     });
 
     it('tracks marks by team ID and applies the team color', async () => {
@@ -294,11 +293,7 @@ describe('Room team workflows', () => {
             1,
             expect.any(Date),
         );
-        expect(room.chatHistory).toContainEqual([
-            chatTimestamp,
-            { contents: "Alice (Alice's Team)", color: 'blue' },
-            ' marked Goal (1,1)',
-        ]);
+        expect(room.board[1][1].completedTeams).toContain(team.id);
     });
 
     it('creates a team when a spectator starts playing', () => {

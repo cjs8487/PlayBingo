@@ -719,9 +719,6 @@ export default class Room extends EventEmitter {
         socket: Connection,
     ): ServerMessage {
         let player = this.getPlayerById(auth.playerId);
-        let playerTeam = player?.teamId
-            ? this.teams.get(player.teamId)
-            : undefined;
         let newPlayer = false;
         if (!player && action.payload) {
             player = new Player(
@@ -735,7 +732,7 @@ export default class Room extends EventEmitter {
             if (auth.isSpectating) {
                 this.spectators.set(player.id, player);
             } else {
-                playerTeam = this.createTeamForPlayer(player);
+                this.createTeamForPlayer(player);
             }
             newPlayer = true;
         }
@@ -747,22 +744,7 @@ export default class Room extends EventEmitter {
         const timestamp = new Date();
         if (newPlayer) {
             this.emit('players:join', player, timestamp);
-            if (playerTeam) {
-                this.sendChat(
-                    [
-                        { contents: player.nickname, color: playerTeam.color },
-                        this.teamsEnabled
-                            ? ` has joined playing for ${playerTeam.name}.`
-                            : ' has joined.',
-                    ],
-                    timestamp,
-                );
-            } else {
-                this.sendChat(
-                    `${player.nickname} is now spectating`,
-                    timestamp,
-                );
-            }
+            this.markActive();
         }
 
         player.addConnection(auth.uuid, socket);
@@ -890,20 +872,7 @@ export default class Room extends EventEmitter {
     }
 
     private handleDisconnectedPlayer(player: Player, timestamp: Date) {
-        const playerTeam = player.teamId
-            ? this.teams.get(player.teamId)
-            : undefined;
-        if (playerTeam) {
-            this.sendChat(
-                [
-                    { contents: player.nickname, color: playerTeam.color },
-                    ' has left.',
-                ],
-                timestamp,
-            );
-        } else {
-            this.sendChat(`${player.nickname} has left.`, timestamp);
-        }
+        this.markActive();
         this.emit('players:leave', player, timestamp);
         const anyoneConnected =
             this.teams.values().some((team) => team.showInRoom()) ||
@@ -960,16 +929,7 @@ export default class Room extends EventEmitter {
             player,
             timestamp,
         );
-        this.sendChat(
-            [
-                {
-                    contents: player.getDisplayName(),
-                    color: team.color,
-                },
-                ` marked ${this.board[row][col].goal.goal} (${row},${col})`,
-            ],
-            timestamp,
-        );
+        this.markActive();
         this.checkWinConditions();
     }
 
@@ -998,16 +958,7 @@ export default class Room extends EventEmitter {
             player,
             timestamp,
         );
-        this.sendChat(
-            [
-                {
-                    contents: player.getDisplayName(),
-                    color: team.color,
-                },
-                ` unmarked ${this.board[unRow][unCol].goal.goal} (${unRow},${unCol})`,
-            ],
-            timestamp,
-        );
+        this.markActive();
         this.checkWinConditions();
     }
 
@@ -1031,17 +982,7 @@ export default class Room extends EventEmitter {
         const oldColor = team.color;
         team.color = color;
         this.emit('player:colorChanged', player, color, oldColor, timestamp);
-        this.sendChat(
-            [
-                {
-                    contents: player.getDisplayName(),
-                    color: team.color,
-                },
-                ' has changed their color to ',
-                { contents: color, color },
-            ],
-            timestamp,
-        );
+        this.markActive();
     }
 
     handleNewCard(action: NewCardAction) {
@@ -1549,22 +1490,8 @@ export default class Room extends EventEmitter {
     }
 
     revealCardForPlayer(player: Player) {
-        const team = player.teamId ? this.teams.get(player.teamId) : undefined;
         const timestamp = new Date();
-        if (team) {
-            this.sendChat(
-                [
-                    { contents: player.nickname, color: team.color },
-                    ' has revealed the card.',
-                ],
-                timestamp,
-            );
-        } else {
-            this.sendChat(
-                `${player.nickname} has revealed the card.`,
-                timestamp,
-            );
-        }
+        this.markActive();
         player.boardHidden = false;
         this.emit('board:revealed', player, timestamp);
     }
