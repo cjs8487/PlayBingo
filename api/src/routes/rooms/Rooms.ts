@@ -459,6 +459,13 @@ async function getOrLoadRoom(slug: string): Promise<Room | null> {
                     timestamp,
                 );
                 break;
+            case 'NEWCARD':
+                newRoom.board.forEach((row) => {
+                    row.forEach((cell) => {
+                        cell.completedPlayers = [];
+                    });
+                });
+                break;
         }
     });
 

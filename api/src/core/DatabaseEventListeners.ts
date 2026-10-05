@@ -4,12 +4,13 @@ import {
     addJoinAction,
     addLeaveAction,
     addMarkAction,
+    addNewCardAction,
     addUnmarkAction,
     createUpdatePlayer,
     setRoomBoard,
 } from '../database/Rooms';
 import Player from './Player';
-import Room from './Room';
+import Room, { BoardGenerationOptions } from './Room';
 
 /**
  * Handles database operations in response to Room events.
@@ -70,7 +71,8 @@ function setupEventListeners(room: Room): void {
         await addUnmarkAction(room.id, player.id, row, col, timestamp);
     });
 
-    room.on('board:regenerated', async (board, options) => {
+    room.on('board:regenerated', async (board, timestamp) => {
+        await addNewCardAction(room.id, timestamp);
         if (board && board.length > 0) {
             await setRoomBoard(
                 room.id,

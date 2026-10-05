@@ -245,6 +245,7 @@ enum RoomActionType {
   UNMARK
   CHAT
   CHANGECOLOR
+  NEWCARD
 }
 
 enum ConnectionService {

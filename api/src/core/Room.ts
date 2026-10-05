@@ -100,10 +100,7 @@ interface RoomEventArguments {
         col: number,
         player: Player,
     ];
-    'board:regenerated': [
-        board: RevealedCell[][],
-        options: BoardGenerationOptions,
-    ];
+    'board:regenerated': [board: RevealedCell[][]];
     'board:revealed': [player: Player];
     chatSent: [message: ChatMessage];
     'timer:started': [startTime: Date];
@@ -479,7 +476,7 @@ export default class Room extends EventEmitter {
         this.raceHandler.resetTimer();
 
         this.sendSyncBoard();
-        this.emit('board:regenerated', this.board, options);
+        this.emit('board:regenerated', this.board);
     }
 
     getPlayers(): PlayerData[] {

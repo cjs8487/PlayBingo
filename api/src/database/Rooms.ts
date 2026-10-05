@@ -113,6 +113,9 @@ export const addChangeColorAction = (
         timestamp,
     );
 
+export const addNewCardAction = (room: string, timestamp: Date) =>
+    addRoomAction(room, RoomActionType.NEWCARD, {}, timestamp);
+
 export const setRoomBoard = async (room: string, board: string[]) => {
     await prisma.room.update({ where: { id: room }, data: { board } });
 };
