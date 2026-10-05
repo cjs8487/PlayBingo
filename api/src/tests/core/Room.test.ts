@@ -84,18 +84,16 @@ afterEach(() => {
 
 describe('handleJoin', () => {
     it('Creates a new player when a new player joins', () => {
-        room.handleJoin(mockJoinAction, mockTokenPayload, mockSocket);
+        room.handleJoin(mockJoinAction, mockTokenPayload);
         expect(room.players.has(mockTokenPayload.playerId)).toBe(true);
-        expect(
-            room.players.get(mockTokenPayload.playerId)?.connections.size,
-        ).toBe(1);
+        expect(room.players.size).toBe(1);
         expect(emitSpy).toHaveBeenCalledWith(
             'players:join',
             expect.any(Player),
         );
     });
 
-    it('Adds a new connection to an existing player', () => {
+    it('Handles an existing player', () => {
         const player = new Player(
             room,
             'test',
@@ -106,22 +104,19 @@ describe('handleJoin', () => {
         );
         player.addConnection(mockTokenPayload.uuid, mockSocket);
         room.players.set(mockTokenPayload.playerId, player);
-        room.handleJoin(mockJoinAction, mockTokenPayload2, mockSocket2);
-        expect(
-            room.players.get(mockTokenPayload.playerId)?.connections.size,
-        ).toBe(2);
+        room.handleJoin(mockJoinAction, mockTokenPayload2);
         expect(room.players.has(mockTokenPayload.playerId)).toBe(true);
         expect(room.players.size).toBe(1);
         expect(emitSpy).not.toHaveBeenCalled();
     });
 
     it('Creates two new players when two new players join', () => {
-        room.handleJoin(mockJoinAction, mockTokenPayload, mockSocket);
+        room.handleJoin(mockJoinAction, mockTokenPayload);
         expect(emitSpy).toHaveBeenCalledWith(
             'players:join',
             expect.any(Player),
         );
-        room.handleJoin(mockJoinAction, mockTokenPayloadPlayer2, mockSocket2);
+        room.handleJoin(mockJoinAction, mockTokenPayloadPlayer2);
         expect(emitSpy).toHaveBeenCalledWith(
             'players:join',
             expect.any(Player),
@@ -129,18 +124,11 @@ describe('handleJoin', () => {
         expect(room.players.has(mockTokenPayload.playerId)).toBe(true);
         expect(room.players.has(mockTokenPayloadPlayer2.playerId)).toBe(true);
         expect(room.players.size).toBe(2);
-        expect(
-            room.players.get(mockTokenPayload.playerId)?.connections.size,
-        ).toBe(1);
-        expect(
-            room.players.get(mockTokenPayloadPlayer2.playerId)?.connections
-                .size,
-        ).toBe(1);
     });
 
     it('Does not send join message for existing players', () => {
-        room.handleJoin(mockJoinAction, mockTokenPayload, mockSocket);
-        room.handleJoin(mockJoinAction, mockTokenPayload2, mockSocket2);
+        room.handleJoin(mockJoinAction, mockTokenPayload);
+        room.handleJoin(mockJoinAction, mockTokenPayload2);
         expect(emitSpy).toHaveBeenCalledTimes(1);
     });
 });

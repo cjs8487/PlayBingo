@@ -45,6 +45,7 @@ import {
 } from '../util/RoomUtils';
 import Player from './Player';
 import { allRooms } from './RoomServer';
+import PlayBingoSocket from './connection/PlayBingoSocket';
 import { BoardGenerator } from './generation/BoardGenerator';
 import {
     GeneratorGoal,
@@ -55,7 +56,6 @@ import { generateSRLv5 } from './generation/SRLv5';
 import LocalTimer from './integration/races/LocalTimer';
 import RaceHandler from './integration/races/RaceHandler';
 import RacetimeHandler, { RaceData } from './integration/races/RacetimeHandler';
-import PlayBingoSocket from './connection/PlayBingoSocket';
 
 export enum BoardGenerationMode {
     RANDOM = 'Random',
@@ -491,20 +491,11 @@ export default class Room extends EventEmitter {
     }
 
     //#region Handlers
-    handleJoin(
-        action: JoinAction,
-        auth: RoomTokenPayload,
-        socket: PlayBingoSocket,
-    ): ServerMessage {
-        let player: Player | undefined;
-        let newPlayer = false;
+    handleJoin(action: JoinAction, auth: RoomTokenPayload): Player | undefined {
         if (this.players.has(auth.playerId)) {
-            player = this.players.get(auth.playerId);
-            if (!player) {
-                return { action: 'unauthorized' };
-            }
+            return this.players.get(auth.playerId);
         } else if (action.payload) {
-            player = new Player(
+            const player = new Player(
                 this,
                 auth.playerId,
                 action.payload.nickname,
@@ -514,62 +505,11 @@ export default class Room extends EventEmitter {
                 auth.userId,
             );
             this.players.set(player.id, player);
-            newPlayer = true;
-        } else {
-            player = this.players.get(auth.playerId);
-            if (!player) {
-                return { action: 'unauthorized' };
-            }
-        }
-
-        if (newPlayer) {
             this.emit('players:join', player);
+            return player;
+        } else {
+            return this.players.get(auth.playerId);
         }
-
-        player.addConnection(auth.uuid, socket);
-        return {
-            action: 'connected',
-            board: {
-                width: this.board[0].length,
-                height: this.board.length,
-                ...(this.hideCard
-                    ? { hidden: true }
-                    : {
-                          hidden: false,
-                          board: this.exploration
-                              ? player.obfuscateBoard()
-                              : this.board,
-                      }),
-            },
-            chatHistory: this.chatHistory,
-            connectedPlayer: player.toClientData(),
-            roomData: {
-                game: this.game,
-                slug: this.slug,
-                name: this.name,
-                gameSlug: this.gameSlug,
-                newGenerator: this.newGenerator,
-                seed: this.seed,
-                racetimeConnection: this.raceHandler
-                    ? 'url' in this.raceHandler
-                        ? {
-                              gameActive: this.racetimeEligible,
-                              url: (this.raceHandler as RacetimeHandler).url,
-                              startDelay: (this.raceHandler as RacetimeHandler)
-                                  .data?.start_delay,
-                              status: (this.raceHandler as RacetimeHandler).data
-                                  ?.status.verbose_value,
-                          }
-                        : undefined
-                    : { gameActive: this.racetimeEligible, url: undefined },
-                mode: getModeString(this.bingoMode, this.lineCount),
-                variant: this.variantName,
-                startedAt: this.raceHandler?.getStartTime(),
-                finishedAt: this.raceHandler?.getEndTime(),
-                raceHandler: this.raceHandler?.key(),
-            },
-            players: this.getPlayers(),
-        };
     }
 
     /**

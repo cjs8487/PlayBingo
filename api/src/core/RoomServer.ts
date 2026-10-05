@@ -73,7 +73,33 @@ roomWebSocketServer.on('connection', (socket, req) => {
         }
         if (action.action === 'join') {
             clearTimeout(timeout);
-            ws.send(room.handleJoin(action, payload, ws));
+            const player = room.handleJoin(action, payload);
+
+            if (!player) {
+                ws.send({ action: 'unauthorized' });
+                return;
+            }
+
+            player.addConnection(payload.uuid, ws);
+            ws.send({
+                action: 'connected',
+                board: {
+                    width: room.board[0].length,
+                    height: room.board.length,
+                    ...(room.hideCard
+                        ? { hidden: true }
+                        : {
+                              hidden: false,
+                              board: room.exploration
+                                  ? player.obfuscateBoard()
+                                  : room.board,
+                          }),
+                },
+                chatHistory: room.chatHistory,
+                connectedPlayer: player.toClientData(),
+                roomData: room.roomData,
+                players: room.getPlayers(),
+            });
         }
 
         // helpers
