@@ -134,6 +134,7 @@ interface RoomEventArguments {
     'players:join': [player: Player];
     'players:leave': [player: Player];
     'player:colorChanged': [player: Player, newColor: string, oldColor: string];
+    'team:lineCompleted': [team: Team];
     'team:finished': [team: Team];
     'team:unfinished': [team: Team];
     'board:cellUpdate': [cell: Cell, row: number, col: number];
@@ -234,6 +235,20 @@ export default class Room extends EventEmitter {
         this.slug = slug;
         this.chatHistory = [];
         this.subscribeToAnnouncements();
+        this.on('board:cellUpdate', (_cell, _row, _col, timestamp) => {
+            this.checkWinConditions(timestamp);
+        });
+        const onGoalChanged: RoomEvents['board:goalMarked'] = (
+            _cell,
+            _row,
+            _col,
+            _player,
+            timestamp,
+        ) => {
+            this.checkWinConditions(timestamp);
+        };
+        this.on('board:goalMarked', onGoalChanged);
+        this.on('board:goalUnmarked', onGoalChanged);
         this.id = id;
         this.bingoMode = bingoMode;
         this.lineCount = lineCount;
@@ -681,6 +696,7 @@ export default class Room extends EventEmitter {
 
         // reset board aware state
         this.teams.forEach((team) => team.reset());
+        this.completed = false;
         this.raceHandler.resetTimer();
 
         this.getAllPlayers().forEach((player) => {
@@ -948,7 +964,6 @@ export default class Room extends EventEmitter {
             timestamp,
         );
         this.markActive();
-        this.checkWinConditions();
     }
 
     handleUnmark(
@@ -977,7 +992,6 @@ export default class Room extends EventEmitter {
             timestamp,
         );
         this.markActive();
-        this.checkWinConditions();
     }
 
     handleChangeColor(
@@ -1183,7 +1197,11 @@ export default class Room extends EventEmitter {
                 );
             });
         }
-        for (const action of ['team:finished', 'team:unfinished'] as const) {
+        for (const action of [
+            'team:lineCompleted',
+            'team:finished',
+            'team:unfinished',
+        ] as const) {
             this.on(action, (team, timestamp) => {
                 this.recordAnnouncement({
                     action,
@@ -1368,8 +1386,7 @@ export default class Room extends EventEmitter {
         });
     }
 
-    private checkWinConditions() {
-        const timestamp = new Date();
+    private checkWinConditions(timestamp: Date) {
         this.teams.forEach((team) => {
             if (this.bingoMode === BingoMode.LOCKOUT) {
                 const goalsNeeded = Math.ceil(
@@ -1391,11 +1408,7 @@ export default class Room extends EventEmitter {
                         0,
                     );
                     if (linesComplete > team.linesComplete) {
-                        this.sendTeamChat(
-                            team,
-                            ' has completed a line!',
-                            timestamp,
-                        );
+                        this.emit('team:lineCompleted', team, timestamp);
                     }
                     if (linesComplete >= this.lineCount && !team.goalComplete) {
                         this.setTeamComplete(team, true);
@@ -1422,13 +1435,9 @@ export default class Room extends EventEmitter {
                 }
             }
         });
-        let allComplete = true;
-        this.teams.forEach((team) => {
-            if (!team.goalComplete) {
-                allComplete = false;
-            }
-        });
-        this.completed = allComplete;
+        this.completed =
+            this.teams.size > 0 &&
+            this.teams.values().every((team) => team.goalComplete);
         const previousEnd = this.raceHandler.getEndTime();
         if (this.completed && !previousEnd) {
             this.raceHandler.allPlayersFinished();

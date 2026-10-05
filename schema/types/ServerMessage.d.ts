@@ -146,6 +146,13 @@ export type RoomAnnouncement1 =
       [k: string]: unknown;
     }
   | {
+      action: "team:lineCompleted";
+      team: AnnouncementTeam;
+      teamDisplayName: string;
+      mode: "LINES" | "BLACKOUT" | "LOCKOUT";
+      [k: string]: unknown;
+    }
+  | {
       action: "team:finished";
       team: AnnouncementTeam;
       teamDisplayName: string;

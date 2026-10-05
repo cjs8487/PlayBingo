@@ -72,6 +72,11 @@ function eventMessage(event: ServerMessage): ChatMessage | undefined {
         }
         case 'board:regenerated':
             return ['The card has been regenerated.'];
+        case 'team:lineCompleted':
+            return [
+                { contents: event.teamDisplayName, color: event.team.color },
+                ' has completed a line!',
+            ];
         case 'team:finished':
             return [
                 { contents: event.teamDisplayName, color: event.team.color },

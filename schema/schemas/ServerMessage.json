@@ -432,6 +432,32 @@
                     ],
                     "properties": {
                         "action": {
+                            "const": "team:lineCompleted"
+                        },
+                        "team": {
+                            "$ref": "#/$defs/AnnouncementTeam"
+                        },
+                        "teamDisplayName": {
+                            "type": "string"
+                        },
+                        "mode": {
+                            "enum": [
+                                "LINES",
+                                "BLACKOUT",
+                                "LOCKOUT"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "required": [
+                        "action",
+                        "team",
+                        "teamDisplayName",
+                        "mode"
+                    ],
+                    "properties": {
+                        "action": {
                             "const": "team:finished"
                         },
                         "team": {

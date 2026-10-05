@@ -481,7 +481,6 @@ async function getOrLoadRoom(slug: string): Promise<Room | null> {
                         a.localeCompare(b),
                     );
                     team.mark(row, col);
-                    newRoom.sendCellUpdate(row, col);
                     sendLegacyAnnouncement([
                         { contents: actor, color: team.color },
                         ` marked ${newRoom.board[row][col].goal.goal} (${row},${col})`,
@@ -497,7 +496,6 @@ async function getOrLoadRoom(slug: string): Promise<Room | null> {
                         col
                     ].completedTeams.filter((teamId) => teamId !== team.id);
                     team.unmark(row, col);
-                    newRoom.sendCellUpdate(row, col);
                     sendLegacyAnnouncement([
                         { contents: actor, color: team.color },
                         ` unmarked ${newRoom.board[row][col].goal.goal} (${row},${col})`,
