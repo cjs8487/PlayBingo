@@ -162,7 +162,7 @@ export default class Player {
             cell: Cell,
             row: number,
             col: number,
-            _player: Player,
+            player: Player,
             timestamp: Date,
         ) => {
             this.sendMessage({
@@ -172,12 +172,20 @@ export default class Player {
                 cell,
                 timestamp: timestamp.toISOString(),
             });
+            this.sendMessage({
+                action: 'board:goalMarked',
+                row,
+                col,
+                cell,
+                player: player.toClientData(),
+                timestamp: timestamp.toISOString(),
+            });
         };
         const onGoalUnmarked = (
             cell: Cell,
             row: number,
             col: number,
-            _player: Player,
+            player: Player,
             timestamp: Date,
         ) => {
             this.sendMessage({
@@ -185,6 +193,14 @@ export default class Player {
                 row,
                 col,
                 cell,
+                timestamp: timestamp.toISOString(),
+            });
+            this.sendMessage({
+                action: 'board:goalUnmarked',
+                row,
+                col,
+                cell,
+                player: player.toClientData(),
                 timestamp: timestamp.toISOString(),
             });
         };
@@ -205,6 +221,16 @@ export default class Player {
         const onBoardRegenerated = (board: RevealedCell[][]) => {
             this.sendMessage({
                 action: 'syncBoard',
+                board: {
+                    width: board[0]?.length ?? 0,
+                    height: board.length,
+                    ...(this.room.hideCard
+                        ? { hidden: true }
+                        : { hidden: false, board }),
+                },
+            });
+            this.sendMessage({
+                action: 'board:regenerated',
                 board: {
                     width: board[0]?.length ?? 0,
                     height: board.length,
@@ -331,7 +357,10 @@ export default class Player {
                     height: this.room.board.length,
                 },
             };
-        } else if (message.action === 'syncBoard' && this.room.exploration) {
+        } else if (
+            message.action === 'syncBoard' ||
+            (message.action === 'board:regenerated' && this.room.exploration)
+        ) {
             if (!message.board.hidden) {
                 message.board.board = this.obfuscateBoard();
             }

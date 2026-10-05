@@ -61,6 +61,7 @@ interface RoomContext {
     connectedPlayer?: Player;
     colorMap: { [k: string]: string };
     showImages: boolean;
+    history: ServerMessage[];
     connect: (
         nickname: string,
         password: string,
@@ -102,6 +103,7 @@ export const RoomContext = createContext<RoomContext>({
     showCounters: false,
     colorMap: {},
     showImages: true,
+    history: [],
     async connect() {
         return { success: false };
     },
@@ -194,6 +196,9 @@ export function RoomContextProvider({
         setShowImages((curr) => !curr);
     }, []);
 
+    const [history, { push: pushHistory, set: setHistory }] =
+        useList<ServerMessage>([]);
+
     // incoming messages
     const onChatMessage = useCallback((message: ChatMessage) => {
         setMessages((curr) => [...curr, message]);
@@ -211,11 +216,18 @@ export function RoomContextProvider({
         (board: Board, chatHistory: ChatMessage[], roomData: RoomData) => {
             emitBoardUpdate({ action: 'board', board });
             setMessages(chatHistory);
+            setHistory([
+                { action: 'connected', board, chatHistory, roomData },
+                ...chatHistory.map<ServerMessage>((message) => ({
+                    action: 'chatSent',
+                    message,
+                })),
+            ]);
             setConnectionStatus(ConnectionStatus.CONNECTED);
             setRoomData(roomData);
             localStorage.removeItem(`authToken-${roomData.slug}`);
         },
-        [],
+        [setHistory],
     );
     const onUnauthorized = useCallback(() => {
         setAuthToken('');
@@ -245,6 +257,9 @@ export function RoomContextProvider({
                 const payload = JSON.parse(message.data) as ServerMessage;
                 if (!payload.action) {
                     return;
+                }
+                if (payload.action !== 'connected') {
+                    pushHistory(payload);
                 }
                 if (payload.players) {
                     setPlayers(payload.players);
@@ -589,6 +604,7 @@ export function RoomContextProvider({
                 showImages,
                 connectedPlayer,
                 colorMap,
+                history,
                 connect,
                 sendChatMessage,
                 markGoal,

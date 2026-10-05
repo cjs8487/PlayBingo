@@ -1,11 +1,125 @@
 'use client';
-import { useContext, useEffect, useRef, useState } from 'react';
 import { RoomContext } from '@/context/RoomContext';
-import { Box, Button, Paper, TextField, Typography } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
+import { Box, Button, Paper, TextField, Typography } from '@mui/material';
+import { ChatMessage, ServerMessage } from '@playbingo/types';
+import { DateTime, Duration } from 'luxon';
+import { useContext, useEffect, useMemo, useRef, useState } from 'react';
+
+function eventMessage(event: ServerMessage): ChatMessage | undefined {
+    switch (event.action) {
+        case 'chatSent':
+        case 'system:message':
+            return event.message;
+        case 'players:join':
+            return event.player.spectator
+                ? [`${event.player.nickname} is now spectating`]
+                : [
+                      {
+                          contents: event.player.nickname,
+                          color: event.player.color,
+                      },
+                      ' has joined.',
+                  ];
+        case 'players:leave':
+            return [
+                { contents: event.player.nickname, color: event.player.color },
+                ' has left.',
+            ];
+        case 'player:colorChanged':
+            return [
+                { contents: event.player.nickname, color: event.newColor },
+                ' has changed their color to ',
+                { contents: event.newColor, color: event.newColor },
+            ];
+        case 'board:goalMarked':
+        case 'board:goalUnmarked':
+            return [
+                { contents: event.player.nickname, color: event.player.color },
+                ` ${event.action === 'board:goalMarked' ? 'marked' : 'unmarked'} ${event.cell.revealed ? event.cell.goal.goal : 'a hidden goal'} (${event.row},${event.col})`,
+            ];
+        case 'board:revealed':
+            return [
+                { contents: event.player.nickname, color: event.player.color },
+                ' has revealed the card.',
+            ];
+        case 'board:regenerated':
+            return ['The card has been regenerated.'];
+        case 'player:finished':
+            return [
+                { contents: event.player.nickname, color: event.player.color },
+                ' has finished.',
+            ];
+        case 'player:unfinished':
+            return [
+                { contents: event.player.nickname, color: event.player.color },
+                ' is no longer finished.',
+            ];
+        case 'timer:started':
+            return ['The timer has started.'];
+        case 'timer:reset':
+            return ['The timer has been reset.'];
+        case 'timer:stopped':
+            return ['The timer has stopped.'];
+        default:
+            return undefined;
+    }
+}
+
+function formatEvent(event: ServerMessage, startedAt?: DateTime): ChatMessage {
+    const contents = eventMessage(event);
+    if (!event.timestamp || event.action === 'chatSent') return contents ?? [];
+    if (!contents) return [];
+    const elapsed = startedAt
+        ? DateTime.fromISO(event.timestamp).diff(startedAt).toMillis()
+        : 0;
+    const timestamp = Duration.fromMillis(Math.max(0, elapsed)).toFormat(
+        'h:mm:ss',
+    );
+    return [`[${timestamp}] `, ...contents];
+}
 
 export default function RoomChat() {
-    const { messages, sendChatMessage, roomData } = useContext(RoomContext);
+    const { history, sendChatMessage, roomData } = useContext(RoomContext);
+    const messages = useMemo(
+        () =>
+            history.reduce<{
+                startedAt?: DateTime;
+                messages: ChatMessage[];
+            }>(
+                (previous, event) => {
+                    const startedAt =
+                        event.action === 'connected' ||
+                        event.action === 'updateRoomData'
+                            ? event.roomData?.startedAt
+                                ? DateTime.fromISO(event.roomData.startedAt)
+                                : undefined
+                            : event.action === 'timer:started'
+                              ? event.timestamp
+                                  ? DateTime.fromISO(event.timestamp)
+                                  : undefined
+                              : event.action === 'timer:reset'
+                                ? undefined
+                                : previous.startedAt;
+                    return {
+                        startedAt,
+                        messages: [
+                            ...previous.messages,
+                            formatEvent(
+                                event,
+                                event.action === 'timer:reset'
+                                    ? previous.startedAt
+                                    : startedAt,
+                            ),
+                        ],
+                    };
+                },
+                {
+                    messages: [],
+                },
+            ).messages,
+        [history],
+    );
 
     const [message, setMessage] = useState('');
 

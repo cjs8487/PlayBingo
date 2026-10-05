@@ -312,73 +312,13 @@
         {
             "required": [
                 "action",
-                "board",
-                "options"
+                "board"
             ],
             "additionalProperties": false,
             "properties": {
                 "action": "board:regenerated",
                 "board": {
-                    "type": "array",
-                    "items": {
-                        "type": "array",
-                        "items": {
-                            "$ref": "./Cell.json#/$defs/RevealedCell"
-                        }
-                    }
-                },
-                "options": {
-                    "oneOf": [
-                        {
-                            "type": "object",
-                            "additionalProperties": false,
-                            "required": [
-                                "mode"
-                            ],
-                            "properties": {
-                                "mode": {
-                                    "const": "Random"
-                                },
-                                "seed": {
-                                    "type": "number"
-                                }
-                            }
-                        },
-                        {
-                            "type": "object",
-                            "additionalProperties": false,
-                            "required": [
-                                "mode"
-                            ],
-                            "properties": {
-                                "mode": {
-                                    "const": "SRLv5"
-                                },
-                                "seed": {
-                                    "type": "number"
-                                }
-                            }
-                        },
-                        {
-                            "type": "object",
-                            "additionalProperties": false,
-                            "required": [
-                                "mode",
-                                "difficulty"
-                            ],
-                            "properties": {
-                                "mode": {
-                                    "const": "Difficulty"
-                                },
-                                "seed": {
-                                    "type": "number"
-                                },
-                                "difficulty": {
-                                    "type": "string"
-                                }
-                            }
-                        }
-                    ]
+                    "$ref": "./Board.json"
                 }
             }
         },
