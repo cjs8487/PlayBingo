@@ -200,11 +200,15 @@ export const setRoomBoard = async (
     board: string[],
     boardWidth: number,
     boardHeight: number,
+    timestamp: Date,
 ) => {
-    await prisma.room.update({
-        where: { id: room },
-        data: { board, boardWidth, boardHeight },
-    });
+    await prisma.$transaction([
+        prisma.room.update({
+            where: { id: room },
+            data: { board, boardWidth, boardHeight },
+        }),
+        addRoomAction(room, RoomActionType.NEWCARD, {}, timestamp),
+    ]);
 };
 
 export const getFullRoomList = () => {
@@ -218,7 +222,12 @@ export const getAllRooms = () => {
 export const getRoomFromSlug = (slug: string) => {
     return prisma.room.findUnique({
         where: { slug },
-        include: { history: true, game: true, players: true, teams: true },
+        include: {
+            history: { orderBy: [{ timestamp: 'asc' }, { id: 'asc' }] },
+            game: true,
+            players: true,
+            teams: true,
+        },
     });
 };
 

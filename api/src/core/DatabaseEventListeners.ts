@@ -276,11 +276,15 @@ export function subscribe(room: Room): void {
                 }),
             );
         };
-    const onBoardRegenerated: RoomEvents['board:regenerated'] = (board) => {
+    const onBoardRegenerated: RoomEvents['board:regenerated'] = (
+        board,
+        _options,
+        timestamp,
+    ) => {
         const goalIds = board.flat().map((cell) => cell.goal.id);
         const { boardWidth, boardHeight } = room;
         enqueue(room, () =>
-            setRoomBoard(room.id, goalIds, boardWidth, boardHeight),
+            setRoomBoard(room.id, goalIds, boardWidth, boardHeight, timestamp),
         );
     };
     const onColorChanged: RoomEvents['player:colorChanged'] = (

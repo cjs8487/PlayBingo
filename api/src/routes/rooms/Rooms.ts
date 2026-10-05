@@ -1,6 +1,11 @@
 import { GeneratorSettings, makeGeneratorSchema } from '@playbingo/shared';
 import { ChatMessage, RoomAnnouncement, RoomData } from '@playbingo/types';
-import { DifficultyVariant, RaceHandler, Variant } from '@prisma/client';
+import {
+    DifficultyVariant,
+    RaceHandler,
+    RoomAction,
+    Variant,
+} from '@prisma/client';
 import { randomInt } from 'crypto';
 import { Router } from 'express';
 import { logError, logInfo, logWarn } from '../../Logger';
@@ -425,7 +430,24 @@ async function getOrLoadRoom(slug: string): Promise<Room | null> {
             break;
     }
 
-    dbRoom.history.forEach((action) => {
+    restoreRoomHistory(newRoom, dbRoom.history);
+
+    allRooms.set(slug, newRoom);
+
+    // Subscribe the room to database event listeners
+    subscribe(newRoom);
+    if (dbRoom.raceHandler === RaceHandler.RACETIME && dbRoom.racetimeRoom) {
+        await newRoom.connectRacetimeWebSocket();
+    }
+
+    return newRoom;
+}
+
+export function restoreRoomHistory(room: Room, history: RoomAction[]) {
+    const activeBoardStart = history.findLastIndex(
+        ({ action }) => action === 'NEWCARD',
+    );
+    history.forEach((action, index) => {
         const {
             nickname,
             newColor,
@@ -435,6 +457,7 @@ async function getOrLoadRoom(slug: string): Promise<Room | null> {
             message,
             player: playerId,
             announcement,
+            team: teamId,
         } = action.payload as {
             nickname: string;
             newColor: string;
@@ -444,17 +467,18 @@ async function getOrLoadRoom(slug: string): Promise<Room | null> {
             message: string;
             player?: string;
             announcement?: RoomAnnouncement | null;
+            team?: string | null;
         };
         const { timestamp } = action;
-        if (announcement) newRoom.chatHistory.push(announcement);
-        const sendLegacyAnnouncement = (message: ChatMessage) => {
-            if (announcement === undefined)
-                newRoom.sendChat(message, timestamp);
+        if (announcement) room.chatHistory.push(announcement);
+        const sendLegacyAnnouncement = (segments: ChatMessage) => {
+            if (announcement === undefined) room.sendChat(segments, timestamp);
         };
 
-        const player = playerId ? newRoom.getPlayerById(playerId) : undefined;
-        const team = player?.teamId
-            ? newRoom.teams.get(player.teamId)
+        const player = playerId ? room.getPlayerById(playerId) : undefined;
+        const recordedTeamId = teamId === undefined ? player?.teamId : teamId;
+        const team = recordedTeamId
+            ? room.teams.get(recordedTeamId)
             : undefined;
         const actor = player ? player.getDisplayName() : nickname;
 
@@ -472,38 +496,36 @@ async function getOrLoadRoom(slug: string): Promise<Room | null> {
                 ]);
                 break;
             case 'MARK':
-                if (!team) {
-                    break;
-                }
-                if (!team.hasMarked(row, col)) {
-                    newRoom.board[row][col].completedTeams.push(team.id);
-                    newRoom.board[row][col].completedTeams.sort((a, b) =>
-                        a.localeCompare(b),
-                    );
+            case 'UNMARK': {
+                if (index < activeBoardStart || !team) break;
+                const cell = room.board[row]?.[col];
+                if (!cell) break;
+
+                if (action.action === 'MARK' && !team.hasMarked(row, col)) {
+                    cell.completedTeams.push(team.id);
+                    cell.completedTeams.sort((a, b) => a.localeCompare(b));
                     team.mark(row, col);
                     sendLegacyAnnouncement([
                         { contents: actor, color: team.color },
-                        ` marked ${newRoom.board[row][col].goal.goal} (${row},${col})`,
+                        ` marked ${cell.goal.goal} (${row},${col})`,
                     ]);
-                }
-                break;
-            case 'UNMARK':
-                if (!team) {
-                    break;
-                }
-                if (team.hasMarked(row, col)) {
-                    newRoom.board[row][col].completedTeams = newRoom.board[row][
-                        col
-                    ].completedTeams.filter((teamId) => teamId !== team.id);
+                } else if (
+                    action.action === 'UNMARK' &&
+                    team.hasMarked(row, col)
+                ) {
+                    cell.completedTeams = cell.completedTeams.filter(
+                        (completedTeamId) => completedTeamId !== team.id,
+                    );
                     team.unmark(row, col);
                     sendLegacyAnnouncement([
                         { contents: actor, color: team.color },
-                        ` unmarked ${newRoom.board[row][col].goal.goal} (${row},${col})`,
+                        ` unmarked ${cell.goal.goal} (${row},${col})`,
                     ]);
                 }
                 break;
+            }
             case 'CHAT':
-                newRoom.sendChat(`${nickname}: ${message}`, timestamp);
+                room.sendChat(`${nickname}: ${message}`, timestamp);
                 break;
             case 'CHANGECOLOR':
                 if (team) {
@@ -515,18 +537,10 @@ async function getOrLoadRoom(slug: string): Promise<Room | null> {
                     { contents: newColor, color: newColor },
                 ]);
                 break;
+            case 'NEWCARD':
+                break;
         }
     });
-
-    allRooms.set(slug, newRoom);
-
-    // Subscribe the room to database event listeners
-    subscribe(newRoom);
-    if (dbRoom.raceHandler === RaceHandler.RACETIME && dbRoom.racetimeRoom) {
-        await newRoom.connectRacetimeWebSocket();
-    }
-
-    return newRoom;
 }
 
 rooms.get('/:slug', async (req, res) => {

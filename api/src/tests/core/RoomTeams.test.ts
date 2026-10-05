@@ -1,4 +1,4 @@
-import { BingoMode } from '@prisma/client';
+import { BingoMode, RoomAction } from '@prisma/client';
 import {
     ChangeColorAction,
     JoinAction,
@@ -15,6 +15,7 @@ import { RoomTokenPayload } from '../../auth/RoomAuth';
 import { subscribe, unsubscribe } from '../../core/DatabaseEventListeners';
 import Room from '../../core/Room';
 import { joinRoom } from '../../core/RoomServer';
+import { restoreRoomHistory } from '../../routes/rooms/Rooms';
 import {
     addMarkAction,
     createUpdatePlayer,
@@ -59,7 +60,7 @@ const createRoom = (teamsEnabled = false, hideCard = false) => {
         5,
         teamsEnabled,
     );
-    room.board = Array.from({ length: 5 }, (_, row) =>
+    room.board = Array.from({ length: 5 }, (_row, row) =>
         Array.from(
             { length: 5 },
             (_col, col) =>
@@ -324,6 +325,53 @@ describe('Room team workflows', () => {
             }),
         );
         expect(room.board[1][1].completedTeams).toContain(team.id);
+    });
+
+    it('restores only marks from the current card for the teams that made them', () => {
+        const room = createRoom(true);
+        joinRoom(room, joinAction('Alice'), auth('alice'), socket());
+        joinRoom(room, joinAction('Bob'), auth('bob'), socket());
+        const aliceTeam = room.getTeamForPlayer('alice')!;
+        const bobTeam = room.getTeamForPlayer('bob')!;
+
+        restoreRoomHistory(room, [
+            mock<RoomAction>({
+                action: 'MARK',
+                timestamp: new Date(),
+                payload: {
+                    player: 'alice',
+                    team: aliceTeam.id,
+                    row: 0,
+                    col: 0,
+                },
+            }),
+            mock<RoomAction>({
+                action: 'NEWCARD',
+                timestamp: new Date(),
+                payload: {},
+            }),
+            mock<RoomAction>({
+                action: 'MARK',
+                timestamp: new Date(),
+                payload: { player: 'alice', team: bobTeam.id, row: 1, col: 1 },
+            }),
+            mock<RoomAction>({
+                action: 'MARK',
+                timestamp: new Date(),
+                payload: { player: 'bob', team: bobTeam.id, row: 2, col: 2 },
+            }),
+            mock<RoomAction>({
+                action: 'UNMARK',
+                timestamp: new Date(),
+                payload: { player: 'bob', team: bobTeam.id, row: 2, col: 2 },
+            }),
+        ]);
+
+        expect(room.board[0][0].completedTeams).toEqual([]);
+        expect(room.board[1][1].completedTeams).toEqual([bobTeam.id]);
+        expect(room.board[2][2].completedTeams).toEqual([]);
+        expect(aliceTeam.goalCount).toBe(0);
+        expect(bobTeam.goalCount).toBe(1);
     });
 
     it('creates a team when a spectator starts playing', () => {
