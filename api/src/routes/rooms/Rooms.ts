@@ -1,5 +1,5 @@
 import { GeneratorSettings, makeGeneratorSchema } from '@playbingo/shared';
-import { RoomData } from '@playbingo/types';
+import { ChatMessage, RoomAnnouncement, RoomData } from '@playbingo/types';
 import { DifficultyVariant, RaceHandler, Variant } from '@prisma/client';
 import { randomInt } from 'crypto';
 import { Router } from 'express';
@@ -434,8 +434,23 @@ async function getOrLoadRoom(slug: string): Promise<Room | null> {
             col,
             message,
             player: playerId,
-        } = action.payload as any;
+            announcement,
+        } = action.payload as {
+            nickname: string;
+            newColor: string;
+            oldColor: string;
+            row: number;
+            col: number;
+            message: string;
+            player?: string;
+            announcement?: RoomAnnouncement | null;
+        };
         const { timestamp } = action;
+        if (announcement) newRoom.chatHistory.push(announcement);
+        const sendLegacyAnnouncement = (message: ChatMessage) => {
+            if (announcement === undefined)
+                newRoom.sendChat(message, timestamp);
+        };
 
         const player = playerId ? newRoom.getPlayerById(playerId) : undefined;
         const team = player?.teamId
@@ -445,22 +460,16 @@ async function getOrLoadRoom(slug: string): Promise<Room | null> {
 
         switch (action.action) {
             case 'JOIN':
-                newRoom.sendChat(
-                    [
-                        { contents: nickname, color: team?.color ?? 'white' },
-                        ' has joined.',
-                    ],
-                    timestamp,
-                );
+                sendLegacyAnnouncement([
+                    { contents: nickname, color: team?.color ?? 'white' },
+                    ' has joined.',
+                ]);
                 break;
             case 'LEAVE':
-                newRoom.sendChat(
-                    [
-                        { contents: nickname, color: team?.color ?? 'white' },
-                        ' has left.',
-                    ],
-                    timestamp,
-                );
+                sendLegacyAnnouncement([
+                    { contents: nickname, color: team?.color ?? 'white' },
+                    ' has left.',
+                ]);
                 break;
             case 'MARK':
                 if (!team) {
@@ -473,13 +482,10 @@ async function getOrLoadRoom(slug: string): Promise<Room | null> {
                     );
                     team.mark(row, col);
                     newRoom.sendCellUpdate(row, col);
-                    newRoom.sendChat(
-                        [
-                            { contents: actor, color: team.color },
-                            ` marked ${newRoom.board[row][col].goal.goal} (${row},${col})`,
-                        ],
-                        timestamp,
-                    );
+                    sendLegacyAnnouncement([
+                        { contents: actor, color: team.color },
+                        ` marked ${newRoom.board[row][col].goal.goal} (${row},${col})`,
+                    ]);
                 }
                 break;
             case 'UNMARK':
@@ -492,13 +498,10 @@ async function getOrLoadRoom(slug: string): Promise<Room | null> {
                     ].completedTeams.filter((teamId) => teamId !== team.id);
                     team.unmark(row, col);
                     newRoom.sendCellUpdate(row, col);
-                    newRoom.sendChat(
-                        [
-                            { contents: actor, color: team.color },
-                            ` unmarked ${newRoom.board[row][col].goal.goal} (${row},${col})`,
-                        ],
-                        timestamp,
-                    );
+                    sendLegacyAnnouncement([
+                        { contents: actor, color: team.color },
+                        ` unmarked ${newRoom.board[row][col].goal.goal} (${row},${col})`,
+                    ]);
                 }
                 break;
             case 'CHAT':
@@ -508,14 +511,11 @@ async function getOrLoadRoom(slug: string): Promise<Room | null> {
                 if (team) {
                     team.color = newColor;
                 }
-                newRoom.sendChat(
-                    [
-                        { contents: actor, color: oldColor },
-                        ' has changed their color to ',
-                        { contents: newColor, color: newColor },
-                    ],
-                    timestamp,
-                );
+                sendLegacyAnnouncement([
+                    { contents: actor, color: oldColor },
+                    ' has changed their color to ',
+                    { contents: newColor, color: newColor },
+                ]);
                 break;
         }
     });

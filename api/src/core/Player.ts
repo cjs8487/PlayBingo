@@ -4,6 +4,7 @@ import {
     HiddenCell,
     Player as PlayerClientData,
     RevealedCell,
+    RoomAnnouncement,
     ServerMessage,
 } from '@playbingo/types';
 import { RoomTokenPayload } from '../auth/RoomAuth';
@@ -206,6 +207,12 @@ export default class Player {
             sendChat('chatSent', message, timestamp);
         const onSystemMessage = (message: ChatMessage, timestamp: Date) =>
             sendChat('system:message', message, timestamp);
+        const onAnnouncement = (announcement: RoomAnnouncement) => {
+            this.sendMessage({
+                ...this.visibleAnnouncement(announcement),
+                players: room.getPlayerData(),
+            });
+        };
         const sendRoomInfoUpdate = () => {
             this.sendMessage({
                 action: 'updateRoomData',
@@ -218,6 +225,7 @@ export default class Player {
         room.on('board:regenerated', onBoardRegenerated);
         room.on('board:revealed', onBoardRevealed);
         room.on('chatSent', onChatSent);
+        room.on('chat:announcement', onAnnouncement);
         room.on('system:message', onSystemMessage);
 
         // TODO: PROTOCOL V2 - implement discrete events for timer events
@@ -234,6 +242,7 @@ export default class Player {
             room.off('board:regenerated', onBoardRegenerated);
             room.off('board:revealed', onBoardRevealed);
             room.off('chatSent', onChatSent);
+            room.off('chat:announcement', onAnnouncement);
             room.off('system:message', onSystemMessage);
             room.off('team:finished', sendRoomInfoUpdate);
             room.off('team:unfinished', sendRoomInfoUpdate);
@@ -265,6 +274,27 @@ export default class Player {
         };
     }
 
+    visibleAnnouncement(
+        announcement: RoomAnnouncement,
+        board?: Cell[][],
+    ): RoomAnnouncement {
+        if (
+            announcement.action !== 'board:goalMarked' &&
+            announcement.action !== 'board:goalUnmarked'
+        ) {
+            return announcement;
+        }
+        if (!this.boardHidden) {
+            if (!this.room.exploration) return announcement;
+            const cell = (board ?? this.getBoardView())[announcement.row]?.[
+                announcement.col
+            ];
+            if (cell?.revealed && cell.goal.goal === announcement.goal)
+                return announcement;
+        }
+        return { ...announcement, goal: undefined };
+    }
+
     sendMessage(message: ServerMessage) {
         let finalMessage: ServerMessage;
         if (message.action === 'board:cellUpdate' && this.room.exploration) {
@@ -279,6 +309,7 @@ export default class Player {
             }
             finalMessage = {
                 action: 'syncBoard',
+                players: message.players,
                 board: {
                     hidden: false,
                     board: this.getBoardView(),

@@ -67,6 +67,7 @@ interface RoomContext {
     colorMap: { [k: string]: string };
     showImages: boolean;
     notificationSoundEnabled: boolean;
+    history: ServerMessage[];
     connect: (
         nickname: string,
         password: string,
@@ -113,6 +114,7 @@ export const RoomContext = createContext<RoomContext>({
     colorMap: {},
     showImages: true,
     notificationSoundEnabled: true,
+    history: [],
     async connect() {
         return { success: false };
     },
@@ -217,6 +219,8 @@ export function RoomContextProvider({
     const toggleNotificationSound = useCallback(() => {
         setNotificationSoundEnabled((curr) => !curr);
     }, []);
+    const [history, { push: pushHistory, set: setHistory }] =
+        useList<ServerMessage>([]);
 
     // incoming messages
     const onChatMessage = useCallback((message: ChatMessage) => {
@@ -232,14 +236,28 @@ export function RoomContextProvider({
         emitBoardUpdate({ action: 'board', board });
     }, []);
     const onConnected = useCallback(
-        (board: Board, chatHistory: ChatMessage[], roomData: RoomData) => {
+        (
+            board: Board,
+            chatHistory: Extract<
+                ServerMessage,
+                { action: 'connected' }
+            >['chatHistory'],
+            roomData: RoomData,
+        ) => {
             emitBoardUpdate({ action: 'board', board });
-            setMessages(chatHistory);
+            setMessages(chatHistory.filter(Array.isArray));
+            setHistory([
+                ...chatHistory.map<ServerMessage>((entry) =>
+                    Array.isArray(entry)
+                        ? { action: 'chatSent', message: entry }
+                        : entry,
+                ),
+            ]);
             setConnectionStatus(ConnectionStatus.CONNECTED);
             setRoomData(roomData);
             localStorage.removeItem(`authToken-${roomData.slug}`);
         },
-        [],
+        [setHistory],
     );
     const onUnauthorized = useCallback(() => {
         setAuthToken('');
@@ -269,6 +287,9 @@ export function RoomContextProvider({
                 const payload = JSON.parse(message.data) as ServerMessage;
                 if (!payload.action) {
                     return;
+                }
+                if (payload.action !== 'connected') {
+                    pushHistory(payload);
                 }
                 if (payload.players) {
                     setTeams(payload.players.teams);
@@ -668,6 +689,7 @@ export function RoomContextProvider({
                 notificationSoundEnabled,
                 connectedPlayer,
                 colorMap,
+                history,
                 connect,
                 sendChatMessage,
                 markGoal,

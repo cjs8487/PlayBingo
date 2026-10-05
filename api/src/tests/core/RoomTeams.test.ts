@@ -184,6 +184,25 @@ describe('Room team workflows', () => {
         expect(room.getPlayerById('alice')?.getDisplayName()).toBe(
             "Alice (Alice's Team)",
         );
+        team.name = 'Renamed Team';
+        team.color = 'red';
+        const reconnect = room.handleJoin(
+            joinAction('Alice'),
+            { ...auth('alice'), uuid: 'reconnect' },
+            socket(),
+        );
+        expect(reconnect).toMatchObject({
+            chatHistory: [
+                expect.objectContaining({
+                    action: 'players:join',
+                    player: {
+                        nickname: 'Alice',
+                        teamsEnabled: true,
+                        team: { name: "Alice's Team", color: 'blue' },
+                    },
+                }),
+            ],
+        });
     });
 
     it('tracks marks by team ID and applies the team color', async () => {
@@ -292,6 +311,14 @@ describe('Room team workflows', () => {
             1,
             1,
             expect.any(Date),
+            expect.objectContaining({
+                action: 'board:goalMarked',
+                player: {
+                    nickname: 'Alice',
+                    teamsEnabled: true,
+                    team: { name: "Alice's Team", color: 'blue' },
+                },
+            }),
         );
         expect(room.board[1][1].completedTeams).toContain(team.id);
     });

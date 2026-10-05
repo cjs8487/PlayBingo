@@ -1,5 +1,6 @@
 import { GeneratorSettings } from '@playbingo/shared';
 import {
+    AnnouncementPlayer,
     Cell,
     ChangeColorAction,
     ChangeRaceHandlerAction,
@@ -12,6 +13,7 @@ import {
     NewCardAction,
     Player as PlayerData,
     RevealedCell,
+    RoomAnnouncement,
     RoomData,
     ServerMessage,
     SetChatEnabledAction,
@@ -94,6 +96,20 @@ export interface BoardGenerationInputs {
     };
 }
 
+export type PlayerAnnouncement = Extract<
+    RoomAnnouncement,
+    { player: AnnouncementPlayer }
+>;
+type PlayerAnnouncementAction =
+    | { action: 'players:join' | 'players:leave' | 'board:revealed' }
+    | { action: 'player:colorChanged'; newColor: string }
+    | {
+          action: 'board:goalMarked' | 'board:goalUnmarked';
+          row: number;
+          col: number;
+          goal?: string;
+      };
+
 interface RoomEventArguments {
     'board:generationRequested': [
         options: BoardGenerationOptions,
@@ -112,7 +128,8 @@ interface RoomEventArguments {
     ];
     'racetime:disconnected': [];
     'room:closed': [];
-    'player:connected': [player: Player];
+    'chat:announcement': [announcement: RoomAnnouncement];
+    'player:connected': [player: Player, newPlayer: boolean];
     'player:chat': [player: Player, message: string];
     'players:join': [player: Player];
     'players:leave': [player: Player];
@@ -157,7 +174,7 @@ export default class Room extends EventEmitter {
     password: string;
     slug: string;
     board: RevealedCell[][];
-    chatHistory: ChatMessage[];
+    chatHistory: (ChatMessage | RoomAnnouncement)[];
     id: string;
     hideCard: boolean;
     bingoMode: BingoMode;
@@ -216,6 +233,7 @@ export default class Room extends EventEmitter {
         this.password = password;
         this.slug = slug;
         this.chatHistory = [];
+        this.subscribeToAnnouncements();
         this.id = id;
         this.bingoMode = bingoMode;
         this.lineCount = lineCount;
@@ -742,13 +760,13 @@ export default class Room extends EventEmitter {
         }
 
         const timestamp = new Date();
+        player.addConnection(auth.uuid, socket);
         if (newPlayer) {
             this.emit('players:join', player, timestamp);
             this.markActive();
         }
 
-        player.addConnection(auth.uuid, socket);
-        this.emit('player:connected', player, timestamp);
+        this.emit('player:connected', player, newPlayer, timestamp);
         return {
             action: 'connected',
             board: {
@@ -763,7 +781,7 @@ export default class Room extends EventEmitter {
                               : this.board,
                       }),
             },
-            chatHistory: this.chatHistory,
+            chatHistory: this.getChatHistory(player),
             connectedPlayer: player.toClientData(),
             roomData: this.roomData,
             players: this.getPlayerData(),
@@ -1106,6 +1124,134 @@ export default class Room extends EventEmitter {
         return '';
     }
 
+    getChatHistory(player: Player) {
+        const board =
+            !player.boardHidden && this.exploration
+                ? player.getBoardView()
+                : undefined;
+        return this.chatHistory.map((entry) =>
+            Array.isArray(entry)
+                ? entry
+                : player.visibleAnnouncement(entry, board),
+        );
+    }
+
+    private subscribeToAnnouncements() {
+        for (const action of [
+            'players:join',
+            'players:leave',
+            'board:revealed',
+        ] as const) {
+            this.on(action, (player, timestamp) => {
+                this.recordAnnouncement(
+                    this.createPlayerAnnouncement(
+                        player,
+                        { action },
+                        timestamp,
+                    ),
+                );
+            });
+        }
+        this.on(
+            'player:colorChanged',
+            (player, newColor, _oldColor, timestamp) => {
+                this.recordAnnouncement(
+                    this.createPlayerAnnouncement(
+                        player,
+                        { action: 'player:colorChanged', newColor },
+                        timestamp,
+                    ),
+                );
+            },
+        );
+        for (const action of [
+            'board:goalMarked',
+            'board:goalUnmarked',
+        ] as const) {
+            this.on(action, (cell, row, col, player, timestamp) => {
+                this.recordAnnouncement(
+                    this.createPlayerAnnouncement(
+                        player,
+                        {
+                            action,
+                            row,
+                            col,
+                            goal: cell.revealed ? cell.goal.goal : undefined,
+                        },
+                        timestamp,
+                    ),
+                );
+            });
+        }
+        for (const action of ['team:finished', 'team:unfinished'] as const) {
+            this.on(action, (team, timestamp) => {
+                this.recordAnnouncement({
+                    action,
+                    team: { name: team.name, color: team.color },
+                    teamDisplayName: team.getDisplayName(),
+                    mode: this.bingoMode,
+                    ...this.announcementTime(timestamp),
+                });
+            });
+        }
+        this.on('board:regenerated', (_board, _options, persist, timestamp) => {
+            if (persist)
+                this.recordAnnouncement({
+                    action: 'board:regenerated',
+                    ...this.announcementTime(timestamp),
+                });
+        });
+        for (const action of [
+            'timer:started',
+            'timer:stopped',
+            'timer:reset',
+        ] as const) {
+            this.on(action, (timestamp) => {
+                this.recordAnnouncement({
+                    action,
+                    ...this.announcementTime(timestamp),
+                });
+            });
+        }
+    }
+
+    createPlayerAnnouncement(
+        player: Player,
+        action: PlayerAnnouncementAction,
+        timestamp: Date,
+    ): PlayerAnnouncement {
+        const team = this.getTeamForPlayer(player.id);
+        return {
+            ...action,
+            player: {
+                nickname: player.nickname,
+                teamsEnabled: this.teamsEnabled,
+                team: team ? { name: team.name, color: team.color } : undefined,
+            },
+            ...this.announcementTime(timestamp),
+        };
+    }
+
+    private announcementTime(timestamp: Date) {
+        return {
+            timestamp: timestamp.toISOString(),
+            startedAt: this.raceHandler.getStartTime(),
+        };
+    }
+
+    private recordAnnouncement(announcement: RoomAnnouncement) {
+        if (this.chatEnabled) {
+            this.chatHistory.push(announcement);
+            this.emit('chat:announcement', announcement);
+        } else if (
+            ['players:join', 'players:leave', 'player:colorChanged'].includes(
+                announcement.action,
+            )
+        ) {
+            this.sendRoomData();
+        }
+    }
+
     //#region Send Messages
     sendChat(message: string, timestamp: Date): void;
     sendChat(message: ChatMessage, timestamp: Date): void;
@@ -1138,12 +1284,9 @@ export default class Room extends EventEmitter {
     sendSystemMessage(message: string) {
         const eventTimestamp = new Date();
         const timestamp = this.getTimestamp(eventTimestamp);
-        if (timestamp) {
-            this.chatHistory.push([`[${timestamp}] ${message}`]);
-        } else {
-            this.chatHistory.push([message]);
-        }
-        this.emit('system:message', [message], eventTimestamp);
+        const rendered = [timestamp ? `[${timestamp}] ${message}` : message];
+        this.chatHistory.push(rendered);
+        this.emit('system:message', rendered, eventTimestamp);
     }
 
     sendCellUpdate(row: number, col: number) {
@@ -1234,20 +1377,10 @@ export default class Room extends EventEmitter {
                     (this.boardHeight * this.boardWidth) / 2,
                 );
                 if (!team.goalComplete && team.goalCount >= goalsNeeded) {
-                    this.sendTeamChat(
-                        team,
-                        ' has achieved lockout!',
-                        timestamp,
-                    );
                     this.setTeamComplete(team, true);
                     this.emit('team:finished', team, timestamp);
                 }
                 if (team.goalComplete && team.goalCount < goalsNeeded) {
-                    this.sendTeamChat(
-                        team,
-                        ' no longer has lockout.',
-                        timestamp,
-                    );
                     this.setTeamComplete(team, false);
                     this.emit('team:unfinished', team, timestamp);
                 }
@@ -1267,22 +1400,12 @@ export default class Room extends EventEmitter {
                     }
                     if (linesComplete >= this.lineCount && !team.goalComplete) {
                         this.setTeamComplete(team, true);
-                        this.sendTeamChat(
-                            team,
-                            ' has completed the goal!',
-                            timestamp,
-                        );
                         this.emit('team:finished', team, timestamp);
                     } else if (
                         linesComplete < this.lineCount &&
                         team.goalComplete
                     ) {
                         this.setTeamComplete(team, false);
-                        this.sendTeamChat(
-                            team,
-                            ' has no longer completed the goal.',
-                            timestamp,
-                        );
                         this.emit('team:unfinished', team, timestamp);
                     }
                     team.linesComplete = linesComplete;
@@ -1292,19 +1415,9 @@ export default class Room extends EventEmitter {
                     );
                     if (complete && !team.goalComplete) {
                         this.setTeamComplete(team, true);
-                        this.sendTeamChat(
-                            team,
-                            ' has achieved blackout!',
-                            timestamp,
-                        );
                         this.emit('team:finished', team, timestamp);
                     } else if (!complete && team.goalComplete) {
                         this.setTeamComplete(team, false);
-                        this.sendTeamChat(
-                            team,
-                            ' no longer has blackout.',
-                            timestamp,
-                        );
                         this.emit('team:unfinished', team, timestamp);
                     }
                 }

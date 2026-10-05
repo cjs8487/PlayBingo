@@ -129,7 +129,14 @@
                 "chatHistory": {
                     "type": "array",
                     "items": {
-                        "$ref": "./ChatMessage.json"
+                        "anyOf": [
+                            {
+                                "$ref": "./ChatMessage.json"
+                            },
+                            {
+                                "$ref": "#/$defs/RoomAnnouncement"
+                            }
+                        ]
                     }
                 },
                 "roomData": {
@@ -237,230 +244,6 @@
         },
         {
             "required": [
-                "action"
-            ],
-            "properties": {
-                "action": {
-                    "const": "timer:started"
-                }
-            }
-        },
-        {
-            "required": [
-                "action",
-                "player"
-            ],
-            "properties": {
-                "action": {
-                    "const": "players:join"
-                },
-                "player": {
-                    "$ref": "./Player.json"
-                }
-            }
-        },
-        {
-            "required": [
-                "action",
-                "player"
-            ],
-            "properties": {
-                "action": {
-                    "const": "players:leave"
-                },
-                "player": {
-                    "$ref": "./Player.json"
-                }
-            }
-        },
-        {
-            "required": [
-                "action",
-                "player"
-            ],
-            "properties": {
-                "action": {
-                    "const": "player:finished"
-                },
-                "player": {
-                    "$ref": "./Player.json"
-                }
-            }
-        },
-        {
-            "required": [
-                "action",
-                "player"
-            ],
-            "properties": {
-                "action": {
-                    "const": "player:unfinished"
-                },
-                "player": {
-                    "$ref": "./Player.json"
-                }
-            }
-        },
-        {
-            "required": [
-                "action",
-                "player"
-            ],
-            "properties": {
-                "action": {
-                    "const": "board:revealed"
-                },
-                "player": {
-                    "$ref": "./Player.json"
-                }
-            }
-        },
-        {
-            "required": [
-                "action",
-                "player",
-                "newColor"
-            ],
-            "properties": {
-                "action": {
-                    "const": "player:colorChanged"
-                },
-                "player": {
-                    "$ref": "./Player.json"
-                },
-                "newColor": {
-                    "type": "string"
-                }
-            }
-        },
-        {
-            "required": [
-                "action",
-                "cell",
-                "row",
-                "col",
-                "player"
-            ],
-            "properties": {
-                "action": {
-                    "const": "board:goalMarked"
-                },
-                "cell": {
-                    "$ref": "./Cell.json"
-                },
-                "row": {
-                    "type": "number"
-                },
-                "col": {
-                    "type": "number"
-                },
-                "player": {
-                    "$ref": "./Player.json"
-                }
-            }
-        },
-        {
-            "required": [
-                "action",
-                "cell",
-                "row",
-                "col",
-                "player"
-            ],
-            "properties": {
-                "action": {
-                    "const": "board:goalUnmarked"
-                },
-                "cell": {
-                    "$ref": "./Cell.json"
-                },
-                "row": {
-                    "type": "number"
-                },
-                "col": {
-                    "type": "number"
-                },
-                "player": {
-                    "$ref": "./Player.json"
-                }
-            }
-        },
-        {
-            "required": [
-                "action",
-                "board",
-                "options"
-            ],
-            "properties": {
-                "action": {
-                    "const": "board:regenerated"
-                },
-                "board": {
-                    "type": "array",
-                    "items": {
-                        "type": "array",
-                        "items": {
-                            "$ref": "./Cell.json#/$defs/RevealedCell"
-                        }
-                    }
-                },
-                "options": {
-                    "oneOf": [
-                        {
-                            "type": "object",
-                            "additionalProperties": false,
-                            "required": [
-                                "mode"
-                            ],
-                            "properties": {
-                                "mode": {
-                                    "const": "Random"
-                                },
-                                "seed": {
-                                    "type": "number"
-                                }
-                            }
-                        },
-                        {
-                            "type": "object",
-                            "additionalProperties": false,
-                            "required": [
-                                "mode"
-                            ],
-                            "properties": {
-                                "mode": {
-                                    "const": "SRLv5"
-                                },
-                                "seed": {
-                                    "type": "number"
-                                }
-                            }
-                        },
-                        {
-                            "type": "object",
-                            "additionalProperties": false,
-                            "required": [
-                                "mode",
-                                "difficulty"
-                            ],
-                            "properties": {
-                                "mode": {
-                                    "const": "Difficulty"
-                                },
-                                "seed": {
-                                    "type": "number"
-                                },
-                                "difficulty": {
-                                    "type": "string"
-                                }
-                            }
-                        }
-                    ]
-                }
-            }
-        },
-        {
-            "required": [
                 "action",
                 "message"
             ],
@@ -474,25 +257,265 @@
             }
         },
         {
+            "$ref": "#/$defs/RoomAnnouncement"
+        }
+    ],
+    "unevaluatedProperties": false,
+    "$defs": {
+        "AnnouncementTeam": {
+            "type": "object",
+            "additionalProperties": false,
             "required": [
-                "action"
+                "name",
+                "color"
             ],
             "properties": {
-                "action": {
-                    "const": "timer:reset"
+                "name": {
+                    "type": "string"
+                },
+                "color": {
+                    "type": "string"
                 }
             }
         },
-        {
+        "AnnouncementPlayer": {
+            "type": "object",
+            "additionalProperties": false,
             "required": [
-                "action"
+                "nickname",
+                "teamsEnabled"
             ],
             "properties": {
-                "action": {
-                    "const": "timer:stopped"
+                "nickname": {
+                    "type": "string"
+                },
+                "teamsEnabled": {
+                    "type": "boolean"
+                },
+                "team": {
+                    "$ref": "#/$defs/AnnouncementTeam"
                 }
             }
+        },
+        "RoomAnnouncement": {
+            "type": "object",
+            "required": [
+                "timestamp"
+            ],
+            "properties": {
+                "timestamp": {
+                    "type": "string",
+                    "format": "date-time"
+                },
+                "startedAt": {
+                    "type": "string",
+                    "format": "date-time"
+                }
+            },
+            "anyOf": [
+                {
+                    "required": [
+                        "action",
+                        "player"
+                    ],
+                    "properties": {
+                        "action": {
+                            "const": "players:join"
+                        },
+                        "player": {
+                            "$ref": "#/$defs/AnnouncementPlayer"
+                        }
+                    }
+                },
+                {
+                    "required": [
+                        "action",
+                        "player"
+                    ],
+                    "properties": {
+                        "action": {
+                            "const": "players:leave"
+                        },
+                        "player": {
+                            "$ref": "#/$defs/AnnouncementPlayer"
+                        }
+                    }
+                },
+                {
+                    "required": [
+                        "action",
+                        "player"
+                    ],
+                    "properties": {
+                        "action": {
+                            "const": "board:revealed"
+                        },
+                        "player": {
+                            "$ref": "#/$defs/AnnouncementPlayer"
+                        }
+                    }
+                },
+                {
+                    "required": [
+                        "action",
+                        "player",
+                        "newColor"
+                    ],
+                    "properties": {
+                        "action": {
+                            "const": "player:colorChanged"
+                        },
+                        "player": {
+                            "$ref": "#/$defs/AnnouncementPlayer"
+                        },
+                        "newColor": {
+                            "type": "string"
+                        }
+                    }
+                },
+                {
+                    "required": [
+                        "action",
+                        "player",
+                        "row",
+                        "col"
+                    ],
+                    "properties": {
+                        "action": {
+                            "const": "board:goalMarked"
+                        },
+                        "player": {
+                            "$ref": "#/$defs/AnnouncementPlayer"
+                        },
+                        "row": {
+                            "type": "number"
+                        },
+                        "col": {
+                            "type": "number"
+                        },
+                        "goal": {
+                            "type": "string"
+                        }
+                    }
+                },
+                {
+                    "required": [
+                        "action",
+                        "player",
+                        "row",
+                        "col"
+                    ],
+                    "properties": {
+                        "action": {
+                            "const": "board:goalUnmarked"
+                        },
+                        "player": {
+                            "$ref": "#/$defs/AnnouncementPlayer"
+                        },
+                        "row": {
+                            "type": "number"
+                        },
+                        "col": {
+                            "type": "number"
+                        },
+                        "goal": {
+                            "type": "string"
+                        }
+                    }
+                },
+                {
+                    "required": [
+                        "action",
+                        "team",
+                        "teamDisplayName",
+                        "mode"
+                    ],
+                    "properties": {
+                        "action": {
+                            "const": "team:finished"
+                        },
+                        "team": {
+                            "$ref": "#/$defs/AnnouncementTeam"
+                        },
+                        "teamDisplayName": {
+                            "type": "string"
+                        },
+                        "mode": {
+                            "enum": [
+                                "LINES",
+                                "BLACKOUT",
+                                "LOCKOUT"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "required": [
+                        "action",
+                        "team",
+                        "teamDisplayName",
+                        "mode"
+                    ],
+                    "properties": {
+                        "action": {
+                            "const": "team:unfinished"
+                        },
+                        "team": {
+                            "$ref": "#/$defs/AnnouncementTeam"
+                        },
+                        "teamDisplayName": {
+                            "type": "string"
+                        },
+                        "mode": {
+                            "enum": [
+                                "LINES",
+                                "BLACKOUT",
+                                "LOCKOUT"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "required": [
+                        "action"
+                    ],
+                    "properties": {
+                        "action": {
+                            "const": "board:regenerated"
+                        }
+                    }
+                },
+                {
+                    "required": [
+                        "action"
+                    ],
+                    "properties": {
+                        "action": {
+                            "const": "timer:started"
+                        }
+                    }
+                },
+                {
+                    "required": [
+                        "action"
+                    ],
+                    "properties": {
+                        "action": {
+                            "const": "timer:reset"
+                        }
+                    }
+                },
+                {
+                    "required": [
+                        "action"
+                    ],
+                    "properties": {
+                        "action": {
+                            "const": "timer:stopped"
+                        }
+                    }
+                }
+            ]
         }
-    ],
-    "unevaluatedProperties": false
+    }
 }

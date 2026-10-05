@@ -124,18 +124,48 @@ export function subscribe(room: Room): void {
     };
     const onPlayerConnected: RoomEvents['player:connected'] = (
         player,
+        newPlayer,
         timestamp,
     ) => {
         const { id, nickname, teamId } = player;
+        const announcement =
+            room.chatEnabled && newPlayer
+                ? room.createPlayerAnnouncement(
+                      player,
+                      { action: 'players:join' },
+                      timestamp,
+                  )
+                : null;
         enqueue(room, () =>
-            addJoinAction(room.id, id, nickname, teamId, timestamp),
+            addJoinAction(
+                room.id,
+                id,
+                nickname,
+                teamId,
+                timestamp,
+                announcement,
+            ),
         );
         writePlayer(player);
     };
     const onPlayersLeave: RoomEvents['players:leave'] = (player, timestamp) => {
         const { id, nickname, teamId } = player;
+        const announcement = room.chatEnabled
+            ? room.createPlayerAnnouncement(
+                  player,
+                  { action: 'players:leave' },
+                  timestamp,
+              )
+            : null;
         enqueue(room, () =>
-            addLeaveAction(room.id, id, nickname, teamId, timestamp),
+            addLeaveAction(
+                room.id,
+                id,
+                nickname,
+                teamId,
+                timestamp,
+                announcement,
+            ),
         );
     };
     const onPlayerChat: RoomEvents['player:chat'] = (
@@ -149,30 +179,70 @@ export function subscribe(room: Room): void {
         );
     };
     const onBoardGoalMarked: RoomEvents['board:goalMarked'] = (
-        _cell,
+        cell,
         row,
         col,
         player,
         timestamp,
     ) => {
         const { id, teamId } = player;
-        if (teamId)
-            enqueue(room, () =>
-                addMarkAction(room.id, id, teamId, row, col, timestamp),
-            );
+        if (!teamId) return;
+        const announcement = room.chatEnabled
+            ? room.createPlayerAnnouncement(
+                  player,
+                  {
+                      action: 'board:goalMarked',
+                      row,
+                      col,
+                      goal: cell.revealed ? cell.goal.goal : undefined,
+                  },
+                  timestamp,
+              )
+            : null;
+        enqueue(room, () =>
+            addMarkAction(
+                room.id,
+                id,
+                teamId,
+                row,
+                col,
+                timestamp,
+                announcement,
+            ),
+        );
     };
     const onBoardGoalUnmarked: RoomEvents['board:goalUnmarked'] = (
-        _cell,
+        cell,
         row,
         col,
         player,
         timestamp,
     ) => {
         const { id, teamId } = player;
-        if (teamId)
-            enqueue(room, () =>
-                addUnmarkAction(room.id, id, teamId, row, col, timestamp),
-            );
+        if (!teamId) return;
+        const announcement = room.chatEnabled
+            ? room.createPlayerAnnouncement(
+                  player,
+                  {
+                      action: 'board:goalUnmarked',
+                      row,
+                      col,
+                      goal: cell.revealed ? cell.goal.goal : undefined,
+                  },
+                  timestamp,
+              )
+            : null;
+        enqueue(room, () =>
+            addUnmarkAction(
+                room.id,
+                id,
+                teamId,
+                row,
+                col,
+                timestamp,
+                announcement,
+            ),
+        );
     };
     const onBoardGenerationRequested: RoomEvents['board:generationRequested'] =
         (options, supply) => {
@@ -233,6 +303,16 @@ export function subscribe(room: Room): void {
                     oldColor,
                     color,
                     timestamp,
+                    room.chatEnabled
+                        ? room.createPlayerAnnouncement(
+                              player,
+                              {
+                                  action: 'player:colorChanged',
+                                  newColor: color,
+                              },
+                              timestamp,
+                          )
+                        : null,
                 ),
             );
         }

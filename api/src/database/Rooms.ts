@@ -1,6 +1,7 @@
 import { BingoMode, RaceHandler, RoomActionType } from '@prisma/client';
 import { JsonObject } from '@prisma/client/runtime/library';
 import Player from '../core/Player';
+import type { PlayerAnnouncement } from '../core/Room';
 import { prisma } from './Database';
 import Team from '../core/Team';
 
@@ -57,17 +58,38 @@ const addRoomAction = (
     });
 };
 
+function announcementPayload(
+    announcement: PlayerAnnouncement | null,
+): JsonObject | null {
+    if (!announcement) return null;
+    return {
+        ...announcement,
+        player: {
+            ...announcement.player,
+            team: announcement.player.team
+                ? { ...announcement.player.team }
+                : undefined,
+        },
+    };
+}
+
 export const addJoinAction = (
     room: string,
     player: string,
     nickname: string,
     team: string | undefined,
     timestamp: Date,
+    announcement: PlayerAnnouncement | null,
 ) =>
     addRoomAction(
         room,
         RoomActionType.JOIN,
-        { player, nickname, team: team ?? null },
+        {
+            player,
+            nickname,
+            team: team ?? null,
+            announcement: announcementPayload(announcement),
+        },
         timestamp,
     );
 
@@ -77,11 +99,17 @@ export const addLeaveAction = (
     nickname: string,
     team: string | undefined,
     timestamp: Date,
+    announcement: PlayerAnnouncement | null,
 ) =>
     addRoomAction(
         room,
         RoomActionType.LEAVE,
-        { player, nickname, team: team ?? null },
+        {
+            player,
+            nickname,
+            team: team ?? null,
+            announcement: announcementPayload(announcement),
+        },
         timestamp,
     );
 
@@ -92,11 +120,18 @@ export const addMarkAction = (
     row: number,
     col: number,
     timestamp: Date,
+    announcement: PlayerAnnouncement | null,
 ) =>
     addRoomAction(
         room,
         RoomActionType.MARK,
-        { player, team, row, col },
+        {
+            player,
+            team,
+            row,
+            col,
+            announcement: announcementPayload(announcement),
+        },
         timestamp,
     );
 
@@ -107,11 +142,18 @@ export const addUnmarkAction = (
     row: number,
     col: number,
     timestamp: Date,
+    announcement: PlayerAnnouncement | null,
 ) =>
     addRoomAction(
         room,
         RoomActionType.UNMARK,
-        { player, team, row, col },
+        {
+            player,
+            team,
+            row,
+            col,
+            announcement: announcementPayload(announcement),
+        },
         timestamp,
     );
 
@@ -137,6 +179,7 @@ export const addChangeColorAction = (
     oldColor: string,
     newColor: string,
     timestamp: Date,
+    announcement: PlayerAnnouncement | null,
 ) =>
     addRoomAction(
         room,
@@ -147,6 +190,7 @@ export const addChangeColorAction = (
             teamName,
             oldColor,
             newColor,
+            announcement: announcementPayload(announcement),
         },
         timestamp,
     );

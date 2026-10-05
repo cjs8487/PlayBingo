@@ -115,7 +115,7 @@ describe('handleJoin', () => {
         expect(
             room.getPlayerById(mockTokenPayload.playerId)?.connections.size,
         ).toBe(1);
-        expect(emitSpy).toHaveBeenCalledTimes(2);
+        expect(emitSpy).toHaveBeenCalledTimes(3);
         expect(emitSpy.mock.calls[0][0]).toBe('players:join');
     });
 
@@ -132,17 +132,18 @@ describe('handleJoin', () => {
         expect(emitSpy).toHaveBeenCalledWith(
             'player:connected',
             player,
+            false,
             new Date(),
         );
     });
 
     it('Creates two new players when two new players join', async () => {
         room.handleJoin(mockJoinAction, mockTokenPayload, mockSocket);
-        expect(emitSpy).toHaveBeenCalledTimes(2);
+        expect(emitSpy).toHaveBeenCalledTimes(3);
         expect(emitSpy.mock.calls[0][0]).toBe('players:join');
         room.handleJoin(mockJoinAction, mockTokenPayloadPlayer2, mockSocket2);
-        expect(emitSpy).toHaveBeenCalledTimes(4);
-        expect(emitSpy.mock.calls[2][0]).toBe('players:join');
+        expect(emitSpy).toHaveBeenCalledTimes(6);
+        expect(emitSpy.mock.calls[3][0]).toBe('players:join');
         expect(room.getPlayerById(mockTokenPayload.playerId)).toBeDefined();
         expect(
             room.getPlayerById(mockTokenPayloadPlayer2.playerId),
@@ -280,7 +281,7 @@ describe('Board Control', () => {
             expect(completedTeams).toContain(
                 room.getTeamForPlayer(mockTokenPayload.playerId)!.id,
             );
-            expect(emitSpy).toHaveBeenCalledTimes(1);
+            expect(emitSpy).toHaveBeenCalledTimes(2);
             expect(emitSpy.mock.calls[0][0]).toBe('board:goalMarked');
             room.handleMark(mockMarkAction, mockTokenPayloadPlayer2);
             for (let i = 0; i < 5; i++) {
@@ -305,13 +306,13 @@ describe('Board Control', () => {
                     }
                 }
             }
-            expect(emitSpy).toHaveBeenCalledTimes(2);
-            expect(emitSpy.mock.calls[1][0]).toBe('board:goalMarked');
+            expect(emitSpy).toHaveBeenCalledTimes(4);
+            expect(emitSpy.mock.calls[2][0]).toBe('board:goalMarked');
         });
 
         it('Sends a cell message update', () => {
             room.handleMark(mockMarkAction, mockTokenPayload);
-            expect(emitSpy).toHaveBeenCalledTimes(1);
+            expect(emitSpy).toHaveBeenCalledTimes(2);
             expect(emitSpy.mock.calls[0][0]).toBe('board:goalMarked');
         });
 
@@ -381,7 +382,7 @@ describe('Board Control', () => {
 
         it('Sends a cell message update', () => {
             room.handleUnmark(mockUnmarkAction, mockTokenPayload);
-            expect(emitSpy).toHaveBeenCalledTimes(1);
+            expect(emitSpy).toHaveBeenCalledTimes(2);
             expect(emitSpy.mock.calls[0][0]).toBe('board:goalUnmarked');
         });
 
@@ -450,7 +451,7 @@ describe('handleChangeColor', () => {
             'blue',
             new Date(),
         );
-        expect(emitSpy).toHaveBeenCalledTimes(1);
+        expect(emitSpy).toHaveBeenCalledTimes(2);
         expect(emitSpy.mock.calls[0][0]).toBe('player:colorChanged');
     });
 

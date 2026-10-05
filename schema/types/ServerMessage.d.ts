@@ -39,7 +39,7 @@ export type ServerMessage = (
   | {
       action: "connected";
       board: Board;
-      chatHistory: ChatMessage[];
+      chatHistory: (ChatMessage | RoomAnnouncement)[];
       roomData?: RoomData;
       chatEnabled?: boolean;
       [k: string]: unknown;
@@ -76,88 +76,11 @@ export type ServerMessage = (
       [k: string]: unknown;
     }
   | {
-      action: "timer:started";
-      [k: string]: unknown;
-    }
-  | {
-      action: "players:join";
-      player: Player;
-      [k: string]: unknown;
-    }
-  | {
-      action: "players:leave";
-      player: Player;
-      [k: string]: unknown;
-    }
-  | {
-      action: "player:finished";
-      player: Player;
-      [k: string]: unknown;
-    }
-  | {
-      action: "player:unfinished";
-      player: Player;
-      [k: string]: unknown;
-    }
-  | {
-      action: "board:revealed";
-      player: Player;
-      [k: string]: unknown;
-    }
-  | {
-      action: "player:colorChanged";
-      player: Player;
-      newColor: string;
-      [k: string]: unknown;
-    }
-  | {
-      action: "board:goalMarked";
-      cell: Cell;
-      row: number;
-      col: number;
-      player: Player;
-      [k: string]: unknown;
-    }
-  | {
-      action: "board:goalUnmarked";
-      cell: Cell;
-      row: number;
-      col: number;
-      player: Player;
-      [k: string]: unknown;
-    }
-  | {
-      action: "board:regenerated";
-      board: RevealedCell[][];
-      options:
-        | {
-            mode: "Random";
-            seed?: number;
-          }
-        | {
-            mode: "SRLv5";
-            seed?: number;
-          }
-        | {
-            mode: "Difficulty";
-            seed?: number;
-            difficulty: string;
-          };
-      [k: string]: unknown;
-    }
-  | {
       action: "system:message";
       message: ChatMessage;
       [k: string]: unknown;
     }
-  | {
-      action: "timer:reset";
-      [k: string]: unknown;
-    }
-  | {
-      action: "timer:stopped";
-      [k: string]: unknown;
-    }
+  | RoomAnnouncement
 ) & {
   players?: {
     teams: Team[];
@@ -179,6 +102,79 @@ export type ChatMessage = (
 )[];
 export type Cell = RevealedCell | HiddenCell;
 export type Board = RevealedBoard | HiddenBoard;
+export type RoomAnnouncement = RoomAnnouncement1 & {
+  timestamp: string;
+  startedAt?: string;
+  [k: string]: unknown;
+};
+export type RoomAnnouncement1 =
+  | {
+      action: "players:join";
+      player: AnnouncementPlayer;
+      [k: string]: unknown;
+    }
+  | {
+      action: "players:leave";
+      player: AnnouncementPlayer;
+      [k: string]: unknown;
+    }
+  | {
+      action: "board:revealed";
+      player: AnnouncementPlayer;
+      [k: string]: unknown;
+    }
+  | {
+      action: "player:colorChanged";
+      player: AnnouncementPlayer;
+      newColor: string;
+      [k: string]: unknown;
+    }
+  | {
+      action: "board:goalMarked";
+      player: AnnouncementPlayer;
+      row: number;
+      col: number;
+      goal?: string;
+      [k: string]: unknown;
+    }
+  | {
+      action: "board:goalUnmarked";
+      player: AnnouncementPlayer;
+      row: number;
+      col: number;
+      goal?: string;
+      [k: string]: unknown;
+    }
+  | {
+      action: "team:finished";
+      team: AnnouncementTeam;
+      teamDisplayName: string;
+      mode: "LINES" | "BLACKOUT" | "LOCKOUT";
+      [k: string]: unknown;
+    }
+  | {
+      action: "team:unfinished";
+      team: AnnouncementTeam;
+      teamDisplayName: string;
+      mode: "LINES" | "BLACKOUT" | "LOCKOUT";
+      [k: string]: unknown;
+    }
+  | {
+      action: "board:regenerated";
+      [k: string]: unknown;
+    }
+  | {
+      action: "timer:started";
+      [k: string]: unknown;
+    }
+  | {
+      action: "timer:reset";
+      [k: string]: unknown;
+    }
+  | {
+      action: "timer:stopped";
+      [k: string]: unknown;
+    };
 
 export interface Team {
   id: string;
@@ -281,6 +277,15 @@ export interface HiddenBoard {
   hidden: true;
   width: number;
   height: number;
+}
+export interface AnnouncementPlayer {
+  nickname: string;
+  teamsEnabled: boolean;
+  team?: AnnouncementTeam;
+}
+export interface AnnouncementTeam {
+  name: string;
+  color: string;
 }
 /**
  * Basic information about a room
