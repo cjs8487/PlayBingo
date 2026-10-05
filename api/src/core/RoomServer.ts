@@ -1,13 +1,15 @@
-import { RoomAction } from '@playbingo/types';
+import { JoinAction, RoomAction, ServerMessage } from '@playbingo/types';
 import { WebSocketServer } from 'ws';
 import {
     createRoomToken,
+    RoomTokenPayload,
     hasPermission,
     verifyRoomToken,
 } from '../auth/RoomAuth';
 import { roomCleanupInterval } from '../Environment';
 import { logInfo, logWarn } from '../Logger';
 import Room from './Room';
+import Connection from './connection/Connection';
 import PlayBingoSocket from './connection/PlayBingoSocket';
 
 export const roomWebSocketServer: WebSocketServer = new WebSocketServer({
@@ -24,6 +26,40 @@ const cleanupInterval = setInterval(() => {
         }
     });
 }, roomCleanupInterval);
+
+export function joinRoom(
+    room: Room,
+    action: JoinAction,
+    auth: RoomTokenPayload,
+    connection: Connection,
+): Extract<ServerMessage, { action: 'connected' | 'unauthorized' }> {
+    const joined = room.handleJoin(action, auth);
+    if (!joined) return { action: 'unauthorized' };
+
+    const { player, newPlayer } = joined;
+    player.addConnection(auth.uuid, connection);
+    room.playerConnected(player, newPlayer);
+
+    return {
+        action: 'connected',
+        board: {
+            width: room.boardWidth,
+            height: room.boardHeight,
+            ...(player.boardHidden
+                ? { hidden: true }
+                : {
+                      hidden: false,
+                      board: room.exploration
+                          ? player.getBoardView()
+                          : room.board,
+                  }),
+        },
+        chatHistory: room.getChatHistory(player),
+        connectedPlayer: player.toClientData(),
+        roomData: room.roomData,
+        players: room.getPlayerData(),
+    };
+}
 
 roomWebSocketServer.on('connection', (socket, req) => {
     if (!req.url) {
@@ -72,7 +108,7 @@ roomWebSocketServer.on('connection', (socket, req) => {
             return;
         }
         if (action.action === 'join') {
-            const result = room.handleJoin(action, payload, ws);
+            const result = joinRoom(room, action, payload, ws);
             ws.send(result);
             if (result.action !== 'connected') return;
             clearTimeout(timeout);

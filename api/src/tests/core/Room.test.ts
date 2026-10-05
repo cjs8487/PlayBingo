@@ -14,6 +14,7 @@ import { RoomTokenPayload } from '../../auth/RoomAuth';
 import Player from '../../core/Player';
 import Room from '../../core/Room';
 import { subscribe, unsubscribe } from '../../core/DatabaseEventListeners';
+import { joinRoom } from '../../core/RoomServer';
 import { createUpdatePlayer } from '../../database/Rooms';
 import RaceHandler from '../../core/integration/races/RaceHandler';
 
@@ -108,7 +109,7 @@ afterEach(async () => {
 
 describe('handleJoin', () => {
     it('Creates a new player when a new player joins', async () => {
-        room.handleJoin(mockJoinAction, mockTokenPayload, mockSocket);
+        joinRoom(room, mockJoinAction, mockTokenPayload, mockSocket);
         expect(room.getPlayerById(mockTokenPayload.playerId)).toBeDefined();
         await flushRoomWrites();
         expect(createUpdatePlayer).toHaveBeenCalled();
@@ -123,7 +124,7 @@ describe('handleJoin', () => {
         const player = new Player(room, 'test', 'Test Player', false);
         player.addConnection(mockTokenPayload.uuid, mockSocket);
         room.createTeamForPlayer(player);
-        room.handleJoin(mockJoinAction, mockTokenPayload2, mockSocket2);
+        joinRoom(room, mockJoinAction, mockTokenPayload2, mockSocket2);
         expect(
             room.getPlayerById(mockTokenPayload.playerId)?.connections.size,
         ).toBe(2);
@@ -138,10 +139,10 @@ describe('handleJoin', () => {
     });
 
     it('Creates two new players when two new players join', async () => {
-        room.handleJoin(mockJoinAction, mockTokenPayload, mockSocket);
+        joinRoom(room, mockJoinAction, mockTokenPayload, mockSocket);
         expect(emitSpy).toHaveBeenCalledTimes(3);
         expect(emitSpy.mock.calls[0][0]).toBe('players:join');
-        room.handleJoin(mockJoinAction, mockTokenPayloadPlayer2, mockSocket2);
+        joinRoom(room, mockJoinAction, mockTokenPayloadPlayer2, mockSocket2);
         expect(emitSpy).toHaveBeenCalledTimes(6);
         expect(emitSpy.mock.calls[3][0]).toBe('players:join');
         expect(room.getPlayerById(mockTokenPayload.playerId)).toBeDefined();
@@ -164,9 +165,9 @@ describe('handleJoin', () => {
         const onJoin = jest.fn();
         room.on('players:join', onJoin);
         mockJoinAction.payload = { nickname: 'player 1' };
-        room.handleJoin(mockJoinAction, mockTokenPayload, mockSocket);
+        joinRoom(room, mockJoinAction, mockTokenPayload, mockSocket);
         mockJoinAction.payload = { nickname: 'player 2' };
-        room.handleJoin(mockJoinAction, mockTokenPayloadPlayer2, mockSocket2);
+        joinRoom(room, mockJoinAction, mockTokenPayloadPlayer2, mockSocket2);
         expect(onJoin).toHaveBeenCalledTimes(2);
         expect(onJoin).toHaveBeenCalledWith(
             room.getPlayerById(mockTokenPayload.playerId),
@@ -182,7 +183,7 @@ describe('handleJoin', () => {
         const onJoin = jest.fn();
         room.on('players:join', onJoin);
         mockJoinAction.payload = { nickname: 'spectator' };
-        room.handleJoin(mockJoinAction, mockTokenPayloadSpectator, mockSocket);
+        joinRoom(room, mockJoinAction, mockTokenPayloadSpectator, mockSocket);
         expect(onJoin).toHaveBeenCalledWith(
             room.spectators.get(mockTokenPayloadSpectator.playerId),
             new Date(),
@@ -192,8 +193,8 @@ describe('handleJoin', () => {
     it('Does not emit a join event when an existing player reconnects', () => {
         const onJoin = jest.fn();
         room.on('players:join', onJoin);
-        room.handleJoin(mockJoinAction, mockTokenPayload, mockSocket);
-        room.handleJoin(mockJoinAction, mockTokenPayload2, mockSocket2);
+        joinRoom(room, mockJoinAction, mockTokenPayload, mockSocket);
+        joinRoom(room, mockJoinAction, mockTokenPayload2, mockSocket2);
         expect(onJoin).toHaveBeenCalledTimes(1);
     });
 });

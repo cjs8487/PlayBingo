@@ -128,7 +128,10 @@ interface RoomEventArguments {
     ];
     'racetime:disconnected': [];
     'room:closed': [];
-    'chat:announcement': [announcement: RoomAnnouncement];
+    'chat:announcement': [
+        announcement: RoomAnnouncement,
+        exclude: Player | undefined,
+    ];
     'player:connected': [player: Player, newPlayer: boolean];
     'player:chat': [player: Player, message: string];
     'players:join': [player: Player];
@@ -747,11 +750,7 @@ export default class Room extends EventEmitter {
     }
 
     //#region Handlers
-    handleJoin(
-        action: JoinAction,
-        auth: RoomTokenPayload,
-        socket: Connection,
-    ): ServerMessage {
+    handleJoin(action: JoinAction, auth: RoomTokenPayload) {
         let player = this.getPlayerById(auth.playerId);
         let newPlayer = false;
         if (!player && action.payload) {
@@ -771,37 +770,17 @@ export default class Room extends EventEmitter {
             newPlayer = true;
         }
 
-        if (!player) {
-            return { action: 'unauthorized' };
-        }
+        return player ? { player, newPlayer } : undefined;
+    }
 
+    playerConnected(player: Player, newPlayer: boolean) {
         const timestamp = new Date();
-        player.addConnection(auth.uuid, socket);
         if (newPlayer) {
             this.emit('players:join', player, timestamp);
             this.markActive();
         }
 
         this.emit('player:connected', player, newPlayer, timestamp);
-        return {
-            action: 'connected',
-            board: {
-                width: this.boardWidth,
-                height: this.boardHeight,
-                ...(player.boardHidden
-                    ? { hidden: true }
-                    : {
-                          hidden: false,
-                          board: this.exploration
-                              ? player.getBoardView()
-                              : this.board,
-                      }),
-            },
-            chatHistory: this.getChatHistory(player),
-            connectedPlayer: player.toClientData(),
-            roomData: this.roomData,
-            players: this.getPlayerData(),
-        };
     }
 
     handleJoinTeam(
@@ -1163,6 +1142,7 @@ export default class Room extends EventEmitter {
                         { action },
                         timestamp,
                     ),
+                    action === 'players:join' ? player : undefined,
                 );
             });
         }
@@ -1256,10 +1236,13 @@ export default class Room extends EventEmitter {
         };
     }
 
-    private recordAnnouncement(announcement: RoomAnnouncement) {
+    private recordAnnouncement(
+        announcement: RoomAnnouncement,
+        exclude?: Player,
+    ) {
         if (this.chatEnabled) {
             this.chatHistory.push(announcement);
-            this.emit('chat:announcement', announcement);
+            this.emit('chat:announcement', announcement, exclude);
         } else if (
             ['players:join', 'players:leave', 'player:colorChanged'].includes(
                 announcement.action,

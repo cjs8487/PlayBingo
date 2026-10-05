@@ -14,6 +14,7 @@ import Connection from '../../core/connection/Connection';
 import { RoomTokenPayload } from '../../auth/RoomAuth';
 import { subscribe, unsubscribe } from '../../core/DatabaseEventListeners';
 import Room from '../../core/Room';
+import { joinRoom } from '../../core/RoomServer';
 import {
     addMarkAction,
     createUpdatePlayer,
@@ -118,7 +119,7 @@ describe('Room team workflows', () => {
         jest.setSystemTime(start);
 
         const room = createRoom();
-        room.handleJoin(joinAction('Alice'), auth('alice'), socket());
+        joinRoom(room, joinAction('Alice'), auth('alice'), socket());
         const onReveal = jest.fn();
         const onMark = jest.fn();
         room.on('board:revealed', onReveal);
@@ -145,7 +146,8 @@ describe('Room team workflows', () => {
 
     it('creates a team for a joining player and exposes team-owned state', async () => {
         const room = createRoom();
-        const result = room.handleJoin(
+        const result = joinRoom(
+            room,
             joinAction('Alice'),
             auth('alice'),
             socket(),
@@ -177,7 +179,7 @@ describe('Room team workflows', () => {
 
     it('names the team after the player and announces it when teams are enabled', () => {
         const room = createRoom(true);
-        room.handleJoin(joinAction('Alice'), auth('alice'), socket());
+        joinRoom(room, joinAction('Alice'), auth('alice'), socket());
 
         const team = room.getTeamForPlayer('alice')!;
         expect(team.name).toBe("Alice's Team");
@@ -186,7 +188,8 @@ describe('Room team workflows', () => {
         );
         team.name = 'Renamed Team';
         team.color = 'red';
-        const reconnect = room.handleJoin(
+        const reconnect = joinRoom(
+            room,
             joinAction('Alice'),
             { ...auth('alice'), uuid: 'reconnect' },
             socket(),
@@ -207,7 +210,7 @@ describe('Room team workflows', () => {
 
     it('tracks marks by team ID and applies the team color', async () => {
         const room = createRoom();
-        room.handleJoin(joinAction('Alice'), auth('alice'), socket());
+        joinRoom(room, joinAction('Alice'), auth('alice'), socket());
         const team = room.getTeamForPlayer('alice')!;
 
         room.handleMark(
@@ -245,8 +248,8 @@ describe('Room team workflows', () => {
 
     it('permits joining another team only when teams are enabled', async () => {
         const room = createRoom();
-        room.handleJoin(joinAction('Alice'), auth('alice'), socket());
-        room.handleJoin(joinAction('Bob'), auth('bob'), socket());
+        joinRoom(room, joinAction('Alice'), auth('alice'), socket());
+        joinRoom(room, joinAction('Bob'), auth('bob'), socket());
         const aliceTeam = room.getTeamForPlayer('alice')!;
 
         const joinTeam = {
@@ -271,7 +274,7 @@ describe('Room team workflows', () => {
 
     it('uses player names for single-player rooms and team names when enabled', () => {
         const room = createRoom(true);
-        room.handleJoin(joinAction('Alice'), auth('alice'), socket());
+        joinRoom(room, joinAction('Alice'), auth('alice'), socket());
         const team = room.getTeamForPlayer('alice')!;
 
         expect(team.getDisplayName()).toBe("Alice's Team");
@@ -284,7 +287,7 @@ describe('Room team workflows', () => {
 
     it('attributes team actions to the acting player when teams are enabled', async () => {
         const room = createRoom(true);
-        room.handleJoin(joinAction('Alice'), auth('alice'), socket());
+        joinRoom(room, joinAction('Alice'), auth('alice'), socket());
         const player = room.getPlayerById('alice')!;
         const team = room.getTeamForPlayer('alice')!;
 
@@ -325,7 +328,7 @@ describe('Room team workflows', () => {
 
     it('creates a team when a spectator starts playing', () => {
         const room = createRoom();
-        room.handleJoin(joinAction('Alice'), auth('alice', true), socket());
+        joinRoom(room, joinAction('Alice'), auth('alice', true), socket());
         const player = room.getPlayerById('alice')!;
         expect(room.teams.size).toBe(0);
         expect(room.spectators.has('alice')).toBe(true);
@@ -348,7 +351,7 @@ describe('Room team workflows', () => {
 
     it('tears down the team when a player starts spectating', () => {
         const room = createRoom();
-        room.handleJoin(joinAction('Alice'), auth('alice'), socket());
+        joinRoom(room, joinAction('Alice'), auth('alice'), socket());
         const player = room.getPlayerById('alice')!;
         const team = room.getTeamForPlayer('alice')!;
         room.handleMark(
@@ -370,8 +373,8 @@ describe('Room team workflows', () => {
 
     it('keeps a shared team alive when one of its players starts spectating', () => {
         const room = createRoom();
-        room.handleJoin(joinAction('Alice'), auth('alice'), socket());
-        room.handleJoin(joinAction('Bob'), auth('bob'), socket());
+        joinRoom(room, joinAction('Alice'), auth('alice'), socket());
+        joinRoom(room, joinAction('Bob'), auth('bob'), socket());
         const aliceTeam = room.getTeamForPlayer('alice')!;
         room.handleSetTeamsEnabled({
             action: 'setTeamsEnabled',
@@ -404,13 +407,14 @@ describe('Room team workflows', () => {
         room.alwaysRevealedMask = 1n;
         const first = openSocket();
         const second = openSocket();
-        room.handleJoin(joinAction('Alice'), auth('alice'), first);
-        room.handleJoin(
+        joinRoom(room, joinAction('Alice'), auth('alice'), first);
+        joinRoom(
+            room,
             joinAction('Alice'),
             { ...auth('alice'), uuid: 'second' },
             second,
         );
-        room.handleJoin(joinAction('Bob'), auth('bob'), openSocket());
+        joinRoom(room, joinAction('Bob'), auth('bob'), openSocket());
         const oldTeam = room.getTeamForPlayer('alice')!;
         const newTeam = room.getTeamForPlayer('bob')!;
         oldTeam.mark(0, 0);
@@ -444,8 +448,8 @@ describe('Room team workflows', () => {
         room.exploration = true;
         room.alwaysRevealedMask = 1n;
         const connection = openSocket();
-        room.handleJoin(joinAction('Alice'), auth('alice'), connection);
-        room.handleJoin(joinAction('Bob'), auth('bob'), openSocket());
+        joinRoom(room, joinAction('Alice'), auth('alice'), connection);
+        joinRoom(room, joinAction('Bob'), auth('bob'), openSocket());
         room.getTeamForPlayer('bob')!.mark(4, 4);
         const player = room.getPlayerById('alice')!;
 
@@ -471,8 +475,8 @@ describe('Room team workflows', () => {
     it('preserves the reveal gate across membership changes, reveals, and resets', () => {
         const room = createRoom(true, true);
         const connection = openSocket();
-        room.handleJoin(joinAction('Alice'), auth('alice'), connection);
-        room.handleJoin(joinAction('Bob'), auth('bob'), openSocket());
+        joinRoom(room, joinAction('Alice'), auth('alice'), connection);
+        joinRoom(room, joinAction('Bob'), auth('bob'), openSocket());
         const player = room.getPlayerById('alice')!;
         room.handleJoinTeam(
             {
@@ -490,7 +494,8 @@ describe('Room team workflows', () => {
         room.revealCardForPlayer(player);
         room.setPlayerSpectating(player, true);
         expect(boardMessages(connection).at(-1)!.board.hidden).toBe(false);
-        const reconnect = room.handleJoin(
+        const reconnect = joinRoom(
+            room,
             joinAction('Alice'),
             { ...auth('alice'), uuid: 'reconnect' },
             openSocket(),
@@ -512,7 +517,7 @@ describe('Room team workflows', () => {
     it('keeps the full board visible in solo rooms without exploration', () => {
         const room = createRoom();
         const connection = openSocket();
-        room.handleJoin(joinAction('Alice'), auth('alice'), connection);
+        joinRoom(room, joinAction('Alice'), auth('alice'), connection);
         const player = room.getPlayerById('alice')!;
         room.setPlayerSpectating(player, true);
         room.setPlayerSpectating(player, false);
@@ -526,9 +531,9 @@ describe('Room team workflows', () => {
         const alice = openSocket();
         const bob = openSocket();
         const carol = openSocket();
-        room.handleJoin(joinAction('Alice'), auth('alice'), alice);
-        room.handleJoin(joinAction('Bob'), auth('bob'), bob);
-        room.handleJoin(joinAction('Carol'), auth('carol'), carol);
+        joinRoom(room, joinAction('Alice'), auth('alice'), alice);
+        joinRoom(room, joinAction('Bob'), auth('bob'), bob);
+        joinRoom(room, joinAction('Carol'), auth('carol'), carol);
         room.revealCardForPlayer(room.getPlayerById('alice')!);
         room.revealCardForPlayer(room.getPlayerById('bob')!);
         room.handleMark(
@@ -546,8 +551,8 @@ describe('Room team workflows', () => {
     it('keeps a refreshing player on their team instead of creating a new one', () => {
         const room = createRoom(true);
         const aliceSocket = socket();
-        room.handleJoin(joinAction('Alice'), auth('alice'), aliceSocket);
-        room.handleJoin(joinAction('Bob'), auth('bob'), socket());
+        joinRoom(room, joinAction('Alice'), auth('alice'), aliceSocket);
+        joinRoom(room, joinAction('Bob'), auth('bob'), socket());
         const team = room.getTeamForPlayer('alice')!;
         room.handleJoinTeam(
             {
@@ -565,7 +570,7 @@ describe('Room team workflows', () => {
         // player id on a new socket
         room.handleSocketClose(aliceSocket);
         expect(room.getPlayerById('alice')?.showInRoom()).toBe(false);
-        room.handleJoin(joinAction('Alice'), auth('alice'), socket());
+        joinRoom(room, joinAction('Alice'), auth('alice'), socket());
 
         expect(room.teams.size).toBe(1);
         expect(room.getTeamForPlayer('alice')).toBe(team);
@@ -578,8 +583,8 @@ describe('Room team workflows', () => {
     it('keeps a refreshing solo player on their team and keeps their marks', () => {
         const room = createRoom(true);
         const aliceSocket = socket();
-        room.handleJoin(joinAction('Alice'), auth('alice'), aliceSocket);
-        room.handleJoin(joinAction('Bob'), auth('bob'), socket());
+        joinRoom(room, joinAction('Alice'), auth('alice'), aliceSocket);
+        joinRoom(room, joinAction('Bob'), auth('bob'), socket());
         const team = room.getTeamForPlayer('alice')!;
         room.handleMark(
             { action: 'mark', payload: { row: 0, col: 0 } } as MarkAction,
@@ -587,7 +592,7 @@ describe('Room team workflows', () => {
         );
 
         room.handleSocketClose(aliceSocket);
-        room.handleJoin(joinAction('Alice'), auth('alice'), socket());
+        joinRoom(room, joinAction('Alice'), auth('alice'), socket());
 
         expect(room.teams.size).toBe(2);
         expect(room.getTeamForPlayer('alice')).toBe(team);
@@ -604,8 +609,8 @@ describe('Room team workflows', () => {
         const close = jest.spyOn(room, 'close').mockImplementation(() => {});
         const aliceSocket = socket();
         const bobSocket = socket();
-        room.handleJoin(joinAction('Alice'), auth('alice'), aliceSocket);
-        room.handleJoin(joinAction('Bob'), auth('bob', true), bobSocket);
+        joinRoom(room, joinAction('Alice'), auth('alice'), aliceSocket);
+        joinRoom(room, joinAction('Bob'), auth('bob', true), bobSocket);
         const team = room.getTeamForPlayer('alice')!;
 
         room.handleSocketClose(aliceSocket);
@@ -642,8 +647,8 @@ describe('Room handleJoinTeam', () => {
 
     const setup = () => {
         const room = createRoom(true);
-        room.handleJoin(joinAction('Alice'), auth('alice'), socket());
-        room.handleJoin(joinAction('Bob'), auth('bob'), socket());
+        joinRoom(room, joinAction('Alice'), auth('alice'), socket());
+        joinRoom(room, joinAction('Bob'), auth('bob'), socket());
         return {
             room,
             aliceTeam: room.getTeamForPlayer('alice')!,
@@ -700,7 +705,7 @@ describe('Room handleJoinTeam', () => {
 
     it('moves a spectator onto a team', () => {
         const { room, aliceTeam } = setup();
-        room.handleJoin(joinAction('Carol'), auth('carol', true), socket());
+        joinRoom(room, joinAction('Carol'), auth('carol', true), socket());
 
         room.handleJoinTeam(joinTeam(aliceTeam.id), auth('carol'));
         expect(room.spectators.has('carol')).toBe(false);

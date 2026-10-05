@@ -207,7 +207,11 @@ export default class Player {
             sendChat('chatSent', message, timestamp);
         const onSystemMessage = (message: ChatMessage, timestamp: Date) =>
             sendChat('system:message', message, timestamp);
-        const onAnnouncement = (announcement: RoomAnnouncement) => {
+        const onAnnouncement = (
+            announcement: RoomAnnouncement,
+            exclude?: Player,
+        ) => {
+            if (exclude === this) return;
             this.sendMessage({
                 ...this.visibleAnnouncement(announcement),
                 players: room.getPlayerData(),
