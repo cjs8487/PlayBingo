@@ -697,7 +697,6 @@ export default class Room extends EventEmitter {
             // the board from the previous settings
             this.generateBoard(this.lastGenerationMode);
         }
-        this.emit('board:regenerated', this.board, this.lastGenerationMode);
     }
 
     handleStartTimer() {

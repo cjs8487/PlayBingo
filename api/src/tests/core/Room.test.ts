@@ -415,11 +415,6 @@ describe('handleNewCard', () => {
         room.handleNewCard(mockNewCardAction);
 
         expect(generateBoardSpy).toHaveBeenCalledWith({ mode: 'Random' });
-        expect(emitSpy).toHaveBeenCalledWith(
-            'board:regenerated',
-            room.board,
-            room.lastGenerationMode,
-        );
     });
 
     it('Generates new board with provided options', () => {
@@ -436,11 +431,6 @@ describe('handleNewCard', () => {
             mode: 'SRLv5',
             seed: 12345,
         });
-        expect(emitSpy).toHaveBeenCalledWith(
-            'board:regenerated',
-            room.board,
-            room.lastGenerationMode,
-        );
     });
 });
 
