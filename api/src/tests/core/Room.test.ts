@@ -547,6 +547,8 @@ describe('room state events', () => {
             raceHandler.getEndTime.mockImplementation(() => endedAt);
             room.raceHandler = raceHandler;
 
+            const chatSpy = jest.spyOn(room, 'sendChat');
+            chatSpy.mockClear();
             room.handleMark(
                 { payload: { row: 0, col: 0 } } as MarkAction,
                 mockTokenPayload,
@@ -571,6 +573,7 @@ describe('room state events', () => {
 
             expect(player.goalComplete).toBe(false);
             expect(emitSpy).toHaveBeenCalledWith('player:unfinished', player);
+            expect(chatSpy).not.toHaveBeenCalled();
         },
     );
 });

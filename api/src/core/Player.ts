@@ -271,6 +271,29 @@ export default class Player {
             });
         };
 
+        const onPlayerFinished = (player: Player, finishTime: Date) => {
+            this.sendMessage({
+                action: 'player:finished',
+                player: player.toClientData(),
+                timestamp: finishTime.toISOString(),
+                players: this.room.getPlayers(),
+            });
+        };
+        const onPlayerUnfinished = (player: Player, timestamp: Date) => {
+            this.sendMessage({
+                action: 'player:unfinished',
+                player: player.toClientData(),
+                timestamp: timestamp.toISOString(),
+                players: this.room.getPlayers(),
+            });
+        };
+        const onTimerStopped = (finishTime: Date) => {
+            this.sendMessage({
+                action: 'timer:stopped',
+                timestamp: finishTime.toISOString(),
+            });
+        };
+
         const sendRoomInfoUpdate = () => {
             this.sendMessage({
                 action: 'updateRoomData',
@@ -290,6 +313,9 @@ export default class Player {
         // this.room.on('players:leave', onPlayersLeave);
 
         // TODO: PROTOCOL V2 - implement discrete events for timer events
+        this.room.on('player:finished', onPlayerFinished);
+        this.room.on('player:unfinished', onPlayerUnfinished);
+        this.room.on('timer:stopped', onTimerStopped);
         this.room.on('player:finished', sendRoomInfoUpdate);
         this.room.on('player:unfinished', sendRoomInfoUpdate);
         this.room.on('timer:started', sendRoomInfoUpdate);
@@ -304,6 +330,9 @@ export default class Player {
             this.room.off('board:revealed', onBoardRevealed);
             this.room.off('chatSent', onChatSent);
             this.room.off('system:message', onSystemMessage);
+            this.room.off('player:finished', onPlayerFinished);
+            this.room.off('player:unfinished', onPlayerUnfinished);
+            this.room.off('timer:stopped', onTimerStopped);
             this.room.off('player:finished', sendRoomInfoUpdate);
             this.room.off('player:unfinished', sendRoomInfoUpdate);
             this.room.off('timer:started', sendRoomInfoUpdate);

@@ -6,7 +6,10 @@ import { ChatMessage, ServerMessage } from '@playbingo/types';
 import { DateTime, Duration } from 'luxon';
 import { useContext, useEffect, useMemo, useRef, useState } from 'react';
 
-function eventMessage(event: ServerMessage): ChatMessage | undefined {
+function eventMessage(
+    event: ServerMessage,
+    mode?: string,
+): ChatMessage | undefined {
     switch (event.action) {
         case 'chatSent':
         case 'system:message':
@@ -48,12 +51,20 @@ function eventMessage(event: ServerMessage): ChatMessage | undefined {
         case 'player:finished':
             return [
                 { contents: event.player.nickname, color: event.player.color },
-                ' has finished.',
+                mode === 'Lockout'
+                    ? ' has achieved lockout!'
+                    : mode === 'Blackout'
+                      ? ' has achieved blackout!'
+                      : ' has completed the goal!',
             ];
         case 'player:unfinished':
             return [
                 { contents: event.player.nickname, color: event.player.color },
-                ' is no longer finished.',
+                mode === 'Lockout'
+                    ? ' no longer has lockout.'
+                    : mode === 'Blackout'
+                      ? ' no longer has blackout.'
+                      : ' has no longer completed the goal.',
             ];
         case 'timer:started':
             return ['The timer has started.'];
@@ -66,8 +77,12 @@ function eventMessage(event: ServerMessage): ChatMessage | undefined {
     }
 }
 
-function formatEvent(event: ServerMessage, startedAt?: DateTime): ChatMessage {
-    const contents = eventMessage(event);
+function formatEvent(
+    event: ServerMessage,
+    startedAt?: DateTime,
+    mode?: string,
+): ChatMessage {
+    const contents = eventMessage(event, mode);
     if (!event.timestamp || event.action === 'chatSent') return contents ?? [];
     if (!contents) return [];
     const elapsed = startedAt
@@ -85,6 +100,7 @@ export default function RoomChat() {
         () =>
             history.reduce<{
                 startedAt?: DateTime;
+                mode?: string;
                 messages: ChatMessage[];
             }>(
                 (previous, event) => {
@@ -101,8 +117,14 @@ export default function RoomChat() {
                               : event.action === 'timer:reset'
                                 ? undefined
                                 : previous.startedAt;
+                    const mode =
+                        event.action === 'connected' ||
+                        event.action === 'updateRoomData'
+                            ? (event.roomData?.mode ?? previous.mode)
+                            : previous.mode;
                     return {
                         startedAt,
+                        mode,
                         messages: [
                             ...previous.messages,
                             formatEvent(
@@ -110,6 +132,7 @@ export default function RoomChat() {
                                 event.action === 'timer:reset'
                                     ? previous.startedAt
                                     : startedAt,
+                                mode,
                             ),
                         ],
                     };

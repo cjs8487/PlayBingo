@@ -295,6 +295,10 @@ export default class Room extends EventEmitter {
                     }
             }
         }
+
+        this.on('board:cellUpdate', this.checkWinConditions);
+        this.on('board:goalMarked', this.checkWinConditions);
+        this.on('board:goalUnmarked', this.checkWinConditions);
     }
 
     //#region EventEmitter
@@ -639,7 +643,6 @@ export default class Room extends EventEmitter {
         );
         player.mark(row, col);
         this.emit('board:goalMarked', this.board[row][col], row, col, player);
-        this.checkWinConditions();
     }
 
     handleUnmark(
@@ -664,7 +667,6 @@ export default class Room extends EventEmitter {
             unCol,
             player,
         );
-        this.checkWinConditions();
     }
 
     handleChangeColor(
@@ -955,32 +957,11 @@ export default class Room extends EventEmitter {
                     player.goalComplete = true;
                     this.raceHandler?.playerFinished(player);
                     const finishTime = new Date(player.finishedAt!);
-                    this.sendChat(
-                        [
-                            {
-                                contents: player.nickname,
-                                color: player.color,
-                            },
-                            ' has achieved lockout!',
-                        ],
-                        finishTime,
-                    );
                     this.emit('player:finished', player, finishTime);
                 }
                 if (player.goalComplete && player.goalCount < goalsNeeded) {
                     player.goalComplete = false;
                     this.raceHandler?.playerUnfinshed(player);
-                    const timestamp = new Date();
-                    this.sendChat(
-                        [
-                            {
-                                contents: player.nickname,
-                                color: player.color,
-                            },
-                            ' no longer has lockout.',
-                        ],
-                        timestamp,
-                    );
                     this.emit('player:unfinished', player);
                 }
             } else {
@@ -991,16 +972,6 @@ export default class Room extends EventEmitter {
                         0,
                     );
                     if (linesComplete > player.linesComplete) {
-                        this.sendChat(
-                            [
-                                {
-                                    contents: player.nickname,
-                                    color: player.color,
-                                },
-                                ' has completed a line!',
-                            ],
-                            new Date(),
-                        );
                         // TODO: emit an event for line completion
                     }
                     if (
@@ -1010,16 +981,6 @@ export default class Room extends EventEmitter {
                         player.goalComplete = true;
                         this.raceHandler?.playerFinished(player).then();
                         const finishTime = new Date(player.finishedAt!);
-                        this.sendChat(
-                            [
-                                {
-                                    contents: player.nickname,
-                                    color: player.color,
-                                },
-                                ' has completed the goal!',
-                            ],
-                            finishTime,
-                        );
                         this.emit('player:finished', player, finishTime);
                     } else if (
                         linesComplete < this.lineCount &&
@@ -1027,17 +988,6 @@ export default class Room extends EventEmitter {
                     ) {
                         player.goalComplete = false;
                         this.raceHandler?.playerUnfinshed(player);
-                        const timestamp = new Date();
-                        this.sendChat(
-                            [
-                                {
-                                    contents: player.nickname,
-                                    color: player.color,
-                                },
-                                ' has no longer completed the goal.',
-                            ],
-                            timestamp,
-                        );
                         this.emit('player:unfinished', player);
                     }
                     player.linesComplete = linesComplete;
@@ -1049,31 +999,10 @@ export default class Room extends EventEmitter {
                         player.goalComplete = true;
                         this.raceHandler?.playerFinished(player);
                         const finishTime = new Date(player.finishedAt!);
-                        this.sendChat(
-                            [
-                                {
-                                    contents: player.nickname,
-                                    color: player.color,
-                                },
-                                ' has achieved blackout!',
-                            ],
-                            finishTime,
-                        );
                         this.emit('player:finished', player, finishTime);
                     } else if (!complete && player.goalComplete) {
                         player.goalComplete = false;
                         this.raceHandler?.playerUnfinshed(player);
-                        const timestamp = new Date();
-                        this.sendChat(
-                            [
-                                {
-                                    contents: player.nickname,
-                                    color: player.color,
-                                },
-                                ' no longer has blackout.',
-                            ],
-                            timestamp,
-                        );
                         this.emit('player:unfinished', player);
                     }
                 }

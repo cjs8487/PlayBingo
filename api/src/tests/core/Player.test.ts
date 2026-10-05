@@ -169,7 +169,7 @@ describe('Room event subscriptions', () => {
         });
         expect(socket.send).toHaveBeenCalledWith(expectedMessage);
         expect(secondSocket.send).toHaveBeenCalledWith(expectedMessage);
-        expect(subscribedRoom.on).toHaveBeenCalledTimes(12);
+        expect(subscribedRoom.on).toHaveBeenCalledTimes(15);
     });
 
     it.each([
@@ -189,9 +189,9 @@ describe('Room event subscriptions', () => {
             configurable: true,
             get: () => roomData,
         });
-        const listener = subscribedRoom.on.mock.calls.find(
-            ([name]) => name === event,
-        )?.[1] as (() => void) | undefined;
+        const listener = subscribedRoom.on.mock.calls
+            .filter(([name]) => name === event)
+            .at(-1)?.[1] as (() => void) | undefined;
 
         expect(listener).toBeDefined();
         listener?.();
@@ -205,6 +205,39 @@ describe('Room event subscriptions', () => {
         );
     });
 
+    it.each(['player:finished', 'player:unfinished', 'timer:stopped'] as const)(
+        'forwards %s with its timestamp',
+        (event) => {
+            const {
+                player,
+                room: subscribedRoom,
+                socket,
+            } = createConnectedPlayer();
+            const listener = subscribedRoom.on.mock.calls.find(
+                ([name]) => name === event,
+            )?.[1] as (...args: any[]) => void;
+            const timestamp = new Date('2026-01-02T03:04:05.000Z');
+            if (event === 'timer:stopped') {
+                listener(timestamp, new Date());
+            } else {
+                listener(player, timestamp, new Date());
+            }
+            expect(socket.send).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    action: event,
+                    timestamp: timestamp.toISOString(),
+                    ...(event === 'timer:stopped'
+                        ? {}
+                        : {
+                              player: expect.objectContaining({
+                                  id: player.id,
+                              }),
+                          }),
+                }),
+            );
+        },
+    );
+
     it('unsubscribes only after the last player connection closes', () => {
         const { player, room: subscribedRoom } = createConnectedPlayer();
         const secondSocket = mock<PlayBingoSocket>();
@@ -214,7 +247,7 @@ describe('Room event subscriptions', () => {
         expect(subscribedRoom.off).not.toHaveBeenCalled();
 
         player.closeConnection('connection-2');
-        expect(subscribedRoom.off).toHaveBeenCalledTimes(12);
+        expect(subscribedRoom.off).toHaveBeenCalledTimes(15);
         for (const [event, listener] of subscribedRoom.on.mock.calls) {
             expect(subscribedRoom.off).toHaveBeenCalledWith(event, listener);
         }
