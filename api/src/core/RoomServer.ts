@@ -128,7 +128,9 @@ roomWebSocketServer.on('connection', (socket, req) => {
                 }
                 break;
             case 'newCard':
-                room.handleNewCard(action);
+                room.handleNewCard(action).catch((error) => {
+                    room.logError(`Failed to generate a new card - ${error}`);
+                });
                 break;
             case 'revealCard':
                 room.handleRevealCard(payload);

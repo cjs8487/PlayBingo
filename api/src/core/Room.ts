@@ -1009,11 +1009,11 @@ export default class Room extends EventEmitter {
             if (!options.mode) {
                 options.mode = this.lastGenerationMode.mode;
             }
-            this.generateBoard(options as BoardGenerationOptions);
+            return this.generateBoard(options as BoardGenerationOptions);
         } else {
             // TODO: we should probably generate a new seed before generating
             // the board from the previous settings
-            this.generateBoard(this.lastGenerationMode);
+            return this.generateBoard(this.lastGenerationMode);
         }
     }
 
@@ -1194,12 +1194,11 @@ export default class Room extends EventEmitter {
                 });
             });
         }
-        this.on('board:regenerated', (_board, _options, persist, timestamp) => {
-            if (persist)
-                this.recordAnnouncement({
-                    action: 'board:regenerated',
-                    ...this.announcementTime(timestamp),
-                });
+        this.on('board:regenerated', (_board, _options, timestamp) => {
+            this.recordAnnouncement({
+                action: 'board:regenerated',
+                ...this.announcementTime(timestamp),
+            });
         });
         for (const action of [
             'timer:started',

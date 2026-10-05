@@ -493,20 +493,20 @@ describe('handleNewCard', () => {
         room.createTeamForPlayer(player);
     });
 
-    it('Generates new board with default options', () => {
+    it('Generates new board with default options', async () => {
         const generateBoardSpy = jest
             .spyOn(room, 'generateBoard')
             .mockResolvedValue(undefined);
         const mockNewCardAction = mockDeep<NewCardAction>();
         mockNewCardAction.options = undefined;
 
-        room.handleNewCard(mockNewCardAction);
+        await room.handleNewCard(mockNewCardAction);
+        expect(emitSpy).not.toHaveBeenCalled();
 
         expect(generateBoardSpy).toHaveBeenCalledWith({ mode: 'Random' });
-        expect(emitSpy).not.toHaveBeenCalled();
     });
 
-    it('Generates new board with provided options', () => {
+    it('Generates new board with provided options', async () => {
         const generateBoardSpy = jest
             .spyOn(room, 'generateBoard')
             .mockResolvedValue(undefined);
@@ -516,13 +516,13 @@ describe('handleNewCard', () => {
             seed: 12345,
         };
 
-        room.handleNewCard(mockNewCardAction);
+        await room.handleNewCard(mockNewCardAction);
+        expect(emitSpy).not.toHaveBeenCalled();
 
         expect(generateBoardSpy).toHaveBeenCalledWith({
             mode: 'SRLv5',
             seed: 12345,
         });
-        expect(emitSpy).not.toHaveBeenCalled();
     });
 });
 
