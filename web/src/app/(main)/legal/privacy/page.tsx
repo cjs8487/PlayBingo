@@ -18,10 +18,10 @@ const sections: PolicyBlock[] = [
             'If you create an account, we may collect information necessary to provide and secure your account, such as:',
         ],
         bullets: [
-            'username or display name;',
-            'email address, where applicable;',
-            'authentication information;',
-            'account preferences; and',
+            'username or display name',
+            'email address, where applicable',
+            'authentication information',
+            'account preferences',
             'information associated with your use of PlayBingo.',
         ],
     },
@@ -36,12 +36,12 @@ const sections: PolicyBlock[] = [
             'PlayBingo stores information that users and communities provide when creating, managing, and playing games. This may include:',
         ],
         bullets: [
-            'game definitions and configurations;',
-            'goals and descriptions;',
-            'images and other uploaded assets;',
-            'game settings;',
-            'game-room information;',
-            'player actions and game state; and',
+            'game definitions and configurations',
+            'goals and descriptions',
+            'images and other uploaded assets',
+            'game settings',
+            'game-room information',
+            'player actions and game state',
             'other content submitted through the Service.',
         ],
     },
@@ -67,34 +67,32 @@ const sections: PolicyBlock[] = [
     {
         paragraphs: [
             'A narrow subset of requests may be excluded from some or all standard logging where appropriate. Additional information may be recorded in targeted logs when reasonably necessary to investigate an error, reproduce a problem, address security or usage concerns, or otherwise maintain the Service. Such logging is intended to contain only information reasonably necessary for the relevant purpose.',
-            'Operational logs are generally retained for approximately one week. Error and diagnostic logs may be retained for longer periods, including indefinitely where reasonably necessary for debugging, security, development, or maintaining the Service. We may delete such logs at our discretion when they are no longer useful.',
-            "Logs are stored within PlayBingo's infrastructure and are not currently backed up to an external system.",
+            'Operational logs are retained for a period of approximately one week. Error and diagnostic logs may be retained for longer periods, including indefinitely where reasonably necessary for debugging, security, development, or maintaining the Service. We may delete such logs at our discretion when they are no longer useful.',
         ],
     },
     {
         heading: 'Analytics and Metrics',
         paragraphs: [
             'PlayBingo collects metrics and analytics to understand how the Service is used, monitor its operation, identify problems, measure performance, and guide development.',
-            'Our current analytics infrastructure is operated by PlayBingo itself using self-hosted monitoring and visualization software. We do not currently use a third-party analytics service to collect or sell information about individual users. Analytics are used primarily in aggregated or de-identified form.',
-            'We do not use analytics data to sell or target advertising to individual users.',
+            'We do not use a third-party analytics service to collect or sell information about individual users. Analytics are used primarily in aggregated or de-identified form.',
         ],
     },
     {
         heading: '2. How We Use Information',
         paragraphs: ['We may use information we collect to:'],
         bullets: [
-            'provide and operate PlayBingo;',
-            'authenticate users and maintain account security;',
-            'host and display community-created games and content;',
-            'provide APIs and integrations;',
-            'monitor the health and performance of the Service;',
-            'maintain, troubleshoot, and debug the Service;',
-            'detect abuse, fraud, security problems, and other misuse;',
-            'enforce rate limits and other usage restrictions;',
-            'understand Service usage and improve PlayBingo;',
-            'respond to support requests;',
-            'develop new features and functionality;',
-            'comply with legal obligations; and',
+            'provide and operate PlayBingo',
+            'authenticate users and maintain account security',
+            'host and display community-created games and content',
+            'provide APIs and integrations',
+            'monitor the health and performance of the Service',
+            'maintain, troubleshoot, and debug the Service',
+            'detect abuse, fraud, security problems, and other misuse',
+            'enforce rate limits and other usage restrictions',
+            'understand Service usage and improve PlayBingo',
+            'respond to support requests',
+            'develop new features and functionality',
+            'comply with legal obligations',
             'protect the rights, safety, and security of PlayBingo, its users, and others.',
         ],
     },
@@ -227,7 +225,7 @@ const sections: PolicyBlock[] = [
         heading: '15. Changes to This Privacy Policy',
         paragraphs: [
             "We may update this Privacy Policy as PlayBingo's practices, features, infrastructure, or legal obligations change.",
-            'When we make material changes, we will provide reasonable notice through the Service or by other appropriate means. The updated policy will indicate its effective date.',
+            'When we make material changes, we will provide reasonable notice through the Service or by other appropriate means. The updated policy will indicate its effective date, which will be no later than 30 days after the changes are made. Non-material changes may be effective immediately without notice.',
         ],
     },
     {
@@ -262,6 +260,10 @@ export default function Privacy() {
                 &quot;our&quot;) collects, uses, stores, and protects
                 information when you use the PlayBingo website, services, APIs,
                 and related features (collectively, the &quot;Service&quot;).
+            </Typography>
+            <Typography>
+                Usage of the Service indicates your acceptance of this Privacy
+                Policy.
             </Typography>
             <Typography>
                 PlayBingo is built around community ownership. We do not sell

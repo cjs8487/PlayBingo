@@ -1,6 +1,6 @@
-import { Box, Container, Typography } from '@mui/material';
+import { Box, Container, Link, Typography } from '@mui/material';
 
-export default function TermsofService() {
+export default function TermsOfService() {
     return (
         <Container
             sx={{ py: 2, display: 'flex', flexDirection: 'column', gap: 1 }}
@@ -21,16 +21,36 @@ export default function TermsofService() {
                 the &quot;Service&quot;).
             </Typography>
             <Typography>
-                By accessing or using PlayBingo, you agree to these Terms. If
-                you do not agree to them, do not use the Service.
+                By accessing the Service or otherwise indicating that you have
+                accepted these Terms, you represent that
+            </Typography>
+            <ul style={{ marginTop: 0, marginBottom: 0 }}>
+                <li>You have read, understand, and agree to these Terms</li>
+                <li>You are at least 13 years old</li>
+                <li>
+                    You are of the age of majority in your jurisdiction, or have
+                    obtained parental or guardian consent to agree to these
+                    Terms.
+                </li>
+                <li>
+                    You have the legal capacity to enter into these Terms and
+                    agree to be bound by them
+                </li>
+            </ul>
+            <Typography>
+                PlayBingo&apos;s{' '}
+                <Link href="/legal/privacy">Privacy Policy</Link> governs how we
+                collect, use, and store information about you when you use the
+                Service. The PRivacy Policy is included in these Terms, and by
+                using the Service, you also agree to the Privacy Policy.
             </Typography>
             <Typography variant="h5">1. The PlayBingo Service</Typography>
             <Typography>
                 PlayBingo is a community-oriented platform for creating,
-                managing, and playing bingo games. PlayBingo may provide tools
-                for creating games, generating boards, managing game rooms,
-                communicating with other players, integrating with third-party
-                services, and accessing game data through APIs.
+                managing, and playing bingo games. PlayBingo provides tools for
+                creating and managing games, generating boards, hosting game
+                rooms, communicating with other players, integrating with
+                third-party services, and accessing game data through APIs.
             </Typography>
             <Typography>
                 PlayBingo is provided on an ongoing basis, but we do not
@@ -39,8 +59,8 @@ export default function TermsofService() {
                 changed, suspended, or discontinued at any time.
             </Typography>
             <Typography>
-                PlayBingo is provided free of charge. We do not currently
-                process payments or financial transactions through the Service.
+                PlayBingo is provided free of charge. We do not process payments
+                or financial transactions through the Service.
             </Typography>
             <Typography variant="h5">2. Accounts</Typography>
             <Typography>
@@ -104,15 +124,63 @@ export default function TermsofService() {
                 we reasonably believe violates these Terms, applicable law, or
                 the rights of others.
             </Typography>
+            <Typography>
+                PlayBingo has a zero-tolerance policy for harassment, threats,
+                or other unlawful, unsafe, or otherwise inappropriate conduct
+                through User Content. We may remove or restrict access to User
+                Content that we reasonably believe violates this policy or falls
+                into any of the following categories:
+            </Typography>
+            <ul style={{ marginTop: 0 }}>
+                <li>
+                    <b>Harassment, Threats, and Intimidation:</b> Content
+                    containing threats, encouragement or glorification of
+                    violence, promotion of crime, or instructions on how to
+                    commit harmful acts.
+                </li>
+                <li>
+                    <b>Discrimination, Hate Speech, and Hateful Behavior:</b>{' '}
+                    Content that promotes hate, intolerance, or discrimination
+                    against individuals or groups based on race, ethnicity,
+                    religion, gender, sexual orientation, disability, or other
+                    any other protected characteristic.
+                </li>
+                <li>
+                    <b>Sexual and Physical Abuse:</b> Content that shows,
+                    promotes, encourages, or otherwise facilitates sexual abuse
+                    or exploitation, including human trafficking and smuggling.
+                </li>
+                <li>
+                    <b>Harassment and Bullying: </b> Content that harasses or
+                    bullies other individuals, including, but not limited to,
+                    degrading remarks about appearance, sexual orientation,
+                    race, religion, or other characteristics, doxing, and other
+                    coordinated abuse.
+                </li>
+                <li>
+                    <b>Suicide and Self-Harm:</b> Content that promotes,
+                    demonstrates, or provides instructions for suicide or
+                    self-harm.
+                </li>
+                <li>
+                    <b>Sensitive and Mature Themes:</b> Content including
+                    nudity, sexual activity, extremely graphic, violent, or
+                    disturbing content, and content that promotes animal
+                    cruelty, neglect, or exploitation.
+                </li>
+                <li>
+                    <b>Personal Information:</b> Content that contains personal
+                    information about yourself or another individual, especially
+                    that which could lead to harm, such as identity theft,
+                    stalking, or fraud.
+                </li>
+                <li>
+                    <b>Illegal Activity:</b> Content that promotes illegal
+                    activity.
+                </li>
+            </ul>
             <Typography variant="h5">
                 4. Third-Party Intellectual Property
-            </Typography>
-            <Typography>
-                PlayBingo may display or store material relating to games,
-                franchises, software, or other works owned by third parties.
-                Such material may include screenshots, characters, names,
-                terminology, logos, artwork, images, and other copyrighted or
-                otherwise protected material.
             </Typography>
             <Typography>
                 Except for rights expressly granted by PlayBingo, all such
@@ -152,36 +220,39 @@ export default function TermsofService() {
             </Typography>
             <Box>
                 <Typography>You may not:</Typography>
-                <ul>
+                <ul style={{ marginTop: 0 }}>
                     <li>
-                        use the Service to violate applicable law or
-                        regulations;
+                        use the Service to violate applicable law or regulations
                     </li>
                     <li>
                         upload or distribute content that you do not have the
-                        right to use;
+                        right to use
                     </li>
-                    <li>impersonate another person or organization;</li>
+                    <li>impersonate another person or organization</li>
+                    <li>
+                        share personally identifiable information about yourself
+                        or others on the Service
+                    </li>
                     <li>
                         interfere with or attempt to compromise the security or
-                        operation of the Service;
+                        operation of the Service
                     </li>
                     <li>
                         intentionally introduce malicious software or other
-                        harmful material;
+                        harmful material
                     </li>
                     <li>
                         abuse APIs, automated systems, or other Service
                         resources in a manner that materially interferes with
-                        the Service;
+                        the Service
                     </li>
                     <li>
                         attempt to access accounts, data, or systems without
-                        authorization;
+                        authorization
                     </li>
                     <li>
                         use the Service to harass, threaten, or unlawfully harm
-                        others; or
+                        others
                     </li>
                     <li>
                         circumvent technical restrictions or access controls.
@@ -235,7 +306,11 @@ export default function TermsofService() {
             <Typography>
                 We may modify these Terms from time to time. When we make
                 material changes, we will provide reasonable notice through the
-                Service or by other appropriate means.
+                Service or by other appropriate means. Whenever material changes
+                are made, they will go into effect 30 days after they are
+                published, or upon your reading of the updated terms, whichever
+                occurs first. Non-material changes may be effective immediately
+                without notice.
             </Typography>
             <Typography>
                 Your continued use of PlayBingo after updated Terms become
@@ -251,10 +326,10 @@ export default function TermsofService() {
             <Typography>
                 PlayBingo does not guarantee that the Service, any account, or
                 any User Content will be available indefinitely. We may
-                discontinue or
+                discontinue or substantially modify the Service in the future.
+                We do not guarantee indefinite preservation of User Content or
+                other data.
             </Typography>
-            substantially modify the Service in the future. We do not guarantee
-            indefinite preservation of User Content or other data.
             <Typography>
                 Sections that by their nature should survive termination,
                 including provisions concerning intellectual property,
