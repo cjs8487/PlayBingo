@@ -1,6 +1,7 @@
 'use client';
 import { KeyboardArrowDown, KeyboardArrowUp } from '@mui/icons-material';
 import {
+    Box,
     Checkbox,
     Collapse,
     FormControl,
@@ -8,23 +9,16 @@ import {
     IconButton,
     InputLabel,
     MenuItem,
-    SelectChangeEvent,
-    TableBody,
-    TableCell,
-    TableContainer,
-    TableHead,
-    Typography,
     Select,
-    TableRow,
-    Box,
-    Table,
+    SelectChangeEvent,
+    Typography,
 } from '@mui/material';
 import { blue, blueGrey, orange, red } from '@mui/material/colors';
 import { DateTime } from 'luxon';
-import { forwardRef, useState } from 'react';
+import { useState } from 'react';
 import { useList } from 'react-use';
 import AutoSizer from 'react-virtualized-auto-sizer';
-import { TableComponents, TableProps, TableVirtuoso } from 'react-virtuoso';
+import { TableComponents, Virtuoso } from 'react-virtuoso';
 import { LogEntry } from '../page';
 
 const colorMap: { [k: string]: string } = {
@@ -33,34 +27,6 @@ const colorMap: { [k: string]: string } = {
     info: blue[900],
     debug: blueGrey[800],
 };
-
-const Scroller = forwardRef<HTMLDivElement>(
-    function VirtuosoScroller(props, ref) {
-        return <TableContainer {...props} ref={ref} />;
-    },
-);
-
-const VirtuosoTable = (props: TableProps) => (
-    <Table
-        {...props}
-        sx={{
-            borderCollapse: 'separate',
-            tableLayout: 'fixed',
-        }}
-    />
-);
-
-const VirtuosoTableBody = forwardRef<HTMLTableSectionElement>(
-    function VirtuosoTableBody(props, ref) {
-        return <TableBody {...props} ref={ref} />;
-    },
-);
-
-const VirtuosoTableHead = forwardRef<HTMLTableSectionElement>(
-    function VirtuosoTableHead(props, ref) {
-        return <TableHead {...props} ref={ref} />;
-    },
-);
 
 const VirtuosoTableRow: TableComponents<LogEntry, TableContext>['TableRow'] = ({
     context,
@@ -76,85 +42,60 @@ const VirtuosoTableRow: TableComponents<LogEntry, TableContext>['TableRow'] = ({
 
     return (
         <>
-            <TableRow
+            <Box
                 sx={{
-                    '& > *': {
-                        borderBottom: 'unset',
-                        background: colorMap[entry.level],
-                    },
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 4,
+                    p: 1,
+                    borderColor: 'divider',
+                    borderLeft: open ? 1 : 0,
                 }}
                 {...props}
             >
-                {'method' in entry && (
-                    <TableCell padding="none" size="small">
-                        <IconButton
-                            aria-label="expand row"
-                            size="small"
-                            onClick={() => setExpanded(props['data-index'])}
-                        >
-                            {open ? <KeyboardArrowUp /> : <KeyboardArrowDown />}
-                        </IconButton>
-                    </TableCell>
-                )}
-                <TableCell colSpan={'method' in entry ? 1 : 2} align="right">
+                <IconButton
+                    aria-label="expand row"
+                    size="small"
+                    onClick={() => setExpanded(props['data-index'])}
+                    disabled={!('method' in entry)}
+                >
+                    {open ? <KeyboardArrowUp /> : <KeyboardArrowDown />}
+                </IconButton>
+                <Box>
                     {DateTime.fromISO(entry.timestamp).toLocaleString(
                         DateTime.DATETIME_MED,
                     )}
-                </TableCell>
-                <TableCell align="center">{entry.level}</TableCell>
-                <TableCell>
+                </Box>
+                <Box sx={{ color: colorMap[entry.level] }}>{entry.level}</Box>
+                <Box>
                     {'room' in entry && `[${entry.room}] `}
                     {entry.message}
-                </TableCell>
-            </TableRow>
+                </Box>
+            </Box>
             {'method' in entry && (
-                <TableRow>
-                    <TableCell
-                        style={{ paddingBottom: 0, paddingTop: 0 }}
-                        colSpan={4}
+                <Collapse in={open} timeout="auto" unmountOnExit>
+                    <Box
+                        sx={{
+                            pl: 4,
+                            borderColor: 'divider',
+                            borderLeft: 1,
+                        }}
                     >
-                        <Collapse in={open} timeout="auto" unmountOnExit>
-                            <Box sx={{ margin: 1 }}>
-                                <Typography
-                                    variant="h6"
-                                    gutterBottom
-                                    component="div"
-                                >
-                                    Additional Request Information
-                                </Typography>
-                                <Typography>
-                                    User Agent: {entry.userAgent}
-                                </Typography>
-                                <Typography>IP Address: {entry.ip}</Typography>
-                                <Typography>
-                                    Session Id: {entry.sessionId}
-                                </Typography>
-                                <Typography>
-                                    Request completed in {entry.durationMs} ms
-                                </Typography>
-                            </Box>
-                        </Collapse>
-                    </TableCell>
-                </TableRow>
+                        <Typography variant="h6" gutterBottom component="div">
+                            Additional Request Information
+                        </Typography>
+                        <Typography>User Agent: {entry.userAgent}</Typography>
+                        <Typography>IP Address: {entry.ip}</Typography>
+                        <Typography>Session Id: {entry.sessionId}</Typography>
+                        <Typography>
+                            Request completed in {entry.durationMs} ms
+                        </Typography>
+                    </Box>
+                </Collapse>
             )}
         </>
     );
 };
-
-const FixedHeaderContent = () => (
-    <TableRow
-        sx={{
-            backgroundColor: 'background.paper',
-        }}
-    >
-        <TableCell size="small" padding="none" />
-        <TableCell align="right" size="small">
-            Timestamp
-        </TableCell>
-        <TableCell align="center">Level</TableCell>
-        <TableCell>Message</TableCell>
-    </TableRow>
-);
 
 interface TableContext {
     isExpanded: (index: number) => boolean;
@@ -286,19 +227,14 @@ export default function LogTable({ logs }: Props) {
             <Box style={{ flexGrow: 1 }}>
                 <AutoSizer>
                     {({ width, height }) => (
-                        <TableVirtuoso<LogEntry, TableContext>
+                        <Virtuoso<LogEntry, TableContext>
                             width={width}
                             height={height}
                             style={{ height, width }}
                             data={shownLogs}
                             components={{
-                                Scroller,
-                                Table: VirtuosoTable,
-                                TableHead: VirtuosoTableHead,
-                                TableRow: VirtuosoTableRow,
-                                TableBody: VirtuosoTableBody,
+                                Item: VirtuosoTableRow,
                             }}
-                            fixedHeaderContent={FixedHeaderContent}
                             initialTopMostItemIndex={logs.length}
                             context={{ isExpanded, setExpanded }}
                         />
