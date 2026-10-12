@@ -67,6 +67,7 @@ export default function StaffDashboardLayout({
                     sx={{
                         flex: '1 1 0',
                         px: { xs: 0, sm: 1 },
+                        py: 1.5,
                         minWidth: 0,
                         minHeight: 0,
                         '&:not([hidden])': { display: 'flex' },
