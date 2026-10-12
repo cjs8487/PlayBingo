@@ -1,3 +1,5 @@
+import { DateTime } from 'luxon';
+
 export type MetadataFilter = {
     key: string;
     value: string | number | boolean | null;
@@ -37,7 +39,9 @@ export function normalizeLogs(entries: unknown[]): LogRecord[] {
             ...metadata
         } = entry;
         const time =
-            typeof timestamp === 'string' ? Date.parse(timestamp) : NaN;
+            typeof timestamp === 'string'
+                ? DateTime.fromISO(timestamp).toMillis()
+                : NaN;
         const origin = source ?? category ?? component;
         return {
             id,

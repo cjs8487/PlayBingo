@@ -1,4 +1,5 @@
 'use client';
+import { DateTime } from 'luxon';
 import { ChevronRight } from '@mui/icons-material';
 import { Box, Chip, Typography } from '@mui/material';
 import { LevelBadge } from './LogInspector';
@@ -65,13 +66,7 @@ export default function LogStreamEntry({
                 }}
             >
                 {Number.isFinite(log.time)
-                    ? new Date(log.time).toLocaleTimeString(undefined, {
-                          hour12: false,
-                          hour: '2-digit',
-                          minute: '2-digit',
-                          second: '2-digit',
-                          fractionalSecondDigits: 3,
-                      })
+                    ? DateTime.fromMillis(log.time).toFormat('HH:mm:ss.SSS')
                     : '—'}
             </Typography>
             <Box sx={{ width: 64, flexShrink: 0 }}>

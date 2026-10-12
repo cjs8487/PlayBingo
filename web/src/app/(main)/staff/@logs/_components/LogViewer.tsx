@@ -233,9 +233,7 @@ export default function LogViewer({
                     }}
                 >
                     <Typography variant="caption" color="text.secondary">
-                        {logs.length.toLocaleString()} total entries ·{' '}
-                        {shown.length.toLocaleString()} matching · Current log
-                        file{loading && ' · Refreshing…'}
+                        {logs.length} total entries · {shown.length} matching
                     </Typography>
                 </Box>
             </Box>

@@ -5,15 +5,11 @@ import {
     FilterAlt,
     FilterAltOff,
 } from '@mui/icons-material';
-import {
-    Box,
-    Chip,
-    IconButton,
-    Snackbar,
-    Tooltip,
-    Typography,
-} from '@mui/material';
-import { useState } from 'react';
+import { Box, Chip, IconButton, Tooltip, Typography } from '@mui/material';
+import { DateTime } from 'luxon';
+import { useEffect } from 'react';
+import { useCopyToClipboard } from 'react-use';
+import { alertError, notifyMessage } from '@/lib/Utils';
 import { formatValue, isScalar, LogRecord, MetadataFilter } from './LogUtils';
 
 export function LevelBadge({ level }: { level: string }) {
@@ -48,21 +44,23 @@ export default function LogInspector({
     onClose: () => void;
     onFilter: (filter: MetadataFilter) => void;
 }) {
-    const [feedback, setFeedback] = useState('');
-    const copy = async (value: string) => {
-        try {
-            await navigator.clipboard.writeText(value);
-            setFeedback('Copied to clipboard');
-        } catch {
-            setFeedback('Copy failed. Select the text to copy manually.');
+    const [copyState, copyToClipboard] = useCopyToClipboard();
+    useEffect(() => {
+        if (copyState.value === undefined && !copyState.error) return;
+        if (copyState.error || !copyState.noUserInteraction) {
+            alertError('Copy failed. Select the text to copy manually.');
+        } else {
+            notifyMessage('Copied to clipboard');
         }
-    };
+    }, [copyState]);
     const copyButton = (value: string, label: string) => (
         <Tooltip title={label}>
             <IconButton
                 size="small"
                 aria-label={label}
-                onClick={() => void copy(value)}
+                onClick={() => {
+                    copyToClipboard(value);
+                }}
             >
                 <ContentCopy sx={{ fontSize: 16 }} />
             </IconButton>
@@ -105,7 +103,7 @@ export default function LogInspector({
                 sx={{ mb: 1.5, overflowWrap: 'anywhere' }}
             >
                 {Number.isFinite(log.time)
-                    ? new Date(log.time).toLocaleString(undefined, {
+                    ? DateTime.fromMillis(log.time).toLocaleString({
                           year: 'numeric',
                           month: 'short',
                           day: 'numeric',
@@ -275,19 +273,13 @@ export default function LogInspector({
                 <Typography sx={{ fontWeight: 600 }}>
                     Raw log entry · JSON
                 </Typography>
-                {copyButton(formatValue(log.raw), 'Copy raw JSON')}
+                {copyButton(formatValue(log.raw), 'Copy to clipboard')}
             </Box>
             <Box component="pre" sx={codeStyle}>
                 {typeof log.raw === 'string'
                     ? JSON.stringify(log.raw, null, 2)
                     : formatValue(log.raw)}
             </Box>
-            <Snackbar
-                open={!!feedback}
-                autoHideDuration={3000}
-                onClose={() => setFeedback('')}
-                message={feedback}
-            />
         </Box>
     );
 }
