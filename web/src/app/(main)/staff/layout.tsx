@@ -31,6 +31,7 @@ export default function StaffDashboardLayout({
 
     return (
         <Container
+            maxWidth="xl"
             sx={{
                 pt: 2,
                 flexGrow: 1,
@@ -54,7 +55,10 @@ export default function StaffDashboardLayout({
                         ))}
                     </TabList>
                 </Box>
-                <TabPanel value="Logs" sx={{ flexGrow: 1 }}>
+                <TabPanel
+                    value="Logs"
+                    sx={{ flexGrow: 1, px: { xs: 0, sm: 1 }, minWidth: 0 }}
+                >
                     {logs}
                 </TabPanel>
                 <TabPanel value="Games" sx={{ flexGrow: 1 }}>
