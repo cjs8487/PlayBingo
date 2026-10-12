@@ -122,6 +122,8 @@ export default function LogViewer({
                 gap: 2,
                 width: '100%',
                 minWidth: 0,
+                minHeight: 0,
+                flex: 1,
                 alignItems: 'stretch',
             }}
         >
@@ -130,6 +132,7 @@ export default function LogViewer({
                     ...panel,
                     flex: 1,
                     minWidth: 0,
+                    minHeight: 0,
                     display: 'flex',
                     flexDirection: 'column',
                 }}
@@ -173,7 +176,7 @@ export default function LogViewer({
                 )}
                 <Box
                     aria-busy={loading}
-                    sx={{ height: 'clamp(380px, 62vh, 800px)', minWidth: 0 }}
+                    sx={{ flex: '1 1 0', minHeight: 0, minWidth: 0 }}
                 >
                     {shown.length ? (
                         <Virtuoso
@@ -226,6 +229,7 @@ export default function LogViewer({
                         py: 1.5,
                         borderTop: '1px solid',
                         borderColor: 'divider',
+                        flexShrink: 0,
                     }}
                 >
                     <Typography variant="caption" color="text.secondary">
@@ -243,7 +247,7 @@ export default function LogViewer({
                         ...panel,
                         width: 380,
                         flexShrink: 0,
-                        maxHeight: 'calc(62vh + 290px)',
+                        minHeight: 0,
                         overflowY: 'auto',
                     }}
                 >

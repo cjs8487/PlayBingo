@@ -59,6 +59,7 @@ export default function LogToolbar({
         <Box
             sx={{
                 p: 2,
+                flexShrink: 0,
                 borderBottom: '1px solid',
                 borderColor: 'divider',
             }}

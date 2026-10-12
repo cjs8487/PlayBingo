@@ -35,6 +35,7 @@ export default function StaffDashboardLayout({
             sx={{
                 pt: 2,
                 flexGrow: 1,
+                minHeight: 0,
                 display: 'flex',
                 flexDirection: 'column',
             }}
@@ -48,7 +49,13 @@ export default function StaffDashboardLayout({
                 Staff Dashboard
             </Typography>
             <TabContext value={tab}>
-                <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+                <Box
+                    sx={{
+                        borderBottom: 1,
+                        borderColor: 'divider',
+                        flexShrink: 0,
+                    }}
+                >
                     <TabList onChange={handleChange}>
                         {tabs.map((tab) => (
                             <Tab key={tab} label={tab} value={tab} />
@@ -57,7 +64,13 @@ export default function StaffDashboardLayout({
                 </Box>
                 <TabPanel
                     value="Logs"
-                    sx={{ flexGrow: 1, px: { xs: 0, sm: 1 }, minWidth: 0 }}
+                    sx={{
+                        flex: '1 1 0',
+                        px: { xs: 0, sm: 1 },
+                        minWidth: 0,
+                        minHeight: 0,
+                        '&:not([hidden])': { display: 'flex' },
+                    }}
                 >
                     {logs}
                 </TabPanel>
