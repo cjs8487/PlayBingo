@@ -13,6 +13,8 @@ import {
 } from '../../database/games/Goals';
 import { Prisma } from '@prisma/client';
 import { requiresApiToken } from '../middleware';
+import { validateGoalMeta } from '../../util/GoalValidation';
+import { logError } from '../../Logger';
 
 const upload = Router();
 
@@ -89,6 +91,23 @@ upload.post('/list', async (req, res) => {
         },
     );
 
+    const metaValidationError: { message?: string } = {};
+    convertedGoals.forEach((goal) => {
+        if (goal.meta === undefined) {
+            return;
+        }
+
+        const metaValidation = validateGoalMeta(goal.meta);
+        if (!metaValidation.valid) {
+            metaValidationError.message = metaValidation.error;
+        }
+    });
+
+    if (metaValidationError.message) {
+        res.status(400).json({ error: metaValidationError.message });
+        return;
+    }
+
     await createGoals(slug, convertedGoals);
     res.sendStatus(201);
 });
@@ -130,6 +149,22 @@ upload.post('/replace', async (req, res) => {
         res.sendStatus(404);
         return;
     }
+    const metaValidationError: { message?: string } = {};
+    goals.forEach((goal) => {
+        if (goal.meta === undefined) {
+            return;
+        }
+
+        const metaValidation = validateGoalMeta(goal.meta);
+        if (!metaValidation.valid) {
+            metaValidationError.message = metaValidation.error;
+        }
+    });
+
+    if (metaValidationError.message) {
+        res.status(400).json({ error: metaValidationError.message });
+        return;
+    }
 
     try {
         const success = await replaceAllGoalsForGame(slug, goals);
@@ -139,6 +174,9 @@ upload.post('/replace', async (req, res) => {
         }
         res.sendStatus(200);
     } catch (e) {
+        if (e instanceof Error) {
+            logError(e.message);
+        }
         res.status(500).send('Failed to replace goals');
     }
 });

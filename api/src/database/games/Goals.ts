@@ -1,4 +1,4 @@
-import { Prisma } from '@prisma/client';
+import { Category, Prisma } from '@prisma/client';
 import { prisma } from '../Database';
 import { logError } from '../../Logger';
 import { gameForSlug } from './Games';
@@ -121,8 +121,9 @@ export const deleteGoal = async (id: string) => {
 export type GoalInput = {
     goal: string;
     description?: string;
-    categories?: string[];
+    categories?: Category[] | string[];
     difficulty?: number;
+    meta?: PrismaJson.GoalMeta;
 };
 
 export const createGoals = async (slug: string, goals: GoalInput[]) => {
@@ -140,18 +141,22 @@ export const createGoals = async (slug: string, goals: GoalInput[]) => {
                     categories: {
                         connectOrCreate: g.categories?.map((cat) => ({
                             create: {
-                                name: cat,
+                                name: typeof cat === 'string' ? cat : cat.name,
                                 game: { connect: { slug: slug } },
                             },
                             where: {
                                 gameId_name: {
                                     gameId,
-                                    name: cat,
+                                    name:
+                                        typeof cat === 'string'
+                                            ? cat
+                                            : cat.name,
                                 },
                             },
                         })),
                     },
                     difficulty: g.difficulty,
+                    meta: g.meta ?? undefined,
                     game: { connect: { slug: slug } },
                 },
             }),
@@ -185,18 +190,25 @@ export const replaceAllGoalsForGame = async (
                         categories: {
                             connectOrCreate: g.categories?.map((cat) => ({
                                 create: {
-                                    name: cat,
+                                    name:
+                                        typeof cat === 'string'
+                                            ? cat
+                                            : cat.name,
                                     game: { connect: { slug } },
                                 },
                                 where: {
                                     gameId_name: {
                                         gameId,
-                                        name: cat,
+                                        name:
+                                            typeof cat === 'string'
+                                                ? cat
+                                                : cat.name,
                                     },
                                 },
                             })),
                         },
                         difficulty: g.difficulty ?? undefined,
+                        meta: g.meta,
                         game: { connect: { id: gameId } },
                     },
                 }),
