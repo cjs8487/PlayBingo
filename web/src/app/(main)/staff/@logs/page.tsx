@@ -1,43 +1,29 @@
-import { Typography } from '@mui/material';
 import { serverGet } from '../../../ServerUtils';
-import LogTable from './_components/LogTable';
+import LogViewer from './_components/LogViewer';
 
-type BasicLogEntry = {
-    level: string;
-    message: string;
-    timestamp: string;
-};
-
-type RequestLogEntry = BasicLogEntry & {
-    method: string;
-    path: string;
-    statusCode: number;
-    sessionId: string;
-    userAgent: string;
-    ip: string;
-    durationMs: number;
-};
-
-type RoomLogEntry = (BasicLogEntry | RequestLogEntry) & {
-    room: string;
-};
-
-export type LogEntry = BasicLogEntry | RequestLogEntry | RoomLogEntry;
-
-async function getLogs(): Promise<LogEntry[]> {
-    const res = await serverGet('/api/logs');
-    if (!res.ok) {
-        return [];
+async function getLogs(): Promise<{
+    logs: unknown[];
+    error: string | null;
+}> {
+    try {
+        const response = await serverGet('/api/logs', { cache: 'no-store' });
+        if (!response.ok) {
+            throw new Error('Log retrieval failed');
+        }
+        const logs: unknown = await response.json();
+        if (!Array.isArray(logs)) {
+            throw new Error('Unexpected log response');
+        }
+        return { logs, error: null };
+    } catch {
+        return {
+            logs: [],
+            error: 'Unable to retrieve server logs. Try refreshing.',
+        };
     }
-    return res.json();
 }
 
 export default async function Logs() {
-    const logs = await getLogs();
-
-    if (!logs) {
-        return <Typography>Failed to load logs</Typography>;
-    }
-
-    return <LogTable logs={logs} />;
+    const result = await getLogs();
+    return <LogViewer initialLogs={result.logs} initialError={result.error} />;
 }
