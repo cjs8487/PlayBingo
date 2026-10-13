@@ -57,6 +57,7 @@ radial-gradient(circle at 40% 30%, rgba(147, 137, 137, 0.13) 0%, rgba(0,0,0,0) 9
         pointerEvents: 'none',
     },
 };
+
 interface BoardCellProps {
     goal?: Goal;
     completedPlayers: string[];
