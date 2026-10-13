@@ -63,6 +63,7 @@ interface RoomContext {
     connectedPlayer?: Player;
     colorMap: { [k: string]: string };
     showImages: boolean;
+    notificationSoundEnabled: boolean;
     connect: (
         nickname: string,
         password: string,
@@ -85,6 +86,7 @@ interface RoomContext {
     toggleGoalDetails: () => void;
     toggleCounters: () => void;
     toggleImages: () => void;
+    toggleNotificationSound: () => void;
     changeAuth: (spectate: boolean) => void;
     startTimer: () => void;
     changeRaceHandler: (handler: string) => void;
@@ -104,6 +106,7 @@ export const RoomContext = createContext<RoomContext>({
     showCounters: false,
     colorMap: {},
     showImages: true,
+    notificationSoundEnabled: true,
     async connect() {
         return { success: false };
     },
@@ -124,6 +127,7 @@ export const RoomContext = createContext<RoomContext>({
     toggleGoalDetails() {},
     toggleCounters() {},
     toggleImages() {},
+    toggleNotificationSound() {},
     changeAuth() {},
     startTimer() {},
     changeRaceHandler() {},
@@ -194,6 +198,12 @@ export function RoomContextProvider({
     const [showImages, setShowImages] = useState(true);
     const toggleImages = useCallback(() => {
         setShowImages((curr) => !curr);
+    }, []);
+
+    const [notificationSoundEnabled, setNotificationSoundEnabled] =
+        useState(true);
+    const toggleNotificationSound = useCallback(() => {
+        setNotificationSoundEnabled((curr) => !curr);
     }, []);
 
     // incoming messages
@@ -275,6 +285,7 @@ export function RoomContextProvider({
                                         ].completedPlayers.includes(player),
                                 );
                             if (
+                                notificationSoundEnabled &&
                                 newMarks.length > 0 &&
                                 (newMarks.length > 1 ||
                                     newMarks[0] !== connectedPlayer?.id)
@@ -609,6 +620,7 @@ export function RoomContextProvider({
                 showGoalDetails,
                 showCounters,
                 showImages,
+                notificationSoundEnabled,
                 connectedPlayer,
                 colorMap,
                 connect,
@@ -629,6 +641,7 @@ export function RoomContextProvider({
                 toggleGoalDetails,
                 toggleCounters,
                 toggleImages,
+                toggleNotificationSound,
                 changeAuth,
                 startTimer,
                 changeRaceHandler,
