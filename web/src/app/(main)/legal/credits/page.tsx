@@ -28,7 +28,7 @@ export default function Credits() {
                 Credits
             </Typography>
             <Typography sx={{ pb: 1 }}>
-                PlayBingo would not be possible without the contributions our
+                PlayBingo would not be possible without the contributions of our
                 community.
             </Typography>
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
@@ -45,7 +45,7 @@ export default function Credits() {
             </Box>
             <Box sx={{ pb: 4 }}>
                 <Typography>
-                    An additional, special rhanks to all the community members
+                    An additional, special thanks to all the community members
                     who have helped make PlayBingo better by providing feedback,
                     finding bugs, and working with us to make PlayBingo the best
                     it can be.
