@@ -39,7 +39,7 @@
         "jsonwebtoken": "^9.0.3",
         "luxon": "^3.7.2",
         "nodemailer": "^10.1.0",
-        "nodemailer-express-handlebars": "^7.0.0",
+        "nodemailer-express-handlebars": "^6.1.2",
         "prisma": "^6.19.3",
         "prisma-json-types-generator": "^3.6.2",
         "prom-client": "^15.1.3",
