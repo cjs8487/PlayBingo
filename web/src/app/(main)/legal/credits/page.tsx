@@ -1,25 +1,7 @@
-import { GitHub } from '@mui/icons-material';
+import Contributors from './_components/Contributors';
 import { Box, Container, Typography } from '@mui/material';
 import Link from 'next/link';
-
-const contributors = [
-    {
-        name: 'cjs07',
-        github: 'https://github.com/cjs8487',
-    },
-    {
-        name: 'Floha258',
-        github: 'https://github.com/floha258',
-    },
-    {
-        name: 'lepelog',
-        github: 'https://github.com/lepelog',
-    },
-    {
-        name: 'tricksnl',
-        github: 'https://github.com/devbeoservice',
-    },
-];
+import { Suspense } from 'react';
 
 export default function Credits() {
     return (
@@ -31,18 +13,15 @@ export default function Credits() {
                 PlayBingo would not be possible without the contributions of our
                 community.
             </Typography>
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                {contributors.map((contributor) => (
-                    <Box key={contributor.name} sx={{ pb: 2 }}>
-                        <Box sx={{ pb: 1 }}>{contributor.name}</Box>
-                        <Box>
-                            <Link href={contributor.github}>
-                                <GitHub />
-                            </Link>
-                        </Box>
-                    </Box>
-                ))}
-            </Box>
+            <Suspense
+                fallback={
+                    <Typography role="status" sx={{ my: 3 }}>
+                        Loading contributors…
+                    </Typography>
+                }
+            >
+                <Contributors />
+            </Suspense>
             <Box sx={{ pb: 4 }}>
                 <Typography>
                     An additional, special thanks to all the community members
