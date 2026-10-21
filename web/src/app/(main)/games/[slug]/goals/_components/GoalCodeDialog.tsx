@@ -15,7 +15,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useGoalManagerContext } from '../../../../../../context/GoalManagerContext';
 import JsonEditor from '@/components/JsonEditor';
 import { useJsonEditor } from '@/hooks/useJsonEditor';
-import type { Goal as SchemaGoal } from '@playbingo/types';
+import { goalTransferData } from '@playbingo/shared';
 import ReplaceConfirmationDialog from './ReplaceConfirmationDialog';
 import { notifyMessage } from '../../../../../../lib/Utils';
 
@@ -45,26 +45,7 @@ export default function GoalCodeDialog({
     // Convert goals to JSON format (dynamically include all fields except excluded ones)
     const exportGoalsToJson = useCallback(() => {
         const ordered = getExportOrder();
-        const allowedKeys: Array<keyof SchemaGoal> = [
-            'goal',
-            'description',
-            'categories',
-            'difficulty',
-            'meta',
-        ];
-
-        const goalsForExport = ordered.map((g) => {
-            const goal = g as unknown as Partial<SchemaGoal> &
-                Record<string, unknown>;
-            const picked: Record<string, unknown> = {};
-            for (const key of allowedKeys) {
-                const value = goal[key as string as keyof typeof goal];
-                if (value !== undefined) {
-                    picked[key as string] = value as unknown;
-                }
-            }
-            return picked;
-        });
+        const goalsForExport = ordered.map(goalTransferData);
 
         return JSON.stringify(goalsForExport, null, 2);
     }, [getExportOrder]);
