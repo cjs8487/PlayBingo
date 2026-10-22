@@ -574,6 +574,41 @@ paths:
           $ref: "#/components/responses/errorUnauthorized"
         403:
           $ref: "#/components/responses/errorForbidden"
+  /games/{slug}/sampleBoard:
+    get:
+      summary: Generate a sample board
+      tags:
+        - games
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: variant
+          in: query
+          description: Optional variant ID.
+          schema:
+            type: string
+        - name: boardSize
+          in: query
+          description:
+            Square dimension from the available board sizes. Defaults to 5 when
+            available, otherwise the first supported size. Omit for custom
+            layouts, which use their fixed dimensions.
+          schema:
+            type: integer
+            minimum: 2
+            maximum: 15
+      responses:
+        200:
+          description: Generated board, width, height, seed and optional variant name.
+        400:
+          $ref: "#/components/responses/errorBadRequest"
+        404:
+          $ref: "#/components/responses/errorNotFound"
+        422:
+          description: No supported board size or generation failed.
   /games/{slug}/boardSizes:
     get:
       summary: Get available board sizes

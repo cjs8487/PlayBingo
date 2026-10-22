@@ -1,6 +1,7 @@
 import {
     availableBoardSizes,
     availableCustomBoardSize,
+    isBoardSize,
 } from '../../core/generation/BoardSizes';
 import { roomBoardSizes } from '../../util/RoomBoardSizes';
 import { makeGeneratorSchema } from '@playbingo/shared';
@@ -737,7 +738,16 @@ games.post('/:slug/generation', async (req, res) => {
 
 games.get('/:slug/sampleBoard', async (req, res) => {
     const { slug } = req.params;
-    const { variant } = req.query;
+    const { variant, boardSize } = req.query;
+    const requestedSize =
+        boardSize === undefined ? undefined : Number(boardSize);
+    if (
+        boardSize !== undefined &&
+        (typeof boardSize !== 'string' || !isBoardSize(requestedSize))
+    ) {
+        res.status(400).send('Board size must be an integer from 2 to 15.');
+        return;
+    }
 
     const gameData = await gameForSlug(slug);
     if (!gameData) {
@@ -775,8 +785,22 @@ games.get('/:slug/sampleBoard', async (req, res) => {
     const settings =
         variantData?.generatorSettings ?? gameData.generatorSettings;
     const sizes = availableBoardSizes(goals, settings);
+    const customLayout = availableCustomBoardSize(goals, settings);
+    if (
+        requestedSize !== undefined &&
+        (customLayout
+            ? customLayout.width !== requestedSize ||
+              customLayout.height !== requestedSize
+            : !sizes.includes(requestedSize))
+    ) {
+        res.status(400).send(
+            'Board size is unavailable for this game and variant.',
+        );
+        return;
+    }
     const size =
-        availableCustomBoardSize(goals, settings)?.width ??
+        customLayout?.width ??
+        requestedSize ??
         (sizes.includes(5) ? 5 : sizes[0]);
     if (size === undefined) {
         res.status(422).send(
