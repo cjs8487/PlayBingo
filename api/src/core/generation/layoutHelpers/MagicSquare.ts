@@ -21,7 +21,7 @@ export const generateMagicSquare = (
         // 4n
         magicSquare = doublyEven(size);
     } else {
-        throw new Error(`Invalid size for a magic sqaure (${size})`);
+        throw new Error(`Invalid size for a magic square (${size})`);
     }
 
     // randomized transformations
@@ -161,31 +161,17 @@ const strachey = (size: number): number[][] => {
 
 const doublyEven = (size: number) => {
     const magicSquare: number[][] = [];
+    const complement = size * size + 1;
     for (let i = 0; i < size; i++) {
         magicSquare[i] = [];
-    }
-
-    const placed: number[] = [];
-    for (let i = 0; i < size; i++) {
+        const blockRow = i % 4;
         for (let j = 0; j < size; j++) {
             const val = i * size + j + 1;
-            if (i == j) {
-                magicSquare[i][j] = val;
-                placed.push(val);
-            } else if (i == size - j - 1) {
-                magicSquare[i][j] = val;
-                placed.push(val);
-            }
-        }
-    }
-
-    let i = 1;
-    for (let y = size - 1; y >= 0; y--) {
-        for (let x = size - 1; x >= 0; x--) {
-            if (!magicSquare[y][x]) {
-                magicSquare[y][x] = i;
-            }
-            i++;
+            const blockColumn = j % 4;
+            magicSquare[i][j] =
+                blockRow === blockColumn || blockRow + blockColumn === 3
+                    ? val
+                    : complement - val;
         }
     }
 
