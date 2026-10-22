@@ -332,7 +332,7 @@ export default function GoalEditor({
                                     label="Difficulty"
                                     disabled={!canModerate}
                                     min={0}
-                                    max={25}
+                                    max={225}
                                 />
                             </Box>
                         </Box>

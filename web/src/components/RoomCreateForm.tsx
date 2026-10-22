@@ -13,11 +13,15 @@ import {
     InputLabel,
     MenuItem,
     Select,
+    TextField,
 } from '@mui/material';
 import { Game } from '@playbingo/types';
+import type { BoardSizeOptions } from '@playbingo/shared';
 import { Form, Formik, useField, useFormikContext } from 'formik';
 import { useRouter } from 'next/navigation';
 import { useAsync } from 'react-use';
+import { useEffect, useMemo } from 'react';
+import useSWR from 'swr';
 import * as yup from 'yup';
 import { useApi } from '../lib/Hooks';
 import {
@@ -28,12 +32,20 @@ import FormikSwitch from './input/FormikSwitch';
 import FormikTextField from './input/FormikTextField';
 import NumberInput from './input/NumberInput';
 
+type RoomBoardSize = number | 'custom';
+
 const roomValidationSchema = yup.object().shape({
     name: yup.string().required('Room name is required'),
     nickname: yup.string().required('Player nickname is required'),
     password: yup.string().required('Password is required'),
     game: yup.string().required('Game is required'),
     variant: yup.string(),
+    boardSize: yup
+        .mixed<RoomBoardSize>()
+        .required('Board size is required')
+        .test('available', 'Select an available board size', function (value) {
+            return this.parent.boardSizes.includes(value);
+        }),
     mode: yup
         .string()
         .required('Game mode is required')
@@ -67,7 +79,11 @@ function VariantSelectField() {
     const {
         values: { game },
     } = useFormikContext<{ game: string }>();
-    const [field, meta] = useField<string>('variant');
+    const [field, meta, helpers] = useField<string>('variant');
+    const { setValue } = helpers;
+    useEffect(() => {
+        setValue('');
+    }, [game, setValue]);
 
     const error = meta.touched && !!meta.error;
 
@@ -123,6 +139,88 @@ function VariantSelectField() {
     );
 }
 
+function BoardSizeSelectField() {
+    const {
+        values: { game, variant, boardSize },
+        setValues,
+        setFieldValue,
+    } = useFormikContext<{
+        game?: string;
+        variant: string;
+        boardSize: RoomBoardSize | '';
+        boardSizes: RoomBoardSize[];
+    }>();
+    const { data, isLoading, error } = useSWR<BoardSizeOptions>(
+        game
+            ? `/api/games/${encodeURIComponent(game)}/boardSizes?${new URLSearchParams({ variant })}`
+            : null,
+        async (url: string) => {
+            const response = await fetch(url);
+            if (!response.ok) throw new Error('Unable to load board sizes');
+            return response.json();
+        },
+    );
+    const options = useMemo<{ value: RoomBoardSize; label: string }[]>(() => {
+        if (data?.customLayout) {
+            const { width, height } = data.customLayout;
+            return [{ value: 'custom', label: `${width} × ${height}` }];
+        }
+        return (data?.sizes ?? []).map((size) => ({
+            value: size,
+            label: `${size} × ${size}`,
+        }));
+    }, [data]);
+
+    useEffect(() => {
+        const allowed = options.map(({ value }) => value);
+        setValues((values) => ({
+            ...values,
+            boardSizes: allowed,
+            boardSize: options.some(({ value }) => value === values.boardSize)
+                ? values.boardSize
+                : allowed.includes(5)
+                  ? 5
+                  : (allowed[0] ?? ''),
+        }));
+    }, [options, setValues]);
+
+    let helperText;
+    if (isLoading) helperText = 'Loading sizes...';
+    else if (error) helperText = 'Unable to load board sizes';
+    else if (game && !options.length)
+        helperText = 'No sizes available for this game and variant';
+    else if (data?.customLayout) helperText = 'Size fixed by the custom layout';
+
+    return (
+        <TextField
+            select
+            id="board-size"
+            name="boardSize"
+            label="Board Size"
+            value={
+                options.find(({ value }) => value === boardSize)?.value ?? ''
+            }
+            disabled={options.length <= 1}
+            error={!!error || (!!game && !isLoading && !options.length)}
+            helperText={helperText}
+            onChange={(event) =>
+                setFieldValue(
+                    'boardSize',
+                    event.target.value === 'custom'
+                        ? 'custom'
+                        : Number(event.target.value),
+                )
+            }
+        >
+            {options.map(({ value, label }) => (
+                <MenuItem key={value} value={value}>
+                    {label}
+                </MenuItem>
+            ))}
+        </TextField>
+    );
+}
+
 interface FormProps {
     game?: string;
 }
@@ -147,6 +245,8 @@ export default function RoomCreateForm({ game }: FormProps) {
                 game,
                 password: '',
                 variant: '',
+                boardSize: '' as RoomBoardSize | '',
+                boardSizes: [] as RoomBoardSize[],
                 mode: 'LINES',
                 lineCount: 1,
                 seed: undefined,
@@ -163,7 +263,14 @@ export default function RoomCreateForm({ game }: FormProps) {
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify(values),
+                    body: JSON.stringify({
+                        ...values,
+                        boardSize:
+                            values.boardSize === 'custom'
+                                ? undefined
+                                : values.boardSize,
+                        boardSizes: undefined,
+                    }),
                 });
                 if (!res.ok) {
                     const error = await res.text();
@@ -179,7 +286,16 @@ export default function RoomCreateForm({ game }: FormProps) {
                 router.push(`/rooms/${slug}`);
             }}
         >
-            {({ values: { mode, exploration, explorationStart } }) => (
+            {({
+                values: {
+                    mode,
+                    exploration,
+                    explorationStart,
+                    boardSize,
+                    boardSizes,
+                },
+                isSubmitting,
+            }) => (
                 <Form>
                     <Box
                         sx={{
@@ -207,6 +323,7 @@ export default function RoomCreateForm({ game }: FormProps) {
                             }))}
                         />
                         <VariantSelectField />
+                        <BoardSizeSelectField />
                         <Box
                             sx={{
                                 display: 'flex',
@@ -324,7 +441,15 @@ export default function RoomCreateForm({ game }: FormProps) {
                                     flexGrow: 1,
                                 }}
                             />
-                            <Button variant="contained" type="submit">
+                            <Button
+                                variant="contained"
+                                type="submit"
+                                disabled={
+                                    isSubmitting ||
+                                    !boardSize ||
+                                    !boardSizes.includes(boardSize)
+                                }
+                            >
                                 Create Room
                             </Button>
                         </Box>

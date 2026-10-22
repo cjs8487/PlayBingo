@@ -1,9 +1,28 @@
 import { pbkdf2Sync, randomBytes } from 'crypto';
 import { PrismaClient } from '@prisma/client';
+import type { GeneratorSettings } from '@playbingo/shared';
 
-const prisma = new PrismaClient();
+const generatorSettings = (
+    boardLayout: GeneratorSettings['boardLayout'] = { mode: 'random' },
+    goalFilters: GeneratorSettings['goalFilters'] = [],
+): GeneratorSettings => ({
+    goalFilters,
+    goalTransformation: [],
+    boardLayout,
+    restrictions: [{ type: 'line-type-exclusion' }],
+    adjustments: [],
+});
+const expeditionLayout = (
+    size: number,
+    height: number = size,
+): GeneratorSettings['boardLayout'] => ({
+    mode: 'custom',
+    layout: Array.from({ length: height }, () =>
+        Array.from({ length: size }, () => ({ selectionCriteria: 'random' })),
+    ),
+});
 
-async function main() {
+export async function main(prisma: PrismaClient) {
     console.log('Seeding database');
 
     console.log('Creating users');
@@ -54,256 +73,157 @@ async function main() {
     console.log(staff, owner, mod, player);
 
     console.log('Creating games and goals');
+    await prisma.variant.deleteMany();
+    await prisma.difficultyVariant.deleteMany();
     await prisma.category.deleteMany();
     await prisma.goalTag.deleteMany();
     await prisma.goal.deleteMany();
     await prisma.game.deleteMany();
 
     const categories = [
-        'Category 1',
-        'Category 2',
-        'Category 3',
-        'Category 4',
-        'Category 5',
+        'Exploration',
+        'Combat',
+        'Collecting',
+        'Puzzle',
+        'Movement',
     ];
-
-    const game1 = await prisma.game.create({
-        data: {
-            name: '25 Goals and No Difficulties',
-            slug: 'nodiff',
-            enableSRLv5: false,
-            racetimeBeta: false,
-            owners: { connect: [{ id: staff.id }, { id: owner.id }] },
-            moderators: { connect: [{ id: mod.id }] },
-            usersFavorited: {
-                connect: [
-                    { id: staff.id },
-                    { id: owner.id },
-                    { id: player.id },
-                ],
-            },
-            generatorSettings: {
-                goalFilters: [],
-                goalTransformation: [],
-                boardLayout: {
-                    mode: 'random',
-                },
-                restrictions: [],
-                adjustments: [],
-            },
+    const games = [
+        {
+            name: 'Meadow Picnic',
+            slug: 'meadow',
+            description: 'An afternoon of simple outdoor adventures.',
+            settings: generatorSettings(),
+            goals: [
+                'Pack a Picnic Basket',
+                'Find a Four-Leaf Clover',
+                'Fly a Kite',
+                'Share Lemonade',
+            ].map((goal) => ({
+                goal,
+                description: `Enjoy the meadow and ${goal.toLowerCase()}.`,
+            })),
         },
-    });
-    await prisma.category.createMany({
-        data: categories.map((cat) => ({
-            gameId: game1.id,
-            name: cat,
-        })),
-    });
-    await Promise.all(
-        Array.from({ length: 25 }).map((_, i) =>
-            prisma.goal.create({
-                data: {
-                    gameId: game1.id,
-                    goal: `Goal ${i + 1}`,
-                    description: `Description for Goal ${i + 1}`,
-                    categories: {
-                        connect: {
-                            gameId_name: {
-                                gameId: game1.id,
-                                name: categories[i % categories.length],
+        {
+            name: 'Crystal Caverns',
+            slug: 'caverns',
+            description:
+                'Descend through the caverns, gathering crystals and unlocking ancient chambers.',
+            settings: generatorSettings({ mode: 'srlv5' }),
+            goals: Array.from({ length: 25 }, (_, i) => ({
+                goal: `Unlock Crystal Chamber ${i + 1}`,
+                description: `Find the crystal key and solve the guardian puzzle in chamber ${i + 1}.`,
+                difficulty: i + 1,
+            })),
+        },
+        {
+            name: 'Lantern Festival',
+            slug: 'lanterns',
+            description:
+                'Explore the village festival, help the stallholders, and enjoy the celebrations.',
+            settings: generatorSettings(),
+            goals: [
+                'Market Square',
+                'Riverbank',
+                'Temple Gardens',
+                'Old Town',
+            ].flatMap((place) =>
+                [
+                    'Light a Lantern',
+                    'Win a Ring Toss',
+                    'Share a Festival Meal',
+                    'Find a Lost Keepsake',
+                    'Watch the Fireworks',
+                    'Help a Stallholder',
+                ].map((activity) => ({
+                    goal: `${activity} at ${place}`,
+                    description: `Visit ${place} during the lantern festival and ${activity.toLowerCase()}.`,
+                })),
+            ),
+        },
+        {
+            name: 'The Binding of Isaac',
+            slug: 'isaac',
+            description:
+                'Explore the floors, collect items and defeat bosses using the classic Isaac layout.',
+            settings: generatorSettings({ mode: 'isaac' }),
+            goals: [
+                'Basement I',
+                'Basement II',
+                'Caves I',
+                'Caves II',
+                'Depths I',
+                'Depths II',
+                'Cellar I',
+                'Cellar II',
+                'Catacombs I',
+                'Catacombs II',
+            ].flatMap((floor) =>
+                [
+                    'Defeat the Boss',
+                    'Find the Secret Room',
+                    'Buy a Shop Item',
+                    'Open a Golden Chest',
+                    'Clear a Challenge Room',
+                    'Collect a Soul Heart',
+                    'Find the Treasure Room',
+                    'Destroy a Tinted Rock',
+                    'Use an Active Item',
+                    'Complete a Room Without Damage',
+                ].map((challenge, i) => ({
+                    goal: `${challenge} in ${floor}`,
+                    description: `${challenge} before leaving ${floor}.`,
+                    difficulty: (i % 4) + 1,
+                })),
+            ),
+        },
+        {
+            name: "Cartographer's Journey",
+            slug: 'cartographer',
+            description:
+                'Chart distant lands and record the landmarks of an expanding world.',
+            settings: generatorSettings({ mode: 'srlv5' }),
+            goals: Array.from({ length: 250 }, (_, i) => ({
+                goal: `${['Map the Coastline', 'Survey the Ruins', 'Discover a Mountain Pass', 'Chart a River', 'Visit the Watchtower'][i % 5]} in Province ${Math.floor(i / 5) + 1}`,
+                description: `Complete your survey of province ${Math.floor(i / 5) + 1} and add it to the royal atlas.`,
+                difficulty: (i % 225) + 1,
+            })),
+        },
+    ];
+    for (const entry of games) {
+        const game = await prisma.game.create({
+            data: {
+                name: entry.name,
+                slug: entry.slug,
+                descriptionMd: entry.description,
+                newGeneratorBeta: true,
+                generatorSettings: entry.settings,
+                owners: { connect: [{ id: staff.id }, { id: owner.id }] },
+                moderators: { connect: [{ id: mod.id }] },
+                usersFavorited: { connect: [{ id: player.id }] },
+            },
+        });
+        await prisma.category.createMany({
+            data: categories.map((name) => ({ gameId: game.id, name })),
+        });
+        await Promise.all(
+            entry.goals.map((goal, i) =>
+                prisma.goal.create({
+                    data: {
+                        ...goal,
+                        gameId: game.id,
+                        categories: {
+                            connect: {
+                                gameId_name: {
+                                    gameId: game.id,
+                                    name: categories[i % categories.length],
+                                },
                             },
                         },
                     },
-                },
-            }),
-        ),
-    );
-
-    const game2 = await prisma.game.create({
-        data: {
-            name: 'SRLv5 25 Goals',
-            slug: 'srl25',
-            enableSRLv5: true,
-            racetimeBeta: false,
-            owners: { connect: [{ id: owner.id }] },
-            moderators: { connect: [{ id: mod.id }] },
-            generatorSettings: {
-                goalFilters: [],
-                goalTransformation: [],
-                boardLayout: {
-                    mode: 'srlv5',
-                },
-                restrictions: [{ type: 'line-type-exclusion' }],
-                adjustments: [],
-            },
-        },
-    });
-    await prisma.category.createMany({
-        data: categories.map((cat) => ({
-            gameId: game2.id,
-            name: cat,
-        })),
-    });
-    await Promise.all(
-        Array.from({ length: 25 }).map((_, i) =>
-            prisma.goal.create({
-                data: {
-                    gameId: game2.id,
-                    goal: `Goal ${i + 1}`,
-                    description: `Description for Goal ${i + 1}`,
-                    categories: {
-                        connect: {
-                            gameId_name: {
-                                gameId: game2.id,
-                                name: categories[i % categories.length],
-                            },
-                        },
-                    },
-                    difficulty: (i % 25) + 1,
-                },
-            }),
-        ),
-    );
-
-    const game3 = await prisma.game.create({
-        data: {
-            name: 'SRLv5 50',
-            slug: 'srl50',
-            enableSRLv5: false,
-            racetimeBeta: false,
-            owners: { connect: [{ id: staff.id }, { id: owner.id }] },
-            moderators: { connect: [{ id: mod.id }] },
-            usersFavorited: { connect: [{ id: owner.id }, { id: mod.id }] },
-            generatorSettings: {
-                goalFilters: [],
-                goalTransformation: [],
-                boardLayout: {
-                    mode: 'srlv5',
-                },
-                restrictions: [{ type: 'line-type-exclusion' }],
-                adjustments: [],
-            },
-        },
-    });
-    await prisma.category.createMany({
-        data: categories.map((cat) => ({
-            gameId: game3.id,
-            name: cat,
-        })),
-    });
-    await Promise.all(
-        Array.from({ length: 50 }).map((_, i) =>
-            prisma.goal.create({
-                data: {
-                    gameId: game3.id,
-                    goal: `Goal ${i + 1}`,
-                    description: `Description for Goal ${i + 1}`,
-                    categories: {
-                        connect: {
-                            gameId_name: {
-                                gameId: game3.id,
-                                name: categories[i % categories.length],
-                            },
-                        },
-                    },
-                    difficulty: (i % 25) + 1,
-                },
-            }),
-        ),
-    );
-
-    const game4 = await prisma.game.create({
-        data: {
-            name: 'SRLv5 100',
-            slug: 'srl100',
-            enableSRLv5: true,
-            racetimeBeta: false,
-            owners: { connect: [{ id: owner.id }] },
-            moderators: { connect: [{ id: mod.id }] },
-            generatorSettings: {
-                goalFilters: [],
-                goalTransformation: [],
-                boardLayout: {
-                    mode: 'srlv5',
-                },
-                restrictions: [{ type: 'line-type-exclusion' }],
-                adjustments: [],
-            },
-        },
-    });
-    await prisma.category.createMany({
-        data: categories.map((cat) => ({
-            gameId: game4.id,
-            name: cat,
-        })),
-    });
-    await Promise.all(
-        Array.from({ length: 100 }).map((_, i) =>
-            prisma.goal.create({
-                data: {
-                    gameId: game4.id,
-                    goal: `Goal ${i + 1}`,
-                    description: `Description for Goal ${i + 1}`,
-                    categories: {
-                        connect: {
-                            gameId_name: {
-                                gameId: game4.id,
-                                name: categories[i % categories.length],
-                            },
-                        },
-                    },
-                    difficulty: (i % 25) + 1,
-                },
-            }),
-        ),
-    );
-
-    const game5 = await prisma.game.create({
-        data: {
-            name: 'SRLv5 250',
-            slug: 'srl250',
-            enableSRLv5: true,
-            racetimeBeta: false,
-            owners: { connect: [{ id: owner.id }] },
-            moderators: { connect: [{ id: mod.id }] },
-            usersFavorited: { connect: [{ id: mod.id }, { id: player.id }] },
-            generatorSettings: {
-                goalFilters: [],
-                goalTransformation: [],
-                boardLayout: {
-                    mode: 'srlv5',
-                },
-                restrictions: [{ type: 'line-type-exclusion' }],
-                adjustments: [],
-            },
-        },
-    });
-    await prisma.category.createMany({
-        data: categories.map((cat) => ({
-            gameId: game5.id,
-            name: cat,
-        })),
-    });
-    await Promise.all(
-        Array.from({ length: 250 }).map((_, i) =>
-            prisma.goal.create({
-                data: {
-                    gameId: game5.id,
-                    goal: `Goal ${i + 1}`,
-                    description: `Description for Goal ${i + 1}`,
-                    categories: {
-                        connect: {
-                            gameId_name: {
-                                gameId: game5.id,
-                                name: categories[i % categories.length],
-                            },
-                        },
-                    },
-                    difficulty: (i % 25) + 1,
-                },
-            }),
-        ),
-    );
+                }),
+            ),
+        );
+    }
 
     const realisticCategories = [
         'Movement',
@@ -326,13 +246,15 @@ async function main() {
         'Main Story',
         'Side Quest',
         'Timed',
+        'Legendary Equipment',
     ];
 
-    const game6 = await prisma.game.create({
+    const epicGame = await prisma.game.create({
         data: {
-            name: 'Epic Adventure Bingo',
+            name: 'Epic Bingo Adventure',
+            descriptionMd:
+                'Travel from the village to distant kingdoms, collecting relics, solving puzzles and challenging legendary foes.',
             slug: 'epic',
-            enableSRLv5: true,
             racetimeBeta: false,
             owners: { connect: [{ id: staff.id }, { id: owner.id }] },
             moderators: { connect: [{ id: mod.id }] },
@@ -416,9 +338,89 @@ async function main() {
     const tags = await prisma.goalTag.createManyAndReturn({
         data: tagNames.map((name) => ({
             name,
-            gameId: game6.id,
+            gameId: epicGame.id,
         })),
     });
+    const regions = [
+        'Whispering Woods',
+        'Amber Coast',
+        'Frostfall Peaks',
+        'Sunken Marsh',
+        'Crystal Vale',
+        'Ember Highlands',
+        'Moonlit Grove',
+        'Shattered Isles',
+        'Silver Desert',
+        'Stormwatch Cliffs',
+        'Verdant Basin',
+        'Hollow Mountain',
+        'Golden Steppe',
+        'Ashen Frontier',
+        'Starfall Canyon',
+        'Winterglass Tundra',
+        'Coral Reach',
+        'Twilight Fen',
+        'Obsidian Ridge',
+        'Dawnspire Kingdom',
+    ];
+    const adventureQuests = [
+        {
+            goal: 'Gather Rare Herbs',
+            description: 'Collect five medicinal herbs for the village healer.',
+            categories: ['Collecting', 'Resource Management'],
+        },
+        {
+            goal: 'Defeat the Bandit Captain',
+            description:
+                'Track down the captain and recover the stolen supplies.',
+            categories: ['Combat'],
+        },
+        {
+            goal: 'Restore the Ancient Shrine',
+            description:
+                'Solve the shrine puzzle and rekindle its sacred flame.',
+            categories: ['Puzzle', 'Story Progression'],
+        },
+        {
+            goal: 'Discover a Hidden Campsite',
+            description: 'Find the abandoned campsite and mark it on your map.',
+            categories: ['Exploration'],
+        },
+        {
+            goal: 'Deliver Supplies to the Outpost',
+            description: 'Bring four supply crates to the isolated outpost.',
+            categories: ['Resource Management'],
+        },
+        {
+            goal: 'Rescue the Missing Scout',
+            description:
+                'Follow the scout’s trail and escort them safely home.',
+            categories: ['Stealth', 'Exploration'],
+        },
+        {
+            goal: 'Win the Arena Challenge',
+            description:
+                'Survive three consecutive rounds against the local champions.',
+            categories: ['Combat', 'Time Challenge'],
+        },
+        {
+            goal: 'Reach the Highest Lookout',
+            description:
+                'Climb to the lookout without using a fast-travel point.',
+            categories: ['Movement'],
+        },
+        {
+            goal: 'Disarm the Ruins’ Traps',
+            description:
+                'Find and disable five traps without triggering an alarm.',
+            categories: ['Puzzle', 'Stealth'],
+        },
+        {
+            goal: 'Recover the Guardian’s Relic',
+            description: 'Defeat the guardian and retrieve its ancient relic.',
+            categories: ['Boss Battle', 'Collecting'],
+        },
+    ];
     const realisticGoals = (id: string) => [
         {
             gameId: id,
@@ -773,7 +775,7 @@ async function main() {
                 })),
             },
             tags: {
-                connect: [{ id: tags[2].id }, { id: tags[7].id }],
+                connect: [{ id: tags[2].id }, { id: tags[8].id }],
             },
             difficulty: 16,
         },
@@ -862,47 +864,162 @@ async function main() {
             },
             difficulty: 24,
         },
-        ...Array.from({ length: 54 }).map((_, i) => ({
+        ...[
+            {
+                goal: 'Talk to the Village Elder',
+                description:
+                    'Visit the elder to learn about the troubles facing the village.',
+                difficulty: 1,
+            },
+            {
+                goal: 'Light the Campfire',
+                description:
+                    'Gather kindling and light the campfire outside the village.',
+                difficulty: 2,
+            },
+        ].map((goal) => ({
+            ...goal,
             gameId: id,
-            goal: `Side Quest ${i + 27}`,
-            description: `Complete side quest number ${
-                i + 27
-            } for extra rewards.`,
             categories: {
                 connect: {
-                    gameId_name: {
-                        gameId: id,
-                        name: realisticCategories[
-                            i % realisticCategories.length
-                        ],
-                    },
+                    gameId_name: { gameId: id, name: 'Story Progression' },
                 },
             },
-            tags: {
-                connect: [{ id: tags[i % tags.length].id }],
-            },
-            difficulty: ((i + 1) % 25) + 1,
+            tags: { connect: [{ id: tags[0].id }, { id: tags[5].id }] },
         })),
+        ...regions.flatMap((region, regionIndex) =>
+            adventureQuests.map((quest, questIndex) => {
+                const difficulty =
+                    26 + regionIndex * adventureQuests.length + questIndex;
+                return {
+                    gameId: id,
+                    goal: `${quest.goal} in ${region}`,
+                    description: `${quest.description} Travel to ${region} and return to the local guild with news of your success.`,
+                    categories: {
+                        connect: quest.categories.map((name) => ({
+                            gameId_name: { gameId: id, name },
+                        })),
+                    },
+                    tags: {
+                        connect: [
+                            {
+                                id: tags[
+                                    Math.min(
+                                        3,
+                                        Math.floor((difficulty - 1) / 60),
+                                    )
+                                ].id,
+                            },
+                            { id: tags[6].id },
+                        ],
+                    },
+                    difficulty,
+                };
+            }),
+        ),
     ];
 
     await prisma.category.createMany({
         data: realisticCategories.map((cat) => ({
-            gameId: game6.id,
+            gameId: epicGame.id,
             name: cat,
         })),
     });
     await Promise.all(
-        realisticGoals(game6.id).map((g) => prisma.goal.create({ data: g })),
+        realisticGoals(epicGame.id).map((g) => prisma.goal.create({ data: g })),
     );
-    console.log(game1, game2, game3, game4, game5, game6);
+    const variants = [
+        {
+            name: 'Open World',
+            description: 'Choose freely from every adventure in the kingdom.',
+            settings: generatorSettings(),
+        },
+        {
+            name: 'First Steps',
+            description:
+                'Meet the village elder, light the campfire and collect your first coins.',
+            settings: generatorSettings(undefined, [
+                { mode: 'difficulty', max: 3 },
+            ]),
+        },
+        {
+            name: 'Prologue',
+            description:
+                'Begin your journey with a few approachable village adventures.',
+            settings: generatorSettings(undefined, [
+                { mode: 'difficulty', max: 4 },
+            ]),
+        },
+        {
+            name: 'Village Errands',
+            description:
+                'A shorter adventure focused on the village and nearby lands.',
+            settings: generatorSettings(undefined, [
+                { mode: 'difficulty', max: 20 },
+            ]),
+        },
+        {
+            name: 'Lost Relics',
+            description: 'Adventure without the aid of legendary equipment.',
+            settings: generatorSettings({ mode: 'srlv5' }, [
+                { mode: 'tags-exclusion', tags: [tags[8].id] },
+            ]),
+        },
+        {
+            name: 'Weekend Expedition',
+            description:
+                'Nine adventures chosen for a short trip into the wilds.',
+            settings: generatorSettings(expeditionLayout(3)),
+        },
+        {
+            name: 'River Expedition',
+            description:
+                'Follow the river through a long, winding series of adventures.',
+            settings: generatorSettings(expeditionLayout(9, 4)),
+        },
+        {
+            name: 'World Tour',
+            description:
+                'A grand expedition of 225 adventures from across the kingdom.',
+            settings: generatorSettings(expeditionLayout(15)),
+        },
+        {
+            name: 'Guild Contracts',
+            description:
+                'Complete a balanced set of 36 contracts offered by the adventurers’ guild.',
+            settings: generatorSettings({
+                mode: 'difficulty-distribution',
+                distribution: Array.from({ length: 36 }, (_, i) => ({
+                    difficulty: i + 1,
+                    count: 1,
+                })),
+            }),
+        },
+    ];
+    for (const variant of variants) {
+        await prisma.variant.create({
+            data: {
+                gameId: epicGame.id,
+                name: variant.name,
+                description: variant.description,
+                generatorSettings: variant.settings,
+            },
+        });
+    }
+    console.log(
+        'Created six games, including Epic Bingo Adventure and its nine variants.',
+    );
 }
 
-main()
-    .then(async () => {
-        await prisma.$disconnect();
-    })
-    .catch(async (e) => {
-        console.error(e);
-        await prisma.$disconnect();
-        process.exit(1);
-    });
+if (require.main === module) {
+    const prisma = new PrismaClient();
+    main(prisma)
+        .then(async () => {
+            await prisma.$disconnect();
+        })
+        .catch(async (e) => {
+            console.error(e);
+            await prisma.$disconnect();
+            process.exit(1);
+        });
+}
