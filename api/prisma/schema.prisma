@@ -190,6 +190,8 @@ model Room {
   game             Game?        @relation(fields: [gameId], references: [id])
   gameId           String?
   board            String[]
+  boardWidth       Int          @default(5)
+  boardHeight      Int          @default(5)
   racetimeRoom     String?
   hideCard         Boolean      @default(false)
   bingoMode        BingoMode    @default(LINES)

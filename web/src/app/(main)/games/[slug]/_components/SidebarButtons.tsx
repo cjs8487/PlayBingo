@@ -11,8 +11,10 @@ import {
     Menu,
     MenuItem,
     Tooltip,
+    TextField,
     Typography,
 } from '@mui/material';
+import { BoardSizeOptions } from '@playbingo/shared';
 import { Game, Goal, Variant } from '@playbingo/types';
 import { ReactNode, useCallback, useState } from 'react';
 import AutoSizer from 'react-virtualized-auto-sizer';
@@ -29,6 +31,9 @@ interface SampleBoardDisplayProps {
     boardCols: number;
     close: () => void;
     regenerate: () => void;
+    sizeOptions: BoardSizeOptions;
+    changeSize: (size: number) => void;
+    generating: boolean;
     seed?: string;
     variant?: string;
 }
@@ -40,13 +45,16 @@ function SampleBoardDisplay({
     boardCols,
     close,
     regenerate,
+    sizeOptions,
+    changeSize,
+    generating,
     seed,
     variant,
 }: SampleBoardDisplayProps) {
     const [showImages, setShowImages] = useState(true);
     return (
         <>
-            <DialogTitle>
+            <DialogTitle sx={{ pr: 18 }}>
                 {gameName} {variant ? `${variant}` : ''} Sample Board ({seed})
             </DialogTitle>
             <Box
@@ -65,12 +73,44 @@ function SampleBoardDisplay({
                 >
                     {showImages ? <HideImage /> : <ImageIcon />}
                 </IconButton>
-                <IconButton aria-label="regenerate" onClick={regenerate}>
+                <IconButton
+                    aria-label="regenerate"
+                    onClick={regenerate}
+                    disabled={generating}
+                >
                     <Refresh />
                 </IconButton>
                 <IconButton aria-label="close" onClick={close}>
                     <Close />
                 </IconButton>
+            </Box>
+            <Box sx={{ px: 3, pb: 2 }}>
+                <TextField
+                    select
+                    label="Board size"
+                    size="small"
+                    value={sizeOptions.customLayout ? 'custom' : boardCols}
+                    onChange={(event) => changeSize(Number(event.target.value))}
+                    disabled={
+                        generating ||
+                        !!sizeOptions.customLayout ||
+                        sizeOptions.sizes.length <= 1
+                    }
+                    sx={{ minWidth: 110 }}
+                >
+                    {sizeOptions.customLayout ? (
+                        <MenuItem value="custom">
+                            {sizeOptions.customLayout.width} ×{' '}
+                            {sizeOptions.customLayout.height}
+                        </MenuItem>
+                    ) : (
+                        sizeOptions.sizes.map((size) => (
+                            <MenuItem key={size} value={size}>
+                                {size} × {size}
+                            </MenuItem>
+                        ))
+                    )}
+                </TextField>
             </Box>
             <DialogContent sx={{}}>
                 <AutoSizer
@@ -310,6 +350,10 @@ export default function SidebarButtons({ game, variants }: Props) {
     const [sampleVariant, setSampleVariant] = useState<string | undefined>('');
     const [sampleWidth, setSampleWidth] = useState(5);
     const [sampleHeight, setSampleHeight] = useState(5);
+    const [sampleSizes, setSampleSizes] = useState<BoardSizeOptions>({
+        sizes: [],
+    });
+    const [generating, setGenerating] = useState(false);
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const open = Boolean(anchorEl);
 
@@ -320,33 +364,49 @@ export default function SidebarButtons({ game, variants }: Props) {
     };
 
     const generateSampleBoard = useCallback(
-        async (variantId?: string) => {
-            const res = await fetch(
-                `/api/games/${slug}/sampleBoard${variantId ? `?variant=${variantId}` : ''}`,
-            );
-            if (!res.ok) {
-                alertError(await res.text());
+        async (variantId?: string, boardSize?: number) => {
+            setGenerating(true);
+            try {
+                const query = new URLSearchParams();
+                if (variantId) query.set('variant', variantId);
+                if (boardSize !== undefined)
+                    query.set('boardSize', String(boardSize));
+                const res = await fetch(
+                    `/api/games/${encodeURIComponent(slug)}/sampleBoard?${query}`,
+                );
+                if (!res.ok) {
+                    alertError(await res.text());
+                    return false;
+                }
+                const {
+                    board,
+                    seed,
+                    width,
+                    height,
+                }: {
+                    board: Goal[][];
+                    seed: string;
+                    variant: string | undefined;
+                    width: number;
+                    height: number;
+                } = await res.json();
+                setSampleBoard(board);
+                setSampleSeed(seed);
+                setSampleVariant(variantId);
+                setSampleWidth(width);
+                setSampleHeight(height);
+                handleClose();
+                return true;
+            } catch (error) {
+                alertError(
+                    error instanceof Error
+                        ? error.message
+                        : 'Unable to generate sample board.',
+                );
                 return false;
+            } finally {
+                setGenerating(false);
             }
-            const {
-                board,
-                seed,
-                width,
-                height,
-            }: {
-                board: Goal[][];
-                seed: string;
-                variant: string | undefined;
-                width: number;
-                height: number;
-            } = await res.json();
-            setSampleBoard(board);
-            setSampleSeed(seed);
-            setSampleVariant(variantId);
-            setSampleWidth(width);
-            setSampleHeight(height);
-            handleClose();
-            return true;
         },
         [slug],
     );
@@ -366,13 +426,35 @@ export default function SidebarButtons({ game, variants }: Props) {
 
     const openSampleBoard = useCallback(
         async (variant?: string) => {
-            const success = await generateSampleBoard(variant);
+            let options: BoardSizeOptions;
+            try {
+                const query = new URLSearchParams();
+                if (variant) query.set('variant', variant);
+                const response = await fetch(
+                    `/api/games/${encodeURIComponent(slug)}/boardSizes?${query}`,
+                );
+                if (!response.ok) throw new Error(await response.text());
+                options = await response.json();
+            } catch (error) {
+                alertError(
+                    error instanceof Error
+                        ? error.message
+                        : 'Unable to load board sizes.',
+                );
+                return;
+            }
+            setSampleSizes(options);
+            const size = options.sizes.includes(5) ? 5 : options.sizes[0];
+            const success = await generateSampleBoard(
+                variant,
+                options.customLayout ? undefined : size,
+            );
             if (success) {
                 setShowSampleBoard(true);
                 setShowDialog(true);
             }
         },
-        [generateSampleBoard],
+        [generateSampleBoard, slug],
     );
 
     const handleSampleBoardButton = useCallback(
@@ -401,6 +483,7 @@ export default function SidebarButtons({ game, variants }: Props) {
                 variant="outlined"
                 sx={{ width: '100%' }}
                 onClick={handleSampleBoardButton}
+                disabled={generating}
                 endIcon={variants.length > 0 ? <ArrowDropDown /> : null}
                 id="sample-board-button"
                 aria-controls={open ? 'sample-board-menu' : undefined}
@@ -442,7 +525,19 @@ export default function SidebarButtons({ game, variants }: Props) {
                         boardCols={sampleWidth}
                         boardRows={sampleHeight}
                         close={() => setShowDialog(false)}
-                        regenerate={() => generateSampleBoard(sampleVariant)}
+                        regenerate={() =>
+                            generateSampleBoard(
+                                sampleVariant,
+                                sampleSizes.customLayout
+                                    ? undefined
+                                    : sampleWidth,
+                            )
+                        }
+                        sizeOptions={sampleSizes}
+                        changeSize={(size) =>
+                            generateSampleBoard(sampleVariant, size)
+                        }
+                        generating={generating}
                         seed={sampleSeed}
                         variant={variantName}
                     />

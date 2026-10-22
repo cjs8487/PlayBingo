@@ -16,7 +16,6 @@ import {
     gameForSlug,
     getDifficultyVariant,
     getTags,
-    goalCount,
 } from '../../database/games/Games';
 import { chunk } from '../../util/Array';
 import { randomWord, slugAdjectives, slugNouns } from '../../util/Words';
@@ -33,8 +32,9 @@ import RacetimeHandler from '../../core/integration/races/RacetimeHandler';
 import LocalTimer from '../../core/integration/races/LocalTimer';
 import { error } from 'console';
 import { getModeString } from '../../util/RoomUtils';
+import { roomBoardSizes } from '../../util/RoomBoardSizes';
+import { isBoardSize } from '../../core/generation/BoardSizes';
 
-const MIN_ROOM_GOALS_REQUIRED = 25;
 const rooms = Router();
 
 rooms.get('/', async (req, res) => {
@@ -84,6 +84,13 @@ rooms.post('/', async (req, res) => {
         explorationStart,
         explorationStartCount,
     } = req.body;
+    const boardSize = req.body.boardSize ?? 5;
+    let boardWidth = boardSize;
+    let boardHeight = boardSize;
+    if (!isBoardSize(boardSize)) {
+        res.status(400).send('Board size must be an integer from 2 to 15.');
+        return;
+    }
     const seed = req.body.seed ?? Math.ceil(999999 * Math.random());
 
     if (!name || !game || !nickname /*|| !variant || !mode*/) {
@@ -97,12 +104,30 @@ rooms.post('/', async (req, res) => {
         return;
     }
 
-    // Might be better as a frontend check, but also way more imperformant
-    const goalsNumber = await goalCount(game);
-
-    if (goalsNumber < MIN_ROOM_GOALS_REQUIRED) {
+    try {
+        const available = await roomBoardSizes(game, variant || undefined);
+        if (available.customLayout) {
+            const { width, height } = available.customLayout;
+            if (
+                req.body.boardSize !== undefined &&
+                (boardSize !== width || boardSize !== height)
+            ) {
+                res.status(400).send(
+                    'The custom layout determines the board dimensions.',
+                );
+                return;
+            }
+            boardWidth = width;
+            boardHeight = height;
+        } else if (!available.sizes.includes(boardSize)) {
+            res.status(400).send(
+                'Board size is unavailable for this game and variant.',
+            );
+            return;
+        }
+    } catch (e) {
         res.status(400).send(
-            `Game has less than the minimum amount of goals required for room creation (${MIN_ROOM_GOALS_REQUIRED}).`,
+            e instanceof Error ? e.message : 'Unable to determine board sizes.',
         );
         return;
     }
@@ -171,6 +196,7 @@ rooms.post('/', async (req, res) => {
         const difficultyVariant = await getDifficultyVariant(variant);
         if (!difficultyVariant || difficultyVariant.gameId !== gameData.id) {
             res.status(400).send('Invalid variant selected.');
+            return;
         }
         generatorSettings = undefined;
         isDifficultyVariant = true;
@@ -192,6 +218,8 @@ rooms.post('/', async (req, res) => {
                 : explorationStart
             : undefined,
         seed,
+        boardWidth,
+        boardHeight,
     );
     const room = new Room(
         name,
@@ -215,6 +243,8 @@ rooms.post('/', async (req, res) => {
             : undefined,
         '',
         generatorSettings,
+        dbRoom.boardWidth,
+        dbRoom.boardHeight,
     );
     const options: BoardGenerationOptions = {
         mode: BoardGenerationMode.RANDOM,
@@ -325,27 +355,18 @@ async function getOrLoadRoom(slug: string): Promise<Room | null> {
         dbRoom.explorationStart ?? undefined,
         dbRoom.racetimeRoom ?? '',
         generatorSettings,
+        dbRoom.boardWidth,
+        dbRoom.boardHeight,
     );
 
-    if (generatorSettings?.boardLayout.mode === 'custom') {
-        newRoom.board = chunk(
-            (await getGoalList(dbRoom.board)).map((goal) => ({
-                goal: goal,
-                completedPlayers: [],
-                revealed: true,
-            })),
-            generatorSettings.boardLayout.layout[0].length,
-        );
-    } else {
-        newRoom.board = chunk(
-            (await getGoalList(dbRoom.board)).map((goal) => ({
-                goal: goal,
-                completedPlayers: [],
-                revealed: true,
-            })),
-            5,
-        );
-    }
+    newRoom.board = chunk(
+        (await getGoalList(dbRoom.board)).map((goal) => ({
+            goal,
+            completedPlayers: [],
+            revealed: true,
+        })),
+        newRoom.boardWidth,
+    );
     newRoom.computeVictoryMasks();
 
     dbRoom.players.forEach((dbPlayer) => {

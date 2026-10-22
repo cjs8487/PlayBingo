@@ -3,6 +3,16 @@ import { prisma } from '../Database';
 import { logError } from '../../Logger';
 import { gameForSlug } from './Games';
 
+export const goalFilterMetadataForGame = (slug: string) =>
+    prisma.goal.findMany({
+        where: { game: { slug } },
+        select: {
+            difficulty: true,
+            categories: { select: { id: true } },
+            tags: { select: { id: true } },
+        },
+    });
+
 export const goalsForGame = async (slug: string) => {
     const goals = await prisma.goal.findMany({
         where: { game: { slug } },
