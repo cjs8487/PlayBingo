@@ -4,8 +4,8 @@ export const generateMagicSquare = (
     size: number,
     seed?: number,
 ): number[][] => {
-    if (size < 3) {
-        return [];
+    if (!Number.isInteger(size) || size < 3) {
+        throw new Error(`Invalid size for a magic square (${size})`);
     }
 
     let magicSquare: number[][] = [];
@@ -23,34 +23,40 @@ export const generateMagicSquare = (
     } else {
         throw new Error(`Invalid size for a magic square (${size})`);
     }
+    const rng = prand.xoroshiro128plus(
+        seed ?? Math.ceil(999999 * Math.random()),
+    );
 
-    // randomized transformations
-    const rng = prand.xoroshiro128plus(seed ?? 999999 * Math.random());
-    const numInterchanges = prand.unsafeUniformIntDistribution(0, 20, rng);
-
-    for (let i = 0; i < numInterchanges; i++) {
-        let x = prand.unsafeUniformIntDistribution(0, size - 1, rng);
-        let y = prand.unsafeUniformIntDistribution(0, size - 1, rng);
-
-        // must be a non central row or column
-        if (size % 2 == 1) {
-            while (x == Math.floor(size / 2)) {
-                x = prand.unsafeUniformIntDistribution(0, size - 1, rng);
-            }
-            while (y == Math.floor(size / 2)) {
-                y = prand.unsafeUniformIntDistribution(0, size - 1, rng);
+    const half = Math.floor(size / 2);
+    for (let x = 0; x < half; x++) {
+        if (prand.unsafeUniformIntDistribution(0, 1, rng)) {
+            const y = size - 1 - x;
+            // Swap row x with row y
+            const tempRow = magicSquare[x];
+            magicSquare[x] = magicSquare[y];
+            magicSquare[y] = tempRow;
+            // Swap col x with col y
+            for (let r = 0; r < size; r++) {
+                const tempCol = magicSquare[r][x];
+                magicSquare[r][x] = magicSquare[r][y];
+                magicSquare[r][y] = tempCol;
             }
         }
+    }
 
-        const temp = magicSquare[y];
-        magicSquare[y] = magicSquare[x];
-        magicSquare[x] = temp;
-
-        for (let j = 0; j < size; j++) {
-            const temp = magicSquare[j][x];
-            magicSquare[j][x] = magicSquare[j][y];
-            magicSquare[j][y] = temp;
-        }
+    const rotations = prand.unsafeUniformIntDistribution(0, 3, rng);
+    for (let i = 0; i < rotations; i++) {
+        magicSquare = magicSquare.map((_, row) =>
+            magicSquare.map((line) => line[row]).reverse(),
+        );
+    }
+    if (prand.unsafeUniformIntDistribution(0, 1, rng)) {
+        magicSquare = magicSquare.map((row) => [...row].reverse());
+    }
+    if (prand.unsafeUniformIntDistribution(0, 1, rng)) {
+        magicSquare = magicSquare.map((row) =>
+            row.map((value) => size ** 2 + 1 - value),
+        );
     }
 
     return magicSquare;
@@ -63,7 +69,7 @@ const siamese = (size: number): number[][] => {
     }
 
     const mid = Math.floor(size / 2);
-    magicSquare[mid][0] = 1;
+    magicSquare[0][mid] = 1;
     let x = mid,
         y = 0;
     for (let i = 1; i <= size ** 2; i++) {

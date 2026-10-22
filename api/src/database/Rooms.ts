@@ -15,6 +15,8 @@ export const createRoom = (
     variant?: string,
     explorationStart?: string,
     seed?: number,
+    boardWidth: number = 5,
+    boardHeight: number = 5,
 ) => {
     return prisma.room.create({
         data: {
@@ -30,6 +32,8 @@ export const createRoom = (
             exploration: !!explorationStart,
             explorationStart,
             seed,
+            boardWidth,
+            boardHeight,
         },
     });
 };
@@ -113,8 +117,16 @@ export const addChangeColorAction = (
         timestamp,
     );
 
-export const setRoomBoard = async (room: string, board: string[]) => {
-    await prisma.room.update({ where: { id: room }, data: { board } });
+export const setRoomBoard = async (
+    room: string,
+    board: string[],
+    boardWidth: number,
+    boardHeight: number,
+) => {
+    await prisma.room.update({
+        where: { id: room },
+        data: { board, boardWidth, boardHeight },
+    });
 };
 
 export const getFullRoomList = () => {

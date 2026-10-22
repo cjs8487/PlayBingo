@@ -1,3 +1,8 @@
+import {
+    availableBoardSizes,
+    availableCustomBoardSize,
+} from '../../core/generation/BoardSizes';
+import { roomBoardSizes } from '../../util/RoomBoardSizes';
 import { makeGeneratorSchema } from '@playbingo/shared';
 import { Game } from '@playbingo/types';
 import { Router } from 'express';
@@ -63,6 +68,26 @@ const games = Router();
 games.get('/', async (req, res) => {
     const result = await allGames(req.session.user);
     res.status(200).json(result);
+});
+
+games.get('/:slug/boardSizes', async (req, res) => {
+    const { slug } = req.params;
+    const variant = req.query.variant;
+    if (variant !== undefined && typeof variant !== 'string') {
+        res.status(400).send('Invalid variant parameter');
+        return;
+    }
+    if (!(await gameForSlug(slug))) {
+        res.sendStatus(404);
+        return;
+    }
+    try {
+        res.json(await roomBoardSizes(slug, variant));
+    } catch (e) {
+        res.status(400).send(
+            e instanceof Error ? e.message : 'Unable to determine board sizes.',
+        );
+    }
 });
 
 games.get('/:slug', async (req, res) => {
@@ -747,20 +772,19 @@ games.get('/:slug/sampleBoard', async (req, res) => {
     const goals = await goalsForGameFull(slug);
     const categories = await getCategories(slug);
 
-    let generator: BoardGenerator;
-    if (variantData) {
-        generator = new BoardGenerator(
-            goals,
-            categories,
-            variantData.generatorSettings,
+    const settings =
+        variantData?.generatorSettings ?? gameData.generatorSettings;
+    const sizes = availableBoardSizes(goals, settings);
+    const size =
+        availableCustomBoardSize(goals, settings)?.width ??
+        (sizes.includes(5) ? 5 : sizes[0]);
+    if (size === undefined) {
+        res.status(422).send(
+            'No supported board sizes are available for this game and variant.',
         );
-    } else {
-        generator = new BoardGenerator(
-            goals,
-            categories,
-            gameData.generatorSettings,
-        );
+        return;
     }
+    const generator = new BoardGenerator(goals, categories, settings, size);
 
     try {
         generator.generateBoard();

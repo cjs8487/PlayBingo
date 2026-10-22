@@ -124,9 +124,9 @@ export const makeGeneratorSchema = (
         }),
         z.object({
             mode: z.literal('srlv5').meta({
-                title: 'SRLv5',
+                title: 'Magic Square',
                 description:
-                    'Generates a 5x5 board using difficulties 1-25 to balance each line. Each difficulty appears on the board exactly once amd the sum of the difficulties in each line sums to the same value. Goals with an invalid difficulty will be ignored.',
+                    'Generates a magic square of size n using difficulties 1 through n*n, with each difficulty appearing exactly once and every row, column and main diagonal having the same sum. Supports sizes 3x3 through 15x15. Goals outside this difficulty range are ignored.',
             }),
         }),
         z.object({
@@ -140,7 +140,7 @@ export const makeGeneratorSchema = (
             mode: z.literal('custom').meta({
                 title: 'Custom',
                 description:
-                    'Generates a board with a custom layout. Custom layouts have no restriction on the size of the board, but must be able fill every cell with at least one goal from the pool. Goals with an invalid value based on the selection criteria for the cell will be ignored when placing a goal in that cell. ',
+                    'Generates a board with a custom layout, with 1 to 15 rows and columns. Goals with an invalid value based on the selection criteria for the cell will be ignored when placing a goal in that cell. ',
             }),
             layout: z
                 .array(
@@ -211,7 +211,9 @@ export const makeGeneratorSchema = (
                 .max(15, '15x15 is the maximum supported board size')
                 .refine(
                     (arr) => arr.every((row) => row.length === arr[0].length),
-                    { error: 'All rows must be the same length' },
+                    {
+                        error: 'All rows must have the same length',
+                    },
                 )
                 .meta({ title: 'Layout' })
                 .default([[{ selectionCriteria: 'random' }]]),
@@ -247,9 +249,14 @@ export const makeGeneratorSchema = (
                             (sum, item) => sum + item.count,
                             0,
                         );
-                        return totalSlots === 25; // Standard 5x5 board
+                        const size = Math.sqrt(totalSlots);
+                        return (
+                            Number.isInteger(size) && size >= 2 && size <= 15
+                        );
                     },
-                    { error: 'Total slots must equal 25 for a 5x5 board' },
+                    {
+                        error: 'Total slots must fill a square board from 2x2 to 15x15',
+                    },
                 )
                 .meta({ title: 'Difficulty Distribution' }),
         }),
