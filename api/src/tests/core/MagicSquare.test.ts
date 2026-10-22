@@ -33,11 +33,26 @@ describe('Magic Square Generation', () => {
         const magicSquare = generateMagicSquare(7);
         validateMagicSquare(7, magicSquare);
     });
-    // TODO: MAKE DOUBLY EVEN APPROACH FULLY GENERIC
-    // it('Generates a valid magic square of size 8', () => {
-    //     const magicSquare = generateMagicSquare(8, 0);
-    //     validateMagicSquare(8, magicSquare);
-    // });
+    it.each([4, 8, 12, 16, 20])(
+        'Generates a valid doubly even magic square of size %i',
+        (size) => {
+            const magicSquare = generateMagicSquare(size, 0);
+            validateMagicSquare(size, magicSquare);
+            const magicConstant = size * ((size ** 2 + 1) / 2);
+            for (let column = 0; column < size; column++) {
+                expect(
+                    magicSquare.reduce((sum, row) => sum + row[column], 0),
+                ).toBe(magicConstant);
+            }
+            expect(new Set(magicSquare.flat()).size).toBe(size * size);
+            expect(Math.min(...magicSquare.flat())).toBe(1);
+            expect(Math.max(...magicSquare.flat())).toBe(size * size);
+        },
+    );
+    it('Generates a valid magic square of size 8', () => {
+        const magicSquare = generateMagicSquare(8, 0);
+        validateMagicSquare(8, magicSquare);
+    });
     it('Generates a valid magic square of size 9', () => {
         const magicSquare = generateMagicSquare(9);
         validateMagicSquare(9, magicSquare);
