@@ -8,12 +8,12 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "json-schema-to-typescript": "^15.0.4"
+    "json-schema-to-typescript": "^16.0.0"
   },
   "devDependencies": {
-    "@types/node": "^20.19.43",
+    "@types/node": "^26.6.5",
     "ts-node": "^10.9.2",
-    "tsx": "^4.23.13",
+    "tsx": "^4.23.15",
     "typescript": "^5.9.3"
   }
 }
