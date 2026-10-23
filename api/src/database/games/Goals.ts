@@ -1,4 +1,5 @@
-import { Prisma } from '@prisma/client';
+import { Category, Prisma } from '@prisma/client';
+import { ExcludedGoalField, goalTransferData } from '@playbingo/shared';
 import { prisma } from '../Database';
 import { logError } from '../../Logger';
 import { gameForSlug } from './Games';
@@ -118,11 +119,51 @@ export const deleteGoal = async (id: string) => {
     }
 };
 
-export type GoalInput = {
-    goal: string;
-    description?: string;
-    categories?: string[];
-    difficulty?: number;
+export type GoalInput = Omit<
+    Prisma.GoalUncheckedCreateInput,
+    ExcludedGoalField | 'meta' | 'categories' | 'tags'
+> & {
+    meta?: PrismaJson.GoalMeta | null;
+    categories?: Category[] | string[] | null;
+    tags?: Array<string | { name: string }> | null;
+    image?: { id: string } | null;
+    secondaryImage?: { id: string } | null;
+    imageTag?: { id: string } | null;
+};
+
+// Preserve transferable scalar fields and translate exported relations for Prisma.
+export const goalCreateData = (
+    input: GoalInput,
+    gameId: string,
+): Prisma.GoalCreateInput => {
+    const { categories, tags, image, secondaryImage, imageTag, ...data } =
+        goalTransferData(input);
+    const namedRelation = (
+        values?: Array<string | { name: string }> | null,
+    ) => ({
+        connectOrCreate: values?.map((value) => {
+            const name = typeof value === 'string' ? value : value.name;
+            return {
+                create: { name, game: { connect: { id: gameId } } },
+                where: { gameId_name: { gameId, name } },
+            };
+        }),
+    });
+
+    return {
+        ...data,
+        meta: data.meta ?? undefined,
+        categories: namedRelation(categories),
+        tags: namedRelation(tags),
+        image: image ? { connect: { id: image.id, gameId } } : undefined,
+        secondaryImage: secondaryImage
+            ? { connect: { id: secondaryImage.id, gameId } }
+            : undefined,
+        imageTag: imageTag
+            ? { connect: { id: imageTag.id, gameId } }
+            : undefined,
+        game: { connect: { id: gameId } },
+    };
 };
 
 export const createGoals = async (slug: string, goals: GoalInput[]) => {
@@ -134,26 +175,7 @@ export const createGoals = async (slug: string, goals: GoalInput[]) => {
     await prisma.$transaction(
         goals.map((g) =>
             prisma.goal.create({
-                data: {
-                    goal: g.goal,
-                    description: g.description,
-                    categories: {
-                        connectOrCreate: g.categories?.map((cat) => ({
-                            create: {
-                                name: cat,
-                                game: { connect: { slug: slug } },
-                            },
-                            where: {
-                                gameId_name: {
-                                    gameId,
-                                    name: cat,
-                                },
-                            },
-                        })),
-                    },
-                    difficulty: g.difficulty,
-                    game: { connect: { slug: slug } },
-                },
+                data: goalCreateData(g, gameId),
             }),
         ),
     );
@@ -179,26 +201,7 @@ export const replaceAllGoalsForGame = async (
         await Promise.all(
             goals.map((g) =>
                 tx.goal.create({
-                    data: {
-                        goal: g.goal,
-                        description: g.description,
-                        categories: {
-                            connectOrCreate: g.categories?.map((cat) => ({
-                                create: {
-                                    name: cat,
-                                    game: { connect: { slug } },
-                                },
-                                where: {
-                                    gameId_name: {
-                                        gameId,
-                                        name: cat,
-                                    },
-                                },
-                            })),
-                        },
-                        difficulty: g.difficulty ?? undefined,
-                        game: { connect: { id: gameId } },
-                    },
+                    data: goalCreateData(g, gameId),
                 }),
             ),
         );
