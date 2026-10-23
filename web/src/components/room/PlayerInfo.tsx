@@ -6,18 +6,19 @@ import {
     Button,
     FormControlLabel,
     Switch,
-    FormControl,
-    InputLabel,
+    Menu,
     MenuItem,
-    Select,
 } from '@mui/material';
 import { ConnectionStatus, useRoomContext } from '../../context/RoomContext';
 import ColorSelect from './ColorSelect';
 import { Sword } from 'mdi-material-ui';
-import { useId } from 'react';
+import { useId, useState } from 'react';
 
 export default function PlayerInfo() {
-    const teamSelectId = useId();
+    const teamMenuId = useId();
+    const [teamMenuAnchor, setTeamMenuAnchor] = useState<HTMLElement | null>(
+        null,
+    );
     const {
         connectionStatus,
         nickname,
@@ -70,36 +71,84 @@ export default function PlayerInfo() {
                         </>
                     )}
                 </Box>
-                {roomData?.teamsEnabled && connectedTeam && (
-                    <FormControl fullWidth size="small" sx={{ mt: 1 }}>
-                        <InputLabel id={`${teamSelectId}-label`}>
-                            Team
-                        </InputLabel>
-                        <Select
-                            labelId={`${teamSelectId}-label`}
-                            id={teamSelectId}
-                            label="Team"
-                            value={connectedTeam?.id ?? ''}
-                            onChange={(event) => joinTeam(event.target.value)}
-                            disabled={
-                                connectionStatus !== ConnectionStatus.CONNECTED
-                            }
-                        >
-                            {teams.map((team) => (
-                                <MenuItem key={team.id} value={team.id}>
-                                    {team.name}
-                                </MenuItem>
-                            ))}
-                        </Select>
-                    </FormControl>
-                )}
                 {connectedTeam && (
                     <Box>
-                        <Typography>
-                            {roomData?.teamsEnabled
-                                ? 'Choose your team color'
-                                : 'Choose your color'}
-                        </Typography>
+                        <Box
+                            sx={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                gap: 1,
+                            }}
+                        >
+                            <Typography>
+                                {roomData?.teamsEnabled
+                                    ? 'Choose your team color'
+                                    : 'Choose your color'}
+                            </Typography>
+                            {roomData?.teamsEnabled && (
+                                <>
+                                    <Button
+                                        size="small"
+                                        sx={{ py: 0 }}
+                                        aria-haspopup="menu"
+                                        aria-expanded={
+                                            teamMenuAnchor ? true : undefined
+                                        }
+                                        aria-controls={
+                                            teamMenuAnchor
+                                                ? teamMenuId
+                                                : undefined
+                                        }
+                                        disabled={
+                                            connectionStatus !==
+                                            ConnectionStatus.CONNECTED
+                                        }
+                                        onClick={(event) =>
+                                            setTeamMenuAnchor(
+                                                event.currentTarget,
+                                            )
+                                        }
+                                    >
+                                        Change team
+                                    </Button>
+                                    <Menu
+                                        id={teamMenuId}
+                                        anchorEl={teamMenuAnchor}
+                                        open={Boolean(teamMenuAnchor)}
+                                        onClose={() => setTeamMenuAnchor(null)}
+                                        slotProps={{
+                                            list: {
+                                                'aria-label': 'Change team',
+                                            },
+                                        }}
+                                    >
+                                        {teams.map((team) => (
+                                            <MenuItem
+                                                key={team.id}
+                                                role="menuitemradio"
+                                                aria-checked={
+                                                    team.id === connectedTeam.id
+                                                }
+                                                disabled={
+                                                    connectionStatus !==
+                                                    ConnectionStatus.CONNECTED
+                                                }
+                                                selected={
+                                                    team.id === connectedTeam.id
+                                                }
+                                                onClick={() => {
+                                                    joinTeam(team.id);
+                                                    setTeamMenuAnchor(null);
+                                                }}
+                                            >
+                                                {team.name}
+                                            </MenuItem>
+                                        ))}
+                                    </Menu>
+                                </>
+                            )}
+                        </Box>
                         <ColorSelect />
                     </Box>
                 )}
