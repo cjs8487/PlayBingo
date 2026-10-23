@@ -6,12 +6,18 @@ import {
     Button,
     FormControlLabel,
     Switch,
+    FormControl,
+    InputLabel,
+    MenuItem,
+    Select,
 } from '@mui/material';
 import { ConnectionStatus, useRoomContext } from '../../context/RoomContext';
 import ColorSelect from './ColorSelect';
 import { Sword } from 'mdi-material-ui';
+import { useId } from 'react';
 
 export default function PlayerInfo() {
+    const teamSelectId = useId();
     const {
         connectionStatus,
         nickname,
@@ -24,6 +30,10 @@ export default function PlayerInfo() {
         changeAuth,
         showImages,
         toggleImages,
+        roomData,
+        teams,
+        connectedTeam,
+        joinTeam,
         notificationSoundEnabled,
         toggleNotificationSound,
     } = useRoomContext();
@@ -40,8 +50,8 @@ export default function PlayerInfo() {
                     }}
                 >
                     <Typography variant="h6">
-                        {connectedPlayer?.spectator ? 'Spectating' : 'Playing'}{' '}
-                        as {nickname}
+                        {!connectedPlayer?.teamId ? 'Spectating' : 'Playing'} as{' '}
+                        {connectedPlayer?.nickname ?? nickname}
                     </Typography>
                     {connectedPlayer?.monitor && (
                         <Sword sx={{ color: 'green' }} />
@@ -49,7 +59,7 @@ export default function PlayerInfo() {
                     <Box sx={{ flexGrow: 1 }} />
                     {connectionStatus !== ConnectionStatus.CLOSED && (
                         <>
-                            {connectedPlayer?.spectator ? (
+                            {!connectedPlayer?.teamId ? (
                                 <Button onClick={() => changeAuth(false)}>
                                     Join Game
                                 </Button>
@@ -62,10 +72,39 @@ export default function PlayerInfo() {
                         </>
                     )}
                 </Box>
-                <Box>
-                    <Typography>Choose your color</Typography>
-                    <ColorSelect />
-                </Box>
+                {roomData?.teamsEnabled && connectedTeam && (
+                    <FormControl fullWidth size="small" sx={{ mt: 1 }}>
+                        <InputLabel id={`${teamSelectId}-label`}>
+                            Team
+                        </InputLabel>
+                        <Select
+                            labelId={`${teamSelectId}-label`}
+                            id={teamSelectId}
+                            label="Team"
+                            value={connectedTeam?.id ?? ''}
+                            onChange={(event) => joinTeam(event.target.value)}
+                            disabled={
+                                connectionStatus !== ConnectionStatus.CONNECTED
+                            }
+                        >
+                            {teams.map((team) => (
+                                <MenuItem key={team.id} value={team.id}>
+                                    {team.name}
+                                </MenuItem>
+                            ))}
+                        </Select>
+                    </FormControl>
+                )}
+                {connectedTeam && (
+                    <Box>
+                        <Typography>
+                            {roomData?.teamsEnabled
+                                ? 'Choose your team color'
+                                : 'Choose your color'}
+                        </Typography>
+                        <ColorSelect />
+                    </Box>
+                )}
                 <Box sx={{ mt: 1.5 }}>
                     <Typography variant="h6">Settings</Typography>
                     <FormControlLabel

@@ -252,6 +252,7 @@ export default function RoomCreateForm({ game }: FormProps) {
                 seed: undefined,
                 hideCard: false,
                 spectator: false,
+                teamsEnabled: false,
                 exploration: false,
                 explorationStart: 'TL',
                 explorationStartCount: '',
@@ -355,6 +356,11 @@ export default function RoomCreateForm({ game }: FormProps) {
                             id="hide-card"
                             name="hideCard"
                             label="Hide card initially?"
+                        />
+                        <FormikSwitch
+                            name="teamsEnabled"
+                            id="teamsEnabled"
+                            label="Enable teams"
                         />
                         <FormikSwitch
                             name="spectator"

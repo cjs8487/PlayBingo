@@ -4,10 +4,15 @@ import { useContext } from 'react';
 import { RoomContext } from '../../context/RoomContext';
 import PlayerRaceSummary from './PlayerRaceSummary';
 export default function PlayerList() {
-    const { players: allPlayers, roomData } = useContext(RoomContext);
-
-    const players = allPlayers.filter((p) => !p.spectator);
-    const spectators = allPlayers.filter((p) => p.spectator);
+    const {
+        teams,
+        spectators: allSpectators,
+        roomData,
+    } = useContext(RoomContext);
+    const players = teams
+        .flatMap((team) => team.players)
+        .filter((player) => player.showInRoom);
+    const spectators = allSpectators.filter((player) => player.showInRoom);
 
     return (
         <Paper
@@ -32,42 +37,79 @@ export default function PlayerList() {
                     rowGap: 1,
                 }}
             >
-                {players
-                    .filter((player) => player.showInRoom)
-                    .map((player) => (
-                        <Box key={player.id}>
-                            <Box
-                                sx={{
-                                    display: 'flex',
-                                    columnGap: 2,
-                                }}
-                            >
+                {teams.map((team) => {
+                    const members = team.players.filter(
+                        (player) => player.showInRoom,
+                    );
+                    if (members.length === 0) {
+                        return null;
+                    }
+                    return (
+                        <Box key={team.id}>
+                            <Box sx={{ display: 'flex', columnGap: 2 }}>
                                 <Box
-                                    style={{ background: player.color }}
+                                    style={{ background: team.color }}
                                     sx={{
                                         px: 0.5,
                                         border: 1,
                                         borderColor: 'divider',
                                     }}
                                 >
-                                    <Typography>{player.goalCount}</Typography>
+                                    <Typography>{team.goalCount}</Typography>
                                 </Box>
-                                {player.monitor && (
-                                    <Sword
-                                        fontSize="small"
-                                        sx={{ color: 'green' }}
-                                    />
+                                {roomData?.teamsEnabled && (
+                                    <Typography>{team.name}</Typography>
                                 )}
-                                <Typography>{player.nickname}</Typography>
+                                {!roomData?.teamsEnabled &&
+                                    members.length === 1 && (
+                                        <>
+                                            {members[0].monitor && (
+                                                <Sword
+                                                    fontSize="small"
+                                                    sx={{ color: 'green' }}
+                                                />
+                                            )}
+                                            <Typography>
+                                                {members[0].nickname}
+                                            </Typography>
+                                        </>
+                                    )}
                             </Box>
-                            {roomData?.raceHandler && (
-                                <PlayerRaceSummary
-                                    raceHandler={roomData.raceHandler}
-                                    player={player}
-                                />
-                            )}
+                            {members.map((player) => (
+                                <Box
+                                    key={player.id}
+                                    sx={{ pl: roomData?.teamsEnabled ? 2 : 0 }}
+                                >
+                                    {(roomData?.teamsEnabled ||
+                                        members.length > 1) && (
+                                        <Box
+                                            sx={{
+                                                display: 'flex',
+                                                columnGap: 2,
+                                            }}
+                                        >
+                                            {player.monitor && (
+                                                <Sword
+                                                    fontSize="small"
+                                                    sx={{ color: 'green' }}
+                                                />
+                                            )}
+                                            <Typography>
+                                                {player.nickname}
+                                            </Typography>
+                                        </Box>
+                                    )}
+                                    {roomData?.raceHandler && (
+                                        <PlayerRaceSummary
+                                            raceHandler={roomData.raceHandler}
+                                            player={player}
+                                        />
+                                    )}
+                                </Box>
+                            ))}
                         </Box>
-                    ))}
+                    );
+                })}
                 {spectators.length > 0 && (
                     <>
                         <Typography variant="h6">Spectators</Typography>
@@ -79,7 +121,7 @@ export default function PlayerList() {
                             }}
                         >
                             {spectators.map((player) => (
-                                <Box key={player.nickname}>
+                                <Box key={player.id}>
                                     <Box
                                         sx={{
                                             display: 'flex',
