@@ -24,6 +24,8 @@ export default function PlayerInfo() {
         changeAuth,
         showImages,
         toggleImages,
+        notificationSoundEnabled,
+        toggleNotificationSound,
     } = useRoomContext();
 
     return (
@@ -92,6 +94,15 @@ export default function PlayerInfo() {
                             />
                         }
                         label="Show Images"
+                    />
+                    <FormControlLabel
+                        control={
+                            <Switch
+                                checked={notificationSoundEnabled}
+                                onChange={toggleNotificationSound}
+                            />
+                        }
+                        label="Notification Sound"
                     />
                 </Box>
             </CardContent>

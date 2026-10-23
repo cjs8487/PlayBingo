@@ -42,6 +42,8 @@ export enum ConnectionStatus {
     CLOSED, // connection was manually closed, and the user is completely disconnected
 }
 
+const notificationSound = new Audio('/goal_ping.ogg');
+
 interface CardRegenerateOptions {
     seed?: number;
     generationMode?: string;
@@ -61,6 +63,7 @@ interface RoomContext {
     connectedPlayer?: Player;
     colorMap: { [k: string]: string };
     showImages: boolean;
+    notificationSoundEnabled: boolean;
     connect: (
         nickname: string,
         password: string,
@@ -83,6 +86,7 @@ interface RoomContext {
     toggleGoalDetails: () => void;
     toggleCounters: () => void;
     toggleImages: () => void;
+    toggleNotificationSound: () => void;
     changeAuth: (spectate: boolean) => void;
     startTimer: () => void;
     changeRaceHandler: (handler: string) => void;
@@ -102,6 +106,7 @@ export const RoomContext = createContext<RoomContext>({
     showCounters: false,
     colorMap: {},
     showImages: true,
+    notificationSoundEnabled: true,
     async connect() {
         return { success: false };
     },
@@ -122,6 +127,7 @@ export const RoomContext = createContext<RoomContext>({
     toggleGoalDetails() {},
     toggleCounters() {},
     toggleImages() {},
+    toggleNotificationSound() {},
     changeAuth() {},
     startTimer() {},
     changeRaceHandler() {},
@@ -194,6 +200,12 @@ export function RoomContextProvider({
         setShowImages((curr) => !curr);
     }, []);
 
+    const [notificationSoundEnabled, setNotificationSoundEnabled] =
+        useState(true);
+    const toggleNotificationSound = useCallback(() => {
+        setNotificationSoundEnabled((curr) => !curr);
+    }, []);
+
     // incoming messages
     const onChatMessage = useCallback((message: ChatMessage) => {
         setMessages((curr) => [...curr, message]);
@@ -264,7 +276,29 @@ export function RoomContextProvider({
                             !payload.cell
                         )
                             return;
-                        onCellUpdate(payload.row, payload.col, payload.cell);
+                        if (!board.hidden) {
+                            const newMarks =
+                                payload.cell.completedPlayers.filter(
+                                    (player) =>
+                                        !board.board[payload.row][
+                                            payload.col
+                                        ].completedPlayers.includes(player),
+                                );
+                            if (
+                                notificationSoundEnabled &&
+                                newMarks.length > 0 &&
+                                (newMarks.length > 1 ||
+                                    newMarks[0] !== connectedPlayer?.id)
+                            ) {
+                                notificationSound.play();
+                            }
+
+                            onCellUpdate(
+                                payload.row,
+                                payload.col,
+                                payload.cell,
+                            );
+                        }
                         break;
                     case 'syncBoard':
                         if (!payload.board) return;
@@ -586,6 +620,7 @@ export function RoomContextProvider({
                 showGoalDetails,
                 showCounters,
                 showImages,
+                notificationSoundEnabled,
                 connectedPlayer,
                 colorMap,
                 connect,
@@ -606,6 +641,7 @@ export function RoomContextProvider({
                 toggleGoalDetails,
                 toggleCounters,
                 toggleImages,
+                toggleNotificationSound,
                 changeAuth,
                 startTimer,
                 changeRaceHandler,
