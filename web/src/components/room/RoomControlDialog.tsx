@@ -42,6 +42,7 @@ export default function RoomControlDialog({
         changeRaceHandler,
         connectedPlayer,
         setChatEnabled,
+        setTeamsEnabled,
     } = useContext(RoomContext);
 
     const handleRaceHandlerChange = (
@@ -132,6 +133,17 @@ export default function RoomControlDialog({
                                 />
                             }
                             label="Enable chat"
+                        />
+                        <FormControlLabel
+                            control={
+                                <Switch
+                                    checked={roomData?.teamsEnabled ?? false}
+                                    onChange={(e) =>
+                                        setTeamsEnabled(e.target.checked)
+                                    }
+                                />
+                            }
+                            label="Enable teams"
                         />
                     </Box>
                 )}

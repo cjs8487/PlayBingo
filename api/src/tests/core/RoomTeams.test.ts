@@ -6,6 +6,7 @@ import {
     MarkAction,
     RevealedCell,
     SetTeamsEnabledAction,
+    ServerMessage,
     UnmarkAction,
 } from '@playbingo/types';
 import { WebSocket } from 'ws';
@@ -34,7 +35,7 @@ jest.mock('../../database/Rooms', () => ({
     updateTeamsEnabled: jest.fn().mockResolvedValue(undefined),
 }));
 
-const createRoom = (teamsEnabled = false) => {
+const createRoom = (teamsEnabled = false, hideCard = false) => {
     const room = new Room(
         'Room',
         'Game',
@@ -42,7 +43,7 @@ const createRoom = (teamsEnabled = false) => {
         'room',
         '',
         'room-id',
-        false,
+        hideCard,
         BingoMode.LINES,
         1,
         false,
@@ -337,5 +338,157 @@ describe('Room team workflows', () => {
         expect(room.teams.size).toBe(1);
         expect(aliceTeam.players.has('alice')).toBe(true);
         expect(aliceTeam.players.has('bob')).toBe(false);
+    });
+    const openSocket = () =>
+        ({ readyState: 1, send: jest.fn() }) as unknown as WebSocket;
+
+    const boardMessages = (connection: WebSocket) =>
+        (connection.send as jest.Mock).mock.calls
+            .map(([raw]) => JSON.parse(raw as string) as ServerMessage)
+            .filter((message) => message.action === 'syncBoard');
+
+    it('syncs the new exploration view to every connection after changing teams', () => {
+        const room = createRoom(true);
+        room.exploration = true;
+        room.alwaysRevealedMask = 1n;
+        const first = openSocket();
+        const second = openSocket();
+        room.handleJoin(joinAction('Alice'), auth('alice'), first);
+        room.handleJoin(
+            joinAction('Alice'),
+            { ...auth('alice'), uuid: 'second' },
+            second,
+        );
+        room.handleJoin(joinAction('Bob'), auth('bob'), openSocket());
+        const oldTeam = room.getTeamForPlayer('alice')!;
+        const newTeam = room.getTeamForPlayer('bob')!;
+        oldTeam.mark(0, 0);
+        newTeam.mark(4, 4);
+        const handleJoin = jest.spyOn(room, 'handleJoin');
+
+        room.handleJoinTeam(
+            {
+                action: 'joinTeam',
+                payload: { teamId: newTeam.id },
+            },
+            auth('alice'),
+        );
+
+        for (const connection of [first, second]) {
+            const message = boardMessages(connection).at(-1)!;
+            expect(message.connectedPlayer?.teamId).toBe(newTeam.id);
+            expect(message.board.hidden).toBe(false);
+            if (!message.board.hidden) {
+                expect(message.board.board).toEqual(newTeam.obfuscateBoard());
+                expect(message.board.board[1][0].revealed).toBe(false);
+                expect(message.board.board[4][3].revealed).toBe(true);
+            }
+        }
+        expect(handleJoin).not.toHaveBeenCalled();
+        expect(room.getPlayerById('alice')!.connections.size).toBe(2);
+    });
+
+    it('syncs spectator visibility and the new solo team when participation changes', () => {
+        const room = createRoom();
+        room.exploration = true;
+        room.alwaysRevealedMask = 1n;
+        const connection = openSocket();
+        room.handleJoin(joinAction('Alice'), auth('alice'), connection);
+        room.handleJoin(joinAction('Bob'), auth('bob'), openSocket());
+        room.getTeamForPlayer('bob')!.mark(4, 4);
+        const player = room.getPlayerById('alice')!;
+
+        room.setPlayerSpectating(player, true);
+        const spectating = boardMessages(connection).at(-1)!;
+        expect(spectating.connectedPlayer?.teamId).toBeUndefined();
+        if (spectating.board.hidden)
+            throw new Error('Expected a revealed board');
+        expect(spectating.board.board).toEqual(room.spectatorObfuscateBoard());
+        expect(spectating.board.board[4][3].revealed).toBe(true);
+
+        room.setPlayerSpectating(player, false);
+        const playing = boardMessages(connection).at(-1)!;
+        expect(playing.connectedPlayer?.teamId).toBe(player.teamId);
+        if (playing.board.hidden) throw new Error('Expected a revealed board');
+        expect(playing.board.board).toEqual(player.getBoardView());
+        expect(playing.board.board[4][3].revealed).toBe(false);
+        const count = boardMessages(connection).length;
+        expect(room.setPlayerSpectating(player, false)).toBe(false);
+        expect(boardMessages(connection)).toHaveLength(count);
+    });
+
+    it('preserves the reveal gate across membership changes, reveals, and resets', () => {
+        const room = createRoom(true, true);
+        const connection = openSocket();
+        room.handleJoin(joinAction('Alice'), auth('alice'), connection);
+        room.handleJoin(joinAction('Bob'), auth('bob'), openSocket());
+        const player = room.getPlayerById('alice')!;
+        room.handleJoinTeam(
+            {
+                action: 'joinTeam',
+                payload: { teamId: room.getTeamForPlayer('bob')!.id },
+            },
+            auth('alice'),
+        );
+        expect(boardMessages(connection).at(-1)!.board).toEqual({
+            hidden: true,
+            width: 5,
+            height: 5,
+        });
+
+        room.revealCardForPlayer(player);
+        room.setPlayerSpectating(player, true);
+        expect(boardMessages(connection).at(-1)!.board.hidden).toBe(false);
+        const reconnect = room.handleJoin(
+            joinAction('Alice'),
+            { ...auth('alice'), uuid: 'reconnect' },
+            openSocket(),
+        );
+        expect(reconnect.action).toBe('connected');
+        if (reconnect.action !== 'connected')
+            throw new Error('Expected connection');
+        expect(reconnect.board.hidden).toBe(false);
+
+        room.sendSyncBoard();
+        room.setPlayerSpectating(player, false);
+        expect(boardMessages(connection).at(-1)!.board).toEqual({
+            hidden: true,
+            width: 5,
+            height: 5,
+        });
+    });
+
+    it('keeps the full board visible in solo rooms without exploration', () => {
+        const room = createRoom();
+        const connection = openSocket();
+        room.handleJoin(joinAction('Alice'), auth('alice'), connection);
+        const player = room.getPlayerById('alice')!;
+        room.setPlayerSpectating(player, true);
+        room.setPlayerSpectating(player, false);
+        const message = boardMessages(connection).at(-1)!;
+        expect(message.board.hidden).toBe(false);
+        if (!message.board.hidden)
+            expect(message.board.board).toEqual(room.board);
+    });
+    it('preserves other players reveal gates when a membership change disbands a marked team', () => {
+        const room = createRoom(true, true);
+        const alice = openSocket();
+        const bob = openSocket();
+        const carol = openSocket();
+        room.handleJoin(joinAction('Alice'), auth('alice'), alice);
+        room.handleJoin(joinAction('Bob'), auth('bob'), bob);
+        room.handleJoin(joinAction('Carol'), auth('carol'), carol);
+        room.revealCardForPlayer(room.getPlayerById('alice')!);
+        room.revealCardForPlayer(room.getPlayerById('bob')!);
+        room.handleMark(
+            { action: 'mark', payload: { row: 0, col: 0 } },
+            auth('alice'),
+        );
+
+        room.setPlayerSpectating(room.getPlayerById('alice')!, true);
+
+        expect(boardMessages(alice).at(-1)!.board.hidden).toBe(false);
+        expect(boardMessages(bob).at(-1)!.board.hidden).toBe(false);
+        expect(boardMessages(carol).at(-1)!.board.hidden).toBe(true);
     });
 });

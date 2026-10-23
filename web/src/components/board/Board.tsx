@@ -119,9 +119,7 @@ export default function Board() {
                                                     ? cell.goal
                                                     : undefined
                                             }
-                                            completedPlayers={
-                                                cell.completedPlayers
-                                            }
+                                            completedTeams={cell.completedTeams}
                                             revealed={cell.revealed}
                                         />
                                     )),

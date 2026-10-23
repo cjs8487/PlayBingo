@@ -82,7 +82,7 @@ export default function RacetimeCard() {
                                 <Refresh />
                             </IconButton>
                             {user?.racetimeConnected &&
-                                !connectedPlayer?.spectator && (
+                                !!connectedPlayer?.teamId && (
                                     <>
                                         <Button onClick={joinRacetimeRoom}>
                                             Join Race

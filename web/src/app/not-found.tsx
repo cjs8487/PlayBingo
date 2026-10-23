@@ -21,7 +21,7 @@ const mockBoard = {
                 goal: text,
                 description: '',
             },
-            completedPlayers: text === '404' ? ['1'] : [],
+            completedTeams: text === '404' ? ['1'] : [],
             revealed: true,
         })),
     ),
