@@ -199,10 +199,7 @@ export default class Player {
 
         this.connections.forEach((socket) => {
             if (socket.readyState === OPEN) {
-                metrics.websocket.messageSent(
-                    this.room.slug,
-                    finalMessage.action,
-                );
+                metrics.websocket.messageSent(finalMessage.action);
                 socket.send(
                     JSON.stringify({
                         ...finalMessage,

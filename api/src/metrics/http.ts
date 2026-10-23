@@ -62,18 +62,29 @@ const httpActiveRequests = new Gauge({
 
 export const observeRequest = (req: Request, res: Response) => {
     httpActiveRequests.inc();
-    const route = req.route ? req.route.path : req.path;
-    const method = req.method;
+    // HTTP methods are client supplied; keep the label vocabulary finite.
+    const method = [
+        'GET',
+        'HEAD',
+        'POST',
+        'PUT',
+        'PATCH',
+        'DELETE',
+        'OPTIONS',
+        'CONNECT',
+        'TRACE',
+    ].includes(req.method)
+        ? req.method
+        : 'other';
 
     const stopTimer = requestDurationHistogram.startTimer();
     const contentLength = req.get('Content-Length');
     if (contentLength) {
-        requestSizeHistogram.observe(
-            { method: req.method },
-            parseInt(contentLength, 10),
-        );
+        requestSizeHistogram.observe({ method }, parseInt(contentLength, 10));
     }
     res.on('finish', () => {
+        // Routing has completed here. Never fall back to a raw, client-supplied path.
+        const route = req.route?.path?.toString() ?? 'unmatched';
         stopTimer({
             route,
             method,
@@ -88,7 +99,7 @@ export const observeRequest = (req: Request, res: Response) => {
         const contentLength = res.get('Content-Length');
         if (contentLength) {
             responseSizeHistogram.observe(
-                { method: req.method },
+                { method },
                 parseInt(contentLength, 10),
             );
         }

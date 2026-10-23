@@ -34,29 +34,21 @@ describe('room metrics', () => {
             player(true, true),
         ]);
 
-        metrics.room.observeRooms([activeRoom]);
+        metrics.room.observeRooms([
+            activeRoom,
+            room('another-room', [], { completed: true }),
+        ]);
         const output = await metrics.registry.metrics();
 
-        expect(output).toContain('rooms_total 1');
-        expect(output).toContain(
-            'room_info{room="active-room",game="test-game",mode="Single Bingo",variant="Normal",generator="new",race_handler="local",exploration="false",hidden_card="false"} 1',
-        );
-        expect(output).toContain(
-            'room_players{room="active-room",role="player"} 2',
-        );
-        expect(output).toContain(
-            'room_players{room="active-room",role="spectator"} 1',
-        );
-        expect(output).toContain(
-            'room_players_connected{room="active-room",role="player"} 1',
-        );
-        expect(output).toContain(
-            'room_players_connected{room="active-room",role="spectator"} 1',
-        );
-        expect(output).toContain('room_completed{room="active-room"} 0');
-        expect(output).toMatch(
-            /room_seconds_since_activity\{room="active-room"\} \d+(?:\.\d+)?/,
-        );
+        expect(output).toContain('rooms_total 2');
+        expect(output).toContain('room_players{role="player"} 2');
+        expect(output).toContain('room_players{role="spectator"} 1');
+        expect(output).toContain('room_players_connected{role="player"} 1');
+        expect(output).toContain('room_players_connected{role="spectator"} 1');
+        expect(output).toContain('room_completed 1');
+        expect(output).not.toContain('room_info');
+        expect(output).not.toContain('room_seconds_since_activity');
+        expect(output).not.toContain('active-room');
     });
 
     it('removes closed rooms from labeled gauges', async () => {
@@ -65,6 +57,8 @@ describe('room metrics', () => {
         const output = await metrics.registry.metrics();
 
         expect(output).toContain('rooms_total 0');
-        expect(output).not.toContain('room="closed-room"');
+        expect(output).not.toContain('closed-room');
+        expect(output).toContain('room_players{role="player"} 0');
+        expect(output).toContain('room_players_connected{role="spectator"} 0');
     });
 });

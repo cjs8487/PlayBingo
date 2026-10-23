@@ -40,20 +40,21 @@ roomWebSocketServer.on('connection', (ws, req) => {
 
     const room = allRooms.get(slug);
     if (!room) {
-        metrics.websocket.messageSent(slug, 'unauthorized');
+        metrics.websocket.messageSent('unauthorized');
         ws.send(JSON.stringify({ action: 'unauthorized' }));
         ws.close();
         return;
     }
 
-    const stopConnectiontimer = metrics.websocket.websocketOpened(slug);
+    const stopConnectiontimer = metrics.websocket.websocketOpened();
     isConnected = true;
 
     const sendWsMessage = (
         message: ServerMessage | { action: string } | string,
     ) => {
-        const action = typeof message === 'string' ? message : message.action;
-        metrics.websocket.messageSent(slug, action);
+        metrics.websocket.messageSent(
+            typeof message === 'string' ? message : message.action,
+        );
         ws.send(
             typeof message === 'string' ? message : JSON.stringify(message),
         );
@@ -82,7 +83,7 @@ roomWebSocketServer.on('connection', (ws, req) => {
         const messageString = message.toString();
 
         if (messageString === 'ping') {
-            metrics.websocket.messageReceived(slug, 'ping');
+            metrics.websocket.messageReceived('ping');
             sendWsMessage('pong');
             // pingTimeout.refresh();
             return;
@@ -90,19 +91,18 @@ roomWebSocketServer.on('connection', (ws, req) => {
 
         const action: RoomAction = JSON.parse(messageString);
         const stopProcessingTimer = metrics.websocket.messageReceived(
-            slug,
             action.action,
         );
         const payload = verifyRoomToken(action.authToken, slug);
         if (!payload) {
             sendWsMessage({ action: 'unauthorized' });
-            stopProcessingTimer({ room: slug, action: action.action });
+            stopProcessingTimer();
             return;
         }
         const room = allRooms.get(payload.roomSlug);
         if (!room) {
             sendWsMessage({ action: 'unauthorized' });
-            stopProcessingTimer({ room: slug, action: action.action });
+            stopProcessingTimer();
             return;
         }
         if (action.action === 'join') {
@@ -113,7 +113,7 @@ roomWebSocketServer.on('connection', (ws, req) => {
         // helpers
         if (!hasPermission(action.action, payload)) {
             sendWsMessage({ action: 'forbidden' });
-            stopProcessingTimer({ room: slug, action: action.action });
+            stopProcessingTimer();
             return;
         }
 
@@ -202,7 +202,7 @@ roomWebSocketServer.on('connection', (ws, req) => {
                 room.handleSetChatEnabled(action);
                 break;
         }
-        stopProcessingTimer({ room: slug, action: action.action });
+        stopProcessingTimer();
     });
     ws.on('close', (code, reason) => {
         // cleanup
@@ -222,7 +222,7 @@ roomWebSocketServer.on('connection', (ws, req) => {
             );
         }
         if (isConnected) {
-            metrics.websocket.websocketClosed(slug, code, stopConnectiontimer);
+            metrics.websocket.websocketClosed(code, stopConnectiontimer);
         }
     });
 });
