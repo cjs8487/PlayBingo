@@ -1,31 +1,8 @@
-'use client';
-
 import { Box, Link, Typography } from '@mui/material';
-import NextLink from 'next/link';
+import { connection } from 'next/server';
+import { randomInt } from 'node:crypto';
+import { Suspense } from 'react';
 import TextFit from '../components/TextFit';
-
-const mockBoard = {
-    hidden: false,
-    width: 5,
-    height: 5,
-    board: [
-        ['Oops!', 'So Lost', 'Wow', 'Much Empty', 'Try Again'],
-        ['Not Found', 'Woot', 'Where?', 'Still Empty', 'Lost Again'],
-        ['Nothing Here', 'Uh-Oh!', '404', 'Dead End', 'Broken Link'],
-        ['Wrong Turn', 'Go Back', 'Really?', 'Click Me', 'Out of Bounds'],
-        ['Misstep', 'No Bingo', 'Whoops', 'Error!', 'Return Home'],
-    ].map((row, rowIndex) =>
-        row.map((text, colIndex) => ({
-            goal: {
-                id: `${rowIndex}:${colIndex}`,
-                goal: text,
-                description: '',
-            },
-            completedPlayers: text === '404' ? ['1'] : [],
-            revealed: true,
-        })),
-    ),
-};
 
 const titles = [
     { title: 'Bingo!', subtitle: 'You found a 404!' },
@@ -84,10 +61,9 @@ const titles = [
     },
 ];
 
-const randomIndex = Math.floor(Math.random() * titles.length);
-
-export default function NotFound() {
-    const { title, subtitle } = titles[randomIndex];
+async function RandomizedNotFound() {
+    await connection();
+    const { title, subtitle } = titles[randomInt(titles.length)];
 
     return (
         <Box
@@ -137,12 +113,7 @@ export default function NotFound() {
                         margin: '0 auto',
                     }}
                 >
-                    <Link
-                        component={NextLink}
-                        href="/"
-                        passHref
-                        underline="none"
-                    >
+                    <Link href="/" underline="none">
                         <Box
                             sx={{
                                 width: `400px`,
@@ -174,9 +145,8 @@ export default function NotFound() {
                                             borderColor: 'divider',
                                             transition: 'all',
                                             transitionDuration: 300,
-                                            background: (theme) =>
-                                                theme.palette.background
-                                                    .default,
+                                            backgroundColor:
+                                                'background.default',
                                             ':hover': {
                                                 zIndex: 10,
                                                 scale: '110%',
@@ -232,7 +202,6 @@ export default function NotFound() {
                 >
                     <Link
                         href="/"
-                        component={NextLink}
                         sx={{
                             color: '#fff',
                         }}
@@ -249,3 +218,34 @@ export default function NotFound() {
         </Box>
     );
 }
+
+export default function NotFound() {
+    return (
+        <Suspense fallback={null}>
+            <RandomizedNotFound />
+        </Suspense>
+    );
+}
+
+const mockBoard = {
+    hidden: false,
+    width: 5,
+    height: 5,
+    board: [
+        ['Oops!', 'So Lost', 'Wow', 'Much Empty', 'Try Again'],
+        ['Not Found', 'Woot', 'Where?', 'Still Empty', 'Lost Again'],
+        ['Nothing Here', 'Uh-Oh!', '404', 'Dead End', 'Broken Link'],
+        ['Wrong Turn', 'Go Back', 'Really?', 'Click Me', 'Out of Bounds'],
+        ['Misstep', 'No Bingo', 'Whoops', 'Error!', 'Return Home'],
+    ].map((row, rowIndex) =>
+        row.map((text, colIndex) => ({
+            goal: {
+                id: `${rowIndex}:${colIndex}`,
+                goal: text,
+                description: '',
+            },
+            completedPlayers: text === '404' ? ['1'] : [],
+            revealed: true,
+        })),
+    ),
+};

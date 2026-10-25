@@ -26,7 +26,6 @@ export const UserContext = createContext<UserContext>({
 
 export const UserContextProvider = ({ children }: React.PropsWithChildren) => {
     const [loggedIn, setLoggedIn] = useState(false);
-    const [checkDone, setCheckDone] = useState(false);
     const [user, setUser] = useState<User>();
     const router = useRouter();
 
@@ -40,7 +39,6 @@ export const UserContextProvider = ({ children }: React.PropsWithChildren) => {
             setUser(undefined);
             setLoggedIn(false);
         }
-        setCheckDone(true);
     }, []);
 
     const doLogout = useCallback(async () => {
@@ -64,10 +62,6 @@ export const UserContextProvider = ({ children }: React.PropsWithChildren) => {
         };
         doCheck();
     }, [checkSession]);
-
-    if (!checkDone) {
-        return null;
-    }
 
     return (
         <UserContext.Provider

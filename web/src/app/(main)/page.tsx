@@ -90,7 +90,9 @@ export default async function Home() {
                     </Paper>
                 </Box>
             </Box>
-            <ToasterOven />
+            <Suspense fallback={null}>
+                <ToasterOven />
+            </Suspense>
         </>
     );
 }
