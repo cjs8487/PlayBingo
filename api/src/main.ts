@@ -23,6 +23,12 @@ declare module 'express-session' {
 // export is needed for tests
 export const app = express();
 
+// Tracking duration of requests
+app.use((req, res, next) => {
+    metrics.http.observeRequest(req, res);
+    next();
+});
+
 app.use(
     session({
         store: sessionStore,
@@ -36,12 +42,6 @@ app.use(
 );
 
 app.use(bodyParser.json());
-
-// Tracking duration of requests
-app.use((req, res, next) => {
-    metrics.http.observeRequest(req, res);
-    next();
-});
 
 // request logger
 app.use((req, res, next) => {

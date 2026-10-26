@@ -6,7 +6,7 @@ import {
     verifyRoomToken,
 } from '../auth/RoomAuth';
 import { roomCleanupInterval } from '../Environment';
-import { logInfo, logWarn } from '../Logger';
+import { logError, logInfo, logWarn } from '../Logger';
 import Room from './Room';
 import metrics from '../metrics';
 
@@ -80,19 +80,19 @@ roomWebSocketServer.on('connection', (ws, req) => {
 
     // handlers
     ws.on('message', (message) => {
-        const messageString = message.toString();
+        let stopProcessingTimer:
+            ReturnType<typeof metrics.websocket.messageReceived> | undefined;
 
+        const messageString = message.toString();
         if (messageString === 'ping') {
-            metrics.websocket.messageReceived('ping');
+            stopProcessingTimer = metrics.websocket.messageReceived('ping');
             sendWsMessage('pong');
             // pingTimeout.refresh();
             return;
         }
 
         const action: RoomAction = JSON.parse(messageString);
-        const stopProcessingTimer = metrics.websocket.messageReceived(
-            action.action,
-        );
+        stopProcessingTimer = metrics.websocket.messageReceived(action.action);
         const payload = verifyRoomToken(action.authToken, slug);
         if (!payload) {
             sendWsMessage({ action: 'unauthorized' });
@@ -205,6 +205,7 @@ roomWebSocketServer.on('connection', (ws, req) => {
         stopProcessingTimer();
     });
     ws.on('close', (code, reason) => {
+        clearTimeout(timeout);
         // cleanup
         // attempt to close the connection from the room, in case the connection
         // is closed unexpectedly without a leave message

@@ -82,26 +82,35 @@ export const observeRequest = (req: Request, res: Response) => {
     if (contentLength) {
         requestSizeHistogram.observe({ method }, parseInt(contentLength, 10));
     }
-    res.on('finish', () => {
-        // Routing has completed here. Never fall back to a raw, client-supplied path.
-        const route = req.route?.path?.toString() ?? 'unmatched';
-        stopTimer({
+    let finalized = false;
+    const finalize = (aborted: boolean) => {
+        if (finalized) return;
+        finalized = true;
+        res.off('finish', onFinish);
+        res.off('close', onClose);
+
+        const route = req.route
+            ? `${req.baseUrl}${req.route.path}`
+            : 'unmatched';
+        const labels = {
             route,
             method,
-            status_code: res.statusCode,
-        });
+            status_code: aborted ? 'aborted' : res.statusCode,
+        };
+        stopTimer(labels);
         httpActiveRequests.dec();
-        httpRequestCounter.inc({
-            route,
-            method,
-            status_code: res.statusCode,
-        });
+        httpRequestCounter.inc(labels);
+
         const contentLength = res.get('Content-Length');
-        if (contentLength) {
+        if (!aborted && contentLength) {
             responseSizeHistogram.observe(
                 { method },
                 parseInt(contentLength, 10),
             );
         }
-    });
+    };
+    const onFinish = () => finalize(false);
+    const onClose = () => finalize(!res.writableFinished);
+    res.once('finish', onFinish);
+    res.once('close', onClose);
 };
