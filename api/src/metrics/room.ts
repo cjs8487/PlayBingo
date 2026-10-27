@@ -1,4 +1,4 @@
-import { Gauge } from 'prom-client';
+import { Counter, Gauge, Histogram } from 'prom-client';
 import type Room from '../core/Room';
 import { registry } from './metrics';
 
@@ -52,3 +52,58 @@ export const observeRooms = (rooms: Iterable<Room>) => {
         roomPlayersConnected.set({ role }, connectedPlayers[role]);
     });
 };
+
+const roomsCreated = new Counter({
+    name: 'rooms_created_total',
+    help: 'New rooms successfully activated',
+    registers: [registry],
+});
+
+const roomsRestored = new Counter({
+    name: 'rooms_restored_total',
+    help: 'Persisted rooms successfully restored into memory',
+    registers: [registry],
+});
+
+const roomsClosed = new Counter({
+    name: 'rooms_closed_total',
+    help: 'Rooms unloaded from memory by reason',
+    labelNames: ['reason'],
+    registers: [registry],
+});
+
+const residenceDuration = new Histogram({
+    name: 'room_residence_duration_seconds',
+    help: 'Time a room remained loaded in this process',
+    buckets: [60, 300, 900, 1800, 3600, 7200, 21600, 86400],
+    registers: [registry],
+});
+
+const roundsCompleted = new Counter({
+    name: 'room_rounds_completed_total',
+    help: 'First completion of a board round by all participating players',
+    registers: [registry],
+});
+
+const residences = new WeakMap<
+    Room,
+    ReturnType<typeof residenceDuration.startTimer>
+>();
+
+export const roomActivated = (room: Room, source: 'created' | 'restored') => {
+    if (residences.has(room)) return;
+    (source === 'created' ? roomsCreated : roomsRestored).inc();
+    residences.set(room, residenceDuration.startTimer());
+};
+
+export type RoomCloseReason = 'inactivity' | 'empty' | 'shutdown';
+
+export const roomClosed = (room: Room, reason: RoomCloseReason) => {
+    const stopTimer = residences.get(room);
+    if (!stopTimer) return;
+    residences.delete(room);
+    roomsClosed.inc({ reason });
+    stopTimer();
+};
+
+export const roundCompleted = () => roundsCompleted.inc();

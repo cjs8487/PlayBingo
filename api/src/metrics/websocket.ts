@@ -85,3 +85,66 @@ export const messageReceived = (action: string) => {
 export const messageSent = (messageType: string) => {
     messageSentCounter.inc({ message_type: messageType });
 };
+
+const upgrades = new Counter({
+    name: 'websocket_upgrades_total',
+    help: 'WebSocket upgrade outcomes',
+    labelNames: ['result'],
+    registers: [registry],
+});
+
+const initializations = new Counter({
+    name: 'websocket_initializations_total',
+    help: 'First room join outcome for each opened connection',
+    labelNames: ['result'],
+    registers: [registry],
+});
+
+const joinDuration = new Histogram({
+    name: 'websocket_join_duration_seconds',
+    help: 'Time from socket open to first successful room join',
+    buckets: [0.01, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10, 30, 60],
+    registers: [registry],
+});
+
+const actionResults = new Counter({
+    name: 'websocket_action_results_total',
+    help: 'Outcomes of synchronous action dispatch, excluding background work',
+    labelNames: ['action', 'result'],
+    registers: [registry],
+});
+
+const sendFailures = new Counter({
+    name: 'websocket_send_failures_total',
+    help: 'Local send failures; successful sends do not imply client delivery',
+    labelNames: ['message_type'],
+    registers: [registry],
+});
+
+export const upgradeFinished = (
+    result: 'accepted' | 'invalid_path' | 'room_missing' | 'handshake_failed',
+) => {
+    upgrades.inc({ result });
+};
+
+export const initializationStarted = () => {
+    const stopJoinTimer = joinDuration.startTimer();
+    let finished = false;
+    return (result: 'joined' | 'timeout' | 'closed_before_join') => {
+        if (finished) return;
+        finished = true;
+        initializations.inc({ result });
+        if (result === 'joined') stopJoinTimer();
+    };
+};
+
+export const actionFinished = (
+    action: string,
+    result: 'processed' | 'unauthorized' | 'forbidden' | 'error',
+) => {
+    actionResults.inc({ action, result });
+};
+
+export const messageSendFailed = (messageType: string) => {
+    sendFailures.inc({ message_type: messageType });
+};

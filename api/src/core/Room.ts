@@ -1,3 +1,5 @@
+import metrics from '../metrics';
+import type { RoomCloseReason } from '../metrics/room';
 import { GeneratorSettings } from '@playbingo/shared';
 import {
     ChangeColorAction,
@@ -120,6 +122,7 @@ export default class Room {
 
     victoryMasks: bigint[];
     completed: boolean;
+    private closed = false;
 
     generatorSettings?: GeneratorSettings;
     newGenerator: boolean;
@@ -447,11 +450,11 @@ export default class Room {
                 ...(this.hideCard
                     ? { hidden: true }
                     : {
-                        hidden: false,
-                        board: this.exploration
-                            ? player.obfuscateBoard()
-                            : this.board,
-                    }),
+                          hidden: false,
+                          board: this.exploration
+                              ? player.obfuscateBoard()
+                              : this.board,
+                      }),
             },
             chatHistory: this.chatHistory,
             connectedPlayer: player.toClientData(),
@@ -465,13 +468,13 @@ export default class Room {
                 racetimeConnection: this.raceHandler
                     ? 'url' in this.raceHandler
                         ? {
-                            gameActive: this.racetimeEligible,
-                            url: (this.raceHandler as RacetimeHandler).url,
-                            startDelay: (this.raceHandler as RacetimeHandler)
-                                .data?.start_delay,
-                            status: (this.raceHandler as RacetimeHandler).data
-                                ?.status.verbose_value,
-                        }
+                              gameActive: this.racetimeEligible,
+                              url: (this.raceHandler as RacetimeHandler).url,
+                              startDelay: (this.raceHandler as RacetimeHandler)
+                                  .data?.start_delay,
+                              status: (this.raceHandler as RacetimeHandler).data
+                                  ?.status.verbose_value,
+                          }
                         : undefined
                     : { gameActive: this.racetimeEligible, url: undefined },
                 mode: getModeString(this.bingoMode, this.lineCount),
@@ -516,7 +519,7 @@ export default class Room {
                 timestamp,
             ).then();
             if (this.players.size === 0) {
-                this.close();
+                this.close('empty');
             }
         }
         invalidateToken(token);
@@ -706,7 +709,7 @@ export default class Room {
                     timestamp,
                 ).then();
                 if (this.players.size === 0) {
-                    this.close();
+                    this.close('empty');
                 }
             }
             return true;
@@ -875,14 +878,14 @@ export default class Room {
                 racetimeConnection:
                     'url' in this.raceHandler
                         ? {
-                            gameActive: this.racetimeEligible,
-                            url: (this.raceHandler as RacetimeHandler).url,
-                            startDelay:
-                                (this.raceHandler as RacetimeHandler).data
-                                    ?.start_delay ?? undefined,
-                            status: (this.raceHandler as RacetimeHandler).data
-                                ?.status.verbose_value,
-                        }
+                              gameActive: this.racetimeEligible,
+                              url: (this.raceHandler as RacetimeHandler).url,
+                              startDelay:
+                                  (this.raceHandler as RacetimeHandler).data
+                                      ?.start_delay ?? undefined,
+                              status: (this.raceHandler as RacetimeHandler).data
+                                  ?.status.verbose_value,
+                          }
                         : undefined,
                 newGenerator: this.newGenerator,
                 mode: getModeString(this.bingoMode, this.lineCount),
@@ -1040,6 +1043,14 @@ export default class Room {
             }
         });
         this.completed = allComplete;
+        if (
+            allComplete &&
+            Array.from(this.players.values()).some(
+                (player) => !player.spectator,
+            )
+        ) {
+            metrics.room.roundCompleted();
+        }
         if (this.completed) {
             this.raceHandler?.allPlayersFinished();
             this.sendRoomData();
@@ -1195,9 +1206,20 @@ export default class Room {
     /**
      * Runs room level cleanup tasks and closes all open connections to the room
      */
-    close() {
+    close(reason: RoomCloseReason = 'inactivity') {
+        if (this.closed) return;
+        this.closed = true;
+        clearTimeout(this.inactivityWarningTimeout);
+        clearTimeout(this.closeTimeout);
+        this.inactivityWarningTimeout = undefined;
+        this.closeTimeout = undefined;
+        metrics.room.roomClosed(this, reason);
         this.logInfo('Closing room.');
-        this.sendSystemMessage('This room has been closed due to inactivity.');
+        this.sendSystemMessage(
+            reason === 'inactivity'
+                ? 'This room has been closed due to inactivity.'
+                : 'This room has been closed.',
+        );
         this.players.forEach((player) => {
             player.connections.forEach((connection) => {
                 this.handleSocketClose(connection);

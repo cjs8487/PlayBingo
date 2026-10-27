@@ -1,3 +1,4 @@
+import metrics from '../../metrics';
 import { randomInt } from 'crypto';
 import { Router } from 'express';
 import { logError, logInfo, logWarn } from '../../Logger';
@@ -256,6 +257,7 @@ rooms.post('/', async (req, res) => {
         return;
     }
     allRooms.set(slug, room);
+    metrics.room.roomActivated(room, 'created');
 
     const token = createRoomToken(
         room,
@@ -456,6 +458,7 @@ async function getOrLoadRoom(slug: string): Promise<Room | null> {
     });
 
     allRooms.set(slug, newRoom);
+    metrics.room.roomActivated(newRoom, 'restored');
     return newRoom;
 }
 

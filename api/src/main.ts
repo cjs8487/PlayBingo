@@ -5,7 +5,11 @@ import session from 'express-session';
 import path from 'path';
 import { port, sessionSecret, testing } from './Environment';
 import { logDebug, logger, logInfo } from './Logger';
-import { allRooms, roomWebSocketServer } from './core/RoomServer';
+import {
+    allRooms,
+    handleRoomUpgrade,
+    roomWebSocketServer,
+} from './core/RoomServer';
 import { disconnect } from './database/Database';
 import mediaServer from './media/MediaServer';
 import api from './routes/api';
@@ -81,37 +85,11 @@ const server = app.listen(port, () => {
     logInfo(`API application listening on port ${port}`);
 });
 
-server.on('upgrade', (req, socket, head) => {
-    logInfo('[websocket] Client initiating protocol upgrade');
-    if (!req.url) {
-        socket.destroy();
-        return;
-    }
-    const segments = req.url.split('/');
-    segments.shift(); // remove leading empty segment
-    if (segments.length < 2) {
-        socket.destroy();
-        return;
-    }
-    const [target, slug] = segments;
-    if (target === 'socket') {
-        const room = allRooms.get(slug);
-        if (!room) {
-            socket.destroy();
-            return;
-        }
-        roomWebSocketServer.handleUpgrade(req, socket, head, (ws) => {
-            roomWebSocketServer.emit('connection', ws, req);
-            logInfo(`Successfully upgraded connection for ${slug}`);
-        });
-    } else {
-        logInfo('[websocket] Unknown upgrade path');
-        socket.destroy();
-    }
-});
+server.on('upgrade', handleRoomUpgrade);
 
 const cleanup = async () => {
     logDebug('Server shutting down');
+    allRooms.forEach((room) => room.close('shutdown'));
     await Promise.all([
         new Promise((resolve) => {
             roomWebSocketServer.close(() => {

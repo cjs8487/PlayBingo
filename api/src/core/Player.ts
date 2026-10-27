@@ -200,12 +200,23 @@ export default class Player {
         this.connections.forEach((socket) => {
             if (socket.readyState === OPEN) {
                 metrics.websocket.messageSent(finalMessage.action);
-                socket.send(
-                    JSON.stringify({
-                        ...finalMessage,
-                        connectedPlayer: this.toClientData(),
-                    }),
-                );
+                try {
+                    socket.send(
+                        JSON.stringify({
+                            ...finalMessage,
+                            connectedPlayer: this.toClientData(),
+                        }),
+                        (error) => {
+                            if (error)
+                                metrics.websocket.messageSendFailed(
+                                    finalMessage.action,
+                                );
+                        },
+                    );
+                } catch (error) {
+                    metrics.websocket.messageSendFailed(finalMessage.action);
+                    throw error;
+                }
             }
         });
     }
