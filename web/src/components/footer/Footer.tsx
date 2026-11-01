@@ -83,6 +83,10 @@ function LargeFooter() {
                     <Typography variant="caption">
                         © Copyright 2024 - {new Date().getFullYear()} Bingothon
                         | All Rights Reserved |{' '}
+                        <Link href="/legal/tos" component={NextLink}>
+                            Terms of Service
+                        </Link>{' '}
+                        |{' '}
                         <Link href="/legal/privacy" component={NextLink}>
                             Privacy Policy
                         </Link>
@@ -146,6 +150,14 @@ function SmallFooter() {
                         flexGrow: 1,
                     }}
                 >
+                    <Link
+                        href="/legal/tos"
+                        component={NextLink}
+                        variant="caption"
+                    >
+                        Terms of Service
+                    </Link>{' '}
+                    |{' '}
                     <Link
                         href="/legal/privacy"
                         component={NextLink}
