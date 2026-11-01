@@ -427,9 +427,6 @@ export default function TermsOfService() {
                 Bingothon C.I.C., registered in England and Wales
             </Typography>
             <Typography>Company number: 13756480</Typography>
-            <Typography>
-                Registered office: [REGISTERED OFFICE ADDRESS]
-            </Typography>
         </Container>
     );
 }
