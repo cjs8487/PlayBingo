@@ -5,6 +5,7 @@ import {
     faPatreon,
     faTwitter,
 } from '@fortawesome/free-brands-svg-icons';
+import { faInfo } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
     Box,
@@ -18,6 +19,7 @@ import NextLink from 'next/link';
 import MenuBookIcon from '@mui/icons-material/MenuBook';
 
 const icons: { icon: IconDefinition; url: string }[] = [
+    { icon: faInfo, url: '/about' },
     { icon: faGithub, url: 'https://github.com/cjs8487/PlayBingo' },
     { icon: faPatreon, url: 'https://www.patreon.com/Bingothon' },
     { icon: faTwitter, url: 'https://twitter.com/bingothon' },
