@@ -1,5 +1,4 @@
 import { Box, Container, Link, Typography } from '@mui/material';
-import NextLink from 'next/link';
 
 export default function About() {
     return (
@@ -12,7 +11,7 @@ export default function About() {
             </Typography>
             <Typography sx={{ mb: 2 }}>
                 PlayBingo allows you to create, customize, and play bingo games
-                and is designed aroundt the communities that create, maintain,
+                and is designed around the communities that create, maintain,
                 and play them.
             </Typography>
             <Typography variant="h3" sx={{ mb: 1 }}>
@@ -29,7 +28,8 @@ export default function About() {
             <Typography sx={{ mb: 2 }}>
                 Customize generation parameters to shape how your boards are
                 created and how your games are played. No two communities have
-                to play bingo the same way.
+                to play bingo the same way, and communities don&apos;t need to
+                fit their game into any existing boxes.
             </Typography>
             <Typography variant="h3" sx={{ mb: 1 }}>
                 Open by design
@@ -40,7 +40,11 @@ export default function About() {
                     open source
                 </Link>
                 , with a public API and an ecosystem built for integrations. Use
-                existing integrations or build your own.
+                PlayBingo as-is, or extend it to meet your community&apos;s
+                needs, such as auto marking, custom board views, or anything
+                else you can imagine. Need a new feature, or found a bug? Let us
+                know and we&apos;ll prioritize it, or submit a pull request and
+                help improve PlayBingo for everyone.
             </Typography>
             <Typography variant="h3" sx={{ mb: 1 }}>
                 No code required
@@ -48,8 +52,9 @@ export default function About() {
             <Typography sx={{ mb: 2 }}>
                 PlayBingo allows you to create and manage games without writing
                 code. Make a change and it&apos;s live immediately; no waiting
-                for pull requests or future releases. Developers can extend
-                PlayBingo when communities need something more.
+                for pull requests, future releases, or admin approval.
+                Developers in your community can extend PlayBingo when you need
+                something more.
             </Typography>
             <Box sx={{ textAlign: 'center' }}>
                 <Typography variant="h2">Play Bingo, your way.</Typography>
