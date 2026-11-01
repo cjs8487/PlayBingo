@@ -2,11 +2,16 @@ import { BoardSizeOptions, GeneratorSettings } from '@playbingo/shared';
 
 import { FilterableGoal, matchesGoalFilter } from './GoalListPruner';
 
+export const MIN_BOARD_SIZE = 2;
+export const MIN_MAGIC_SQUARE_SIZE = 3;
+export const MAX_BOARD_SIZE = 15;
+export const DEFAULT_BOARD_SIZE = 5;
+
 export const isBoardSize = (size: unknown): size is number =>
     typeof size === 'number' &&
     Number.isInteger(size) &&
-    size >= 2 &&
-    size <= 15;
+    size >= MIN_BOARD_SIZE &&
+    size <= MAX_BOARD_SIZE;
 
 const filteredGoals = (
     goals: readonly FilterableGoal[],
@@ -28,7 +33,7 @@ export const availableBoardSizes = (
         switch (layout.mode) {
             case 'srlv5':
                 return (
-                    size >= 3 &&
+                    size >= MIN_MAGIC_SQUARE_SIZE &&
                     Array.from({ length: size ** 2 }, (_, i) => i + 1).every(
                         (difficulty) => difficulties.has(difficulty),
                     )
@@ -65,8 +70,8 @@ export const availableCustomBoardSize = (
     if (
         width < 1 ||
         height < 1 ||
-        width > 15 ||
-        height > 15 ||
+        width > MAX_BOARD_SIZE ||
+        height > MAX_BOARD_SIZE ||
         layout.some((row) => row.length !== width) ||
         filteredGoals(goals, settings).length < width * height
     )

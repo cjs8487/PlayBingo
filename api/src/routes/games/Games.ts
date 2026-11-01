@@ -1,6 +1,7 @@
 import {
     availableBoardSizes,
     availableCustomBoardSize,
+    DEFAULT_BOARD_SIZE,
     isBoardSize,
 } from '../../core/generation/BoardSizes';
 import { roomBoardSizes } from '../../util/RoomBoardSizes';
@@ -740,7 +741,7 @@ games.get('/:slug/sampleBoard', async (req, res) => {
     const { slug } = req.params;
     const { variant, boardSize } = req.query;
     const requestedSize =
-        boardSize === undefined ? undefined : Number(boardSize);
+        boardSize === undefined ? DEFAULT_BOARD_SIZE : Number(boardSize);
     if (
         boardSize !== undefined &&
         (typeof boardSize !== 'string' || !isBoardSize(requestedSize))
@@ -798,10 +799,7 @@ games.get('/:slug/sampleBoard', async (req, res) => {
         );
         return;
     }
-    const size =
-        customLayout?.width ??
-        requestedSize ??
-        (sizes.includes(5) ? 5 : sizes[0]);
+    const size = customLayout?.width ?? requestedSize ?? sizes[0];
     if (size === undefined) {
         res.status(422).send(
             'No supported board sizes are available for this game and variant.',
