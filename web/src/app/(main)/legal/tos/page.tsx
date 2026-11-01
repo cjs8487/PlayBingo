@@ -12,11 +12,14 @@ export default function TermsOfService() {
                 <Typography sx={{ fontWeight: 'bold' }}>
                     Effective Date:
                 </Typography>
-                <Typography>September 17, 2026</Typography>
+                <Typography>October 26, 2026</Typography>
             </Box>
             <Typography>
-                Welcome to PlayBingo. These Terms of Service (&quot;Terms&quot;)
-                govern your use of PlayBingo, including the PlayBingo website,
+                PlayBingo is operated by Bingothon C.I.C., a community interest
+                company registered in England and Wales (&quot;we,&quot;
+                &quot;us,&quot; or &quot;our&quot;). These Terms of Service
+                (&quot;Terms&quot;) form an agreement between you and Bingothon
+                C.I.C. and govern your use of PlayBingo, including its website,
                 services, APIs, software, and related features (collectively,
                 the &quot;Service&quot;).
             </Typography>
@@ -25,8 +28,11 @@ export default function TermsOfService() {
                 accepted these Terms, you represent that
             </Typography>
             <ul style={{ marginTop: 0, marginBottom: 0 }}>
-                <li>You have read, understand, and agree to these Terms</li>
-                <li>You are at least 13 years old</li>
+                <li>You have read, understand, and agree to these Terms.</li>
+                <li>
+                    You are at least 13 years old and meet any higher minimum
+                    age required by applicable law.
+                </li>
                 <li>
                     You are of the age of majority in your jurisdiction, or have
                     obtained parental or guardian consent to agree to these
@@ -34,15 +40,16 @@ export default function TermsOfService() {
                 </li>
                 <li>
                     You have the legal capacity to enter into these Terms and
-                    agree to be bound by them
+                    agree to be bound by them.
                 </li>
             </ul>
             <Typography>
                 PlayBingo&apos;s{' '}
-                <Link href="/legal/privacy">Privacy Policy</Link> governs how we
-                collect, use, and store information about you when you use the
-                Service. The PRivacy Policy is included in these Terms, and by
-                using the Service, you also agree to the Privacy Policy.
+                <Link href="/legal/privacy">Privacy Policy</Link> explains how
+                we collect, use, and store personal information when you use the
+                Service, and describes your privacy rights. Acceptance of these
+                Terms does not constitute consent to processing where separate
+                consent is required by law.
             </Typography>
             <Typography variant="h5">1. The PlayBingo Service</Typography>
             <Typography>
@@ -142,8 +149,8 @@ export default function TermsOfService() {
                     <b>Discrimination, Hate Speech, and Hateful Behavior:</b>{' '}
                     Content that promotes hate, intolerance, or discrimination
                     against individuals or groups based on race, ethnicity,
-                    religion, gender, sexual orientation, disability, or other
-                    any other protected characteristic.
+                    religion, gender, sexual orientation, disability, or any
+                    other protected characteristic.
                 </li>
                 <li>
                     <b>Sexual and Physical Abuse:</b> Content that shows,
@@ -170,9 +177,9 @@ export default function TermsOfService() {
                 </li>
                 <li>
                     <b>Personal Information:</b> Content that contains personal
-                    information about yourself or another individual, especially
-                    that which could lead to harm, such as identity theft,
-                    stalking, or fraud.
+                    information about yourself or another individual in public
+                    areas of the Service, particularly information that could
+                    lead to harm, such as identity theft, stalking, or fraud.
                 </li>
                 <li>
                     <b>Illegal Activity:</b> Content that promotes illegal
@@ -183,9 +190,10 @@ export default function TermsOfService() {
                 4. Third-Party Intellectual Property
             </Typography>
             <Typography>
-                Except for rights expressly granted by PlayBingo, all such
-                third-party intellectual property remains the property of its
-                respective owners. PlayBingo does not claim ownership of
+                Games and User Content may refer to video games, characters,
+                artwork, trademarks, or other intellectual property owned by
+                third parties. That intellectual property remains the property
+                of its respective owners. PlayBingo does not claim ownership of
                 third-party intellectual property merely because it is displayed
                 or used in connection with a game on the Service.
             </Typography>
@@ -202,8 +210,12 @@ export default function TermsOfService() {
             <Typography>
                 If you believe that content available through PlayBingo
                 infringes your copyright or other intellectual-property rights,
-                please contact us at [CONTACT EMAIL] with sufficient information
-                for us to identify the material and understand your claim.
+                please contact us at{}
+                <Link href="mailto:staff@playbingo.gg">
+                    staff@playbingo.gg
+                </Link>{' '}
+                with sufficient information for us to identify the material and
+                understand your claim.
             </Typography>
             <Typography>
                 We may remove or restrict access to material that we reasonably
@@ -230,8 +242,8 @@ export default function TermsOfService() {
                     </li>
                     <li>impersonate another person or organization</li>
                     <li>
-                        share personally identifiable information about yourself
-                        or others on the Service
+                        publish personal or confidential information about
+                        yourself or others in public areas of the Service
                     </li>
                     <li>
                         interfere with or attempt to compromise the security or
@@ -276,9 +288,12 @@ export default function TermsOfService() {
                 terms.
             </Typography>
             <Typography>
-                The copyright and license information for PlayBingo and relevant
-                third-party software and assets is available at
-                [CREDITS/LICENSES URL].
+                The PlayBingo source code and license are available in the{' '}
+                <Link href="https://github.com/cjs8487/PlayBingo">
+                    PlayBingo repository
+                </Link>
+                . Third-party components remain subject to the notices and
+                licenses distributed with them.
             </Typography>
             <Typography>
                 These Terms do not replace or restrict rights granted to you
@@ -304,13 +319,14 @@ export default function TermsOfService() {
                 9. Changes, Suspension, and Termination
             </Typography>
             <Typography>
-                We may modify these Terms from time to time. When we make
-                material changes, we will provide reasonable notice through the
-                Service or by other appropriate means. Whenever material changes
-                are made, they will go into effect 30 days after they are
-                published, or upon your reading of the updated terms, whichever
-                occurs first. Non-material changes may be effective immediately
-                without notice.
+                We may modify these Terms to reflect changes in the Service,
+                address security or abuse, clarify their wording, or comply with
+                changes in law. When we make material changes, we will provide
+                reasonable notice through the Service or by other appropriate
+                means. Material changes take effect 30 days after publication,
+                unless applicable law requires a different date. Reading the
+                updated Terms does not bring that date forward. Non-material
+                changes may be effective immediately without notice.
             </Typography>
             <Typography>
                 Your continued use of PlayBingo after updated Terms become
@@ -365,37 +381,27 @@ export default function TermsOfService() {
                 related to your use of the Service.
             </Typography>
             <Typography>
-                To the maximum extent permitted by applicable law,
-                PlayBingo&apos;s total liability arising from or relating to the
-                Service will not exceed the greater of (a) the amount you paid
-                to PlayBingo for the Service during the twelve months preceding
-                the event giving rise to the claim, or (b) [AMOUNT].
+                Nothing in these Terms excludes or limits liability for death or
+                personal injury caused by negligence, fraud or fraudulent
+                misrepresentation, or any other liability that cannot lawfully
+                be excluded or limited. The exclusions above do not restrict
+                your mandatory consumer rights, including any applicable right
+                to services provided with reasonable care and skill.
             </Typography>
+            <Typography variant="h5">12. Governing Law</Typography>
             <Typography>
-                Nothing in these Terms limits liability that cannot legally be
-                limited or excluded.
-            </Typography>
-            <Typography variant="h5">12. Indemnification</Typography>
-            <Typography>
-                To the maximum extent permitted by applicable law, you agree to
-                defend, indemnify, and hold harmless PlayBingo and its operators
-                and contributors from claims, liabilities, damages, losses, and
-                expenses arising from your User Content, your violation of these
-                Terms, your violation of applicable law, or your infringement of
-                another person&apos;s rights.
-            </Typography>
-            <Typography variant="h5">13. Governing Law</Typography>
-            <Typography>
-                These Terms are governed by the laws of the State of [STATE],
-                without regard to its conflict-of-law rules, except to the
-                extent that applicable law requires otherwise.
+                These Terms are governed by the laws of England and Wales. If
+                you are a consumer, this choice does not deprive you of
+                mandatory protections under the laws of your country of
+                residence.
             </Typography>
             <Typography>
                 Any dispute arising from these Terms or the Service will be
-                resolved in the courts located in [COUNTY/STATE], unless
-                applicable law provides otherwise.
+                subject to the non-exclusive jurisdiction of the courts of
+                England and Wales. Consumers may also bring proceedings in their
+                local courts where applicable law provides that right.
             </Typography>
-            <Typography variant="h5">14. General</Typography>
+            <Typography variant="h5">13. General</Typography>
             <Typography>
                 If any provision of these Terms is found to be unenforceable,
                 the remaining provisions will remain in effect.
@@ -405,21 +411,25 @@ export default function TermsOfService() {
                 our right to enforce it later.
             </Typography>
             <Typography>
-                These Terms, together with the Privacy Policy and any other
-                terms expressly incorporated by reference, constitute the
-                agreement between you and PlayBingo concerning your use of the
-                Service.
+                These Terms and any other terms expressly incorporated by
+                reference constitute the agreement between you and PlayBingo
+                concerning your use of the Service.
             </Typography>
-            <Typography variant="h5">15. Contact</Typography>
+            <Typography variant="h5">14. Contact</Typography>
             <Typography>
                 Questions regarding these Terms may be sent to:
             </Typography>
             <Typography sx={{ fontWeight: 'bold' }}>
-                **[LEGAL/CONTACT EMAIL]**
+                <Link href="mailto:staff@playbingo.gg">staff@playbingo.gg</Link>
             </Typography>
             <Typography>PlayBingo</Typography>
-            <Typography>[LEGAL ENTITY NAME]</Typography>
-            <Typography>[MAILING ADDRESS]</Typography>
+            <Typography>
+                Bingothon C.I.C., registered in England and Wales
+            </Typography>
+            <Typography>Company number: 13756480</Typography>
+            <Typography>
+                Registered office: [REGISTERED OFFICE ADDRESS]
+            </Typography>
         </Container>
     );
 }
