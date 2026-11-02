@@ -18,6 +18,10 @@ export type ServerMessage = (
       team: Team;
     }
   | {
+      action: "updatedTeam";
+      team: Team;
+    }
+  | {
       action: "cellUpdate";
       row: number;
       col: number;
