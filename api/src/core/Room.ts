@@ -726,18 +726,46 @@ export default class Room {
         if (!player) {
             return { action: 'unauthorized' };
         }
-        const team = this.teams.get(action.payload.teamId);
+        let team: Team | undefined;
+        if (action.payload.teamId) {
+            team = this.teams.get(action.payload.teamId);
+        } else {
+            team = this.createTeamForPlayer(player);
+        }
         if (!team) {
             return { action: 'unauthorized' };
         }
-        const oldTeam = this.removePlayerFromTeam(player);
+        if (action.payload.teamName) {
+            team.name = action.payload.teamName;
+        }
+        // Check if there was an old team
+        if (player.teamId) {
+            const oldTeam = this.teams.get(player.teamId);
+            if (oldTeam && oldTeam.id !== team.id) {
+                this.removePlayerFromTeam(player);
+                createUpdateTeam(this.id, oldTeam).then();
+            } else if (oldTeam && oldTeam.id === team.id) {
+                // player changed the team name
+                this.sendChat(
+                    [
+                        {
+                            contents: player.nickname,
+                            color: team.color,
+                        },
+                        ` changed their team name to ${team.getDisplayName()}`,
+                    ],
+                    new Date(),
+                );
+                return {
+                    action: 'updatedTeam',
+                    team: team.toClientData(),
+                };
+            }
+        }
         this.spectators.delete(player.id);
         player.teamId = team.id;
         team.addPlayer(player);
-        if (oldTeam) {
-            createUpdateTeam(this.id, oldTeam).then();
-        }
-        this.persistPlayer(player);
+        createUpdateTeam(this.id, team).then();
         this.sendChat(
             [
                 {

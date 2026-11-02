@@ -43,7 +43,8 @@ export interface LeaveAction {
 export interface JoinTeamAction {
   action: "joinTeam";
   payload: {
-    teamId: string;
+    teamId: string | null;
+    teamName?: string;
   };
 }
 export interface ChatAction {
