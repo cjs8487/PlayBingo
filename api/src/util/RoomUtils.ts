@@ -1,7 +1,7 @@
 import { RevealedCell } from '@playbingo/types';
 import { GeneratorGoal } from '../core/generation/GeneratorCore';
 import { chunk } from './Array';
-import { BingoMode } from '@prisma/client';
+import { BingoMode, TraversalDirection } from '@prisma/client';
 
 export const listToBoard = (
     list: GeneratorGoal[],
@@ -64,7 +64,11 @@ export const hasLineCompletion = (
     return (bitset & lineMask) === lineMask;
 };
 
-export const getModeString = (mode: BingoMode, lineCount: number): string => {
+export const getModeString = (
+    mode: BingoMode,
+    lineCount: number,
+    direction: TraversalDirection = 'UP',
+): string => {
     switch (mode) {
         case BingoMode.LINES:
             if (lineCount === 1) {
@@ -84,6 +88,13 @@ export const getModeString = (mode: BingoMode, lineCount: number): string => {
             return 'Blackout';
         case BingoMode.LOCKOUT:
             return 'Lockout';
+        case BingoMode.TRAVERSE:
+            return {
+                UP: 'Climb',
+                DOWN: 'Tumble',
+                LEFT: 'Moonwalk',
+                RIGHT: 'Charge',
+            }[direction];
         default:
             return 'Unknown Mode';
     }
@@ -135,4 +146,57 @@ export function computeRevealedMask(
 
     // Combine all directions + self
     return (markedMask | up | down | left | right) & allMask;
+}
+
+export function startingEdgeMask(
+    width: number,
+    height: number,
+    direction: TraversalDirection,
+): bigint {
+    if (direction === 'UP' || direction === 'DOWN') {
+        return (
+            ((1n << BigInt(width)) - 1n) <<
+            BigInt(direction === 'UP' ? width * (height - 1) : 0)
+        );
+    }
+    let mask = 0n;
+    const col = direction === 'LEFT' ? width - 1 : 0;
+    for (let row = 0; row < height; row++)
+        mask |= rowColToMask(row, col, width);
+    return mask;
+}
+
+/** Orthogonally connected marked cells reachable from the starting edge. */
+export function connectedTraversalMask(
+    marked: bigint,
+    width: number,
+    height: number,
+    direction: TraversalDirection,
+): bigint {
+    let connected = marked & startingEdgeMask(width, height, direction);
+    while (true) {
+        const next = computeRevealedMask(connected, width, height) & marked;
+        if (next === connected) return connected;
+        connected = next;
+    }
+}
+
+export function hasTraversalCompletion(
+    marked: bigint,
+    width: number,
+    height: number,
+    direction: TraversalDirection,
+): boolean {
+    const destination = startingEdgeMask(
+        width,
+        height,
+        ({ UP: 'DOWN', DOWN: 'UP', LEFT: 'RIGHT', RIGHT: 'LEFT' } as const)[
+            direction
+        ],
+    );
+    return (
+        (connectedTraversalMask(marked, width, height, direction) &
+            destination) !==
+        0n
+    );
 }

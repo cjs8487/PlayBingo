@@ -70,6 +70,8 @@ export default async function Home() {
                         sx={{
                             textAlign: 'center',
                             px: { xs: 2, sm: 6, md: 12 },
+                            maxWidth: '100%',
+                            minWidth: 0,
                             py: 4,
                             mb: 4,
                             animation: '1.8s 1 slidein',

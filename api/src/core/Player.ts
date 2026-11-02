@@ -1,3 +1,4 @@
+import { BingoMode } from '@prisma/client';
 import {
     HiddenCell,
     Player as PlayerClientData,
@@ -6,7 +7,11 @@ import {
 } from '@playbingo/types';
 import { OPEN, WebSocket } from 'ws';
 import { RoomTokenPayload } from '../auth/RoomAuth';
-import { computeRevealedMask, rowColToMask } from '../util/RoomUtils';
+import {
+    computeRevealedMask,
+    rowColToMask,
+    connectedTraversalMask,
+} from '../util/RoomUtils';
 import Room from './Room';
 
 /**
@@ -248,7 +253,14 @@ export default class Player {
     getRevealedMask(): bigint {
         return (
             computeRevealedMask(
-                this.markedGoals,
+                this.room.bingoMode === BingoMode.TRAVERSE
+                    ? connectedTraversalMask(
+                          this.markedGoals,
+                          this.room.board[0].length,
+                          this.room.board.length,
+                          this.room.traversalDirection,
+                      )
+                    : this.markedGoals,
                 this.room.board[0].length,
                 this.room.board.length,
             ) | this.room.alwaysRevealedMask
@@ -257,7 +269,7 @@ export default class Player {
 
     obfuscateBoard() {
         if (this.spectator) {
-            this.exploredGoals = 0n;
+            this.exploredGoals = this.room.alwaysRevealedMask;
             this.room.players.forEach((player) => {
                 if (!player.spectator) {
                     this.exploredGoals |= player.getRevealedMask();

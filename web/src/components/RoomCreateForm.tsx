@@ -37,7 +37,18 @@ const roomValidationSchema = yup.object().shape({
     mode: yup
         .string()
         .required('Game mode is required')
-        .oneOf(['LINES', 'BLACKOUT', 'LOCKOUT'], 'Invalid game mode'),
+        .oneOf(
+            ['LINES', 'BLACKOUT', 'LOCKOUT', 'TRAVERSE'],
+            'Invalid game mode',
+        ),
+    traversalDirection: yup
+        .string()
+        .oneOf(['UP', 'DOWN', 'LEFT', 'RIGHT'], 'Invalid traversal direction')
+        .when('mode', {
+            is: 'TRAVERSE',
+            then: (schema) =>
+                schema.required('Traversal direction is required'),
+        }),
     explorationStart: yup
         .string()
         .oneOf(
@@ -51,9 +62,15 @@ const roomValidationSchema = yup.object().shape({
         }),
     explorationStartCount: yup
         .number()
-        .when(['exploration', 'explorationStart'], {
-            is: (exploration: boolean, explorationStart: string) =>
-                exploration && explorationStart === 'RANDOM',
+        .when(['exploration', 'explorationStart', 'mode'], {
+            is: (
+                exploration: boolean,
+                explorationStart: string,
+                mode: string,
+            ) =>
+                exploration &&
+                explorationStart === 'RANDOM' &&
+                mode !== 'TRAVERSE',
             then: (schema) =>
                 schema
                     .required('Start count is required')
@@ -148,6 +165,7 @@ export default function RoomCreateForm({ game }: FormProps) {
                 password: '',
                 variant: '',
                 mode: 'LINES',
+                traversalDirection: 'UP',
                 lineCount: 1,
                 seed: undefined,
                 hideCard: false,
@@ -180,7 +198,7 @@ export default function RoomCreateForm({ game }: FormProps) {
             }}
         >
             {({ values: { mode, exploration, explorationStart } }) => (
-                <Form>
+                <Form style={{ width: '34rem', maxWidth: '100%' }}>
                     <Box
                         sx={{
                             display: 'flex',
@@ -207,31 +225,72 @@ export default function RoomCreateForm({ game }: FormProps) {
                             }))}
                         />
                         <VariantSelectField />
-                        <Box
-                            sx={{
-                                display: 'flex',
-                                width: '100%',
-                                alignItems: 'center',
-                                columnGap: 2,
-                            }}
-                        >
-                            <FormikSelectField
-                                id="room-mode-select"
-                                name="mode"
-                                label="Game Mode"
-                                options={[
-                                    { value: 'LINES', label: 'Lines' },
-                                    { value: 'BLACKOUT', label: 'Blackout' },
-                                    { value: 'LOCKOUT', label: 'Lockout' },
-                                ]}
-                                sx={{ flexGrow: 1 }}
-                            />
-                            {mode === 'LINES' && (
-                                <NumberInput
-                                    name="lineCount"
-                                    label="Lines"
-                                    disabled={mode !== 'LINES'}
+                        <Box>
+                            <Box
+                                sx={{
+                                    display: 'flex',
+                                    width: '100%',
+                                    alignItems: 'center',
+                                    columnGap: 2,
+                                }}
+                            >
+                                <FormikSelectField
+                                    id="room-mode-select"
+                                    name="mode"
+                                    label="Game Mode"
+                                    options={[
+                                        { value: 'LINES', label: 'Lines' },
+                                        {
+                                            value: 'BLACKOUT',
+                                            label: 'Blackout',
+                                        },
+                                        { value: 'LOCKOUT', label: 'Lockout' },
+                                        {
+                                            value: 'TRAVERSE',
+                                            label: 'Traverse',
+                                        },
+                                    ]}
+                                    sx={{ flexGrow: 1 }}
                                 />
+                                {mode === 'TRAVERSE' && (
+                                    <FormikSelectField
+                                        id="traversal-direction-select"
+                                        name="traversalDirection"
+                                        label="Direction"
+                                        options={[
+                                            { value: 'UP', label: 'Climb (↑)' },
+                                            {
+                                                value: 'DOWN',
+                                                label: 'Tumble (↓)',
+                                            },
+                                            {
+                                                value: 'LEFT',
+                                                label: 'Moonwalk (←)',
+                                            },
+                                            {
+                                                value: 'RIGHT',
+                                                label: 'Charge (→)',
+                                            },
+                                        ]}
+                                        sx={{ minWidth: 120 }}
+                                    />
+                                )}
+                                {mode === 'LINES' && (
+                                    <NumberInput
+                                        name="lineCount"
+                                        label="Lines"
+                                        disabled={mode !== 'LINES'}
+                                    />
+                                )}
+                            </Box>
+                            {mode === 'TRAVERSE' && (
+                                <FormHelperText>
+                                    Complete a connected path across the board.
+                                    Only the starting edge is visible, and
+                                    completing goals reveals adjacent cells,
+                                    with the difficulty of the goals increasing
+                                    as you move across the board.
+                                </FormHelperText>
                             )}
                         </Box>
                         <FormikSwitch
@@ -244,55 +303,57 @@ export default function RoomCreateForm({ game }: FormProps) {
                             id="spectator"
                             label="Join as spectator?"
                         />
-                        <Box
-                            sx={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: 2,
-                            }}
-                        >
-                            <FormikSwitch
-                                name="exploration"
-                                id="exploration"
-                                label="Exploration"
-                            />
-                            <FormikSelectField
-                                id="room-mode-select"
-                                name="explorationStart"
-                                label="Starting Square"
-                                disabled={!exploration}
-                                sx={{ flexGrow: 1 }}
-                                options={[
-                                    { value: 'TL', label: 'Top Left' },
-                                    { value: 'TR', label: 'Top Right' },
-                                    { value: 'BL', label: 'Bottom Left' },
-                                    { value: 'BR', label: 'Bottom Right' },
-                                    {
-                                        value: 'CENTER',
-                                        label: 'Center',
-                                        tooltip:
-                                            'The center square of the board starts revealed. If the board has an even width or height, two squares will be revealed in that direction.',
-                                    },
-                                    {
-                                        value: 'RANDOM',
-                                        label: 'Random',
-                                        tooltip:
-                                            'A specified number of cells in the square will be chosen at random to start revealed',
-                                    },
-                                ]}
-                            />
-                            <NumberInput
-                                id="exploration-random-revealed-count"
-                                name="explorationStartCount"
-                                label="Start Count"
-                                disabled={
-                                    !exploration ||
-                                    explorationStart !== 'RANDOM'
-                                }
-                                min={1}
-                                max={5}
-                            />
-                        </Box>
+                        {mode !== 'TRAVERSE' && (
+                            <Box
+                                sx={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 2,
+                                }}
+                            >
+                                <FormikSwitch
+                                    name="exploration"
+                                    id="exploration"
+                                    label="Exploration"
+                                />
+                                <FormikSelectField
+                                    id="exploration-start-select"
+                                    name="explorationStart"
+                                    label="Starting Square"
+                                    disabled={!exploration}
+                                    sx={{ flexGrow: 1 }}
+                                    options={[
+                                        { value: 'TL', label: 'Top Left' },
+                                        { value: 'TR', label: 'Top Right' },
+                                        { value: 'BL', label: 'Bottom Left' },
+                                        { value: 'BR', label: 'Bottom Right' },
+                                        {
+                                            value: 'CENTER',
+                                            label: 'Center',
+                                            tooltip:
+                                                'The center square of the board starts revealed. If the board has an even width or height, two squares will be revealed in that direction.',
+                                        },
+                                        {
+                                            value: 'RANDOM',
+                                            label: 'Random',
+                                            tooltip:
+                                                'A specified number of cells in the square will be chosen at random to start revealed',
+                                        },
+                                    ]}
+                                />
+                                <NumberInput
+                                    id="exploration-random-revealed-count"
+                                    name="explorationStartCount"
+                                    label="Start Count"
+                                    disabled={
+                                        !exploration ||
+                                        explorationStart !== 'RANDOM'
+                                    }
+                                    min={1}
+                                    max={5}
+                                />
+                            </Box>
+                        )}
                         <Accordion>
                             <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                                 Advanced Generation Options

@@ -1,7 +1,15 @@
-import { BingoMode, RaceHandler, RoomActionType } from '@prisma/client';
+import {
+    BingoMode,
+    RaceHandler,
+    RoomActionType,
+    TraversalDirection,
+} from '@prisma/client';
 import { JsonObject } from '@prisma/client/runtime/library';
 import Player from '../core/Player';
 import { prisma } from './Database';
+
+export const discardUninitializedRoom = (id: string) =>
+    prisma.room.deleteMany({ where: { id, board: { isEmpty: true } } });
 
 export const createRoom = (
     slug: string,
@@ -15,6 +23,7 @@ export const createRoom = (
     variant?: string,
     explorationStart?: string,
     seed?: number,
+    traversalDirection: TraversalDirection = 'UP',
 ) => {
     return prisma.room.create({
         data: {
@@ -26,9 +35,11 @@ export const createRoom = (
             hideCard,
             bingoMode,
             lineCount,
+            traversalDirection,
             variant: variant ? { connect: { id: variant } } : undefined,
-            exploration: !!explorationStart,
-            explorationStart,
+            exploration: bingoMode === BingoMode.TRAVERSE || !!explorationStart,
+            explorationStart:
+                bingoMode === BingoMode.TRAVERSE ? null : explorationStart,
             seed,
         },
     });

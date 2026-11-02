@@ -14,7 +14,7 @@ import {
     UnmarkAction,
     SetChatEnabledAction,
 } from '@playbingo/types';
-import { BingoMode } from '@prisma/client';
+import { BingoMode, TraversalDirection } from '@prisma/client';
 import { DateTime } from 'luxon';
 import { WebSocket } from 'ws';
 import { roomCleanupInactive } from '../Environment';
@@ -50,10 +50,14 @@ import {
     getModeString,
     listToBoard,
     rowColToMask,
+    startingEdgeMask,
+    hasTraversalCompletion,
 } from '../util/RoomUtils';
 import Player from './Player';
 import { allRooms } from './RoomServer';
 import { BoardGenerator } from './generation/BoardGenerator';
+import { GenerationFailedError } from './generation/GenerationFailedError';
+import { generateTraverse } from './generation/Traverse';
 import {
     GeneratorGoal,
     GlobalGenerationState,
@@ -109,6 +113,7 @@ export default class Room {
     id: string;
     hideCard: boolean;
     bingoMode: BingoMode;
+    traversalDirection: TraversalDirection;
     lineCount: number;
     variantName: string;
     exploration: boolean = false;
@@ -150,6 +155,7 @@ export default class Room {
         explorationStart?: string,
         racetimeUrl?: string,
         generatorSettings?: GeneratorSettings,
+        traversalDirection: TraversalDirection = 'UP',
     ) {
         this.name = name;
         this.game = game;
@@ -159,6 +165,7 @@ export default class Room {
         this.chatHistory = [];
         this.id = id;
         this.bingoMode = bingoMode;
+        this.traversalDirection = traversalDirection;
         this.lineCount = lineCount;
         this.variantName = variantName;
 
@@ -195,7 +202,18 @@ export default class Room {
 
         this.seed = seed;
 
-        if (explorationStart) {
+        if (this.bingoMode === BingoMode.TRAVERSE) {
+            this.exploration = true;
+            const layout = generatorSettings?.boardLayout;
+            const width =
+                layout?.mode === 'custom' ? layout.layout[0].length : 5;
+            const height = layout?.mode === 'custom' ? layout.layout.length : 5;
+            this.alwaysRevealedMask = startingEdgeMask(
+                width,
+                height,
+                this.traversalDirection,
+            );
+        } else if (explorationStart) {
             this.exploration = true;
             switch (explorationStart) {
                 case 'TL':
@@ -239,7 +257,8 @@ export default class Room {
     }
 
     async generateBoard(options: BoardGenerationOptions) {
-        this.lastGenerationMode = options;
+        let generatedBoard: RevealedCell[][];
+        let generatedSeed = this.seed;
         const { mode, seed } = options;
         const goals = await goalsForGameFull(this.gameSlug);
         let goalList: GeneratorGoal[];
@@ -253,7 +272,29 @@ export default class Room {
         // game is enabled and configured for the new generator system
         // difficulty variants are mutually exclusive with th new generator
         // system currently, so if difficulty is selected go back to the old one
-        if (this.generatorSettings && mode !== BoardGenerationMode.DIFFICULTY) {
+        if (this.bingoMode === BingoMode.TRAVERSE) {
+            generatedSeed = seed ?? Math.ceil(999999 * Math.random());
+            const settings =
+                mode !== BoardGenerationMode.DIFFICULTY
+                    ? this.generatorSettings
+                    : undefined;
+            const layout = settings?.boardLayout;
+            const width =
+                layout?.mode === 'custom' ? layout.layout[0].length : 5;
+            const height = layout?.mode === 'custom' ? layout.layout.length : 5;
+            generatedBoard = generateTraverse(
+                goals,
+                width,
+                height,
+                this.traversalDirection,
+                generatedSeed,
+                settings,
+                categories,
+            );
+        } else if (
+            this.generatorSettings &&
+            mode !== BoardGenerationMode.DIFFICULTY
+        ) {
             const generator = new BoardGenerator(
                 goals,
                 categories,
@@ -261,15 +302,14 @@ export default class Room {
             );
             generator.reset(options.seed);
             generator.generateBoard();
-            this.seed = generator.seed;
-            this.board = generator.board.map((row) =>
+            generatedSeed = generator.seed;
+            generatedBoard = generator.board.map((row) =>
                 row.map((goal) => ({
                     goal: goal,
                     completedPlayers: [],
                     revealed: true,
                 })),
             );
-            this.computeVictoryMasks();
         } else {
             const globalState: GlobalGenerationState = {
                 useCategoryMaxes: categories.some((cat) => cat.max > 0),
@@ -357,8 +397,20 @@ export default class Room {
                 this.logError(`Failed to generate board ${e}`);
                 return;
             }
-            this.board = listToBoard(goalList, 5);
+            generatedBoard = listToBoard(goalList, 5);
         }
+
+        if (this.bingoMode === BingoMode.TRAVERSE) {
+            this.alwaysRevealedMask = startingEdgeMask(
+                generatedBoard[0].length,
+                generatedBoard.length,
+                this.traversalDirection,
+            );
+        }
+        this.board = generatedBoard;
+        this.seed = generatedSeed;
+        this.lastGenerationMode = options;
+        this.computeVictoryMasks();
 
         // reset board aware state
         this.players.values().forEach((player) => {
@@ -447,11 +499,11 @@ export default class Room {
                 ...(this.hideCard
                     ? { hidden: true }
                     : {
-                        hidden: false,
-                        board: this.exploration
-                            ? player.obfuscateBoard()
-                            : this.board,
-                    }),
+                          hidden: false,
+                          board: this.exploration
+                              ? player.obfuscateBoard()
+                              : this.board,
+                      }),
             },
             chatHistory: this.chatHistory,
             connectedPlayer: player.toClientData(),
@@ -465,16 +517,20 @@ export default class Room {
                 racetimeConnection: this.raceHandler
                     ? 'url' in this.raceHandler
                         ? {
-                            gameActive: this.racetimeEligible,
-                            url: (this.raceHandler as RacetimeHandler).url,
-                            startDelay: (this.raceHandler as RacetimeHandler)
-                                .data?.start_delay,
-                            status: (this.raceHandler as RacetimeHandler).data
-                                ?.status.verbose_value,
-                        }
+                              gameActive: this.racetimeEligible,
+                              url: (this.raceHandler as RacetimeHandler).url,
+                              startDelay: (this.raceHandler as RacetimeHandler)
+                                  .data?.start_delay,
+                              status: (this.raceHandler as RacetimeHandler).data
+                                  ?.status.verbose_value,
+                          }
                         : undefined
                     : { gameActive: this.racetimeEligible, url: undefined },
-                mode: getModeString(this.bingoMode, this.lineCount),
+                mode: getModeString(
+                    this.bingoMode,
+                    this.lineCount,
+                    this.traversalDirection,
+                ),
                 variant: this.variantName,
                 startedAt: this.raceHandler?.getStartTime(),
                 finishedAt: this.raceHandler?.getEndTime(),
@@ -554,6 +610,20 @@ export default class Room {
         }
         const { row, col } = action.payload;
         if (row === undefined || col === undefined) return;
+        if (
+            !Number.isInteger(row) ||
+            !Number.isInteger(col) ||
+            !this.board[row]?.[col]
+        )
+            return;
+        if (
+            this.bingoMode === BingoMode.TRAVERSE &&
+            (player.spectator ||
+                (player.getRevealedMask() &
+                    rowColToMask(row, col, this.board[0].length)) ===
+                    0n)
+        )
+            return;
         if (player.hasMarked(row, col)) return;
 
         if (
@@ -574,7 +644,9 @@ export default class Room {
                     contents: player.nickname,
                     color: player.color,
                 },
-                ` marked ${this.board[row][col].goal.goal} (${row},${col})`,
+                this.bingoMode === BingoMode.TRAVERSE
+                    ? ` marked (${row},${col})`
+                    : ` marked ${this.board[row][col].goal.goal} (${row},${col})`,
             ],
             timestamp,
         );
@@ -602,7 +674,9 @@ export default class Room {
         this.sendChat(
             [
                 { contents: player.nickname, color: player.color },
-                ` unmarked ${this.board[unRow][unCol].goal.goal} (${unRow},${unCol})`,
+                this.bingoMode === BingoMode.TRAVERSE
+                    ? ` unmarked (${unRow},${unCol})`
+                    : ` unmarked ${this.board[unRow][unCol].goal.goal} (${unRow},${unCol})`,
             ],
             timestamp,
         );
@@ -648,11 +722,26 @@ export default class Room {
             if (!options.mode) {
                 options.mode = this.lastGenerationMode.mode;
             }
-            this.generateBoard(options as BoardGenerationOptions);
+            this.regenerateBoard(options as BoardGenerationOptions);
         } else {
             // TODO: we should probably generate a new seed before generating
             // the board from the previous settings
-            this.generateBoard(this.lastGenerationMode);
+            this.regenerateBoard(this.lastGenerationMode);
+        }
+    }
+
+    private async regenerateBoard(options: BoardGenerationOptions) {
+        try {
+            await this.generateBoard(options);
+        } catch (error) {
+            if (error instanceof GenerationFailedError) {
+                this.sendSystemMessage(error.message);
+            } else {
+                this.logError(`Failed to regenerate board: ${error}`);
+                this.sendSystemMessage(
+                    'Board generation failed. The previous board has been kept.',
+                );
+            }
         }
     }
 
@@ -727,7 +816,11 @@ export default class Room {
                     url,
                 },
                 newGenerator: this.newGenerator,
-                mode: getModeString(this.bingoMode, this.lineCount),
+                mode: getModeString(
+                    this.bingoMode,
+                    this.lineCount,
+                    this.traversalDirection,
+                ),
                 variant: this.variantName,
                 raceHandler: this.raceHandler?.key(),
             },
@@ -751,7 +844,11 @@ export default class Room {
                     url: undefined,
                 },
                 newGenerator: this.newGenerator,
-                mode: getModeString(this.bingoMode, this.lineCount),
+                mode: getModeString(
+                    this.bingoMode,
+                    this.lineCount,
+                    this.traversalDirection,
+                ),
                 variant: this.variantName,
                 raceHandler: this.raceHandler?.key(),
             },
@@ -875,17 +972,21 @@ export default class Room {
                 racetimeConnection:
                     'url' in this.raceHandler
                         ? {
-                            gameActive: this.racetimeEligible,
-                            url: (this.raceHandler as RacetimeHandler).url,
-                            startDelay:
-                                (this.raceHandler as RacetimeHandler).data
-                                    ?.start_delay ?? undefined,
-                            status: (this.raceHandler as RacetimeHandler).data
-                                ?.status.verbose_value,
-                        }
+                              gameActive: this.racetimeEligible,
+                              url: (this.raceHandler as RacetimeHandler).url,
+                              startDelay:
+                                  (this.raceHandler as RacetimeHandler).data
+                                      ?.start_delay ?? undefined,
+                              status: (this.raceHandler as RacetimeHandler).data
+                                  ?.status.verbose_value,
+                          }
                         : undefined,
                 newGenerator: this.newGenerator,
-                mode: getModeString(this.bingoMode, this.lineCount),
+                mode: getModeString(
+                    this.bingoMode,
+                    this.lineCount,
+                    this.traversalDirection,
+                ),
                 variant: this.variantName,
                 seed: this.seed,
                 startedAt: this.raceHandler?.getStartTime(),
@@ -914,7 +1015,30 @@ export default class Room {
 
     private checkWinConditions() {
         this.players.forEach((player) => {
-            if (this.bingoMode === BingoMode.LOCKOUT) {
+            if (this.bingoMode === BingoMode.TRAVERSE) {
+                const complete =
+                    !player.spectator &&
+                    hasTraversalCompletion(
+                        player.markedGoals,
+                        this.board[0].length,
+                        this.board.length,
+                        this.traversalDirection,
+                    );
+                if (complete !== player.goalComplete) {
+                    player.goalComplete = complete;
+                    if (complete) this.raceHandler?.playerFinished(player);
+                    else this.raceHandler?.playerUnfinshed(player);
+                    this.sendChat(
+                        [
+                            { contents: player.nickname, color: player.color },
+                            complete
+                                ? ' has crossed the board!'
+                                : ' no longer has a complete crossing.',
+                        ],
+                        new Date(),
+                    );
+                }
+            } else if (this.bingoMode === BingoMode.LOCKOUT) {
                 const goalsNeeded = Math.ceil(
                     (this.board.length * this.board[0].length) / 2,
                 );

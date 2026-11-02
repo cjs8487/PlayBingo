@@ -9,6 +9,7 @@ import Room, {
 import { allRooms } from '../../core/RoomServer';
 import {
     createRoom,
+    discardUninitializedRoom,
     getFullRoomList,
     getRoomFromSlug,
 } from '../../database/Rooms';
@@ -27,12 +28,17 @@ import Player from '../../core/Player';
 import { GeneratorSettings, makeGeneratorSchema } from '@playbingo/shared';
 import { getCategories } from '../../database/games/GoalCategories';
 import { getVariant } from '../../database/games/Variants';
-import { DifficultyVariant, RaceHandler, Variant } from '@prisma/client';
+import {
+    BingoMode,
+    DifficultyVariant,
+    RaceHandler,
+    Variant,
+} from '@prisma/client';
 import { GenerationFailedError } from '../../core/generation/GenerationFailedError';
 import RacetimeHandler from '../../core/integration/races/RacetimeHandler';
 import LocalTimer from '../../core/integration/races/LocalTimer';
 import { error } from 'console';
-import { getModeString } from '../../util/RoomUtils';
+import { getModeString, startingEdgeMask } from '../../util/RoomUtils';
 
 const MIN_ROOM_GOALS_REQUIRED = 25;
 const rooms = Router();
@@ -75,7 +81,8 @@ rooms.post('/', async (req, res) => {
         nickname,
         password,
         variant,
-        mode,
+        mode: requestedMode = BingoMode.LINES,
+        traversalDirection: requestedDirection,
         lineCount,
         generationMode,
         hideCard,
@@ -90,6 +97,22 @@ rooms.post('/', async (req, res) => {
         res.status(400).send('Missing required element(s).');
         return;
     }
+
+    if (!Object.values(BingoMode).includes(requestedMode)) {
+        res.status(400).send('Invalid game mode.');
+        return;
+    }
+    const mode = requestedMode;
+    if (
+        mode === BingoMode.TRAVERSE &&
+        requestedDirection !== undefined &&
+        !['UP', 'DOWN', 'LEFT', 'RIGHT'].includes(requestedDirection)
+    ) {
+        res.status(400).send('Invalid traversal direction.');
+        return;
+    }
+    const traversalDirection =
+        mode === BingoMode.TRAVERSE ? (requestedDirection ?? 'UP') : 'UP';
 
     const gameData = await gameForSlug(game);
     if (!gameData) {
@@ -186,12 +209,13 @@ rooms.post('/', async (req, res) => {
         mode,
         lineCount,
         isDifficultyVariant ? undefined : variant,
-        exploration
+        mode !== BingoMode.TRAVERSE && exploration
             ? explorationStart === 'RANDOM'
                 ? `${explorationStartCount}`
                 : explorationStart
             : undefined,
         seed,
+        traversalDirection,
     );
     const room = new Room(
         name,
@@ -208,13 +232,14 @@ rooms.post('/', async (req, res) => {
             !!gameData.racetimeGoal,
         variantName,
         seed,
-        exploration
+        mode !== BingoMode.TRAVERSE && exploration
             ? explorationStart === 'RANDOM'
                 ? explorationStartCount
                 : explorationStart
             : undefined,
         '',
         generatorSettings,
+        traversalDirection,
     );
     const options: BoardGenerationOptions = {
         mode: BoardGenerationMode.RANDOM,
@@ -248,6 +273,8 @@ rooms.post('/', async (req, res) => {
     try {
         await room.generateBoard(options);
     } catch (e) {
+        clearTimeout(room.inactivityWarningTimeout);
+        await discardUninitializedRoom(dbRoom.id);
         if (e instanceof GenerationFailedError) {
             res.status(422).send(e.message);
             return;
@@ -325,6 +352,7 @@ async function getOrLoadRoom(slug: string): Promise<Room | null> {
         dbRoom.explorationStart ?? undefined,
         dbRoom.racetimeRoom ?? '',
         generatorSettings,
+        dbRoom.traversalDirection,
     );
 
     if (generatorSettings?.boardLayout.mode === 'custom') {
@@ -344,6 +372,13 @@ async function getOrLoadRoom(slug: string): Promise<Room | null> {
                 revealed: true,
             })),
             5,
+        );
+    }
+    if (newRoom.bingoMode === BingoMode.TRAVERSE) {
+        newRoom.alwaysRevealedMask = startingEdgeMask(
+            newRoom.board[0].length,
+            newRoom.board.length,
+            newRoom.traversalDirection,
         );
     }
     newRoom.computeVictoryMasks();
@@ -417,7 +452,9 @@ async function getOrLoadRoom(slug: string): Promise<Room | null> {
                     newRoom.sendChat(
                         [
                             { contents: player.nickname, color: player.color },
-                            ` marked ${newRoom.board[row][col].goal.goal} (${row},${col})`,
+                            newRoom.bingoMode === BingoMode.TRAVERSE
+                                ? ` marked (${row},${col})`
+                                : ` marked ${newRoom.board[row][col].goal.goal} (${row},${col})`,
                         ],
                         timestamp,
                     );
@@ -433,7 +470,9 @@ async function getOrLoadRoom(slug: string): Promise<Room | null> {
                     newRoom.sendChat(
                         [
                             { contents: player.nickname, color: player.color },
-                            ` unmarked ${newRoom.board[row][col].goal.goal} (${row},${col})`,
+                            newRoom.bingoMode === BingoMode.TRAVERSE
+                                ? ` unmarked (${row},${col})`
+                                : ` unmarked ${newRoom.board[row][col].goal.goal} (${row},${col})`,
                         ],
                         timestamp,
                     );
@@ -482,7 +521,11 @@ rooms.get('/:slug', async (req, res) => {
             status: (room.raceHandler as RacetimeHandler).data?.status
                 .verbose_value,
         },
-        mode: getModeString(room.bingoMode, room.lineCount),
+        mode: getModeString(
+            room.bingoMode,
+            room.lineCount,
+            room.traversalDirection,
+        ),
         variant: room.variantName,
         chatEnabled: room.chatEnabled,
     };
