@@ -80,6 +80,7 @@ api.get('/logs', requiresApiToken, async (req, res) => {
     contents
         .trim()
         .split('\n')
+        .filter((entry) => entry.trim().length > 0)
         .map((entry) => {
             entryList.push(JSON.parse(entry));
         });
