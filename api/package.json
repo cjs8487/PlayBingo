@@ -19,7 +19,7 @@
         "docker:down": "docker compose down",
         "test": "jest --forceExit",
         "prod:start": "node ./build/src/main.js",
-        "db:data-migration": "tsx prisma/migrations/20260102221138_make_discrete_resource_model/data-migration.ts"
+        "db:data-migration": "tsx prisma/migrations/20261021000000_add_room_board_dimensions/data-migration.ts"
     },
     "author": "",
     "license": "ISC",

@@ -96,6 +96,4 @@ with staff permissions, owner is an owner for all games in the seed data, mod is
 a moderator for all games, and player is a basic user with no extra permissions.
 The password for each account is `password`. None of the seed users have an
 accessible email, anything that requires email must be done outside of the seed
-data. There are 6 games included in the seed data as well. 5 of the 6 games are
-SRLv5 enabled, and each game contains a varied number of goals ranging from 25
-(the minimum number of goals) to 250.
+data. There are 6 games included in the seed data as well.

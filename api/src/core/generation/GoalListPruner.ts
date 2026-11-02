@@ -3,58 +3,39 @@ import { BoardGenerator } from './BoardGenerator';
 
 type GoalFilter = GeneratorSettings['goalFilters'][number];
 
-export type GoalListPruner = (generator: BoardGenerator) => void;
+export type FilterableGoal = {
+    difficulty: number | null;
+    categories: readonly { id: string }[];
+    tags: readonly { id: string }[];
+};
 
-export const createPruner = (filter: GoalFilter) => {
+export const matchesGoalFilter = (goal: FilterableGoal, filter: GoalFilter) => {
     switch (filter.mode) {
         case 'category':
-            return categoryFilter(filter.categories);
+            return goal.categories.some((category) =>
+                filter.categories.includes(category.id),
+            );
         case 'difficulty':
-            return difficultyFilter(
-                filter.min ?? 0,
-                filter.max ?? Number.MAX_VALUE,
+            return (
+                !!goal.difficulty &&
+                goal.difficulty >= (filter.min ?? 0) &&
+                goal.difficulty <= (filter.max ?? Number.MAX_VALUE)
             );
         case 'tags-inclusion':
-            return tagsInclusionFilter(filter.tags);
+            return goal.tags.some((tag) => filter.tags.includes(tag.id));
         case 'tags-exclusion':
-            return tagsExclusionFilter(filter.tags);
+            return !goal.tags.some((tag) => filter.tags.includes(tag.id));
         default:
-            throw Error(`Unknown goal filter`);
+            throw Error('Unknown goal filter');
     }
 };
 
-const categoryFilter =
-    (categoryIds: string[]) => (generator: BoardGenerator) => {
-        generator.goals = generator.goals.filter(
-            (goal) =>
-                goal.categories?.some((goalCat) =>
-                    categoryIds.includes(goalCat.id),
-                ) ?? false,
+export type GoalListPruner = (generator: BoardGenerator) => void;
+
+export const createPruner =
+    (filter: GoalFilter): GoalListPruner =>
+    (generator) => {
+        generator.goals = generator.goals.filter((goal) =>
+            matchesGoalFilter(goal, filter),
         );
     };
-
-const difficultyFilter =
-    (min: number, max: number) => (generator: BoardGenerator) => {
-        generator.goals = generator.goals.filter(
-            (goal) =>
-                !!goal.difficulty &&
-                goal.difficulty >= min &&
-                goal.difficulty <= max,
-        );
-    };
-
-const tagsInclusionFilter = (tags: string[]) => (generator: BoardGenerator) => {
-    generator.goals = generator.goals.filter(
-        (goal) =>
-            goal.tags?.some((goalTag) => tags.includes(goalTag.id)) ?? false,
-    );
-};
-
-const tagsExclusionFilter = (tags: string[]) => (generator: BoardGenerator) => {
-    generator.goals = generator.goals.filter(
-        (goal) =>
-            !goal.tags ||
-            goal.tags.length === 0 ||
-            !(goal.tags.some((goalTag) => tags.includes(goalTag.id)) ?? false),
-    );
-};

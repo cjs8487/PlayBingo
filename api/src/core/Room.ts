@@ -54,6 +54,7 @@ import {
 import Player from './Player';
 import { allRooms } from './RoomServer';
 import { BoardGenerator } from './generation/BoardGenerator';
+import { GenerationFailedError } from './generation/GenerationFailedError';
 import {
     GeneratorGoal,
     GlobalGenerationState,
@@ -150,6 +151,8 @@ export default class Room {
         explorationStart?: string,
         racetimeUrl?: string,
         generatorSettings?: GeneratorSettings,
+        public boardWidth: number = 5,
+        public boardHeight: number = 5,
     ) {
         this.name = name;
         this.game = game;
@@ -199,19 +202,45 @@ export default class Room {
             this.exploration = true;
             switch (explorationStart) {
                 case 'TL':
-                    this.alwaysRevealedMask |= rowColToMask(0, 0, 5);
+                    this.alwaysRevealedMask |= rowColToMask(0, 0, boardWidth);
                     break;
                 case 'TR':
-                    this.alwaysRevealedMask |= rowColToMask(0, 4, 5);
+                    this.alwaysRevealedMask |= rowColToMask(
+                        0,
+                        boardWidth - 1,
+                        boardWidth,
+                    );
                     break;
                 case 'BL':
-                    this.alwaysRevealedMask |= rowColToMask(4, 0, 5);
+                    this.alwaysRevealedMask |= rowColToMask(
+                        boardHeight - 1,
+                        0,
+                        boardWidth,
+                    );
                     break;
                 case 'BR':
-                    this.alwaysRevealedMask |= rowColToMask(4, 4, 5);
+                    this.alwaysRevealedMask |= rowColToMask(
+                        boardHeight - 1,
+                        boardWidth - 1,
+                        boardWidth,
+                    );
                     break;
                 case 'CENTER':
-                    this.alwaysRevealedMask |= rowColToMask(2, 2, 5);
+                    for (const row of new Set([
+                        Math.floor((boardHeight - 1) / 2),
+                        Math.floor(boardHeight / 2),
+                    ])) {
+                        for (const col of new Set([
+                            Math.floor((boardWidth - 1) / 2),
+                            Math.floor(boardWidth / 2),
+                        ])) {
+                            this.alwaysRevealedMask |= rowColToMask(
+                                row,
+                                col,
+                                boardWidth,
+                            );
+                        }
+                    }
                     break;
                 default:
                     const startCount = Number(explorationStart);
@@ -221,17 +250,17 @@ export default class Room {
                         );
                         this.exploration = false;
                     }
-                    const cells = [...Array(25).keys()];
+                    const cells = [...Array(boardWidth * boardHeight).keys()];
                     shuffle(cells);
                     for (let i = 0; i < startCount; i++) {
                         const cell = cells.pop();
-                        if (!cell) {
+                        if (cell === undefined) {
                             return;
                         }
                         this.alwaysRevealedMask |= rowColToMask(
-                            cell % 5,
-                            Math.floor(cell / 5),
-                            5,
+                            Math.floor(cell / boardWidth),
+                            cell % boardWidth,
+                            boardWidth,
                         );
                     }
             }
@@ -258,9 +287,33 @@ export default class Room {
                 goals,
                 categories,
                 this.generatorSettings,
+                this.boardWidth,
+                options.seed,
             );
+            if (
+                this.generatorSettings.boardLayout.mode === 'custom' &&
+                (this.generatorSettings.boardLayout.layout.length !==
+                    this.boardHeight ||
+                    this.generatorSettings.boardLayout.layout.some(
+                        (row) => row.length !== this.boardWidth,
+                    ))
+            ) {
+                throw new GenerationFailedError(
+                    'Custom layout dimensions no longer match this room',
+                    generator,
+                );
+            }
             generator.reset(options.seed);
             generator.generateBoard();
+            if (
+                generator.board.length !== this.boardHeight ||
+                generator.board.some((row) => row.length !== this.boardWidth)
+            ) {
+                throw new GenerationFailedError(
+                    'Generated board dimensions do not match this room',
+                    generator,
+                );
+            }
             this.seed = generator.seed;
             this.board = generator.board.map((row) =>
                 row.map((goal) => ({
@@ -342,7 +395,7 @@ export default class Room {
                         shuffle(goalList, seed);
                         break;
                     case BoardGenerationMode.RANDOM:
-                        if (await useTypedRandom(this.game)) {
+                        if (await useTypedRandom(this.gameSlug)) {
                             goalList = generateRandomTyped(goals, seed);
                             goalList.shift();
                         } else {
@@ -372,9 +425,11 @@ export default class Room {
         this.raceHandler.resetTimer();
 
         this.sendSyncBoard();
-        setRoomBoard(
+        await setRoomBoard(
             this.id,
             this.board.flat().map((cell) => cell.goal.id),
+            this.boardWidth,
+            this.boardHeight,
         );
     }
 
@@ -442,16 +497,16 @@ export default class Room {
         return {
             action: 'connected',
             board: {
-                width: this.board[0].length,
-                height: this.board.length,
+                width: this.boardWidth,
+                height: this.boardHeight,
                 ...(this.hideCard
                     ? { hidden: true }
                     : {
-                        hidden: false,
-                        board: this.exploration
-                            ? player.obfuscateBoard()
-                            : this.board,
-                    }),
+                          hidden: false,
+                          board: this.exploration
+                              ? player.obfuscateBoard()
+                              : this.board,
+                      }),
             },
             chatHistory: this.chatHistory,
             connectedPlayer: player.toClientData(),
@@ -465,13 +520,13 @@ export default class Room {
                 racetimeConnection: this.raceHandler
                     ? 'url' in this.raceHandler
                         ? {
-                            gameActive: this.racetimeEligible,
-                            url: (this.raceHandler as RacetimeHandler).url,
-                            startDelay: (this.raceHandler as RacetimeHandler)
-                                .data?.start_delay,
-                            status: (this.raceHandler as RacetimeHandler).data
-                                ?.status.verbose_value,
-                        }
+                              gameActive: this.racetimeEligible,
+                              url: (this.raceHandler as RacetimeHandler).url,
+                              startDelay: (this.raceHandler as RacetimeHandler)
+                                  .data?.start_delay,
+                              status: (this.raceHandler as RacetimeHandler).data
+                                  ?.status.verbose_value,
+                          }
                         : undefined
                     : { gameActive: this.racetimeEligible, url: undefined },
                 mode: getModeString(this.bingoMode, this.lineCount),
@@ -840,8 +895,8 @@ export default class Room {
         this.sendServerMessage({
             action: 'syncBoard',
             board: {
-                width: this.board[0].length,
-                height: this.board.length,
+                width: this.boardWidth,
+                height: this.boardHeight,
                 ...(this.hideCard
                     ? { hidden: true }
                     : { hidden: false, board: this.board }),
@@ -875,14 +930,14 @@ export default class Room {
                 racetimeConnection:
                     'url' in this.raceHandler
                         ? {
-                            gameActive: this.racetimeEligible,
-                            url: (this.raceHandler as RacetimeHandler).url,
-                            startDelay:
-                                (this.raceHandler as RacetimeHandler).data
-                                    ?.start_delay ?? undefined,
-                            status: (this.raceHandler as RacetimeHandler).data
-                                ?.status.verbose_value,
-                        }
+                              gameActive: this.racetimeEligible,
+                              url: (this.raceHandler as RacetimeHandler).url,
+                              startDelay:
+                                  (this.raceHandler as RacetimeHandler).data
+                                      ?.start_delay ?? undefined,
+                              status: (this.raceHandler as RacetimeHandler).data
+                                  ?.status.verbose_value,
+                          }
                         : undefined,
                 newGenerator: this.newGenerator,
                 mode: getModeString(this.bingoMode, this.lineCount),
@@ -916,7 +971,7 @@ export default class Room {
         this.players.forEach((player) => {
             if (this.bingoMode === BingoMode.LOCKOUT) {
                 const goalsNeeded = Math.ceil(
-                    (this.board.length * this.board[0].length) / 2,
+                    (this.boardHeight * this.boardWidth) / 2,
                 );
                 if (!player.goalComplete && player.goalCount >= goalsNeeded) {
                     this.sendChat(
@@ -1223,8 +1278,8 @@ export default class Room {
             board: {
                 hidden: false,
                 board: this.board,
-                width: this.board[0].length,
-                height: this.board.length,
+                width: this.boardWidth,
+                height: this.boardHeight,
             },
         });
     }
@@ -1236,8 +1291,8 @@ export default class Room {
     }
 
     computeVictoryMasks() {
-        const width = this.board[0].length;
-        const height = this.board.length;
+        const width = this.boardWidth;
+        const height = this.boardHeight;
         if (this.bingoMode === BingoMode.LINES) {
             this.victoryMasks = computeLineMasks(height, width);
         } else if (this.bingoMode === BingoMode.BLACKOUT) {

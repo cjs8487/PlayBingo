@@ -355,6 +355,15 @@ paths:
                 password:
                   type: string
                   description: The room password
+                boardSize:
+                  type: integer
+                  minimum: 2
+                  maximum: 15
+                  default: 5
+                  description:
+                    Dimension of a selectable square board. Must be in the sizes array
+                    returned by GET /games/{slug}/boardSizes. Omit for custom
+                    layouts, which determine their own width and height.
                 generationMode:
                   type: string
                   description:
@@ -565,6 +574,95 @@ paths:
           $ref: "#/components/responses/errorUnauthorized"
         403:
           $ref: "#/components/responses/errorForbidden"
+  /games/{slug}/sampleBoard:
+    get:
+      summary: Generate a sample board
+      tags:
+        - games
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: variant
+          in: query
+          description: Optional variant ID.
+          schema:
+            type: string
+        - name: boardSize
+          in: query
+          description:
+            Square dimension from the available board sizes. Defaults to 5 when
+            available, otherwise the first supported size. Omit for custom
+            layouts, which use their fixed dimensions.
+          schema:
+            type: integer
+            minimum: 2
+            maximum: 15
+      responses:
+        200:
+          description: Generated board, width, height, seed and optional variant name.
+        400:
+          $ref: "#/components/responses/errorBadRequest"
+        404:
+          $ref: "#/components/responses/errorNotFound"
+        422:
+          description: No supported board size or generation failed.
+  /games/{slug}/boardSizes:
+    get:
+      summary: Get available board sizes
+      description:
+        Returns selectable square sizes with sufficient goals after filtering.
+        Custom layouts and other generation modes with fixed layouts return
+        their fixed width and height.
+      tags:
+        - games
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: variant
+          in: query
+          description: Optional variant ID.
+          schema:
+            type: string
+      responses:
+        200:
+          description: Selectable square sizes or fixed custom layout dimensions.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - sizes
+                properties:
+                  sizes:
+                    type: array
+                    items:
+                      type: integer
+                      minimum: 2
+                      maximum: 15
+                  customLayout:
+                    type: object
+                    required:
+                      - width
+                      - height
+                    properties:
+                      width:
+                        type: integer
+                        minimum: 1
+                        maximum: 15
+                      height:
+                        type: integer
+                        minimum: 1
+                        maximum: 15
+        400:
+          $ref: "#/components/responses/errorBadRequest"
+        404:
+          $ref: "#/components/responses/errorNotFound"
   /games/{slug}/goals:
     get:
       summary: Get goals for a game

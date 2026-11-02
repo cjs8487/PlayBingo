@@ -57,6 +57,7 @@ export class BoardGenerator {
         goals: GeneratorGoal[],
         categories: Category[],
         config: GeneratorSettings,
+        public readonly size: number,
         seed?: number,
     ) {
         this.allGoals = goals;
