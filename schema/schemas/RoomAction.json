@@ -1,179 +1,217 @@
 {
-    "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "type": "object",
-    "additionalProperties": false,
-    "required": ["authToken"],
-    "description": "An outgoing client websocket message sent when a client performs an action in a room",
-    "properties": {
-        "authToken": {"type": "string", "description": "JWT for the room obtained from the server"}
-    },
-    "anyOf": [
-        {"$ref": "#/$defs/JoinAction"},
-        {"$ref": "#/$defs/LeaveAction"},
-        {"$ref": "#/$defs/ChatAction"},
-        {"$ref": "#/$defs/MarkAction"},
-        {"$ref": "#/$defs/UnmarkAction"},
-        {"$ref": "#/$defs/ChangeColorAction"},
-        {"$ref": "#/$defs/NewCardAction"},
-        {"$ref": "#/$defs/RevealCardAction"},
-        {"$ref": "#/$defs/ChangeAuthAction"},
-        {"$ref": "#/$defs/StartTimerAction"},
-        {"$ref": "#/$defs/ChangeRaceHandlerAction"},
-        {"$ref": "#/$defs/ResetTimerAction"},
-        {"$ref": "#/$defs/SetChatEnabledAction"}
-    ],
-    "$defs": {
-        "JoinAction": {
-            "required": ["action"],
-            "additionalProperties": false,
-            "properties": {
-                "action": "join",
-                "payload": {
-                    "required": ["nickname"],
-                    "additionalProperties": false,
-                    "properties": {
-                        "nickname": {"type": "string"}
-                    }
-                }
-            }
-        },
-        "LeaveAction": {
-            "required": ["action"],
-            "additionalProperties": false,
-            "properties": {
-                "action": "leave"
-            }
-        },
-        "ChatAction": {
-            "required": ["action", "payload"],
-            "additionalProperties": false,
-            "properties": {
-                "action": "chat",
-                "payload": {
-                    "required": ["message"],
-                    "additionalProperties": false,
-                    "properties": {
-                        "message": {"type": "string"}
-                    }
-                }
-            }
-        },
-        "MarkAction": {
-            "required": ["action", "payload"],
-            "additionalProperties": false,
-            "properties": {
-                "action": "mark",
-                "payload": {
-                    "required": ["row", "col"],
-                    "additionalProperties": false,
-                    "properties": {
-                        "row": {"type": "number"},
-                        "col": {"type": "number"}
-                    }
-                }
-            }
-        },
-        "UnmarkAction": {
-            "required": ["action", "payload"],
-            "additionalProperties": false,
-            "properties": {
-                "action": "unmark",
-                "payload": {
-                    "required": ["row", "col"],
-                    "additionalProperties": false,
-                    "properties": {
-                        "row": {"type": "number"},
-                        "col": {"type": "number"}
-                    }
-                }
-            }
-        },
-        "ChangeColorAction": {
-            "required": ["action", "payload"],
-            "additionalProperties": false,
-            "properties": {
-                "action": "changeColor",
-                "payload": {
-                    "required": ["color"],
-                    "additionalProperties": false,
-                    "properties": {
-                        "color": {"type": "string"}
-                    }
-                }
-            }
-        },
-        "NewCardAction": {
-            "required": ["action"],
-            "additionalProperties": false,
-            "properties": {
-                "action": "newCard",
-                "options": {
-                        "required": ["mode"],
-                        "additionalProperties": false,
-                        "properties": {
-                            "seed": {"type": "number"},
-                            "mode": {"type": "string"},
-                            "difficulty": {"type": "string"}
-                    }
-                }
-            }
-        },
-        "RevealCardAction": {
-            "required": ["action"],
-            "additionalProperties": false,
-            "properties": {
-                "action": "revealCard"
-            }
-        },
-        "ChangeAuthAction": {
-            "required": ["action", "payload"],
-            "additionalProperties": false,
-            "properties": {
-                "action": "changeAuth",
-                "payload": {
-                    "required": ["spectate"],
-                    "additionalProperties": false,
-                    "properties": {
-                        "spectate": {"type": "boolean"}
-                    }
-                }
-            }
-        },
-        "StartTimerAction": {
-            "required": ["action"],
-            "additionalProperties": false,
-            "properties": {
-                "action": "startTimer"
-            }
-        },
-        "ChangeRaceHandlerAction": {
-            "required": ["action", "raceHandler"],
-            "additionalProperties": false,
-            "properties": {
-                "action": "changeRaceHandler",
-                "raceHandler": {"enum": ["racetime", "local"]}
-            }
-        },
-        "ResetTimerAction": {
-            "required": ["action", "raceHandler"],
-            "additionalProperties": false,
-            "properties": {
-                "action": "resetTimer"
-            }
-        },
-        "SetChatEnabledAction": {
-            "required": ["action", "payload"],
-            "additionalProperties": false,
-            "properties": {
-                "action": "setChatEnabled",
-                "payload": {
-                    "required": ["enabled"],
-                    "additionalProperties": false,
-                    "properties": {
-                        "enabled": {"type": "boolean"}
-                    }
-                }
-            }
-        }
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["authToken"],
+  "description": "An outgoing client websocket message sent when a client performs an action in a room",
+  "properties": {
+    "authToken": {
+      "type": "string",
+      "description": "JWT for the room obtained from the server"
     }
+  },
+  "anyOf": [
+    { "$ref": "#/$defs/JoinAction" },
+    { "$ref": "#/$defs/LeaveAction" },
+    { "$ref": "#/$defs/JoinTeamAction" },
+    { "$ref": "#/$defs/ChatAction" },
+    { "$ref": "#/$defs/MarkAction" },
+    { "$ref": "#/$defs/UnmarkAction" },
+    { "$ref": "#/$defs/ChangeColorAction" },
+    { "$ref": "#/$defs/NewCardAction" },
+    { "$ref": "#/$defs/RevealCardAction" },
+    { "$ref": "#/$defs/ChangeAuthAction" },
+    { "$ref": "#/$defs/StartTimerAction" },
+    { "$ref": "#/$defs/ChangeRaceHandlerAction" },
+    { "$ref": "#/$defs/ResetTimerAction" },
+    { "$ref": "#/$defs/SetChatEnabledAction" },
+    { "$ref": "#/$defs/SetTeamsEnabledAction" }
+  ],
+  "$defs": {
+    "JoinAction": {
+      "required": ["action"],
+      "additionalProperties": false,
+      "properties": {
+        "action": "join",
+        "payload": {
+          "required": ["nickname"],
+          "additionalProperties": false,
+          "properties": {
+            "nickname": { "type": "string" }
+          }
+        }
+      }
+    },
+    "LeaveAction": {
+      "required": ["action"],
+      "additionalProperties": false,
+      "properties": {
+        "action": "leave"
+      }
+    },
+    "JoinTeamAction": {
+      "required": ["action", "payload"],
+      "additionalProperties": false,
+      "properties": {
+        "action": "joinTeam",
+        "payload": {
+          "required": ["teamId"],
+          "additionalProperties": false,
+          "properties": {
+            "teamId": {
+              "oneOf": [{ "type": "string" }, { "type": "null" }]
+            },
+            "teamName": { "type": "string" }
+          }
+        }
+      }
+    },
+    "ChatAction": {
+      "required": ["action", "payload"],
+      "additionalProperties": false,
+      "properties": {
+        "action": "chat",
+        "payload": {
+          "required": ["message"],
+          "additionalProperties": false,
+          "properties": {
+            "message": { "type": "string" }
+          }
+        }
+      }
+    },
+    "MarkAction": {
+      "required": ["action", "payload"],
+      "additionalProperties": false,
+      "properties": {
+        "action": "mark",
+        "payload": {
+          "required": ["row", "col"],
+          "additionalProperties": false,
+          "properties": {
+            "row": { "type": "number" },
+            "col": { "type": "number" }
+          }
+        }
+      }
+    },
+    "UnmarkAction": {
+      "required": ["action", "payload"],
+      "additionalProperties": false,
+      "properties": {
+        "action": "unmark",
+        "payload": {
+          "required": ["row", "col"],
+          "additionalProperties": false,
+          "properties": {
+            "row": { "type": "number" },
+            "col": { "type": "number" }
+          }
+        }
+      }
+    },
+    "ChangeColorAction": {
+      "required": ["action", "payload"],
+      "additionalProperties": false,
+      "properties": {
+        "action": "changeColor",
+        "payload": {
+          "required": ["color"],
+          "additionalProperties": false,
+          "properties": {
+            "color": { "type": "string" }
+          }
+        }
+      }
+    },
+    "NewCardAction": {
+      "required": ["action"],
+      "additionalProperties": false,
+      "properties": {
+        "action": "newCard",
+        "options": {
+          "required": ["mode"],
+          "additionalProperties": false,
+          "properties": {
+            "seed": { "type": "number" },
+            "mode": { "type": "string" },
+            "difficulty": { "type": "string" }
+          }
+        }
+      }
+    },
+    "RevealCardAction": {
+      "required": ["action"],
+      "additionalProperties": false,
+      "properties": {
+        "action": "revealCard"
+      }
+    },
+    "ChangeAuthAction": {
+      "required": ["action", "payload"],
+      "additionalProperties": false,
+      "properties": {
+        "action": "changeAuth",
+        "payload": {
+          "required": ["spectate"],
+          "additionalProperties": false,
+          "properties": {
+            "spectate": { "type": "boolean" }
+          }
+        }
+      }
+    },
+    "StartTimerAction": {
+      "required": ["action"],
+      "additionalProperties": false,
+      "properties": {
+        "action": "startTimer"
+      }
+    },
+    "ChangeRaceHandlerAction": {
+      "required": ["action", "raceHandler"],
+      "additionalProperties": false,
+      "properties": {
+        "action": "changeRaceHandler",
+        "raceHandler": { "enum": ["racetime", "local"] }
+      }
+    },
+    "ResetTimerAction": {
+      "required": ["action", "raceHandler"],
+      "additionalProperties": false,
+      "properties": {
+        "action": "resetTimer"
+      }
+    },
+    "SetChatEnabledAction": {
+      "required": ["action", "payload"],
+      "additionalProperties": false,
+      "properties": {
+        "action": "setChatEnabled",
+        "payload": {
+          "required": ["enabled"],
+          "additionalProperties": false,
+          "properties": {
+            "enabled": { "type": "boolean" }
+          }
+        }
+      }
+    },
+    "SetTeamsEnabledAction": {
+      "required": ["action", "payload"],
+      "additionalProperties": false,
+      "properties": {
+        "action": "setTeamsEnabled",
+        "payload": {
+          "required": ["enabled"],
+          "additionalProperties": false,
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            }
+          }
+        }
+      }
+    }
+  }
 }
