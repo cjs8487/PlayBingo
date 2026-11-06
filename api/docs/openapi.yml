@@ -84,6 +84,7 @@ components:
         - slug
         - gameSlug
         - newGenerator
+        - teamsEnabled
       properties:
         name:
           type: string
@@ -107,6 +108,15 @@ components:
           description: 
             Flag indicating if this game has opted in the new generator system.
             By default, new games are automatically opted in.
+        teamsEnabled:
+          type: boolean
+          description:
+            Flag indicating if teams are enabled for the room. When disabled,
+            the server still creates one team per player to own that player's
+            marks, but messages display player names and players cannot join
+            another team. When enabled, messages display team names and players
+            may join existing teams. Monitors can change this setting over the
+            room WebSocket with the `setTeamsEnabled` action.
         token:
           type: string
           description:
@@ -371,6 +381,12 @@ paths:
                     default value depends on the games configuration. If it is
                     configured for SRLv5, generation will default to SRLv5.
                     Otherwise, the default generation mode is Random
+                teamsEnabled:
+                  type: boolean
+                  default: false
+                  description:
+                    Whether players in the room can form teams. If not
+                    specified, every player plays on their own team.
       responses:
         200:
           description: OK
