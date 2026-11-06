@@ -9,12 +9,26 @@ of the WebSocket protocol between versions. The protocol version will not be
 incremented according to semantic versioning rules unless there is an extreme
 case.**
 
-**Current Protocol Version: v1**
+**Current Protocol Version: v2**
 
 Whenever a breaking change is introduced to the protocol, the version number
 will be incremented. Non-breaking changes may result in a minor version update.
 Patch versions are not used, nor are new features guaranteed to cause version
 changes.
+
+### Changes in v2
+Protocol v2 moves room state from players to teams. Clients written for v1 must
+be updated before connecting to rooms running v2:
+
+- The `players` field is no longer an array. It is now an object with `teams`
+  and `spectators` arrays. See [Server Messages](#server-messages).
+- `Player.color` has been removed. Colors belong to teams. See [Teams](#teams).
+- `completedPlayers` on board cells has been renamed to `completedTeams` and
+  contains team IDs instead of player IDs.
+- Room data now includes the required `teamsEnabled` flag.
+- `changeColor` now changes the color of the player's team.
+- The `joinTeam` and `setTeamsEnabled` actions and the `joinedTeam`,
+  `updatedTeam`, and `forbidden` server messages have been added.
 
 ## Connecting to a PlayBingo WebSocket
 Establishing a WebSocket connection with the server is a multi-step process:
@@ -74,19 +88,69 @@ The `players` field contains up to date information about all players connected
 to the room and the `connectedPlayer` field contains up to date information on
 the player this message was sent to.
 
+`players` is an object with two arrays. `teams` contains every team in the room,
+with each team's players nested under it. `spectators` contains every player
+that is not on a team. A player only ever appears in one of the two lists.
+
 ```json
 {
-  "players": [],
+  "players": {
+    "teams": [
+      {
+        "id": "team1",
+        "name": "Team Blue",
+        "color": "blue",
+        "goalCount": 3,
+        "players": [
+          {
+            "id": "abc",
+            "nickname": "player",
+            "teamId": "team1",
+            "monitor": true,
+            "showInRoom": true,
+            "raceStatus": { "connected": false }
+          }
+        ]
+      }
+    ],
+    "spectators": [
+      {
+        "id": "def",
+        "nickname": "spectator",
+        "teamId": "",
+        "monitor": false,
+        "showInRoom": true,
+        "raceStatus": { "connected": false }
+      }
+    ]
+  },
   "connectedPlayer": {
     "id": "abc",
     "nickname": "player",
-    "color": "blue",
-    "goalCount": 0,
-    "spectator": false,
-    "monitor": true
+    "teamId": "team1",
+    "monitor": true,
+    "showInRoom": true,
+    "raceStatus": { "connected": false }
   }
 }
 ```
+
+### Teams
+Marks on the board are owned by teams, not by individual players. A `Team` has
+an `id`, a `name`, a `color`, a `goalCount`, and the list of `players` on the
+team. `Team.color` is the authoritative color for the team's marks.
+
+Players do not have a color of their own. To render a player, read the color
+from the team identified by the player's `teamId`. Spectators have an empty
+`teamId` and must not be rendered with a color.
+
+The `teamsEnabled` flag in the room data controls how teams behave:
+
+- When `teamsEnabled` is `false`, the server still creates one team per player
+  to own that player's marks. Messages display player names, and joining another
+  team is forbidden.
+- When `teamsEnabled` is `true`, messages display team names, and players may
+  join existing teams using the `joinTeam` action.
 
 ### Connected
 Sent after a successful `join` action. This message contains identity
@@ -106,21 +170,25 @@ information and the current room state.
             "difficulty": 1,
             "categories": ["cat1", "cat2"]
         },
-        "completedPlayers": ["player1", "player3"]
+        "completedTeams": ["team1", "team3"]
       }
     ]
   },
   "chatHistory": [],
   "nickname": "websocket player",
-  "color": "blue",
   "roomData": {
     "name": "Websocket Documentation",
     "game": "PlayBingo",
     "slug": "ferocious-bingo-4821",
     "gameSlug": "bingo",
+    "teamsEnabled": false,
     "racetimeConnection": {
       "gameActive": false
     }
+  },
+  "players": {
+    "teams": [],
+    "spectators": []
   }
 }
 ```
@@ -146,6 +214,10 @@ or system-generated.
 Sent when the data for a specific cell changes (e.g., marked or unmarked). The
 message includes the updated cell data.
 
+`completedTeams` contains the IDs of the teams that have marked the cell. To
+render a completed cell, resolve each ID to a team in `players.teams` and use
+that team's `color`.
+
 **Sample Message**
 ```json
 {
@@ -155,7 +227,7 @@ message includes the updated cell data.
   "cell": {
     "goal": "Complete a line of goals",
     "description": "Complete a line of goals in any direction",
-    "completedPlayers": ["green", "#ff0000"]
+    "completedTeams": ["team1", "team2"]
   }
 }
 ```
@@ -179,17 +251,17 @@ contains the new board state.
             "difficulty": 1,
             "categories": ["cat2"]
         },
-          "completedPlayers": ["player2"]
+          "completedTeams": ["team2"]
         },
         {
-          "goal": "goal": {
+          "goal": {
             "id": "abc23",
             "goal": "Goal 2",
             "description": "Description of goal 2",
             "difficulty": 1,
             "categories": ["cat1",]
         },
-          "completedPlayers": ["player1"]
+          "completedTeams": ["team1"]
         }
       ]
     ]
@@ -221,7 +293,9 @@ Sent when a connection is closed by the server, typically in response to a
 ```
 
 ### Update Room Data
-Notifies clients of updates to core room information.
+Notifies clients of updates to core room information, including changes to the
+`teamsEnabled` setting. Clients should replace their local room data with the
+contents of this message.
 
 **Sample Message**
 ```json
@@ -231,7 +305,8 @@ Notifies clients of updates to core room information.
     "name": "Updated Room Name",
     "game": "Updated Game",
     "slug": "updated-room-slug",
-    "gameSlug": "updated-game-slug"
+    "gameSlug": "updated-game-slug",
+    "teamsEnabled": true
   }
 }
 ```
@@ -244,19 +319,31 @@ connection status or chat messages.
 ```json
 {
   "action": "syncRaceData",
-  "players": [
-    {
-      "nickname": "player1",
-      "color": "red",
-      "goalCount": 5,
-      "racetimeStatus": {
-        "connected": true,
-        "username": "racer1",
-        "status": "in progress",
-        "finishTime": "PT1H30M"
+  "players": {
+    "teams": [
+      {
+        "id": "team1",
+        "name": "Team Red",
+        "color": "red",
+        "goalCount": 5,
+        "players": [
+          {
+            "id": "abc",
+            "nickname": "player1",
+            "teamId": "team1",
+            "monitor": false,
+            "showInRoom": true,
+            "raceStatus": {
+              "connected": true,
+              "username": "racer1",
+              "finishTime": "PT1H30M"
+            }
+          }
+        ]
       }
-    }
-  ],
+    ],
+    "spectators": []
+  },
   "racetimeConnection": {
     "gameActive": true,
     "url": "https://racetime.gg/room",
@@ -266,6 +353,74 @@ connection status or chat messages.
     "started": "2023-01-01T00:00:00Z",
     "ended": "2023-01-01T01:30:00Z"
   }
+}
+```
+
+### Joined Team
+Sent to the client that sent a `joinTeam` action after it successfully joined a
+team. The message contains the team the player joined.
+
+**Sample Message**
+```json
+{
+  "action": "joinedTeam",
+  "team": {
+    "id": "team1",
+    "name": "Team Blue",
+    "color": "blue",
+    "goalCount": 3,
+    "players": [
+      {
+        "id": "abc",
+        "nickname": "player",
+        "teamId": "team1",
+        "monitor": false,
+        "showInRoom": true,
+        "raceStatus": { "connected": false }
+      }
+    ]
+  }
+}
+```
+
+### Updated Team
+Sent to the client that sent a `joinTeam` action when it renamed the team it is
+already on, instead of moving to a different team. The message contains the
+updated team.
+
+**Sample Message**
+```json
+{
+  "action": "updatedTeam",
+  "team": {
+    "id": "team1",
+    "name": "New Team Name",
+    "color": "blue",
+    "goalCount": 3,
+    "players": [
+      {
+        "id": "abc",
+        "nickname": "player",
+        "teamId": "team1",
+        "monitor": false,
+        "showInRoom": true,
+        "raceStatus": { "connected": false }
+      }
+    ]
+  }
+}
+```
+
+### Forbidden
+Indicates that the authorization token is valid, but the action is not allowed.
+This happens when the token lacks the permission the action requires, or when
+the action is not available in the room's current state (for example `joinTeam`
+while teams are disabled).
+
+**Sample Message**
+```json
+{
+  "action": "forbidden"
 }
 ```
 
@@ -363,8 +518,9 @@ does nothing.
 ```
 
 ### Change Color
-Changes the player's selected color. The color must be a valid CSS color or hex
-code.
+Changes the color of the authenticated player's team. The new color applies to
+every player on the team and to all of the team's marks. The color must be a
+valid CSS color or hex code. Spectators cannot use this action.
 
 **Sample Message:**
 
@@ -392,6 +548,79 @@ has the monitor permission.
   "payload": {
     "seed": 12345,
     "generationMode": "random"
+  },
+  "authToken": "your-auth-token"
+}
+```
+
+### Join Team
+Moves the authenticated player onto a team, creates a new team, or renames the
+player's current team. This action is only available when `teamsEnabled` is
+`true`. Otherwise the server responds with `forbidden`.
+
+The payload accepts the following fields:
+
+- `teamId` (required): The ID of the team to join. Set it to `null` to create a
+  new team and move the player onto it.
+- `teamName` (optional): A name to give the team. When `teamId` is the player's
+  current team, the team is renamed and the player stays on it.
+
+The server responds with `joinedTeam` when the player moved to another team or
+created a new one, and with `updatedTeam` when the player renamed their current
+team. If `teamId` does not match a team in the room, the server responds with
+`unauthorized`. Other clients see the change through the chat message the server
+sends and the updated `players` field.
+
+**Sample Message (join an existing team):**
+
+```json
+{
+  "action": "joinTeam",
+  "payload": {
+    "teamId": "team1"
+  },
+  "authToken": "your-auth-token"
+}
+```
+
+**Sample Message (create a new team):**
+
+```json
+{
+  "action": "joinTeam",
+  "payload": {
+    "teamId": null,
+    "teamName": "My New Team"
+  },
+  "authToken": "your-auth-token"
+}
+```
+
+**Sample Message (rename the current team):**
+
+```json
+{
+  "action": "joinTeam",
+  "payload": {
+    "teamId": "team1",
+    "teamName": "Renamed Team"
+  },
+  "authToken": "your-auth-token"
+}
+```
+
+### Set Teams Enabled
+Enables or disables teams for the room. This action is only available if the
+authorization token it is sent with has the monitor permission. Every client is
+notified of the change through an `updateRoomData` message.
+
+**Sample Message:**
+
+```json
+{
+  "action": "setTeamsEnabled",
+  "payload": {
+    "enabled": true
   },
   "authToken": "your-auth-token"
 }
