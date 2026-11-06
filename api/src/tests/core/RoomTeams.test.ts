@@ -51,6 +51,8 @@ const createRoom = (teamsEnabled = false) => {
         undefined,
         undefined,
         undefined,
+        5,
+        5,
         teamsEnabled,
     );
     room.board = Array.from({ length: 5 }, (_, row) =>
