@@ -411,6 +411,10 @@ Room actions follow the same base format as server messages:
 
 If additional inputs are required, they are provided in the `payload` field.
 
+Actions marked with `monitor` next to their name require the monitor
+permission. If the authorization token the action is sent with does not have
+this permission, the server responds with `forbidden`.
+
 ### Join
 Activates the WebSocket connection to the room. The server uses the provided
 nickname to identify the connection.
@@ -505,11 +509,10 @@ Changes the color of the authenticated player's team. Spectators cannot use this
 }
 ```
 
-### New Card
+### New Card `monitor`
 Regenerates the room's bingo card. If parameters are not provided, the previous
 values will be reused, except for the seed, which will be randomized if left
-blank. This action is only available if the authorization token it is sent with
-has the monitor permission.
+blank.
 
 **Sample Message:**
 
@@ -580,9 +583,8 @@ sends and the updated `players` field.
 }
 ```
 
-### Set Teams Enabled
-Enables or disables teams for the room. This action is only available if the
-authorization token it is sent with has the monitor permission.
+### Set Teams Enabled `monitor`
+Enables or disables teams for the room.
 
 **Sample Message:**
 
