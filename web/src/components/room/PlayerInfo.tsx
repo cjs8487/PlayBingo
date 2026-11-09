@@ -9,6 +9,11 @@ import {
     Menu,
     Divider,
     MenuItem,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions,
+    TextField,
 } from '@mui/material';
 import { ConnectionStatus, useRoomContext } from '../../context/RoomContext';
 import ColorSelect from './ColorSelect';
@@ -20,6 +25,10 @@ export default function PlayerInfo() {
     const [teamMenuAnchor, setTeamMenuAnchor] = useState<HTMLElement | null>(
         null,
     );
+    const [teamNameDraft, setTeamNameDraft] = useState<{
+        id: string | null;
+        name: string;
+    } | null>(null);
     const {
         connectionStatus,
         nickname,
@@ -39,6 +48,16 @@ export default function PlayerInfo() {
         notificationSoundEnabled,
         toggleNotificationSound,
     } = useRoomContext();
+
+    const canSaveTeamName = Boolean(
+        roomData?.teamsEnabled &&
+        teamNameDraft?.name.trim() &&
+        connectedTeam &&
+        (teamNameDraft.id === null ||
+            (teamNameDraft.id === connectedTeam.id &&
+                teamNameDraft.name.trim() !== connectedTeam.name)) &&
+        connectionStatus === ConnectionStatus.CONNECTED,
+    );
 
     return (
         <Card>
@@ -132,7 +151,25 @@ export default function PlayerInfo() {
                                                 ConnectionStatus.CONNECTED
                                             }
                                             onClick={() => {
-                                                joinTeam(null);
+                                                setTeamNameDraft({
+                                                    id: connectedTeam.id,
+                                                    name: connectedTeam.name,
+                                                });
+                                                setTeamMenuAnchor(null);
+                                            }}
+                                        >
+                                            Rename team
+                                        </MenuItem>
+                                        <MenuItem
+                                            disabled={
+                                                connectionStatus !==
+                                                ConnectionStatus.CONNECTED
+                                            }
+                                            onClick={() => {
+                                                setTeamNameDraft({
+                                                    id: null,
+                                                    name: `${connectedPlayer?.nickname ?? nickname}'s Team`,
+                                                });
                                                 setTeamMenuAnchor(null);
                                             }}
                                         >
@@ -208,6 +245,61 @@ export default function PlayerInfo() {
                     />
                 </Box>
             </CardContent>
+            <Dialog
+                open={Boolean(
+                    teamNameDraft &&
+                    connectedTeam &&
+                    (teamNameDraft.id === null ||
+                        teamNameDraft.id === connectedTeam.id) &&
+                    roomData?.teamsEnabled,
+                )}
+                onClose={() => setTeamNameDraft(null)}
+                fullWidth
+                maxWidth="xs"
+            >
+                <Box
+                    component="form"
+                    onSubmit={(event) => {
+                        event.preventDefault();
+                        if (!canSaveTeamName || !teamNameDraft) return;
+                        joinTeam(teamNameDraft.id, teamNameDraft.name);
+                        setTeamNameDraft(null);
+                    }}
+                >
+                    <DialogTitle>
+                        {teamNameDraft?.id === null
+                            ? 'Start a new team'
+                            : 'Rename team'}
+                    </DialogTitle>
+                    <DialogContent>
+                        <TextField
+                            label="Team name"
+                            value={teamNameDraft?.name ?? ''}
+                            onChange={(event) => {
+                                if (teamNameDraft)
+                                    setTeamNameDraft({
+                                        ...teamNameDraft,
+                                        name: event.target.value,
+                                    });
+                            }}
+                            autoFocus
+                            required
+                            fullWidth
+                            margin="dense"
+                        />
+                    </DialogContent>
+                    <DialogActions>
+                        <Button onClick={() => setTeamNameDraft(null)}>
+                            Cancel
+                        </Button>
+                        <Button type="submit" disabled={!canSaveTeamName}>
+                            {teamNameDraft?.id === null
+                                ? 'Create team'
+                                : 'Save'}
+                        </Button>
+                    </DialogActions>
+                </Box>
+            </Dialog>
         </Card>
     );
 }

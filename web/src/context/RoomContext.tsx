@@ -96,7 +96,7 @@ interface RoomContext {
     resetTimer: () => void;
     setChatEnabled: (enabled: boolean) => void;
     setTeamsEnabled: (enabled: boolean) => void;
-    joinTeam: (teamId: string | null) => void;
+    joinTeam: (teamId: string | null, teamName?: string) => void;
 }
 
 export const RoomContext = createContext<RoomContext>({
@@ -619,18 +619,20 @@ export function RoomContextProvider({
     );
 
     const joinTeam = useCallback(
-        (teamId: string | null) => {
+        (teamId: string | null, teamName?: string) => {
+            const name = teamName?.trim();
             if (
                 !roomData.teamsEnabled ||
                 !connectedPlayer?.teamId ||
-                teamId === connectedPlayer.teamId
+                (teamName !== undefined && !name) ||
+                (teamId === connectedPlayer.teamId && !name)
             ) {
                 return;
             }
             sendJsonMessage({
                 action: 'joinTeam',
                 authToken,
-                payload: { teamId },
+                payload: { teamId, ...(name ? { teamName: name } : {}) },
             } satisfies RoomAction);
         },
         [authToken, sendJsonMessage, roomData.teamsEnabled, connectedPlayer],
