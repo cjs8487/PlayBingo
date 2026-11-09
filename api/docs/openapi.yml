@@ -110,13 +110,7 @@ components:
             By default, new games are automatically opted in.
         teamsEnabled:
           type: boolean
-          description:
-            Flag indicating if teams are enabled for the room. When disabled,
-            the server still creates one team per player to own that player's
-            marks, but messages display player names and players cannot join
-            another team. When enabled, messages display team names and players
-            may join existing teams. Monitors can change this setting over the
-            room WebSocket with the `setTeamsEnabled` action.
+          description: Flag indicating if teams are enabled for the room.
         token:
           type: string
           description:
@@ -384,9 +378,7 @@ paths:
                 teamsEnabled:
                   type: boolean
                   default: false
-                  description:
-                    Whether players in the room can form teams. If not
-                    specified, every player plays on their own team.
+                  description: Whether teams are enabled for the room.
       responses:
         200:
           description: OK
