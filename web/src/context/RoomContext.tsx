@@ -96,7 +96,7 @@ interface RoomContext {
     resetTimer: () => void;
     setChatEnabled: (enabled: boolean) => void;
     setTeamsEnabled: (enabled: boolean) => void;
-    joinTeam: (teamId: string) => void;
+    joinTeam: (teamId: string | null) => void;
 }
 
 export const RoomContext = createContext<RoomContext>({
@@ -619,7 +619,7 @@ export function RoomContextProvider({
     );
 
     const joinTeam = useCallback(
-        (teamId: string) => {
+        (teamId: string | null) => {
             if (
                 !roomData.teamsEnabled ||
                 !connectedPlayer?.teamId ||

@@ -7,6 +7,7 @@ import {
     FormControlLabel,
     Switch,
     Menu,
+    Divider,
     MenuItem,
 } from '@mui/material';
 import { ConnectionStatus, useRoomContext } from '../../context/RoomContext';
@@ -125,6 +126,19 @@ export default function PlayerInfo() {
                                             },
                                         }}
                                     >
+                                        <MenuItem
+                                            disabled={
+                                                connectionStatus !==
+                                                ConnectionStatus.CONNECTED
+                                            }
+                                            onClick={() => {
+                                                joinTeam(null);
+                                                setTeamMenuAnchor(null);
+                                            }}
+                                        >
+                                            Start a new team
+                                        </MenuItem>
+                                        <Divider />
                                         {teams.map((team) => (
                                             <MenuItem
                                                 key={team.id}
