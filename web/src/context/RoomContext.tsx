@@ -290,18 +290,17 @@ export function RoomContextProvider({
                         )
                             return;
                         if (!board.hidden) {
-                            const newMarks =
-                                payload.cell.completedPlayers.filter(
-                                    (player) =>
-                                        !board.board[payload.row][
-                                            payload.col
-                                        ].completedPlayers.includes(player),
-                                );
+                            const newMarks = payload.cell.completedTeams.filter(
+                                (teamId) =>
+                                    !board.board[payload.row][
+                                        payload.col
+                                    ].completedTeams.includes(teamId),
+                            );
                             if (
                                 notificationSoundEnabled &&
                                 newMarks.length > 0 &&
                                 (newMarks.length > 1 ||
-                                    newMarks[0] !== connectedPlayer?.id)
+                                    newMarks[0] !== connectedPlayer?.teamId)
                             ) {
                                 notificationSound.play();
                             }
