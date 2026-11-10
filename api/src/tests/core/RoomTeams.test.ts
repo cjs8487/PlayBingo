@@ -341,3 +341,93 @@ describe('Room team workflows', () => {
         expect(aliceTeam.players.has('bob')).toBe(false);
     });
 });
+
+describe('Room handleJoinTeam', () => {
+    afterEach(() => jest.clearAllMocks());
+
+    const joinTeam = (teamId: string | null, teamName?: string) =>
+        ({
+            action: 'joinTeam',
+            payload: { teamId, teamName },
+        }) as JoinTeamAction;
+
+    // a player must be listed by exactly the team their teamId points to
+    const expectOnTeam = (room: Room, playerId: string, teamId: string) => {
+        const player = room.getAllPlayers().find((p) => p.id === playerId);
+        expect(player).toHaveProperty('teamId', teamId);
+        // expect team to have player
+        expect(room.teams.get(teamId)!.players.has(playerId)).toBe(true);
+        // expect no other team to have player
+        room.teams
+            .values()
+            .filter((t) => t.id != teamId)
+            .forEach((team) => expect(team.players.has(playerId)).toBe(false));
+    };
+
+    const setup = () => {
+        const room = createRoom(true);
+        room.handleJoin(joinAction('Alice'), auth('alice'), socket());
+        room.handleJoin(joinAction('Bob'), auth('bob'), socket());
+        return {
+            room,
+            aliceTeam: room.getTeamForPlayer('alice')!,
+            bobTeam: room.getTeamForPlayer('bob')!,
+        };
+    };
+
+    it('moves players between existing and new teams, deleting empty teams', () => {
+        const { room, aliceTeam, bobTeam } = setup();
+        room.handleJoinTeam(joinTeam(aliceTeam.id), auth('bob'));
+        expect(room.teams.has(bobTeam.id)).toBe(false);
+        expectOnTeam(room, 'bob', aliceTeam.id);
+
+        const result = room.handleJoinTeam(joinTeam(null, 'New'), auth('bob'));
+        expect(result.action).toBe('joinedTeam');
+        const newTeam = room.getTeamForPlayer('bob')!;
+        expect(newTeam.id).not.toBe(aliceTeam.id);
+        expect(newTeam.name).toBe('New');
+        expect(room.teams.size).toBe(2);
+        expectOnTeam(room, 'alice', aliceTeam.id);
+        expectOnTeam(room, 'bob', newTeam.id);
+    });
+
+    it('renames the current team without changing membership', () => {
+        const { room, aliceTeam } = setup();
+
+        const result = room.handleJoinTeam(
+            joinTeam(aliceTeam.id, 'Renamed'),
+            auth('alice'),
+        );
+        expect(result).toEqual({
+            action: 'updatedTeam',
+            team: aliceTeam.toClientData(),
+        });
+        expect(aliceTeam.name).toBe('Renamed');
+        expect(room.teams.size).toBe(2);
+        expectOnTeam(room, 'alice', aliceTeam.id);
+    });
+
+    it('rejects unknown teams and players without changing membership', () => {
+        const { room, aliceTeam } = setup();
+
+        // team does not exist
+        expect(room.handleJoinTeam(joinTeam('missing'), auth('alice'))).toEqual(
+            { action: 'unauthorized' },
+        );
+        // player does not exist
+        expect(room.handleJoinTeam(joinTeam(null), auth('nobody'))).toEqual({
+            action: 'unauthorized',
+        });
+        expect(room.teams.size).toBe(2);
+        expectOnTeam(room, 'alice', aliceTeam.id);
+    });
+
+    it('moves a spectator onto a team', () => {
+        const { room, aliceTeam } = setup();
+        room.handleJoin(joinAction('Carol'), auth('carol', true), socket());
+
+        room.handleJoinTeam(joinTeam(aliceTeam.id), auth('carol'));
+        expect(room.spectators.has('carol')).toBe(false);
+        expectOnTeam(room, 'carol', aliceTeam.id);
+    });
+});
