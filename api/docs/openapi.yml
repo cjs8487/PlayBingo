@@ -84,6 +84,7 @@ components:
         - slug
         - gameSlug
         - newGenerator
+        - teamsEnabled
       properties:
         name:
           type: string
@@ -107,6 +108,9 @@ components:
           description: 
             Flag indicating if this game has opted in the new generator system.
             By default, new games are automatically opted in.
+        teamsEnabled:
+          type: boolean
+          description: Flag indicating if teams are enabled for the room.
         token:
           type: string
           description:
@@ -371,6 +375,10 @@ paths:
                     default value depends on the games configuration. If it is
                     configured for SRLv5, generation will default to SRLv5.
                     Otherwise, the default generation mode is Random
+                teamsEnabled:
+                  type: boolean
+                  default: false
+                  description: Whether teams are enabled for the room.
       responses:
         200:
           description: OK
