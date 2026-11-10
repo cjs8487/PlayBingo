@@ -317,13 +317,21 @@ export default class Room {
      * Removes a player from their current team, deleting the team if they were
      * its last member.
      *
+     * @param player The player to remove from a team
+     * @param team The team to remove the player from
+     *
      * @returns The team the player was removed from, if it still exists
      */
-    removePlayerFromTeam(player: Player): Team | undefined {
-        const team = player.teamId ? this.teams.get(player.teamId) : undefined;
-        player.teamId = undefined;
+    removePlayerFromTeam(
+        player: Player,
+        team: Team | undefined,
+    ): Team | undefined {
         if (!team) {
             return undefined;
+        }
+        if (player.teamId === team.id) {
+            // Only set teamId to undefined if player didn't join a new team yet
+            player.teamId = undefined;
         }
         team.removePlayer(player.id);
         if (team.players.size === 0) {
@@ -346,7 +354,8 @@ export default class Room {
         }
         const timestamp = new Date();
         if (spectating) {
-            const oldTeam = this.removePlayerFromTeam(player);
+            const oldTeam = this.getTeamForPlayer(player.id);
+            this.removePlayerFromTeam(player, oldTeam);
             this.spectators.set(player.id, player);
             this.sendChat(`${player.nickname} is now spectating`, timestamp);
             if (oldTeam) {
@@ -726,10 +735,14 @@ export default class Room {
         if (!player) {
             return { action: 'unauthorized' };
         }
+        const oldTeam = player.teamId
+            ? this.teams.get(player.teamId)
+            : undefined;
         let team: Team | undefined;
         if (action.payload.teamId) {
             team = this.teams.get(action.payload.teamId);
-        } else {
+        } else if (action.payload.teamId === null) {
+            // only create a new team if teamId was set specifically to null
             team = this.createTeamForPlayer(player);
         }
         if (!team) {
@@ -739,13 +752,13 @@ export default class Room {
             team.name = action.payload.teamName;
         }
         // Check if there was an old team
-        if (player.teamId) {
-            const oldTeam = this.teams.get(player.teamId);
-            if (oldTeam && oldTeam.id !== team.id) {
-                this.removePlayerFromTeam(player);
+        if (oldTeam) {
+            if (oldTeam.id !== team.id) {
+                this.removePlayerFromTeam(player, oldTeam);
                 createUpdateTeam(this.id, oldTeam).then();
-            } else if (oldTeam && oldTeam.id === team.id) {
+            } else if (action.payload.teamName) {
                 // player changed the team name
+                this.persistPlayer(player);
                 this.sendChat(
                     [
                         {
@@ -765,7 +778,7 @@ export default class Room {
         this.spectators.delete(player.id);
         player.teamId = team.id;
         team.addPlayer(player);
-        createUpdateTeam(this.id, team).then();
+        this.persistPlayer(player);
         this.sendChat(
             [
                 {
@@ -809,7 +822,7 @@ export default class Room {
         const playerTeam = player.teamId
             ? this.teams.get(player.teamId)
             : undefined;
-        this.removePlayerFromTeam(player);
+        this.removePlayerFromTeam(player, playerTeam);
         this.spectators.delete(player.id);
         if (playerTeam) {
             this.sendChat(
