@@ -62,8 +62,6 @@ import { deleteFile, saveFile } from '../../media/MediaServer';
 import variants from './Variants';
 import goalImages from './GoalImages';
 import imageTags from './ImageTags';
-import { getImage } from '../../database/games/GoalImages';
-import { getTag } from '../../database/games/ImageTags';
 
 const games = Router();
 

@@ -1,5 +1,5 @@
 import { GeneratorSettings } from '@playbingo/shared/GeneratorSettings';
-import { Game, GameResource, Prisma } from '@prisma/client';
+import { Game, Prisma } from '@prisma/client';
 import { logError } from '../../Logger';
 import { prisma } from '../Database';
 

@@ -53,7 +53,6 @@ describe('shuffle', () => {
     // difference in implementation means this seed may never be problematic
     it('should not introduce undefined', () => {
         const array = [1];
-        const seed = 609754;
         shuffle(array);
         expect(array).not.toContain(undefined);
     });

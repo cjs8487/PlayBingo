@@ -55,7 +55,7 @@ export const verifyRoomToken = (
             return false;
         }
         return payload;
-    } catch (e) {
+    } catch (_e) {
         return false;
     }
 };
