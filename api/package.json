@@ -69,13 +69,12 @@
         "@types/nodemailer-express-handlebars": "^4.0.6",
         "@types/supertest": "^7.2.1",
         "@types/ws": "^8.18.2",
-        "@typescript-eslint/eslint-plugin": "^8.72.0",
-        "@typescript-eslint/parser": "^8.72.0",
         "babel-jest": "^30.0.5",
         "eslint": "^9.39.5",
         "eslint-config-prettier": "^10.1.8",
         "eslint-import-resolver-typescript": "^4.4.5",
         "eslint-plugin-import": "^2.32.0",
+        "eslint-plugin-prettier": "^5.5.7",
         "jest": "^30.5.2",
         "jest-mock-extended": "^4.0.2",
         "prettier": "^3.9.10",
@@ -84,6 +83,7 @@
         "ts-node": "^10.9.2",
         "tsc-watch": "^7.2.1",
         "tsx": "^4.23.15",
-        "typescript": "^5.9.3"
+        "typescript": "^5.9.3",
+        "typescript-eslint": "^8.72.2"
     }
 }
