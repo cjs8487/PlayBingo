@@ -67,9 +67,7 @@ export default class Player {
      * between playing and spectating.
      */
     getBoardView(): (RevealedCell | HiddenCell)[][] {
-        const team = this.teamId
-            ? this.room.teams.get(this.teamId)
-            : undefined;
+        const team = this.teamId ? this.room.teams.get(this.teamId) : undefined;
         return team
             ? team.obfuscateBoard()
             : this.room.spectatorObfuscateBoard();
@@ -81,9 +79,7 @@ export default class Player {
      * responsible for the action is never lost.
      */
     getDisplayName(): string {
-        const team = this.teamId
-            ? this.room.teams.get(this.teamId)
-            : undefined;
+        const team = this.teamId ? this.room.teams.get(this.teamId) : undefined;
         return this.room.teamsEnabled && team
             ? `${this.nickname} (${team.name})`
             : this.nickname;

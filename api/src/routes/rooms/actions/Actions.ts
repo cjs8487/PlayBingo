@@ -44,8 +44,7 @@ export interface ActionResultValue<T> extends ActionResultBase {
 }
 
 export type ActionResult<T = unknown> =
-    | ActionResultValue<T>
-    | ActionResultError;
+    ActionResultValue<T> | ActionResultError;
 
 export const handleAction = async (
     room: Room,

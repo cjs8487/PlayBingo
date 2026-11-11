@@ -22,14 +22,12 @@ export const createGlobalAdjustment = (adjustment: Adjustment) => {
 
 const synergize: GlobalAdjustment = (generator, lastPlaced) => {
     lastPlaced.categories.forEach((cat) => {
-        generator.goalsByCategoryId[cat.id].forEach(
-            (goal) => {
-                // do not add more copies of a goal that has been excluded
-                if (generator.goalCopies[goal.id] > 0) {
-                    generator.goalCopies[goal.id] += 1;
-                }
-            },
-        );
+        generator.goalsByCategoryId[cat.id].forEach((goal) => {
+            // do not add more copies of a goal that has been excluded
+            if (generator.goalCopies[goal.id] > 0) {
+                generator.goalCopies[goal.id] += 1;
+            }
+        });
     });
 };
 
@@ -37,9 +35,7 @@ const boardTypeMax: GlobalAdjustment = (generator, lastPlaced) => {
     lastPlaced.categories.forEach((cat) => {
         generator.categoryMaxes[cat.id]--;
         if (generator.categoryMaxes[cat.id] === 0) {
-            generator.goalsByCategoryId[
-                cat.id
-            ].forEach((goal) => {
+            generator.goalsByCategoryId[cat.id].forEach((goal) => {
                 generator.goalCopies[goal.id] = 0;
             });
         }
