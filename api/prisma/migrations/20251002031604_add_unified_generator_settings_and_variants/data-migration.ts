@@ -1,7 +1,6 @@
 import {
     GenerationGlobalAdjustments,
     GenerationGoalRestriction,
-    GenerationGoalSelection,
     PrismaClient,
 } from '@prisma/client';
 import { GeneratorSettings } from '@playbingo/shared';

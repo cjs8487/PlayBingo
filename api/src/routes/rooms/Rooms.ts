@@ -30,7 +30,6 @@ import { DifficultyVariant, RaceHandler, Variant } from '@prisma/client';
 import { GenerationFailedError } from '../../core/generation/GenerationFailedError';
 import RacetimeHandler from '../../core/integration/races/RacetimeHandler';
 import LocalTimer from '../../core/integration/races/LocalTimer';
-import { error } from 'console';
 import { roomBoardSizes } from '../../util/RoomBoardSizes';
 import { isBoardSize } from '../../core/generation/BoardSizes';
 import Team from '../../core/Team';

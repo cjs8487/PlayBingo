@@ -1,7 +1,6 @@
 import { BingoMode } from '@prisma/client';
 import Room from '../../core/Room';
 import { roomCleanupInactive } from '../../Environment';
-import { mockReset } from 'jest-mock-extended';
 import { allRooms } from '../../core/RoomServer';
 
 afterEach(() => {
