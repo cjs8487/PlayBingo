@@ -11,8 +11,6 @@ import {
     GoalInput,
     replaceAllGoalsForGame,
 } from '../../database/games/Goals';
-import { Prisma } from '@prisma/client';
-import { requiresApiToken } from '../middleware';
 import { validateGoalMeta } from '../../util/GoalValidation';
 import { logError } from '../../Logger';
 

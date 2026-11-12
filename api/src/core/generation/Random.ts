@@ -1,4 +1,4 @@
-import { Category, Goal } from '@prisma/client';
+import { Category } from '@prisma/client';
 import { shuffle } from '../../util/Array';
 import { GeneratorGoal } from './GeneratorCore';
 

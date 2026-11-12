@@ -85,10 +85,7 @@ interface ErrorMessage {
 }
 
 type WebSocketMessage =
-    | RaceDataMessage
-    | AuthenticatedMessage
-    | PongMessage
-    | ErrorMessage;
+    RaceDataMessage | AuthenticatedMessage | PongMessage | ErrorMessage;
 
 type SynchronousSocketCallback<T> = (value: T) => void;
 

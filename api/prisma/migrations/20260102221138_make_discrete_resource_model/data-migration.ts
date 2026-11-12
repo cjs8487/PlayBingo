@@ -1,10 +1,4 @@
-import {
-    GenerationGlobalAdjustments,
-    GenerationGoalRestriction,
-    GenerationGoalSelection,
-    PrismaClient,
-} from '@prisma/client';
-import { GeneratorSettings } from '@playbingo/shared';
+import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 

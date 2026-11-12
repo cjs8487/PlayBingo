@@ -113,7 +113,7 @@ users.route('/:id').post(requiresApiToken, async (req, res) => {
 users.post<{ id: string }>(
     '/:id/changePassword',
     requiresApiToken,
-    async (req, res, next) => {
+    async (req, res) => {
         const { id } = req.params;
         const { currentPassword, newPassword } = req.body;
 

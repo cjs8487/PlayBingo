@@ -302,14 +302,12 @@ describe('Board Layout', () => {
 
             // columns
             for (let c = 0; c < n; c++) {
-                let sum = 0;
                 for (let r = 0; r < n; r++) {
                     const cell = layout[r][c];
                     expect(cell.selectionCriteria).toBe('difficulty');
                     if (cell.selectionCriteria !== 'difficulty') {
                         return;
                     }
-                    sum += cell.difficulty;
                 }
             }
 
@@ -683,7 +681,7 @@ describe('Goal Restriction', () => {
         it('Prefers to place goals of differing types in the same row', () => {
             generator.reset();
             generator.generateBoardLayout();
-            let goals = generator.validGoalsForCell(0, 0);
+            const goals = generator.validGoalsForCell(0, 0);
             const g = goals.pop();
             if (!g) {
                 return fail();

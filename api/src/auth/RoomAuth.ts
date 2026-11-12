@@ -55,7 +55,7 @@ export const verifyRoomToken = (
             return false;
         }
         return payload;
-    } catch (e) {
+    } catch (_e) {
         return false;
     }
 };
@@ -78,8 +78,8 @@ export const hasPermission = (
         case 'startTimer':
         case 'changeRaceHandler':
         case 'resetTimer':
-            return payload.isMonitor;
         case 'setChatEnabled':
+        case 'setTeamsEnabled':
             return payload.isMonitor;
         default:
             return true;

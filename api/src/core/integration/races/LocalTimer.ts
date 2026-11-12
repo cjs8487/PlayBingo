@@ -22,23 +22,23 @@ export default class LocalTimer implements RaceHandler {
         return RaceHandlers.LOCAL;
     }
 
-    connect(url: string): void {}
+    connect(_url: string): void {}
 
     disconnect(): void {}
 
-    async joinPlayer(player: Player): Promise<boolean> {
+    async joinPlayer(_player: Player): Promise<boolean> {
         return true;
     }
 
-    async leavePlayer(player: Player): Promise<boolean> {
+    async leavePlayer(_player: Player): Promise<boolean> {
         return true;
     }
 
-    async readyPlayer(player: Player): Promise<boolean> {
+    async readyPlayer(_player: Player): Promise<boolean> {
         return true;
     }
 
-    async unreadyPlayer(player: Player): Promise<boolean> {
+    async unreadyPlayer(_player: Player): Promise<boolean> {
         throw new Error('Method not implemented.');
     }
 
@@ -66,7 +66,7 @@ export default class LocalTimer implements RaceHandler {
         this.finishedAt = undefined;
         updateStartTime(this.room.id, null).then();
         updateFinishTime(this.room.id, null).then();
-        this.room.players.forEach((player) => {
+        this.room.getAllPlayers().forEach((player) => {
             player.finishedAt = undefined;
             createUpdatePlayer(this.room.id, player).then();
         });
