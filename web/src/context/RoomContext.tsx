@@ -7,6 +7,7 @@ import {
     RoomAction,
     RoomData,
     ServerMessage,
+    Team,
 } from '@playbingo/types';
 import {
     ReactNode,
@@ -56,7 +57,9 @@ interface RoomContext {
     color: string;
     roomData?: RoomData;
     nickname: string;
-    players: Player[];
+    teams: Team[];
+    spectators: Player[];
+    connectedTeam?: Team;
     starredGoals: number[];
     showGoalDetails: boolean;
     showCounters: boolean;
@@ -92,6 +95,8 @@ interface RoomContext {
     changeRaceHandler: (handler: string) => void;
     resetTimer: () => void;
     setChatEnabled: (enabled: boolean) => void;
+    setTeamsEnabled: (enabled: boolean) => void;
+    joinTeam: (teamId: string | null, teamName?: string) => void;
 }
 
 export const RoomContext = createContext<RoomContext>({
@@ -100,7 +105,8 @@ export const RoomContext = createContext<RoomContext>({
     messages: [],
     color: 'blue',
     nickname: '',
-    players: [],
+    teams: [],
+    spectators: [],
     starredGoals: [],
     showGoalDetails: false,
     showCounters: false,
@@ -133,6 +139,8 @@ export const RoomContext = createContext<RoomContext>({
     changeRaceHandler() {},
     resetTimer() {},
     setChatEnabled() {},
+    setTeamsEnabled() {},
+    joinTeam() {},
 });
 
 interface RoomContextProps {
@@ -160,7 +168,6 @@ export function RoomContextProvider({
             (serverRoomData.token ? user?.username : '') ??
             '',
     );
-    const [color, setColor] = useState('blue');
     const [connectionStatusState, setConnectionStatus] = useState(
         //if there is already an auth token present, start the connection
         //process automatically
@@ -168,13 +175,18 @@ export function RoomContextProvider({
             ? ConnectionStatus.CONNECTING
             : ConnectionStatus.UNINITIALIZED,
     );
-    const [players, setPlayers] = useState<Player[]>([]);
+    const [teams, setTeams] = useState<Team[]>([]);
+    const [spectators, setSpectators] = useState<Player[]>([]);
     const [connectedPlayer, setConnectedPlayer] = useState<Player>();
+    const connectedTeam = teams.find(
+        (team) => team.id === connectedPlayer?.teamId,
+    );
+    const color = connectedTeam?.color ?? 'blue';
     const colorMap = useMemo(() => {
         const colorMap: { [k: string]: string } = {};
-        players.forEach((player) => (colorMap[player.id] = player.color));
+        teams.forEach((team) => (colorMap[team.id] = team.color));
         return colorMap;
-    }, [players]);
+    }, [teams]);
 
     const [starredGoals, { push, filter }] = useList<number>([]);
 
@@ -259,7 +271,8 @@ export function RoomContextProvider({
                     return;
                 }
                 if (payload.players) {
-                    setPlayers(payload.players);
+                    setTeams(payload.players.teams);
+                    setSpectators(payload.players.spectators);
                 }
                 if (payload.connectedPlayer) {
                     setConnectedPlayer(payload.connectedPlayer);
@@ -277,18 +290,17 @@ export function RoomContextProvider({
                         )
                             return;
                         if (!board.hidden) {
-                            const newMarks =
-                                payload.cell.completedPlayers.filter(
-                                    (player) =>
-                                        !board.board[payload.row][
-                                            payload.col
-                                        ].completedPlayers.includes(player),
-                                );
+                            const newMarks = payload.cell.completedTeams.filter(
+                                (teamId) =>
+                                    !board.board[payload.row][
+                                        payload.col
+                                    ].completedTeams.includes(teamId),
+                            );
                             if (
                                 notificationSoundEnabled &&
                                 newMarks.length > 0 &&
                                 (newMarks.length > 1 ||
-                                    newMarks[0] !== connectedPlayer?.id)
+                                    newMarks[0] !== connectedPlayer?.teamId)
                             ) {
                                 notificationSound.play();
                             }
@@ -336,6 +348,7 @@ export function RoomContextProvider({
                         break;
                     case 'reauthenticate':
                         setAuthToken(payload.authToken);
+                        break;
                 }
             },
             onClose() {
@@ -428,7 +441,6 @@ export function RoomContextProvider({
     );
     const changeColor = useCallback(
         (color: string) => {
-            setColor(color);
             sendJsonMessage({
                 action: 'changeColor',
                 authToken,
@@ -477,7 +489,7 @@ export function RoomContextProvider({
         }
     }, [roomData, authToken]);
     const joinRacetimeRoom = useCallback(async () => {
-        if (connectedPlayer?.spectator) {
+        if (!connectedPlayer?.teamId) {
             return;
         }
         const res = await fetch(`/api/rooms/${roomData.slug}/actions`, {
@@ -494,7 +506,7 @@ export function RoomContextProvider({
         }
     }, [roomData, authToken, connectedPlayer]);
     const leaveRacetimeRoom = useCallback(async () => {
-        if (connectedPlayer?.spectator) {
+        if (!connectedPlayer?.teamId) {
             return;
         }
         const res = await fetch(`/api/rooms/${roomData.slug}/actions`, {
@@ -511,7 +523,7 @@ export function RoomContextProvider({
         }
     }, [roomData, authToken, connectedPlayer]);
     const racetimeReady = useCallback(async () => {
-        if (connectedPlayer?.spectator) {
+        if (!connectedPlayer?.teamId) {
             return;
         }
         const res = await fetch(`/api/rooms/${roomData.slug}/actions`, {
@@ -528,7 +540,7 @@ export function RoomContextProvider({
         }
     }, [roomData, authToken, connectedPlayer]);
     const racetimeUnready = useCallback(async () => {
-        if (connectedPlayer?.spectator) {
+        if (!connectedPlayer?.teamId) {
             return;
         }
         const res = await fetch(`/api/rooms/${roomData.slug}/actions`, {
@@ -606,6 +618,36 @@ export function RoomContextProvider({
         [authToken, sendJsonMessage],
     );
 
+    const joinTeam = useCallback(
+        (teamId: string | null, teamName?: string) => {
+            const name = teamName?.trim();
+            if (
+                !roomData.teamsEnabled ||
+                !connectedPlayer?.teamId ||
+                (teamName !== undefined && !name) ||
+                (teamId === connectedPlayer.teamId && !name)
+            ) {
+                return;
+            }
+            sendJsonMessage({
+                action: 'joinTeam',
+                authToken,
+                payload: { teamId, ...(name ? { teamName: name } : {}) },
+            } satisfies RoomAction);
+        },
+        [authToken, sendJsonMessage, roomData.teamsEnabled, connectedPlayer],
+    );
+    const setTeamsEnabled = useCallback(
+        (enabled: boolean) => {
+            sendJsonMessage({
+                action: 'setTeamsEnabled',
+                authToken,
+                payload: { enabled },
+            } satisfies RoomAction);
+        },
+        [authToken, sendJsonMessage],
+    );
+
     return (
         <RoomContext.Provider
             value={{
@@ -615,7 +657,9 @@ export function RoomContextProvider({
                 color,
                 roomData,
                 nickname,
-                players,
+                teams,
+                spectators,
+                connectedTeam,
                 starredGoals,
                 showGoalDetails,
                 showCounters,
@@ -647,6 +691,8 @@ export function RoomContextProvider({
                 changeRaceHandler,
                 resetTimer,
                 setChatEnabled: setChatEnabledWS,
+                setTeamsEnabled,
+                joinTeam,
             }}
         >
             {children}

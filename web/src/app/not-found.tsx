@@ -4,6 +4,29 @@ import { randomInt } from 'node:crypto';
 import { Suspense } from 'react';
 import TextFit from '../components/TextFit';
 
+const mockBoard = {
+    hidden: false,
+    width: 5,
+    height: 5,
+    board: [
+        ['Oops!', 'So Lost', 'Wow', 'Much Empty', 'Try Again'],
+        ['Not Found', 'Woot', 'Where?', 'Still Empty', 'Lost Again'],
+        ['Nothing Here', 'Uh-Oh!', '404', 'Dead End', 'Broken Link'],
+        ['Wrong Turn', 'Go Back', 'Really?', 'Click Me', 'Out of Bounds'],
+        ['Misstep', 'No Bingo', 'Whoops', 'Error!', 'Return Home'],
+    ].map((row, rowIndex) =>
+        row.map((text, colIndex) => ({
+            goal: {
+                id: `${rowIndex}:${colIndex}`,
+                goal: text,
+                description: '',
+            },
+            completedTeams: text === '404' ? ['1'] : [],
+            revealed: true,
+        })),
+    ),
+};
+
 const titles = [
     { title: 'Bingo!', subtitle: 'You found a 404!' },
     {
@@ -226,26 +249,3 @@ export default function NotFound() {
         </Suspense>
     );
 }
-
-const mockBoard = {
-    hidden: false,
-    width: 5,
-    height: 5,
-    board: [
-        ['Oops!', 'So Lost', 'Wow', 'Much Empty', 'Try Again'],
-        ['Not Found', 'Woot', 'Where?', 'Still Empty', 'Lost Again'],
-        ['Nothing Here', 'Uh-Oh!', '404', 'Dead End', 'Broken Link'],
-        ['Wrong Turn', 'Go Back', 'Really?', 'Click Me', 'Out of Bounds'],
-        ['Misstep', 'No Bingo', 'Whoops', 'Error!', 'Return Home'],
-    ].map((row, rowIndex) =>
-        row.map((text, colIndex) => ({
-            goal: {
-                id: `${rowIndex}:${colIndex}`,
-                goal: text,
-                description: '',
-            },
-            completedPlayers: text === '404' ? ['1'] : [],
-            revealed: true,
-        })),
-    ),
-};

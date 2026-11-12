@@ -60,7 +60,7 @@ radial-gradient(circle at 40% 30%, rgba(147, 137, 137, 0.13) 0%, rgba(0,0,0,0) 9
 
 interface BoardCellProps {
     goal?: Goal;
-    completedPlayers: string[];
+    completedTeams: string[];
     revealed?: boolean;
     onReveal?: () => void;
     row: number;
@@ -69,7 +69,7 @@ interface BoardCellProps {
 
 export default function BoardCell({
     goal,
-    completedPlayers,
+    completedTeams,
     revealed = false,
     onReveal,
     row,
@@ -96,13 +96,13 @@ export default function BoardCell({
         if (!connectedPlayer) {
             return;
         }
-        if (connectedPlayer.spectator) {
+        if (!connectedPlayer.teamId) {
             return;
         }
         if (!revealed) {
             return;
         }
-        if (completedPlayers.includes(connectedPlayer.id)) {
+        if (completedTeams.includes(connectedPlayer.teamId)) {
             unmarkGoal(row, col);
         } else {
             markGoal(row, col);
@@ -110,7 +110,7 @@ export default function BoardCell({
     }, [
         connectedPlayer,
         revealed,
-        completedPlayers,
+        completedTeams,
         unmarkGoal,
         row,
         col,
@@ -159,10 +159,10 @@ export default function BoardCell({
     ]);
 
     // calculations
-    const colorPortion = 360 / completedPlayers.length;
+    const colorPortion = 360 / completedTeams.length;
     const isStarred = starredGoals.includes(row * board.width + col);
-    const colors = completedPlayers
-        .map((player) => colorMap[player])
+    const colors = completedTeams
+        .map((teamId) => colorMap[teamId])
         .filter((c) => !!c);
 
     const [counter, setCounter] = useState(0);

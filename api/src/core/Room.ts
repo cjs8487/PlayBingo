@@ -376,6 +376,7 @@ export default class Room {
             );
             this.persistPlayer(player);
         }
+        player.syncBoard();
         return true;
     }
 
@@ -400,7 +401,7 @@ export default class Room {
             });
         });
         if (boardChanged) {
-            this.sendSyncBoard();
+            this.getAllPlayers().forEach((player) => player.syncBoard());
         }
     }
 
@@ -708,7 +709,7 @@ export default class Room {
             board: {
                 width: this.boardWidth,
                 height: this.boardHeight,
-                ...(this.hideCard
+                ...(player.boardHidden
                     ? { hidden: true }
                     : {
                           hidden: false,
@@ -789,6 +790,7 @@ export default class Room {
             ],
             new Date(),
         );
+        player.syncBoard();
         return {
             action: 'joinedTeam',
             team: team.toClientData(),

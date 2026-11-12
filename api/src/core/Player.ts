@@ -42,6 +42,8 @@ export default class Player {
     connections: Map<string, WebSocket>;
 
     finishedAt?: string;
+    /** Whether the card is hidden for this player. */
+    boardHidden: boolean;
 
     constructor(
         room: Room,
@@ -56,6 +58,7 @@ export default class Player {
         this.nickname = nickname;
         this.teamId = teamId;
         this.monitor = monitor;
+        this.boardHidden = room.hideCard;
         this.userId = userId;
 
         this.connections = new Map<string, WebSocket>();
@@ -197,6 +200,13 @@ export default class Player {
             finalMessage = message;
         }
 
+        if (
+            finalMessage.action === 'syncBoard' ||
+            finalMessage.action === 'connected'
+        ) {
+            this.boardHidden = !!finalMessage.board.hidden;
+        }
+
         this.connections.forEach((socket) => {
             if (socket.readyState === OPEN) {
                 socket.send(
@@ -206,6 +216,20 @@ export default class Player {
                     }),
                 );
             }
+        });
+    }
+
+    /** Sends the current membership's board view to all of this player's connections. */
+    syncBoard() {
+        this.sendMessage({
+            action: 'syncBoard',
+            board: {
+                width: this.room.board[0].length,
+                height: this.room.board.length,
+                ...(this.boardHidden
+                    ? { hidden: true }
+                    : { hidden: false, board: this.room.board }),
+            },
         });
     }
 
