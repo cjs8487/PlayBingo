@@ -4,29 +4,93 @@ import {
     Button,
     Box,
     Switch,
+    Divider,
 } from '@mui/material';
 import ColorSelect from './ColorSelect';
-import { Refresh } from 'mdi-material-ui';
-import { useRoomContext } from '../../context/RoomContext';
+import { Refresh, Sword } from 'mdi-material-ui';
+import TeamControls from './TeamControls';
+import { ConnectionStatus, useRoomContext } from '../../context/RoomContext';
 
 export default function SettingsPanel() {
     const {
-        roomData,
         showCounters,
         toggleCounters,
         showGoalDetails,
         toggleGoalDetails,
         showImages,
         toggleImages,
-        regenerateCard,
+        notificationSoundEnabled,
+        toggleNotificationSound,
+        connectionStatus,
+        connectedTeam,
+        changeAuth,
+        disconnect,
         connectedPlayer,
+        roomData,
         setChatEnabled,
+        setTeamsEnabled,
+        regenerateCard,
     } = useRoomContext();
+
+    const connected = connectionStatus === ConnectionStatus.CONNECTED;
 
     return (
         <>
-            <ColorSelect />
-            <Box sx={{ my: 2, border: 1, borderColor: 'divider' }} />
+            {connected && connectedPlayer && (
+                <>
+                    <Typography
+                        variant="subtitle1"
+                        sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
+                    >
+                        {connectedTeam ? 'Playing' : 'Spectating'} as{' '}
+                        {connectedPlayer.nickname}
+                        {connectedPlayer.monitor && (
+                            <Sword
+                                titleAccess="Room monitor"
+                                fontSize="small"
+                                color="success"
+                            />
+                        )}
+                    </Typography>
+                    <Box
+                        sx={{
+                            display: 'flex',
+                            flexWrap: 'wrap',
+                            gap: 1,
+                            mt: 1,
+                        }}
+                    >
+                        <Button
+                            size="small"
+                            onClick={() => changeAuth(Boolean(connectedTeam))}
+                        >
+                            {connectedTeam ? 'Spectate' : 'Join Game'}
+                        </Button>
+                        <Button
+                            size="small"
+                            color="secondary"
+                            onClick={disconnect}
+                        >
+                            Disconnect
+                        </Button>
+                    </Box>
+                    {connectedTeam && (
+                        <Box
+                            sx={{
+                                display: 'flex',
+                                flexWrap: 'wrap',
+                                alignItems: 'center',
+                                gap: 1,
+                                mt: 1,
+                            }}
+                        >
+                            <ColorSelect />
+                            <TeamControls />
+                        </Box>
+                    )}
+                    <Divider sx={{ my: 2 }} />
+                </>
+            )}
             <Box>
                 <Typography variant="h6">Settings</Typography>
                 <FormControlLabel
@@ -68,23 +132,43 @@ export default function SettingsPanel() {
                     }
                     label="Show Images"
                 />
-                {connectedPlayer?.monitor && (
+                <FormControlLabel
+                    control={
+                        <Switch
+                            checked={notificationSoundEnabled}
+                            onChange={toggleNotificationSound}
+                        />
+                    }
+                    label="Notification Sound"
+                />
+                {connected && connectedPlayer?.monitor && (
                     <>
                         <FormControlLabel
                             control={
                                 <Switch
                                     checked={roomData?.chatEnabled ?? true}
-                                    onChange={(e) =>
-                                        setChatEnabled(e.target.checked)
+                                    onChange={(event) =>
+                                        setChatEnabled(event.target.checked)
                                     }
                                 />
                             }
                             label="Enable chat"
                         />
+                        <FormControlLabel
+                            control={
+                                <Switch
+                                    checked={roomData?.teamsEnabled ?? false}
+                                    onChange={(event) =>
+                                        setTeamsEnabled(event.target.checked)
+                                    }
+                                />
+                            }
+                            label="Enable teams"
+                        />
                         <Button
                             size="small"
                             onClick={() => regenerateCard()}
-                            sx={{ width: '100%' }}
+                            sx={{ width: '100%', mt: 1 }}
                             startIcon={<Refresh />}
                         >
                             Regenerate Card

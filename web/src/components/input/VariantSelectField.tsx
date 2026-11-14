@@ -8,7 +8,8 @@ import {
 } from '@mui/material';
 import { Game } from '@playbingo/types';
 import { useField, useFormikContext } from 'formik';
-import { useAsync } from 'react-use';
+import useSWR from 'swr';
+import type { RoomFormValues } from '../RoomCreateForm';
 
 /**
  * Self-contained variant select component for use in Formik managed forms.
@@ -18,28 +19,30 @@ export default function VariantSelectField(
 ) {
     const {
         values: { game },
-    } = useFormikContext<{ game: string }>();
+        setValues,
+    } = useFormikContext<RoomFormValues>();
     const [field, meta] = useField<string>('variant');
 
     const error = meta.touched && !!meta.error;
 
-    const options = useAsync(async () => {
-        if (!game) {
-            return [];
-        }
+    const {
+        data,
+        isLoading,
+        error: loadError,
+    } = useSWR<Game>(
+        game ? `/api/games/${encodeURIComponent(game)}` : null,
+        async (url: string) => {
+            const res = await fetch(url);
+            if (!res.ok) throw new Error('Unable to load variants');
+            return res.json();
+        },
+    );
+    const options = [
+        ...(data?.difficultyVariants ?? []),
+        ...(data?.variants ?? []),
+    ];
 
-        const res = await fetch(`/api/games/${game}`);
-        if (!res.ok) {
-            return [];
-        }
-        const gameData: Game = await res.json();
-        return [
-            ...(gameData.difficultyVariants ?? []),
-            ...(gameData.variants ?? []),
-        ];
-    }, [game]);
-
-    const disabled = !options.value || options.value.length === 0;
+    const disabled = options.length === 0;
 
     return (
         <FormControl {...props}>
@@ -50,12 +53,20 @@ export default function VariantSelectField(
                 name="variant"
                 value={field.value}
                 onBlur={field.onBlur}
-                onChange={field.onChange}
+                onChange={(event) => {
+                    const variant = event.target.value;
+                    setValues((values) => ({
+                        ...values,
+                        variant,
+                        boardSizes: [],
+                    }));
+                }}
                 fullWidth
                 label="Variant"
                 disabled={disabled}
             >
-                {options.value?.map((option) => (
+                <MenuItem value="">Normal</MenuItem>
+                {options.map((option) => (
                     <MenuItem key={option.id} value={option.id}>
                         {option.name}
                     </MenuItem>
@@ -64,11 +75,13 @@ export default function VariantSelectField(
             {error && (
                 <FormHelperText error={error}>{meta.error}</FormHelperText>
             )}
-            {disabled && (
+            {game && disabled && (
                 <FormHelperText>
-                    {options.loading
+                    {isLoading
                         ? 'Loading variants...'
-                        : 'No variants available'}
+                        : loadError
+                          ? 'Unable to load variants'
+                          : 'No variants available'}
                 </FormHelperText>
             )}
         </FormControl>

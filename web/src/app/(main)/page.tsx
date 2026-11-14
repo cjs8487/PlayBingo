@@ -9,7 +9,7 @@ import {
 import { Suspense } from 'react';
 import ActiveRoomList from '../../components/ActiveRoomList';
 import ToasterOven from '../../components/utilities/ToasterOven';
-import HomePageRoomForm from './_components/HomePageRoomForm';
+import RoomCreateForm from '../../components/RoomCreateForm';
 
 export default async function Home() {
     return (
@@ -55,7 +55,7 @@ export default async function Home() {
                         }}
                     >
                         <CardContent>
-                            <HomePageRoomForm />
+                            <RoomCreateForm />
                         </CardContent>
                     </Card>
                 </Grid>

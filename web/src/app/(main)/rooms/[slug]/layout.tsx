@@ -30,7 +30,7 @@ export default async function RoomLayout({
 
     return (
         <>
-            <RoomContextProvider serverRoomData={room}>
+            <RoomContextProvider key={slug} serverRoomData={room}>
                 {children}
             </RoomContextProvider>
         </>

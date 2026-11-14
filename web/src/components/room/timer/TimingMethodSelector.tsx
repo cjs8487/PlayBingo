@@ -8,13 +8,6 @@ export default function TimingMethodSelector() {
     const { roomData, changeRaceHandler, connectedPlayer } =
         useContext(RoomContext);
 
-    const handleRaceHandlerChange = (
-        event: React.MouseEvent<HTMLElement>,
-        handler: string | null,
-    ) => {
-        changeRaceHandler(handler ?? '');
-    };
-
     if (!connectedPlayer?.monitor) {
         return null;
     }
@@ -23,7 +16,9 @@ export default function TimingMethodSelector() {
         <ToggleButtonGroup
             value={roomData?.raceHandler}
             exclusive
-            onChange={handleRaceHandlerChange}
+            onChange={(_, handler: 'LOCAL' | 'RACETIME' | null) => {
+                if (handler) changeRaceHandler(handler.toLowerCase());
+            }}
             aria-label="race handler"
             size="small"
             orientation="horizontal"

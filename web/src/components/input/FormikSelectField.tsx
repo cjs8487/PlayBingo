@@ -26,6 +26,7 @@ interface FormikSelectProps {
     sx?: SxProps;
     disabled?: boolean;
     fullWidth?: boolean;
+    onValueChange?: (value: string | null) => void;
 }
 
 export function FormikSelectField({
@@ -84,25 +85,30 @@ export function FormikSelectFieldAutocomplete({
     disabled,
     sx,
     fullWidth,
+    onValueChange,
 }: FormikSelectProps) {
     const [field, meta, helpers] = useField<string | null>(name);
 
     return (
         <Autocomplete
             id={id}
-            value={
-                options.find((opt) => opt.value === field.value)?.label ?? null
-            }
-            onChange={(_, newValue) => {
-                helpers.setValue(
-                    options.find((option) => option.label === newValue)
-                        ?.value ?? null,
-                );
+            value={options.find((opt) => opt.value === field.value) ?? null}
+            onChange={(_, option) => {
+                const value = option?.value ?? null;
+                if (onValueChange) {
+                    onValueChange(value);
+                } else {
+                    helpers.setValue(value);
+                }
             }}
             onBlur={field.onBlur}
             blurOnSelect
             clearOnBlur
-            options={options.map((option) => option.label)}
+            options={options}
+            getOptionKey={(option) => option.value}
+            isOptionEqualToValue={(option, value) =>
+                option.value === value.value
+            }
             renderInput={(params) => (
                 <TextField
                     {...params}

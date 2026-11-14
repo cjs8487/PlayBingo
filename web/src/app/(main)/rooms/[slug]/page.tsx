@@ -15,7 +15,10 @@ export default function Room() {
     const { connectionStatus, roomData } = useRoomContext();
 
     let showLogin = false;
-    if (connectionStatus === ConnectionStatus.UNINITIALIZED) {
+    if (
+        connectionStatus === ConnectionStatus.UNINITIALIZED ||
+        connectionStatus === ConnectionStatus.UNAUTHORIZED
+    ) {
         showLogin = true;
     }
 
@@ -220,7 +223,14 @@ function RoomMd() {
             >
                 <Board />
             </Box>
-            <Paper sx={{ display: 'flex', flexDirection: 'column', p: 1.5 }}>
+            <Paper
+                sx={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    p: 1.5,
+                    overflowY: 'auto',
+                }}
+            >
                 <RoomInfo />
                 <Box sx={{ my: 2, border: 1, borderColor: 'divider' }} />
                 <PlayerList />
@@ -233,7 +243,7 @@ function RoomMd() {
                     <TimerControls />
                 </Box>
                 <Box sx={{ my: 2, border: 1, borderColor: 'divider' }} />
-                <Box sx={{ position: 'relative', height: '100%' }}>
+                <Box sx={{ position: 'relative', flex: '1 0 200px' }}>
                     <RoomChat />
                 </Box>
             </Paper>
@@ -253,7 +263,7 @@ function RoomLg() {
                 gridTemplateRows: 'auto',
             }}
         >
-            <Paper sx={{ p: 1.5 }}>
+            <Paper sx={{ p: 1.5, overflowY: 'auto' }}>
                 <RoomInfo />
                 <Box sx={{ my: 2, border: 1, borderColor: 'divider' }} />
                 <Box
@@ -308,7 +318,7 @@ function RoomXl() {
                 gridTemplateRows: 'auto',
             }}
         >
-            <Paper sx={{ p: 1.5 }}>
+            <Paper sx={{ p: 1.5, overflowY: 'auto' }}>
                 <RoomInfo />
                 <Box sx={{ my: 2, border: 1, borderColor: 'divider' }} />
                 <Box

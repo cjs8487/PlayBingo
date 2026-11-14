@@ -1,6 +1,7 @@
 'use client';
+import { useApi } from '@/lib/Hooks';
 import { alertError } from '@/lib/Utils';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import { ArrowDropDown } from '@mui/icons-material';
 import {
     Accordion,
     AccordionDetails,
@@ -8,29 +9,26 @@ import {
     Box,
     Button,
     CircularProgress,
-    FormControl,
-    FormHelperText,
-    InputLabel,
     MenuItem,
-    Select,
     TextField,
+    Typography,
 } from '@mui/material';
-import type { BoardSizeOptions } from '@playbingo/shared';
 import { Game } from '@playbingo/types';
-import { Form, Formik, useField, useFormikContext } from 'formik';
+import type { BoardSizeOptions } from '@playbingo/shared';
+import { Form, Formik, useFormikContext } from 'formik';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo } from 'react';
-import { useAsync } from 'react-use';
 import useSWR from 'swr';
 import * as yup from 'yup';
-import { useApi } from '../lib/Hooks';
 import {
     FormikSelectField,
     FormikSelectFieldAutocomplete,
 } from './input/FormikSelectField';
 import FormikSwitch from './input/FormikSwitch';
 import FormikTextField from './input/FormikTextField';
+import GameModeSelector from './input/GameModeSelector';
 import NumberInput from './input/NumberInput';
+import VariantSelectField from './input/VariantSelectField';
 
 type RoomBoardSize = number | 'custom';
 
@@ -44,7 +42,9 @@ const roomValidationSchema = yup.object().shape({
         .mixed<RoomBoardSize>()
         .required('Board size is required')
         .test('available', 'Select an available board size', function (value) {
-            return this.parent.boardSizes.includes(value);
+            return (
+                value !== undefined && this.parent.boardSizes.includes(value)
+            );
         }),
     mode: yup
         .string()
@@ -69,87 +69,19 @@ const roomValidationSchema = yup.object().shape({
             then: (schema) =>
                 schema
                     .required('Start count is required')
+                    .integer()
                     .min(1, 'Must start with at least 1 revealed square')
                     .max(5, 'Cannot start with more than 5 goals revealed'),
             otherwise: (schema) => schema.notRequired(),
         }),
 });
 
-function VariantSelectField() {
-    const {
-        values: { game },
-    } = useFormikContext<{ game: string }>();
-    const [field, meta, helpers] = useField<string>('variant');
-    const { setValue } = helpers;
-    useEffect(() => {
-        setValue('');
-    }, [game, setValue]);
-
-    const error = meta.touched && !!meta.error;
-
-    const options = useAsync(async () => {
-        if (!game) {
-            return [];
-        }
-
-        const res = await fetch(`/api/games/${game}`);
-        if (!res.ok) {
-            return [];
-        }
-        const gameData: Game = await res.json();
-        return [
-            ...(gameData.difficultyVariants ?? []),
-            ...(gameData.variants ?? []),
-        ];
-    }, [game]);
-
-    const disabled = !options.value || options.value.length === 0;
-
-    return (
-        <FormControl>
-            <InputLabel id="variant-label">Variant</InputLabel>
-            <Select
-                id="variant"
-                labelId="variant-label"
-                name="variant"
-                value={field.value}
-                onBlur={field.onBlur}
-                onChange={field.onChange}
-                fullWidth
-                label="Variant"
-                disabled={disabled}
-            >
-                {options.value?.map((option) => (
-                    <MenuItem key={option.id} value={option.id}>
-                        {option.name}
-                    </MenuItem>
-                ))}
-            </Select>
-            {error && (
-                <FormHelperText error={error}>{meta.error}</FormHelperText>
-            )}
-            {disabled && (
-                <FormHelperText>
-                    {options.loading
-                        ? 'Loading variants...'
-                        : 'No variants available'}
-                </FormHelperText>
-            )}
-        </FormControl>
-    );
-}
-
 function BoardSizeSelectField() {
     const {
         values: { game, variant, boardSize },
         setValues,
         setFieldValue,
-    } = useFormikContext<{
-        game?: string;
-        variant: string;
-        boardSize: RoomBoardSize | '';
-        boardSizes: RoomBoardSize[];
-    }>();
+    } = useFormikContext<RoomFormValues>();
     const { data, isLoading, error } = useSWR<BoardSizeOptions>(
         game
             ? `/api/games/${encodeURIComponent(game)}/boardSizes?${new URLSearchParams({ variant })}`
@@ -182,7 +114,7 @@ function BoardSizeSelectField() {
                   ? 5
                   : (allowed[0] ?? ''),
         }));
-    }, [options, setValues]);
+    }, [game, variant, options, setValues]);
 
     let helperText;
     if (isLoading) helperText = 'Loading sizes...';
@@ -202,6 +134,7 @@ function BoardSizeSelectField() {
             }
             disabled={options.length <= 1}
             error={!!error || (!!game && !isLoading && !options.length)}
+            fullWidth
             helperText={helperText}
             onChange={(event) =>
                 setFieldValue(
@@ -223,20 +156,20 @@ function BoardSizeSelectField() {
 export interface RoomFormValues {
     name: string;
     nickname: string;
-    game: string;
+    game: string | null;
     password: string;
     variant: string;
     boardSize: RoomBoardSize | '';
     boardSizes: RoomBoardSize[];
     mode: 'LINES' | 'BLACKOUT' | 'LOCKOUT';
     lineCount: number;
-    seed?: number;
+    seed: number | '';
     hideCard: boolean;
     spectator: boolean;
     teamsEnabled: boolean;
     exploration: boolean;
     explorationStart: 'TL' | 'TR' | 'BL' | 'BR' | 'CENTER' | 'RANDOM';
-    explorationStartCount: string;
+    explorationStartCount: number | '';
 }
 
 interface FormProps {
@@ -261,13 +194,13 @@ export default function RoomCreateForm({ game }: FormProps) {
                 name: '',
                 nickname: '',
                 game: game ?? '',
+                boardSize: '',
+                boardSizes: [],
                 password: '',
                 variant: '',
-                boardSize: '' as RoomBoardSize | '',
-                boardSizes: [] as RoomBoardSize[],
                 mode: 'LINES',
                 lineCount: 1,
-                seed: undefined,
+                seed: '',
                 hideCard: false,
                 spectator: false,
                 teamsEnabled: false,
@@ -276,212 +209,252 @@ export default function RoomCreateForm({ game }: FormProps) {
                 explorationStartCount: '',
             }}
             validationSchema={roomValidationSchema}
-            onSubmit={async (values) => {
-                const res = await fetch('/api/rooms', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        ...values,
-                        boardSize:
-                            values.boardSize === 'custom'
-                                ? undefined
-                                : values.boardSize,
-                        boardSizes: undefined,
-                    }),
-                });
-                if (!res.ok) {
-                    const error = await res.text();
-                    alertError(`Unable to create room - ${error}`);
-                    return;
+            onSubmit={async ({ boardSize, boardSizes, seed, ...values }) => {
+                if (!boardSize || !boardSizes.includes(boardSize)) return;
+
+                try {
+                    const res = await fetch('/api/rooms', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            ...values,
+                            boardSize:
+                                boardSize === 'custom' ? undefined : boardSize,
+                            seed: seed === '' ? undefined : seed,
+                        }),
+                    });
+                    if (!res.ok) {
+                        alertError(
+                            `Unable to create room - ${await res.text()}`,
+                        );
+                        return;
+                    }
+
+                    const { slug, authToken } = await res.json();
+                    localStorage.setItem(
+                        'PlayBingo.temp.nickname',
+                        values.nickname,
+                    );
+                    localStorage.setItem(`authToken-${slug}`, authToken);
+                    router.push(`/rooms/${slug}`);
+                } catch {
+                    alertError('Unable to create room. Please try again.');
                 }
-                const { slug, authToken } = await res.json();
-                localStorage.setItem(
-                    'PlayBingo.temp.nickname',
-                    values.nickname,
-                );
-                localStorage.setItem(`authToken-${slug}`, authToken);
-                router.push(`/rooms/${slug}`);
             }}
         >
             {({
                 values: {
-                    mode,
                     exploration,
                     explorationStart,
                     boardSize,
                     boardSizes,
                 },
+                setValues,
+                setFieldValue,
+                submitForm,
                 isSubmitting,
             }) => (
-                <Form>
+                <Box
+                    component={Form}
+                    sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}
+                >
                     <Box
                         sx={{
                             display: 'flex',
-                            flexDirection: 'column',
-                            rowGap: 2.5,
-                            textAlign: 'left',
+                            flexDirection: { xs: 'column', sm: 'row' },
+                            gap: 2,
                         }}
                     >
-                        <FormikTextField name="name" label="Room Name" />
-                        <FormikTextField name="nickname" label="Nickname" />
                         <FormikTextField
-                            id="roomPassword"
-                            type="password"
+                            id="room-name"
+                            name="name"
+                            label="Room Name"
+                            fullWidth
+                        />
+
+                        <FormikTextField
+                            id="room-password"
                             name="password"
                             label="Password"
+                            fullWidth
+                            type="password"
                         />
+                        <FormikTextField
+                            id="player-nickname"
+                            name="nickname"
+                            label="Nickname"
+                            fullWidth
+                        />
+                    </Box>
+                    <Box
+                        sx={{
+                            display: 'flex',
+                            flexDirection: { xs: 'column', sm: 'row' },
+                            gap: 2,
+                        }}
+                    >
                         <FormikSelectFieldAutocomplete
-                            id="gameSelect"
+                            id="game-select"
                             name="game"
                             label="Game"
                             options={games.map((game) => ({
                                 label: game.name,
                                 value: game.slug,
                             }))}
+                            onValueChange={(nextGame) =>
+                                setValues((values) => ({
+                                    ...values,
+                                    game: nextGame,
+                                    variant: '',
+                                    boardSizes: [],
+                                }))
+                            }
+                            fullWidth
                         />
-                        <VariantSelectField />
+                        <VariantSelectField fullWidth />
                         <BoardSizeSelectField />
-                        <Box
+                    </Box>
+                    <GameModeSelector />
+                    <Accordion className="bg-surface">
+                        <AccordionSummary expandIcon={<ArrowDropDown />}>
+                            <Typography>Advanced Settings</Typography>
+                        </AccordionSummary>
+                        <AccordionDetails
                             sx={{
                                 display: 'flex',
-                                width: '100%',
-                                alignItems: 'center',
-                                columnGap: 2,
-                            }}
-                        >
-                            <FormikSelectField
-                                id="room-mode-select"
-                                name="mode"
-                                label="Game Mode"
-                                options={[
-                                    { value: 'LINES', label: 'Lines' },
-                                    {
-                                        value: 'BLACKOUT',
-                                        label: 'Blackout',
-                                    },
-                                    { value: 'LOCKOUT', label: 'Lockout' },
-                                ]}
-                                sx={{ flexGrow: 1 }}
-                            />
-                            {mode === 'LINES' && (
-                                <NumberInput
-                                    name="lineCount"
-                                    label="Lines"
-                                    disabled={mode !== 'LINES'}
-                                />
-                            )}
-                        </Box>
-                        <FormikSwitch
-                            id="hide-card"
-                            name="hideCard"
-                            label="Hide card initially?"
-                        />
-                        <FormikSwitch
-                            name="teamsEnabled"
-                            id="teamsEnabled"
-                            label="Enable teams"
-                        />
-                        <FormikSwitch
-                            name="spectator"
-                            id="spectator"
-                            label="Join as spectator?"
-                        />
-                        <Box
-                            sx={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: 2,
-                            }}
-                        >
-                            <FormikSwitch
-                                name="exploration"
-                                id="exploration"
-                                label="Exploration"
-                            />
-                            <FormikSelectField
-                                id="room-mode-select"
-                                name="explorationStart"
-                                label="Starting Square"
-                                disabled={!exploration}
-                                sx={{ flexGrow: 1 }}
-                                options={[
-                                    { value: 'TL', label: 'Top Left' },
-                                    { value: 'TR', label: 'Top Right' },
-                                    { value: 'BL', label: 'Bottom Left' },
-                                    { value: 'BR', label: 'Bottom Right' },
-                                    {
-                                        value: 'CENTER',
-                                        label: 'Center',
-                                        tooltip:
-                                            'The center square of the board starts revealed. If the board has an even width or height, two squares will be revealed in that direction.',
-                                    },
-                                    {
-                                        value: 'RANDOM',
-                                        label: 'Random',
-                                        tooltip:
-                                            'A specified number of cells in the square will be chosen at random to start revealed',
-                                    },
-                                ]}
-                            />
-                            <NumberInput
-                                id="exploration-random-revealed-count"
-                                name="explorationStartCount"
-                                label="Start Count"
-                                disabled={
-                                    !exploration ||
-                                    explorationStart !== 'RANDOM'
-                                }
-                                min={1}
-                                max={5}
-                            />
-                        </Box>
-                        <Accordion>
-                            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                                Advanced Generation Options
-                            </AccordionSummary>
-                            <AccordionDetails
-                                sx={{
-                                    display: 'flex',
-                                    flexDirection: 'column',
-                                    rowGap: 3,
-                                }}
-                            >
-                                <FormikTextField
-                                    type="number"
-                                    name="seed"
-                                    label="Seed"
-                                    pattern="[0-9]*"
-                                    inputMode="numeric"
-                                    fullWidth
-                                />
-                            </AccordionDetails>
-                        </Accordion>
-                        <Box
-                            sx={{
-                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: 1,
                             }}
                         >
                             <Box
                                 sx={{
-                                    flexGrow: 1,
+                                    display: 'flex',
+                                    flexDirection: { xs: 'column', sm: 'row' },
+                                    gap: 2,
                                 }}
+                            >
+                                <FormikSwitch
+                                    id="hide-card"
+                                    name="hideCard"
+                                    label="Hide card initially?"
+                                />
+                                <FormikSwitch
+                                    id="enable-teams"
+                                    name="teamsEnabled"
+                                    label="Enable teams"
+                                />
+                            </Box>
+                            <Box
+                                sx={{
+                                    display: 'flex',
+                                    flexDirection: { xs: 'column', sm: 'row' },
+                                    gap: 2,
+                                }}
+                            >
+                                <FormikSwitch
+                                    id="exploration-toggle"
+                                    name="exploration"
+                                    label="Enable fog of war?"
+                                />
+                                <FormikSelectField
+                                    id="exploration-start"
+                                    name="explorationStart"
+                                    label="Starting Square"
+                                    disabled={!exploration}
+                                    sx={{
+                                        flexGrow: 1,
+                                        textAlign: 'left',
+                                    }}
+                                    options={[
+                                        { value: 'TL', label: 'Top Left' },
+                                        { value: 'TR', label: 'Top Right' },
+                                        { value: 'BL', label: 'Bottom Left' },
+                                        { value: 'BR', label: 'Bottom Right' },
+                                        {
+                                            value: 'CENTER',
+                                            label: 'Center',
+                                            tooltip:
+                                                'The center square of the board starts revealed. If the board has an even width or height, two squares will be revealed in that direction.',
+                                        },
+                                        {
+                                            value: 'RANDOM',
+                                            label: 'Random',
+                                            tooltip:
+                                                'A specified number of cells in the square will be chosen at random to start revealed',
+                                        },
+                                    ]}
+                                />
+                                <NumberInput
+                                    id="exploration-random-revealed-count"
+                                    name="explorationStartCount"
+                                    label="Starting Square Count"
+                                    min={1}
+                                    max={5}
+                                    disabled={
+                                        !exploration ||
+                                        explorationStart !== 'RANDOM'
+                                    }
+                                />
+                            </Box>
+                            <FormikTextField
+                                type="number"
+                                name="seed"
+                                label="Seed"
+                                pattern="[0-9]*"
+                                inputMode="numeric"
+                                fullWidth
                             />
+                        </AccordionDetails>
+                    </Accordion>
+                    <Box
+                        sx={{
+                            display: 'flex',
+                            gap: 2,
+                            width: '100%',
+                        }}
+                    >
+                        <Box sx={{ flexGrow: 1 }} />
+                        <Box
+                            sx={{
+                                display: 'flex',
+                                gap: 2,
+                                flexWrap: 'wrap',
+                                justifyContent: 'flex-end',
+                            }}
+                        >
                             <Button
-                                variant="contained"
-                                type="submit"
+                                type="button"
                                 disabled={
                                     isSubmitting ||
                                     !boardSize ||
                                     !boardSizes.includes(boardSize)
                                 }
+                                color="secondary"
+                                onClick={async () => {
+                                    await setFieldValue('spectator', true);
+                                    await submitForm();
+                                }}
+                            >
+                                Create As Spectator
+                            </Button>
+
+                            <Button
+                                type="button"
+                                disabled={
+                                    isSubmitting ||
+                                    !boardSize ||
+                                    !boardSizes.includes(boardSize)
+                                }
+                                onClick={async () => {
+                                    await setFieldValue('spectator', false);
+                                    await submitForm();
+                                }}
                             >
                                 Create Room
                             </Button>
                         </Box>
                     </Box>
-                </Form>
+                </Box>
             )}
         </Formik>
     );

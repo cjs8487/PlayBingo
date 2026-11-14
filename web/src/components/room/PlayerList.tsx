@@ -50,19 +50,21 @@ export default function PlayerList() {
                             <Typography>{team.goalCount}</Typography>
                         </Box>
                         <Box sx={{ p: 0.5, flexGrow: 1 }}>
-                            <Box
-                                sx={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'space-between',
-                                    borderBottom: 1,
-                                    borderColor: 'divider',
-                                }}
-                            >
-                                <Typography sx={{ flexGrow: 1, pb: 0.5 }}>
-                                    {team.name}
-                                </Typography>
-                            </Box>
+                            {roomData.teamsEnabled && (
+                                <Box
+                                    sx={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'space-between',
+                                        borderBottom: 1,
+                                        borderColor: 'divider',
+                                    }}
+                                >
+                                    <Typography sx={{ flexGrow: 1, pb: 0.5 }}>
+                                        {team.name}
+                                    </Typography>
+                                </Box>
+                            )}
                             {members.map((player) => (
                                 <Box
                                     key={player.id}
@@ -82,6 +84,7 @@ export default function PlayerList() {
                                     />
                                     {player.monitor && (
                                         <Sword
+                                            titleAccess="Room monitor"
                                             fontSize="small"
                                             sx={{ color: 'green', ml: 2 }}
                                         />

@@ -1,7 +1,7 @@
 'use client';
 import { Box } from '@mui/material';
 import { ConfirmProvider } from 'material-ui-confirm';
-import { ReactNode, useState } from 'react';
+import { ReactNode, Suspense, useState } from 'react';
 import CookieConsent from 'react-cookie-consent';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -42,11 +42,11 @@ export default function CoreLayout({
                         open={navDrawerOpen}
                         setOpen={setManuallyOpened}
                     />
-                    {children}
+                    <Suspense fallback={null}>{children}</Suspense>
                     <Footer />
                 </Box>
                 <ToastContainer />
-                {modal}
+                <Suspense fallback={null}>{modal}</Suspense>
             </ConfirmProvider>
             <CookieConsent
                 location="bottom"
