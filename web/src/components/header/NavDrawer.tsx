@@ -15,6 +15,7 @@ import {
 import Image from 'next/image';
 import NextLink from 'next/link';
 import { useSelectedLayoutSegment } from 'next/navigation';
+import { Suspense, type ReactNode } from 'react';
 import logo from '../../images/playbingologo.png';
 import { icons } from '../footer/Footer';
 
@@ -25,9 +26,42 @@ interface Props {
     setOpen: (open: boolean) => void;
 }
 
-export default function NavDrawer({ open, setOpen }: Props) {
-    const segment = useSelectedLayoutSegment();
+interface NavLinkProps {
+    href: string;
+    icon: ReactNode;
+    children: ReactNode;
+    onClick: () => void;
+    selected?: boolean;
+}
 
+function NavLink({ href, icon, children, onClick, selected }: NavLinkProps) {
+    return (
+        <ListItemButton
+            component={NextLink}
+            href={href}
+            selected={selected}
+            onClick={onClick}
+        >
+            <ListItemIcon>{icon}</ListItemIcon>
+            <ListItemText>{children}</ListItemText>
+        </ListItemButton>
+    );
+}
+
+function ActiveNavLink(props: NavLinkProps) {
+    const segment = useSelectedLayoutSegment();
+    return <NavLink {...props} selected={`/${segment}` === props.href} />;
+}
+
+function DrawerNavLink(props: NavLinkProps) {
+    return (
+        <Suspense fallback={<NavLink {...props} />}>
+            <ActiveNavLink {...props} />
+        </Suspense>
+    );
+}
+
+export default function NavDrawer({ open, setOpen }: Props) {
     return (
         <Drawer
             open={open}
@@ -55,46 +89,34 @@ export default function NavDrawer({ open, setOpen }: Props) {
                         <Image src={logo} alt="PlayBingo logo" height={52} />
                     </ListItem>
                     <ListItem disablePadding>
-                        <ListItemButton
-                            component={NextLink}
+                        <DrawerNavLink
                             href="/games"
-                            selected={segment === 'games'}
+                            icon={<Games />}
                             onClick={() => setOpen(false)}
                         >
-                            <ListItemIcon>
-                                <Games />
-                            </ListItemIcon>
-                            <ListItemText>Games</ListItemText>
-                        </ListItemButton>
+                            Games
+                        </DrawerNavLink>
                     </ListItem>
                     <ListItem disablePadding>
-                        <ListItemButton
-                            component={NextLink}
+                        <DrawerNavLink
                             href="/rooms"
-                            selected={segment === 'rooms'}
+                            icon={<PlayArrow />}
                             onClick={() => setOpen(false)}
                         >
-                            <ListItemIcon>
-                                <PlayArrow />
-                            </ListItemIcon>
-                            <ListItemText>Rooms</ListItemText>
-                        </ListItemButton>
+                            Rooms
+                        </DrawerNavLink>
                     </ListItem>
                 </List>
                 <Box sx={{ flexGrow: 1 }} />
                 <List>
                     <ListItem disablePadding>
-                        <ListItemButton
-                            component={NextLink}
+                        <DrawerNavLink
                             href="/docs"
-                            selected={segment === 'docs'}
+                            icon={<MenuBook />}
                             onClick={() => setOpen(false)}
                         >
-                            <ListItemIcon>
-                                <MenuBook />
-                            </ListItemIcon>
-                            <ListItemText>Documentation</ListItemText>
-                        </ListItemButton>
+                            Documentation
+                        </DrawerNavLink>
                     </ListItem>
                 </List>
                 <Divider />
