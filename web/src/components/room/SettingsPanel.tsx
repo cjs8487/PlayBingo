@@ -85,7 +85,6 @@ export default function SettingsPanel() {
                             }}
                         >
                             <ColorSelect />
-                            <TeamControls />
                         </Box>
                     )}
                     <Divider sx={{ my: 2 }} />
