@@ -69,7 +69,7 @@ export default function PlayerList() {
                                 <Box
                                     key={player.id}
                                     sx={{
-                                        p: 1,
+                                        p: 0.5,
                                         display: 'flex',
                                         alignItems: 'center',
                                         justifyContent: 'space-between',
