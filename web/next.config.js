@@ -23,6 +23,9 @@ const nextConfig = {
     turbopack: {
         root: path.join(__dirname, '..'),
     },
+    deprecated: {
+        looseRouteMatching: true,
+    },
 };
 
 module.exports = nextConfig;

@@ -1,6 +1,6 @@
 'use client';
 import { Box } from '@mui/material';
-import { ReactNode } from 'react';
+import { ReactNode, Suspense } from 'react';
 import CookieConsent from 'react-cookie-consent';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -29,7 +29,9 @@ export default function CoreLayout({
                     }}
                 >
                     <Header />
-                    {children}
+                    <Suspense fallback={<Box role="status">Loading...</Box>}>
+                        {children}
+                    </Suspense>
                     <Footer />
                 </Box>
                 <ToastContainer />
