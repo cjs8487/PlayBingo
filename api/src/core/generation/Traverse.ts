@@ -3,6 +3,7 @@ import { GeneratorGoal } from './GeneratorCore';
 import { GeneratorSettings } from '@playbingo/shared';
 import { BoardGenerator } from './BoardGenerator';
 import { GenerationFailedError } from './GenerationFailedError';
+import { shuffle } from '../../util/Array';
 
 /** Preserve random/custom layouts and turn difficulty layouts into directional steps. */
 export function generateTraverse(
@@ -38,28 +39,18 @@ export function generateTraverse(
             );
             const lineCount =
                 direction === 'LEFT' || direction === 'RIGHT' ? width : height;
-            const min = rated.reduce(
-                (value, goal) => Math.min(value, goal.difficulty!),
-                Infinity,
-            );
-            const max = rated.reduce(
-                (value, goal) => Math.max(value, goal.difficulty!),
-                -Infinity,
-            );
-            const groupWidth = (max - min + 1) / lineCount;
+            // Balance the goal supply across steps. Shuffle first so ties can
+            // span steps without fixing the same goals to the same lines.
+            shuffle(rated, undefined, generator.rng);
+            rated.sort((a, b) => a.difficulty! - b.difficulty!);
             generator.goalsByDifficulty = Object.fromEntries(
-                Array.from({ length: lineCount }, (_, index) => {
-                    const lower = Math.floor(min + index * groupWidth);
-                    const upper = Math.ceil(min + (index + 1) * groupWidth) - 1;
-                    return [
-                        index + 1,
-                        rated.filter(
-                            (goal) =>
-                                goal.difficulty! >= lower &&
-                                goal.difficulty! <= upper,
-                        ),
-                    ];
-                }),
+                Array.from({ length: lineCount }, (_, index) => [
+                    index + 1,
+                    rated.slice(
+                        Math.floor((index * rated.length) / lineCount),
+                        Math.floor(((index + 1) * rated.length) / lineCount),
+                    ),
+                ]),
             );
             generator.layout = Array.from({ length: height }, (_row, row) =>
                 Array.from({ length: width }, (_col, col) => ({

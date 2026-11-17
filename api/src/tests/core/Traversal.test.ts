@@ -276,18 +276,32 @@ it.each<[TraversalDirection, GeneratorSettings['boardLayout']]>([
     },
 );
 
-it('fails at goal filling when a difficulty group has no candidates', () => {
-    const sparse = goalPool()
-        .slice(0, 25)
-        .map((goal, index) => ({ ...goal, difficulty: index === 24 ? 7 : 1 }));
-    expect(() =>
-        generateTraverse(
-            sparse,
+it.each([1, 7])(
+    'reuses difficulty levels across steps with a final difficulty of %s',
+    (lastDifficulty) => {
+        const goals = goalPool()
+            .slice(0, 25)
+            .map((goal, index) => ({
+                ...goal,
+                difficulty: index === 24 ? lastDifficulty : 1,
+            }));
+        const board = generateTraverse(
+            goals,
             5,
             5,
             'DOWN',
             42,
             settingsFor({ mode: 'srlv5' }),
-        ),
-    ).toThrow('No valid goals found to place in cell');
-});
+        );
+        expect(new Set(board.flat().map((cell) => cell.goal.id)).size).toBe(25);
+        expect(
+            board
+                .slice(0, 4)
+                .flat()
+                .every((cell) => cell.goal.difficulty === 1),
+        ).toBe(true);
+        expect(board[4].map((cell) => cell.goal.difficulty)).toContain(
+            lastDifficulty,
+        );
+    },
+);

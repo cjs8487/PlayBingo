@@ -158,18 +158,19 @@ function VariantSelectField() {
 
 function BoardSizeSelectField() {
     const {
-        values: { game, variant, boardSize },
+        values: { game, variant, mode, boardSize },
         setValues,
         setFieldValue,
     } = useFormikContext<{
         game?: string;
         variant: string;
+        mode: string;
         boardSize: RoomBoardSize | '';
         boardSizes: RoomBoardSize[];
     }>();
     const { data, isLoading, error } = useSWR<BoardSizeOptions>(
         game
-            ? `/api/games/${encodeURIComponent(game)}/boardSizes?${new URLSearchParams({ variant })}`
+            ? `/api/games/${encodeURIComponent(game)}/boardSizes?${new URLSearchParams({ variant, mode })}`
             : null,
         async (url: string) => {
             const response = await fetch(url);

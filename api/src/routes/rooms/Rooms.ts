@@ -129,7 +129,11 @@ rooms.post('/', async (req, res) => {
     }
 
     try {
-        const available = await roomBoardSizes(game, variant || undefined);
+        const available = await roomBoardSizes(
+            game,
+            variant || undefined,
+            mode,
+        );
         if (available.customLayout) {
             const { width, height } = available.customLayout;
             if (

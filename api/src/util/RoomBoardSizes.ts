@@ -1,4 +1,5 @@
 import { BoardSizeOptions, GeneratorSettings } from '@playbingo/shared';
+import { BingoMode } from '@prisma/client';
 import {
     availableBoardSizes,
     availableCustomBoardSize,
@@ -11,6 +12,7 @@ import { getVariant } from '../database/games/Variants';
 export const roomBoardSizes = async (
     slug: string,
     variantId?: string,
+    mode?: BingoMode,
 ): Promise<BoardSizeOptions> => {
     const game = await gameForSlug(slug);
     if (!game) throw new Error('Game not found');
@@ -38,5 +40,11 @@ export const roomBoardSizes = async (
         const customLayout = availableCustomBoardSize(goals, settings);
         return { sizes: [], ...(customLayout ? { customLayout } : {}) };
     }
-    return { sizes: availableBoardSizes(goals, settings) };
+    return {
+        sizes: availableBoardSizes(
+            goals,
+            settings,
+            mode === BingoMode.TRAVERSE,
+        ),
+    };
 };

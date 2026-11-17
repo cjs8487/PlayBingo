@@ -8,6 +8,7 @@ import { roomBoardSizes } from '../../util/RoomBoardSizes';
 import { makeGeneratorSchema } from '@playbingo/shared';
 import { Game } from '@playbingo/types';
 import { Router } from 'express';
+import { BingoMode } from '@prisma/client';
 import { BoardGenerator } from '../../core/generation/BoardGenerator';
 import { GenerationFailedError } from '../../core/generation/GenerationFailedError';
 import {
@@ -77,12 +78,22 @@ games.get('/:slug/boardSizes', async (req, res) => {
         res.status(400).send('Invalid variant parameter');
         return;
     }
+    const mode = req.query.mode;
+    if (
+        mode !== undefined &&
+        !Object.values(BingoMode).includes(mode as BingoMode)
+    ) {
+        res.status(400).send('Invalid game mode parameter');
+        return;
+    }
     if (!(await gameForSlug(slug))) {
         res.sendStatus(404);
         return;
     }
     try {
-        res.json(await roomBoardSizes(slug, variant));
+        res.json(
+            await roomBoardSizes(slug, variant, mode as BingoMode | undefined),
+        );
     } catch (e) {
         res.status(400).send(
             e instanceof Error ? e.message : 'Unable to determine board sizes.',
