@@ -74,7 +74,7 @@ export default function GoalSearch() {
                     renderOption={(props, option, { selected }) => {
                         const { key, ...optionProps } = props;
                         return (
-                            <MenuItem key={key} {...optionProps}>
+                            <li key={key} {...optionProps}>
                                 <Checkbox
                                     icon={icon}
                                     checkedIcon={checkedIcon}
@@ -87,7 +87,7 @@ export default function GoalSearch() {
                                     </ListItemIcon>
                                 ) : null}
                                 <ListItemText>{option.display}</ListItemText>
-                            </MenuItem>
+                            </li>
                         );
                     }}
                     renderInput={(params) => (
