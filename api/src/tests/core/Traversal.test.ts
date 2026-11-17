@@ -1,9 +1,9 @@
+import { GeneratorSettings } from '@playbingo/shared';
 import { BingoMode, TraversalDirection } from '@prisma/client';
 import { mock } from 'jest-mock-extended';
 import Room, { BoardGenerationMode } from '../../core/Room';
 import Player from '../../core/Player';
 import { RoomTokenPayload } from '../../auth/RoomAuth';
-import { GenerationFailedError } from '../../core/generation/GenerationFailedError';
 import { generateTraverse } from '../../core/generation/Traverse';
 import * as Goals from '../../database/games/Goals';
 import * as Categories from '../../database/games/GoalCategories';
@@ -33,7 +33,7 @@ afterEach(() => {
 });
 
 it.each(Object.values(TraversalDirection))(
-    '%s generates a difficulty ramp and supports exploration and a completed crossing',
+    '%s preserves a custom layout and supports team exploration and a completed crossing',
     async (direction) => {
         const width = 5,
             height = 3;
@@ -68,7 +68,7 @@ it.each(Object.values(TraversalDirection))(
             },
             width,
             height,
-            false,
+            true,
             direction,
         );
         jest.spyOn(Goals, 'goalsForGameFull').mockResolvedValue(goalPool());
@@ -87,6 +87,8 @@ it.each(Object.values(TraversalDirection))(
         );
         const player = new Player(room, 'p', 'Player', false);
         const team = room.createTeamForPlayer(player);
+        const teammate = new Player(room, 'p2', 'Teammate', false, team.id);
+        team.addPlayer(teammate);
         await room.generateBoard({
             mode: BoardGenerationMode.RANDOM,
             seed: 42,
@@ -97,9 +99,6 @@ it.each(Object.values(TraversalDirection))(
         expect(
             new Set(room.board.flat().map((cell) => cell.goal.id)).size,
         ).toBe(width * height);
-        expect(
-            room.board.flat().every((cell) => cell.goal.difficulty != null),
-        ).toBe(true);
         const horizontal = direction === 'LEFT' || direction === 'RIGHT';
         const reversed = direction === 'UP' || direction === 'LEFT';
         const lines = horizontal
@@ -108,15 +107,6 @@ it.each(Object.values(TraversalDirection))(
               )
             : [...room.board];
         if (reversed) lines.reverse();
-        const averages = lines.map(
-            (line) =>
-                line.reduce((sum, cell) => sum + cell.goal.difficulty!, 0) /
-                line.length,
-        );
-        for (let index = 1; index < averages.length; index++)
-            expect(averages[index]).toBeGreaterThanOrEqual(averages[index - 1]);
-        expect(averages.at(-1)).toBeGreaterThan(averages[0]);
-
         const visible = team.obfuscateBoard();
         const start = reversed ? lines.length - 1 : 0;
         visible.forEach((row, r) =>
@@ -126,8 +116,11 @@ it.each(Object.values(TraversalDirection))(
             }),
         );
         const auth = { ...mock<RoomTokenPayload>(), playerId: player.id };
-        const mark = (row: number, col: number) =>
-            room.handleMark({ action: 'mark', payload: { row, col } }, auth);
+        const mark = (row: number, col: number, playerId = player.id) =>
+            room.handleMark(
+                { action: 'mark', payload: { row, col } },
+                { ...auth, playerId },
+            );
         mark(1, 2);
         expect(team.goalCount).toBe(0);
         const coordinate = (step: number): [number, number] => {
@@ -136,7 +129,7 @@ it.each(Object.values(TraversalDirection))(
         };
         for (let step = 0; step < lines.length; step++) {
             expect(team.goalComplete).toBe(false);
-            mark(...coordinate(step));
+            mark(...coordinate(step), step % 2 ? teammate.id : player.id);
             if (step + 1 < lines.length)
                 expect(team.hasRevealed(...coordinate(step + 1))).toBe(true);
         }
@@ -192,11 +185,109 @@ it('requires an edge-connected path rather than diagonal or disconnected marks',
     ).toBe(false);
 });
 
-it('fails when the eligible pool cannot fill a difficulty group', () => {
+const settingsFor = (
+    boardLayout: GeneratorSettings['boardLayout'],
+): GeneratorSettings => ({
+    goalFilters: [],
+    goalTransformation: [],
+    restrictions: [],
+    adjustments: [],
+    boardLayout,
+});
+
+it('fills random layouts without requiring difficulties', () => {
+    const goals = goalPool()
+        .slice(0, 16)
+        .map((goal) => ({ ...goal, difficulty: null }));
+    const board = generateTraverse(goals, 4, 4, 'UP', 42);
+    expect(board).toHaveLength(4);
+    expect(board.every((row) => row.length === 4)).toBe(true);
+    expect(new Set(board.flat().map((cell) => cell.goal.id)).size).toBe(16);
+});
+
+it('preserves custom cell criteria and only requires difficulties where specified', () => {
+    const goals = goalPool()
+        .slice(0, 3)
+        .map((goal, index) => ({
+            ...goal,
+            difficulty: index === 1 ? 7 : null,
+        }));
+    const board = generateTraverse(
+        goals,
+        3,
+        1,
+        'RIGHT',
+        42,
+        settingsFor({
+            mode: 'custom',
+            layout: [
+                [
+                    { selectionCriteria: 'fixed', goal: goals[0].id },
+                    { selectionCriteria: 'difficulty', difficulty: 7 },
+                    { selectionCriteria: 'random' },
+                ],
+            ],
+        }),
+    );
+    expect(board[0].map((cell) => cell.goal.id)).toEqual([
+        goals[0].id,
+        goals[1].id,
+        goals[2].id,
+    ]);
+});
+
+it.each<[TraversalDirection, GeneratorSettings['boardLayout']]>([
+    ['UP', { mode: 'srlv5' }],
+    ['DOWN', { mode: 'isaac' }],
+    [
+        'LEFT',
+        {
+            mode: 'difficulty-distribution',
+            distribution: [{ difficulty: 1, count: 25 }],
+        },
+    ],
+    ['RIGHT', { mode: 'srlv5' }],
+])(
+    '%s replaces difficulty layouts with increasing steps',
+    (direction, layout) => {
+        const board = generateTraverse(
+            goalPool(),
+            5,
+            5,
+            direction,
+            42,
+            settingsFor(layout),
+        );
+        const lines =
+            direction === 'LEFT' || direction === 'RIGHT'
+                ? Array.from({ length: 5 }, (_, col) =>
+                      board.map((row) => row[col]),
+                  )
+                : [...board];
+        if (direction === 'UP' || direction === 'LEFT') lines.reverse();
+        const averages = lines.map(
+            (line) =>
+                line.reduce((sum, cell) => sum + cell.goal.difficulty!, 0) /
+                line.length,
+        );
+        for (let index = 1; index < averages.length; index++)
+            expect(averages[index]).toBeGreaterThanOrEqual(averages[index - 1]);
+        expect(averages.at(-1)).toBeGreaterThan(averages[0]);
+    },
+);
+
+it('fails at goal filling when a difficulty group has no candidates', () => {
     const sparse = goalPool()
         .slice(0, 25)
         .map((goal, index) => ({ ...goal, difficulty: index === 24 ? 7 : 1 }));
-    expect(() => generateTraverse(sparse, 5, 5, 'DOWN', 42)).toThrow(
-        GenerationFailedError,
-    );
+    expect(() =>
+        generateTraverse(
+            sparse,
+            5,
+            5,
+            'DOWN',
+            42,
+            settingsFor({ mode: 'srlv5' }),
+        ),
+    ).toThrow('No valid goals found to place in cell');
 });

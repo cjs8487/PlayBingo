@@ -469,23 +469,15 @@ export default class Room {
             categoryMaxes[cat.name] = cat.max <= 0 ? -1 : cat.max;
         });
 
-        // generator config was passed in when the room was initialized, so the
-        // game is enabled and configured for the new generator system
-        // difficulty variants are mutually exclusive with th new generator
-        // system currently, so if difficulty is selected go back to the old one
         if (this.bingoMode === BingoMode.TRAVERSE) {
             generatedSeed = seed ?? Math.ceil(999999 * Math.random());
-            const settings =
-                mode !== BoardGenerationMode.DIFFICULTY
-                    ? this.generatorSettings
-                    : undefined;
             generatedBoard = generateTraverse(
                 goals,
                 this.boardWidth,
                 this.boardHeight,
                 this.traversalDirection,
                 generatedSeed,
-                settings,
+                this.generatorSettings,
                 categories,
             );
         } else if (
