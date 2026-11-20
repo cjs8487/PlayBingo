@@ -1,11 +1,11 @@
 import { Category, TraversalDirection } from '@prisma/client';
 import { GeneratorGoal } from './GeneratorCore';
-import { GeneratorSettings } from '@playbingo/shared';
+import { GeneratorSettings, usesTraverseSteps } from '@playbingo/shared';
 import { BoardGenerator } from './BoardGenerator';
 import { GenerationFailedError } from './GenerationFailedError';
 import { shuffle } from '../../util/Array';
 
-/** Preserve random/custom layouts and turn difficulty layouts into directional steps. */
+/** Use the configured layout, with optional directional steps for Traverse. */
 export function generateTraverse(
     goals: GeneratorGoal[],
     width: number,
@@ -28,10 +28,7 @@ export function generateTraverse(
         width,
         seed,
     );
-    if (
-        settings.boardLayout.mode !== 'random' &&
-        settings.boardLayout.mode !== 'custom'
-    ) {
+    if (usesTraverseSteps(settings)) {
         generator.layoutGenerator = () => {
             const rated = generator.goals.filter(
                 (goal) =>

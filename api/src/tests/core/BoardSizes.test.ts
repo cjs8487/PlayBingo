@@ -162,7 +162,21 @@ it.each<GeneratorSettings['boardLayout']>([
                     : [],
         }));
         const config = settings(layout);
+        config.boardLayout.traverseSteps = true;
         config.goalFilters = [{ mode: 'tags-inclusion', tags: ['included'] }];
+        expect(
+            availableBoardSizes(
+                supply,
+                {
+                    ...config,
+                    boardLayout: {
+                        ...config.boardLayout,
+                        traverseSteps: false,
+                    },
+                },
+                true,
+            ),
+        ).toEqual(availableBoardSizes(supply, config));
         expect(availableBoardSizes(supply, config, true)).toEqual([
             2, 3, 4, 5, 6,
         ]);

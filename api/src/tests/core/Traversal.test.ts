@@ -236,17 +236,33 @@ it('preserves custom cell criteria and only requires difficulties where specifie
     ]);
 });
 
+it('preserves the configured difficulty layout without the Traverse opt-in', () => {
+    const board = generateTraverse(
+        goalPool(),
+        5,
+        5,
+        'DOWN',
+        42,
+        settingsFor({ mode: 'isaac' }),
+    );
+    expect(board[0].map((cell) => cell.goal.difficulty)).toEqual([
+        2, 3, 1, 1, 2,
+    ]);
+    expect(board[2][2].goal.difficulty).toBe(4);
+});
+
 it.each<[TraversalDirection, GeneratorSettings['boardLayout']]>([
-    ['UP', { mode: 'srlv5' }],
-    ['DOWN', { mode: 'isaac' }],
+    ['UP', { mode: 'srlv5', traverseSteps: true }],
+    ['DOWN', { mode: 'isaac', traverseSteps: true }],
     [
         'LEFT',
         {
             mode: 'difficulty-distribution',
             distribution: [{ difficulty: 1, count: 25 }],
+            traverseSteps: true,
         },
     ],
-    ['RIGHT', { mode: 'srlv5' }],
+    ['RIGHT', { mode: 'srlv5', traverseSteps: true }],
 ])(
     '%s replaces difficulty layouts with increasing steps',
     (direction, layout) => {
@@ -291,7 +307,7 @@ it.each([1, 7])(
             5,
             'DOWN',
             42,
-            settingsFor({ mode: 'srlv5' }),
+            settingsFor({ mode: 'srlv5', traverseSteps: true }),
         );
         expect(new Set(board.flat().map((cell) => cell.goal.id)).size).toBe(25);
         expect(

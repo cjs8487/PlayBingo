@@ -1,4 +1,8 @@
-import { BoardSizeOptions, GeneratorSettings } from '@playbingo/shared';
+import {
+    BoardSizeOptions,
+    GeneratorSettings,
+    usesTraverseSteps,
+} from '@playbingo/shared';
 
 import { FilterableGoal, matchesGoalFilter } from './GoalListPruner';
 
@@ -27,8 +31,7 @@ export const availableBoardSizes = (
     traverse: boolean = false,
 ): number[] => {
     const layout = settings.boardLayout;
-    const stepped =
-        traverse && layout.mode !== 'random' && layout.mode !== 'custom';
+    const stepped = traverse && usesTraverseSteps(settings);
     const eligible = filteredGoals(goals, settings).filter(
         (goal) =>
             !stepped ||
