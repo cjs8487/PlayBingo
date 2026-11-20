@@ -20,7 +20,7 @@ import {
     JoinTeamAction,
     SetTeamsEnabledAction,
 } from '@playbingo/types';
-import { BingoMode } from '@prisma/client';
+import { BingoMode, TraversalDirection } from '@prisma/client';
 import { DateTime } from 'luxon';
 import { WebSocket } from 'ws';
 import { roomCleanupInactive } from '../Environment';
@@ -58,11 +58,14 @@ import {
     getModeString,
     listToBoard,
     rowColToMask,
+    startingEdgeMask,
+    hasTraversalCompletion,
 } from '../util/RoomUtils';
 import Player from './Player';
 import { allRooms } from './RoomServer';
 import { BoardGenerator } from './generation/BoardGenerator';
 import { GenerationFailedError } from './generation/GenerationFailedError';
+import { generateTraverse } from './generation/Traverse';
 import {
     GeneratorGoal,
     GlobalGenerationState,
@@ -119,6 +122,7 @@ export default class Room {
     id: string;
     hideCard: boolean;
     bingoMode: BingoMode;
+    traversalDirection: TraversalDirection;
     lineCount: number;
     variantName: string;
     exploration: boolean = false;
@@ -165,6 +169,7 @@ export default class Room {
         public boardWidth: number = 5,
         public boardHeight: number = 5,
         teamsEnabled: boolean = false,
+        traversalDirection: TraversalDirection = 'UP',
     ) {
         this.name = name;
         this.game = game;
@@ -174,6 +179,7 @@ export default class Room {
         this.chatHistory = [];
         this.id = id;
         this.bingoMode = bingoMode;
+        this.traversalDirection = traversalDirection;
         this.lineCount = lineCount;
         this.variantName = variantName;
 
@@ -212,7 +218,14 @@ export default class Room {
         this.seed = seed;
         this.teamsEnabled = teamsEnabled;
 
-        if (explorationStart) {
+        if (this.bingoMode === BingoMode.TRAVERSE) {
+            this.exploration = true;
+            this.alwaysRevealedMask = startingEdgeMask(
+                boardWidth,
+                boardHeight,
+                this.traversalDirection,
+            );
+        } else if (explorationStart) {
             this.exploration = true;
             switch (explorationStart) {
                 case 'TL':
@@ -423,7 +436,7 @@ export default class Room {
     }
 
     spectatorObfuscateBoard(): Cell[][] {
-        let exploredGoals = 0n;
+        let exploredGoals = this.alwaysRevealedMask;
         this.teams.forEach((team) => {
             exploredGoals |= team.getRevealedMask();
         });
@@ -445,7 +458,8 @@ export default class Room {
     }
 
     async generateBoard(options: BoardGenerationOptions) {
-        this.lastGenerationMode = options;
+        let generatedBoard: RevealedCell[][];
+        let generatedSeed = this.seed;
         const { mode, seed } = options;
         const goals = await goalsForGameFull(this.gameSlug);
         let goalList: GeneratorGoal[];
@@ -455,11 +469,21 @@ export default class Room {
             categoryMaxes[cat.name] = cat.max <= 0 ? -1 : cat.max;
         });
 
-        // generator config was passed in when the room was initialized, so the
-        // game is enabled and configured for the new generator system
-        // difficulty variants are mutually exclusive with th new generator
-        // system currently, so if difficulty is selected go back to the old one
-        if (this.generatorSettings && mode !== BoardGenerationMode.DIFFICULTY) {
+        if (this.bingoMode === BingoMode.TRAVERSE) {
+            generatedSeed = seed ?? Math.ceil(999999 * Math.random());
+            generatedBoard = generateTraverse(
+                goals,
+                this.boardWidth,
+                this.boardHeight,
+                this.traversalDirection,
+                generatedSeed,
+                this.generatorSettings,
+                categories,
+            );
+        } else if (
+            this.generatorSettings &&
+            mode !== BoardGenerationMode.DIFFICULTY
+        ) {
             const generator = new BoardGenerator(
                 goals,
                 categories,
@@ -491,15 +515,14 @@ export default class Room {
                     generator,
                 );
             }
-            this.seed = generator.seed;
-            this.board = generator.board.map((row) =>
+            generatedSeed = generator.seed;
+            generatedBoard = generator.board.map((row) =>
                 row.map((goal) => ({
                     goal: goal,
                     completedTeams: [],
                     revealed: true,
                 })),
             );
-            this.computeVictoryMasks();
         } else {
             const globalState: GlobalGenerationState = {
                 useCategoryMaxes: categories.some((cat) => cat.max > 0),
@@ -587,8 +610,20 @@ export default class Room {
                 this.logError(`Failed to generate board ${e}`);
                 return;
             }
-            this.board = listToBoard(goalList, 5);
+            generatedBoard = listToBoard(goalList, 5);
         }
+
+        if (this.bingoMode === BingoMode.TRAVERSE) {
+            this.alwaysRevealedMask = startingEdgeMask(
+                generatedBoard[0].length,
+                generatedBoard.length,
+                this.traversalDirection,
+            );
+        }
+        this.board = generatedBoard;
+        this.seed = generatedSeed;
+        this.lastGenerationMode = options;
+        this.computeVictoryMasks();
 
         // reset board aware state
         this.teams.forEach((team) => team.reset());
@@ -633,7 +668,11 @@ export default class Room {
                               ?.status.verbose_value,
                       }
                     : undefined,
-            mode: getModeString(this.bingoMode, this.lineCount),
+            mode: getModeString(
+                this.bingoMode,
+                this.lineCount,
+                this.traversalDirection,
+            ),
             variant: this.variantName,
             teamsEnabled: this.teamsEnabled,
             chatEnabled: this.chatEnabled,
@@ -881,6 +920,19 @@ export default class Room {
         }
         const { row, col } = action.payload;
         if (row === undefined || col === undefined) return;
+        if (
+            !Number.isInteger(row) ||
+            !Number.isInteger(col) ||
+            !this.board[row]?.[col]
+        )
+            return;
+        if (
+            this.bingoMode === BingoMode.TRAVERSE &&
+            (team.getRevealedMask() &
+                rowColToMask(row, col, this.board[0].length)) ===
+                0n
+        )
+            return;
         if (team.hasMarked(row, col)) return;
 
         if (
@@ -899,7 +951,9 @@ export default class Room {
                     contents: player.getDisplayName(),
                     color: team.color,
                 },
-                ` marked ${this.board[row][col].goal.goal} (${row},${col})`,
+                this.bingoMode === BingoMode.TRAVERSE
+                    ? ` marked (${row},${col})`
+                    : ` marked ${this.board[row][col].goal.goal} (${row},${col})`,
             ],
             timestamp,
         );
@@ -931,7 +985,9 @@ export default class Room {
                     contents: player.getDisplayName(),
                     color: team.color,
                 },
-                ` unmarked ${this.board[unRow][unCol].goal.goal} (${unRow},${unCol})`,
+                this.bingoMode === BingoMode.TRAVERSE
+                    ? ` unmarked (${unRow},${unCol})`
+                    : ` unmarked ${this.board[unRow][unCol].goal.goal} (${unRow},${unCol})`,
             ],
             timestamp,
         );
@@ -993,11 +1049,26 @@ export default class Room {
             if (!options.mode) {
                 options.mode = this.lastGenerationMode.mode;
             }
-            this.generateBoard(options as BoardGenerationOptions);
+            this.regenerateBoard(options as BoardGenerationOptions);
         } else {
             // TODO: we should probably generate a new seed before generating
             // the board from the previous settings
-            this.generateBoard(this.lastGenerationMode);
+            this.regenerateBoard(this.lastGenerationMode);
+        }
+    }
+
+    private async regenerateBoard(options: BoardGenerationOptions) {
+        try {
+            await this.generateBoard(options);
+        } catch (error) {
+            if (error instanceof GenerationFailedError) {
+                this.sendSystemMessage(error.message);
+            } else {
+                this.logError(`Failed to regenerate board: ${error}`);
+                this.sendSystemMessage(
+                    'Board generation failed. The previous board has been kept.',
+                );
+            }
         }
     }
 
@@ -1230,7 +1301,24 @@ export default class Room {
     private checkWinConditions() {
         const timestamp = new Date();
         this.teams.forEach((team) => {
-            if (this.bingoMode === BingoMode.LOCKOUT) {
+            if (this.bingoMode === BingoMode.TRAVERSE) {
+                const complete = hasTraversalCompletion(
+                    team.markedGoals,
+                    this.boardWidth,
+                    this.boardHeight,
+                    this.traversalDirection,
+                );
+                if (complete !== team.goalComplete) {
+                    this.setTeamComplete(team, complete);
+                    this.sendTeamChat(
+                        team,
+                        complete
+                            ? ' has crossed the board!'
+                            : ' no longer has a complete crossing.',
+                        timestamp,
+                    );
+                }
+            } else if (this.bingoMode === BingoMode.LOCKOUT) {
                 const goalsNeeded = Math.ceil(
                     (this.boardHeight * this.boardWidth) / 2,
                 );

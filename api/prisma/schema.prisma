@@ -196,6 +196,7 @@ model Room {
   hideCard         Boolean      @default(false)
   bingoMode        BingoMode    @default(LINES)
   lineCount        Int          @default(1)
+  traversalDirection TraversalDirection @default(UP)
   players          Player[]
   teams            Team[]
   variant          Variant?     @relation(fields: [variantId], references: [id])
@@ -278,6 +279,7 @@ enum BingoMode {
   LINES
   BLACKOUT
   LOCKOUT
+  TRAVERSE
 }
 
 // board generation enums
@@ -312,4 +314,11 @@ enum GenerationGlobalAdjustments {
 enum RaceHandler {
   LOCAL
   RACETIME
+}
+
+enum TraversalDirection {
+  UP
+  DOWN
+  LEFT
+  RIGHT
 }

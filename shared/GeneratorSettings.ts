@@ -121,6 +121,11 @@ export const makeGeneratorSchema = (
                 description:
                     'Generates a board layout that has no restrictions on what goals can be placed in any given cell',
             }),
+            traverseSteps: z.boolean().default(false).optional().meta({
+                title: 'Use Stepped Traverse Layout',
+                description:
+                    'For Traverse rooms, replace difficulty-based layouts with steps that increase in difficulty along the traversal direction. Random and custom layouts are preserved.',
+            }),
         }),
         z.object({
             mode: z.literal('srlv5').meta({
@@ -128,12 +133,22 @@ export const makeGeneratorSchema = (
                 description:
                     'Generates a magic square of size n using difficulties 1 through n*n, with each difficulty appearing exactly once and every row, column and main diagonal having the same sum. Supports sizes 3x3 through 15x15. Goals outside this difficulty range are ignored.',
             }),
+            traverseSteps: z.boolean().default(false).optional().meta({
+                title: 'Use Stepped Traverse Layout',
+                description:
+                    'For Traverse rooms, replace difficulty-based layouts with steps that increase in difficulty along the traversal direction. Random and custom layouts are preserved.',
+            }),
         }),
         z.object({
             mode: z.literal('isaac').meta({
                 title: 'Static (Isaac)',
                 description:
                     'Generates a 5x5 board with a static layout using difficulties 1-4. The center cell of the board is always 4, and all sum of difficulties in lines including the center cell is 10. All other lines have a difficulty sum of 9. Goals with an invalid difficulty will be ignored.',
+            }),
+            traverseSteps: z.boolean().default(false).optional().meta({
+                title: 'Use Stepped Traverse Layout',
+                description:
+                    'For Traverse rooms, replace difficulty-based layouts with steps that increase in difficulty along the traversal direction. Random and custom layouts are preserved.',
             }),
         }),
         z.object({
@@ -217,6 +232,11 @@ export const makeGeneratorSchema = (
                 )
                 .meta({ title: 'Layout' })
                 .default([[{ selectionCriteria: 'random' }]]),
+            traverseSteps: z.boolean().default(false).optional().meta({
+                title: 'Use Stepped Traverse Layout',
+                description:
+                    'For Traverse rooms, replace difficulty-based layouts with steps that increase in difficulty along the traversal direction. Random and custom layouts are preserved.',
+            }),
         }),
         z.object({
             mode: z.literal('difficulty-distribution').meta({
@@ -259,6 +279,11 @@ export const makeGeneratorSchema = (
                     },
                 )
                 .meta({ title: 'Difficulty Distribution' }),
+            traverseSteps: z.boolean().default(false).optional().meta({
+                title: 'Use Stepped Traverse Layout',
+                description:
+                    'For Traverse rooms, replace difficulty-based layouts with steps that increase in difficulty along the traversal direction. Random and custom layouts are preserved.',
+            }),
         }),
     ]);
 
@@ -374,3 +399,6 @@ export const makeGeneratorSchema = (
 export type GeneratorSettings = z.infer<
     ReturnType<typeof makeGeneratorSchema>['schema']
 >;
+
+export const usesTraverseSteps = (settings: GeneratorSettings): boolean =>
+    settings.boardLayout.traverseSteps === true;

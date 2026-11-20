@@ -6,6 +6,8 @@ import {
     CardContent,
     Checkbox,
     FormControl,
+    FormControlLabel,
+    FormGroup,
     IconButton,
     InputLabel,
     ListItemText,
@@ -15,13 +17,7 @@ import {
     Tooltip,
     Typography,
 } from '@mui/material';
-import React, {
-    ReactNode,
-    useCallback,
-    useEffect,
-    useMemo,
-    useState,
-} from 'react';
+import { ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
 import z, { ZodType } from 'zod';
 import NumberField from '../NumberField';
 
@@ -701,10 +697,17 @@ export function JsonSchemaRenderer({
     }
     if (t === 'boolean') {
         return (
-            <Checkbox
-                checked={!!value}
-                onChange={(e) => onChange(e.target.checked)}
-            />
+            <FormGroup>
+                <FormControlLabel
+                    control={
+                        <Checkbox
+                            checked={!!value}
+                            onChange={(e) => onChange(e.target.checked)}
+                        />
+                    }
+                    label={schema.title}
+                />
+            </FormGroup>
         );
     }
 

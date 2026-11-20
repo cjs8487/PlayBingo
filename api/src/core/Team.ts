@@ -1,7 +1,12 @@
+import { BingoMode } from '@prisma/client';
 import Room from './Room';
 import Player from './Player';
 import { HiddenCell, RevealedCell, Team as TeamData } from '@playbingo/types';
-import { computeRevealedMask, rowColToMask } from '../util/RoomUtils';
+import {
+    computeRevealedMask,
+    rowColToMask,
+    connectedTraversalMask,
+} from '../util/RoomUtils';
 
 export default class Team {
     room: Room;
@@ -126,9 +131,18 @@ export default class Team {
     }
 
     getRevealedMask(): bigint {
+        const marked =
+            this.room.bingoMode === BingoMode.TRAVERSE
+                ? connectedTraversalMask(
+                      this.markedGoals,
+                      this.room.board[0].length,
+                      this.room.board.length,
+                      this.room.traversalDirection,
+                  )
+                : this.markedGoals;
         return (
             computeRevealedMask(
-                this.markedGoals,
+                marked,
                 this.room.board[0].length,
                 this.room.board.length,
             ) | this.room.alwaysRevealedMask

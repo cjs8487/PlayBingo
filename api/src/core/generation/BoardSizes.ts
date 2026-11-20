@@ -1,4 +1,8 @@
-import { BoardSizeOptions, GeneratorSettings } from '@playbingo/shared';
+import {
+    BoardSizeOptions,
+    GeneratorSettings,
+    usesTraverseSteps,
+} from '@playbingo/shared';
 
 import { FilterableGoal, matchesGoalFilter } from './GoalListPruner';
 
@@ -24,12 +28,19 @@ const filteredGoals = (
 export const availableBoardSizes = (
     goals: readonly FilterableGoal[],
     settings: GeneratorSettings,
+    traverse: boolean = false,
 ): number[] => {
-    const eligible = filteredGoals(goals, settings);
-    const difficulties = new Set(eligible.map((goal) => goal.difficulty));
     const layout = settings.boardLayout;
+    const stepped = traverse && usesTraverseSteps(settings);
+    const eligible = filteredGoals(goals, settings).filter(
+        (goal) =>
+            !stepped ||
+            (goal.difficulty != null && Number.isFinite(goal.difficulty)),
+    );
+    const difficulties = new Set(eligible.map((goal) => goal.difficulty));
     return Array.from({ length: 14 }, (_, i) => i + 2).filter((size) => {
         if (eligible.length < size ** 2) return false;
+        if (stepped) return true;
         switch (layout.mode) {
             case 'srlv5':
                 return (

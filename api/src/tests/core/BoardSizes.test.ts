@@ -4,6 +4,7 @@ import {
     availableCustomBoardSize,
 } from '../../core/generation/BoardSizes';
 import { GeneratorGoal } from '../../core/generation/GeneratorCore';
+import { generateTraverse } from '../../core/generation/Traverse';
 
 const goals: GeneratorGoal[] = Array.from({ length: 225 }, (_, i) => ({
     id: String(i),
@@ -141,6 +142,49 @@ it('limits the Isaac layout to 5x5 without checking individual cells', () => {
         ),
     ).toEqual([5]);
 });
+
+it.each<GeneratorSettings['boardLayout']>([
+    { mode: 'srlv5' },
+    { mode: 'isaac' },
+    {
+        mode: 'difficulty-distribution',
+        distribution: [{ difficulty: 1, count: 25 }],
+    },
+])(
+    'sizes stepped Traverse layouts by filtered rated goals for $mode',
+    (layout) => {
+        const supply = goals.slice(0, 64).map((goal, index) => ({
+            ...goal,
+            difficulty: index < 49 ? (index % 2) * 9 + 1 : null,
+            tags:
+                index < 36 || index >= 49
+                    ? [{ id: 'included', name: 'Included', gameId: 'game' }]
+                    : [],
+        }));
+        const config = settings(layout);
+        config.boardLayout.traverseSteps = true;
+        config.goalFilters = [{ mode: 'tags-inclusion', tags: ['included'] }];
+        expect(
+            availableBoardSizes(
+                supply,
+                {
+                    ...config,
+                    boardLayout: {
+                        ...config.boardLayout,
+                        traverseSteps: false,
+                    },
+                },
+                true,
+            ),
+        ).toEqual(availableBoardSizes(supply, config));
+        expect(availableBoardSizes(supply, config, true)).toEqual([
+            2, 3, 4, 5, 6,
+        ]);
+        const board = generateTraverse(supply, 6, 6, 'DOWN', 42, config);
+        expect(board).toHaveLength(6);
+        expect(board.every((row) => row.length === 6)).toBe(true);
+    },
+);
 
 it('offers only the exact square size of a custom layout', () => {
     const layout = Array.from({ length: 3 }, () =>
