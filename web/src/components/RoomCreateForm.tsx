@@ -152,7 +152,9 @@ function BoardSizeSelectField() {
     }>();
     const { data, isLoading, error } = useSWR<BoardSizeOptions>(
         game
-            ? `/api/games/${encodeURIComponent(game)}/boardSizes?${new URLSearchParams({ variant })}`
+            ? variant
+                ? `/api/games/${encodeURIComponent(game)}/boardSizes?${new URLSearchParams({ variant })}`
+                : `/api/games/${encodeURIComponent(game)}/boardSizes`
             : null,
         async (url: string) => {
             const response = await fetch(url);
