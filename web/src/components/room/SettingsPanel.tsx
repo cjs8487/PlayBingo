@@ -8,7 +8,6 @@ import {
 } from '@mui/material';
 import ColorSelect from './ColorSelect';
 import { Refresh, Sword } from 'mdi-material-ui';
-import TeamControls from './TeamControls';
 import { ConnectionStatus, useRoomContext } from '../../context/RoomContext';
 
 export default function SettingsPanel() {
