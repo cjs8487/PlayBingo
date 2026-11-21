@@ -86,13 +86,7 @@ export function useJSONForm<T extends ZodType<any, any>>(
 }
 
 export type JSONValue =
-    | string
-    | number
-    | boolean
-    | object
-    | JSONValue[]
-    | null
-    | undefined;
+    string | number | boolean | object | JSONValue[] | null | undefined;
 
 /** A light JSON Schema type; we only use a subset of fields */
 export type JSONSchema = {
