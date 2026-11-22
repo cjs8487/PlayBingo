@@ -90,6 +90,10 @@ export interface Team {
   color: string;
   goalCount: number;
   players: Player[];
+  /**
+   * Whether at least one player on the team is connected
+   */
+  showInRoom: boolean;
 }
 export interface Player {
   id: string;

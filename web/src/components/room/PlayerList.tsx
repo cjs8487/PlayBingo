@@ -38,12 +38,12 @@ export default function PlayerList() {
                 }}
             >
                 {teams.map((team) => {
+                    if (!team.showInRoom) {
+                        return null;
+                    }
                     const members = team.players.filter(
                         (player) => player.showInRoom,
                     );
-                    if (members.length === 0) {
-                        return null;
-                    }
                     return (
                         <Box key={team.id}>
                             <Box sx={{ display: 'flex', columnGap: 2 }}>

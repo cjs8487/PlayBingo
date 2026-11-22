@@ -493,6 +493,80 @@ describe('Room team workflows', () => {
         expect(boardMessages(bob).at(-1)!.board.hidden).toBe(false);
         expect(boardMessages(carol).at(-1)!.board.hidden).toBe(true);
     });
+
+    it('keeps a refreshing player on their team instead of creating a new one', () => {
+        const room = createRoom(true);
+        const aliceSocket = socket();
+        room.handleJoin(joinAction('Alice'), auth('alice'), aliceSocket);
+        room.handleJoin(joinAction('Bob'), auth('bob'), socket());
+        const team = room.getTeamForPlayer('alice')!;
+        room.handleJoinTeam(
+            {
+                action: 'joinTeam',
+                payload: { teamId: team.id },
+            } as JoinTeamAction,
+            auth('bob'),
+        );
+        room.handleMark(
+            { action: 'mark', payload: { row: 0, col: 0 } } as MarkAction,
+            auth('alice'),
+        );
+
+        // a page refresh drops the old socket, then joins again with the same
+        // player id on a new socket
+        room.handleSocketClose(aliceSocket);
+        expect(room.getPlayerById('alice')?.showInRoom()).toBe(false);
+        room.handleJoin(joinAction('Alice'), auth('alice'), socket());
+
+        expect(room.teams.size).toBe(1);
+        expect(room.getTeamForPlayer('alice')).toBe(team);
+        expect(room.getPlayerById('alice')?.teamId).toBe(team.id);
+        expect(team.players.has('bob')).toBe(true);
+        expect(room.board[0][0].completedTeams).toEqual([team.id]);
+        expect(team.hasMarked(0, 0)).toBe(true);
+    });
+
+    it('keeps a refreshing solo player on their team and keeps their marks', () => {
+        const room = createRoom(true);
+        const aliceSocket = socket();
+        room.handleJoin(joinAction('Alice'), auth('alice'), aliceSocket);
+        room.handleJoin(joinAction('Bob'), auth('bob'), socket());
+        const team = room.getTeamForPlayer('alice')!;
+        room.handleMark(
+            { action: 'mark', payload: { row: 0, col: 0 } } as MarkAction,
+            auth('alice'),
+        );
+
+        room.handleSocketClose(aliceSocket);
+        room.handleJoin(joinAction('Alice'), auth('alice'), socket());
+
+        expect(room.teams.size).toBe(2);
+        expect(room.getTeamForPlayer('alice')).toBe(team);
+        expect(room.board[0][0].completedTeams).toEqual([team.id]);
+        expect(room.chatHistory).not.toContainEqual([
+            chatTimestamp,
+            { contents: team.name, color: team.color },
+            ` ${team.name} has been disbanded.`,
+        ]);
+    });
+
+    it('reports team visibility and closes the room once nobody is connected', () => {
+        const room = createRoom(true);
+        const close = jest.spyOn(room, 'close').mockImplementation(() => {});
+        const aliceSocket = socket();
+        const bobSocket = socket();
+        room.handleJoin(joinAction('Alice'), auth('alice'), aliceSocket);
+        room.handleJoin(joinAction('Bob'), auth('bob', true), bobSocket);
+        const team = room.getTeamForPlayer('alice')!;
+
+        room.handleSocketClose(aliceSocket);
+        expect(team.showInRoom()).toBe(false);
+        expect(team.toClientData().showInRoom).toBe(false);
+        expect(close).not.toHaveBeenCalled();
+
+        room.handleSocketClose(bobSocket);
+        expect(close).toHaveBeenCalledTimes(1);
+    });
 });
 
 describe('Room handleJoinTeam', () => {

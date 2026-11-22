@@ -813,19 +813,16 @@ export default class Room {
         const hasLeft = !player.hasConnections();
         const timestamp = new Date();
         if (hasLeft) {
-            this.removePlayer(player, timestamp);
+            this.handleDisconnectedPlayer(player, timestamp);
         }
         invalidateToken(token);
         return { action: 'disconnected' };
     }
 
-    /** Removes a fully disconnected player from the room */
-    private removePlayer(player: Player, timestamp: Date) {
+    private handleDisconnectedPlayer(player: Player, timestamp: Date) {
         const playerTeam = player.teamId
             ? this.teams.get(player.teamId)
             : undefined;
-        this.removePlayerFromTeam(player, playerTeam);
-        this.spectators.delete(player.id);
         if (playerTeam) {
             this.sendChat(
                 [
@@ -844,7 +841,12 @@ export default class Room {
             playerTeam?.id,
             timestamp,
         ).then();
-        if (this.getAllPlayers().length === 0) {
+        const anyoneConnected =
+            this.teams.values().some((team) => team.showInRoom()) ||
+            this.spectators
+                .values()
+                .some((spectator) => spectator.showInRoom());
+        if (!anyoneConnected) {
             this.close();
         }
     }
@@ -1037,7 +1039,7 @@ export default class Room {
             return false;
         }
         if (!player.hasConnections()) {
-            this.removePlayer(player, new Date());
+            this.handleDisconnectedPlayer(player, new Date());
         }
         return true;
     }
