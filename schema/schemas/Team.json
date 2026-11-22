@@ -7,7 +7,8 @@
         "name",
         "color",
         "goalCount",
-        "players"
+        "players",
+        "showInRoom"
     ],
     "properties": {
         "id": {
@@ -27,6 +28,10 @@
             "items": {
                 "$ref": "./Player.json"
             }
+        },
+        "showInRoom": {
+            "type": "boolean",
+            "description": "Whether at least one player on the team is connected"
         }
     }
 }

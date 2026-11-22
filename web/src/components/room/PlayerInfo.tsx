@@ -176,28 +176,37 @@ export default function PlayerInfo() {
                                             Start a new team
                                         </MenuItem>
                                         <Divider />
-                                        {teams.map((team) => (
-                                            <MenuItem
-                                                key={team.id}
-                                                role="menuitemradio"
-                                                aria-checked={
-                                                    team.id === connectedTeam.id
-                                                }
-                                                disabled={
-                                                    connectionStatus !==
-                                                    ConnectionStatus.CONNECTED
-                                                }
-                                                selected={
-                                                    team.id === connectedTeam.id
-                                                }
-                                                onClick={() => {
-                                                    joinTeam(team.id);
-                                                    setTeamMenuAnchor(null);
-                                                }}
-                                            >
-                                                {team.name}
-                                            </MenuItem>
-                                        ))}
+                                        {teams
+                                            .filter(
+                                                (team) =>
+                                                    team.showInRoom ||
+                                                    team.id ===
+                                                        connectedTeam.id,
+                                            )
+                                            .map((team) => (
+                                                <MenuItem
+                                                    key={team.id}
+                                                    role="menuitemradio"
+                                                    aria-checked={
+                                                        team.id ===
+                                                        connectedTeam.id
+                                                    }
+                                                    disabled={
+                                                        connectionStatus !==
+                                                        ConnectionStatus.CONNECTED
+                                                    }
+                                                    selected={
+                                                        team.id ===
+                                                        connectedTeam.id
+                                                    }
+                                                    onClick={() => {
+                                                        joinTeam(team.id);
+                                                        setTeamMenuAnchor(null);
+                                                    }}
+                                                >
+                                                    {team.name}
+                                                </MenuItem>
+                                            ))}
                                     </Menu>
                                 </>
                             )}

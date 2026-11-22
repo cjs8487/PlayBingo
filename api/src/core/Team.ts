@@ -89,7 +89,12 @@ export default class Team {
                 player.toClientData(),
             ),
             goalCount: this.goalCount,
+            showInRoom: this.showInRoom(),
         };
+    }
+
+    showInRoom(): boolean {
+        return this.players.values().some((player) => player.showInRoom());
     }
 
     //#region Goal Tracking
