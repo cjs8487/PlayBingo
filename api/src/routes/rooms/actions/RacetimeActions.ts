@@ -1,7 +1,6 @@
 import { ConnectionService } from '@prisma/client';
 import Room from '../../../core/Room';
 import { getRacetimeConfiguration } from '../../../database/games/Games';
-import { connectRoomToRacetime } from '../../../database/Rooms';
 import { racetimeHost } from '../../../Environment';
 import { getAccessToken } from '../../../lib/RacetimeConnector';
 import { ActionResult, unknownAction } from './Actions';
@@ -141,8 +140,7 @@ const createRacetimeRoom = async (
         };
     }
     const url = `${racetimeHost}${relativePath}`;
-    await connectRoomToRacetime(room.slug, url).then();
-    room.handleRacetimeRoomCreated(url);
+    await room.handleRacetimeRoomCreated(url);
 
     return {
         code: 200,

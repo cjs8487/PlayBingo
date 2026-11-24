@@ -60,7 +60,7 @@ const createRoom = (teamsEnabled = false, hideCard = false) => {
     room.board = Array.from({ length: 5 }, (_, row) =>
         Array.from(
             { length: 5 },
-            (_, col) =>
+            (_col, col) =>
                 ({
                     goal: {
                         id: `${row}-${col}`,
@@ -73,6 +73,7 @@ const createRoom = (teamsEnabled = false, hideCard = false) => {
         ),
     );
     room.computeVictoryMasks();
+    subscribe(room);
     return room;
 };
 
@@ -93,6 +94,15 @@ const joinAction = (nickname: string) =>
 // even a mocked resolved promise defers its continuation to a microtask, and the
 // player write is chained behind the team write so the foreign key exists
 const flushPersistence = () => new Promise(process.nextTick);
+
+afterEach(async () => {
+    unsubscribe('room-id');
+    await new Promise<void>((resolve) =>
+        jest
+            .requireActual<typeof import('timers')>('timers')
+            .setImmediate(resolve),
+    );
+});
 
 const chatTimestamp = expect.stringMatching(/^\[\d+:\d{2}:\d{2}\] $/);
 
@@ -144,11 +154,18 @@ describe('Room team workflows', () => {
         const team = room.getTeamForPlayer('alice');
         expect(team).toMatchObject({ name: 'Alice', color: 'blue' });
         expect(room.getPlayerById('alice')?.teamId).toBe(team?.id);
-        expect(createUpdateTeam).toHaveBeenCalledWith('room-id', team);
+        expect(createUpdateTeam).toHaveBeenCalledWith(
+            'room-id',
+            expect.objectContaining({
+                id: team!.id,
+                name: team!.name,
+                color: team!.color,
+            }),
+        );
         await flushPersistence();
         expect(createUpdatePlayer).toHaveBeenCalledWith(
             'room-id',
-            room.getPlayerById('alice'),
+            expect.objectContaining({ id: 'alice', teamId: team?.id }),
         );
         expect(room.chatHistory).toContainEqual([
             chatTimestamp,
@@ -170,7 +187,7 @@ describe('Room team workflows', () => {
         ]);
     });
 
-    it('tracks marks by team ID and applies the team color', () => {
+    it('tracks marks by team ID and applies the team color', async () => {
         const room = createRoom();
         room.handleJoin(joinAction('Alice'), auth('alice'), socket());
         const team = room.getTeamForPlayer('alice')!;
@@ -197,10 +214,18 @@ describe('Room team workflows', () => {
             auth('alice'),
         );
         expect(team.color).toBe('red');
-        expect(createUpdateTeam).toHaveBeenLastCalledWith('room-id', team);
+        await flushPersistence();
+        expect(createUpdateTeam).toHaveBeenLastCalledWith(
+            'room-id',
+            expect.objectContaining({
+                id: team!.id,
+                name: team!.name,
+                color: team!.color,
+            }),
+        );
     });
 
-    it('permits joining another team only when teams are enabled', () => {
+    it('permits joining another team only when teams are enabled', async () => {
         const room = createRoom();
         room.handleJoin(joinAction('Alice'), auth('alice'), socket());
         room.handleJoin(joinAction('Bob'), auth('bob'), socket());
@@ -218,6 +243,7 @@ describe('Room team workflows', () => {
             action: 'setTeamsEnabled',
             payload: { enabled: true },
         } as SetTeamsEnabledAction);
+        await flushPersistence();
         expect(updateTeamsEnabled).toHaveBeenCalledWith('room-id', true);
         expect(room.handleJoinTeam(joinTeam, auth('bob'))?.action).toBe(
             'joinedTeam',
@@ -255,12 +281,10 @@ describe('Room team workflows', () => {
             payload: { enabled: true },
         } as SetTeamsEnabledAction);
 
-        subscribe(room);
         room.handleMark(
             { action: 'mark', payload: { row: 1, col: 1 } } as MarkAction,
             auth('alice'),
         );
-        unsubscribe(room.id);
         expect(addMarkAction).toHaveBeenCalledWith(
             'room-id',
             'alice',

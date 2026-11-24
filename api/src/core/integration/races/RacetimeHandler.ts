@@ -1,6 +1,5 @@
 import { RawData, WebSocket } from 'ws';
 import { racetimeHost } from '../../../Environment';
-import { disconnectRoomFromRacetime } from '../../../database/Rooms';
 import Room from '../../Room';
 import { logInfo } from '../../../Logger';
 import RaceHandler from './RaceHandler';
@@ -202,7 +201,7 @@ export default class RacetimeHandler implements RaceHandler {
             this.socket.close();
         }
         this.socket = undefined;
-        disconnectRoomFromRacetime(this.room.slug).then();
+        this.room.emit('racetime:disconnected');
     }
 
     async connectWebsocket() {
@@ -349,7 +348,6 @@ export default class RacetimeHandler implements RaceHandler {
             this.room.logError(
                 'Unable to connect to racetime.gg. Room will be disconnected.',
             );
-            disconnectRoomFromRacetime(this.room.slug).then();
             this.room.handleRacetimeRoomDisconnected();
             return;
         }
@@ -358,8 +356,6 @@ export default class RacetimeHandler implements RaceHandler {
             this.room.logInfo(
                 'Existing race was cancelled. Disconnecting room.',
             );
-            disconnectRoomFromRacetime(this.room.slug).then();
-            this.disconnect();
             this.room.handleRacetimeRoomDisconnected();
             return;
         }

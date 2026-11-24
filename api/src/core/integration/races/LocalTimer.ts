@@ -1,10 +1,5 @@
 import { RaceStatusConnected } from '@playbingo/types';
 import { RaceHandler as RaceHandlers } from '@prisma/client';
-import {
-    createUpdatePlayer,
-    updateFinishTime,
-    updateStartTime,
-} from '../../../database/Rooms';
 import Player from '../../Player';
 import Room from '../../Room';
 import RaceHandler from './RaceHandler';
@@ -64,11 +59,11 @@ export default class LocalTimer implements RaceHandler {
     resetTimer(): void {
         this.startedAt = undefined;
         this.finishedAt = undefined;
-        updateStartTime(this.room.id, null).then();
-        updateFinishTime(this.room.id, null).then();
+        this.room.emit('race:startChanged', null);
+        this.room.emit('race:finishChanged', null);
         this.room.getAllPlayers().forEach((player) => {
             player.finishedAt = undefined;
-            createUpdatePlayer(this.room.id, player).then();
+            this.room.emit('race:playerChanged', player);
         });
     }
 
@@ -76,27 +71,27 @@ export default class LocalTimer implements RaceHandler {
         const now = new Date();
         this.startedAt = now.toISOString();
         this.room.revealCardForAllPlayers();
-        updateStartTime(this.room.id, now).then();
+        this.room.emit('race:startChanged', this.startedAt);
     }
 
     async playerFinished(player: Player): Promise<void> {
         player.finishedAt = new Date().toISOString();
-        createUpdatePlayer(this.room.id, player).then();
+        this.room.emit('race:playerChanged', player);
     }
 
     async playerUnfinshed(player: Player): Promise<void> {
         player.finishedAt = undefined;
-        createUpdatePlayer(this.room.id, player).then();
+        this.room.emit('race:playerChanged', player);
     }
 
     async allPlayersFinished(): Promise<void> {
         const now = new Date();
         this.finishedAt = now.toISOString();
-        updateFinishTime(this.room.id, now).then();
+        this.room.emit('race:finishChanged', this.finishedAt);
     }
 
     async allPlayersNotFinished(): Promise<void> {
         this.finishedAt = undefined;
-        updateFinishTime(this.room.id, null).then();
+        this.room.emit('race:finishChanged', null);
     }
 }

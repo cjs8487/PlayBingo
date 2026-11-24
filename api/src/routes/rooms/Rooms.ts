@@ -415,7 +415,6 @@ async function getOrLoadRoom(slug: string): Promise<Room | null> {
             newRoom.raceHandler = new RacetimeHandler(newRoom);
             if (dbRoom.racetimeRoom) {
                 newRoom.raceHandler.connect(dbRoom.racetimeRoom);
-                await newRoom.connectRacetimeWebSocket();
             }
             break;
         case RaceHandler.LOCAL:
@@ -525,6 +524,9 @@ async function getOrLoadRoom(slug: string): Promise<Room | null> {
 
     // Subscribe the room to database event listeners
     subscribe(newRoom);
+    if (dbRoom.raceHandler === RaceHandler.RACETIME && dbRoom.racetimeRoom) {
+        await newRoom.connectRacetimeWebSocket();
+    }
 
     return newRoom;
 }

@@ -189,7 +189,13 @@ export const disconnectRoomFromRacetime = (slug: string) => {
     });
 };
 
-export const createUpdatePlayer = async (room: string, player: Player) => {
+export const createUpdatePlayer = async (
+    room: string,
+    player: Pick<
+        Player,
+        'id' | 'nickname' | 'teamId' | 'userId' | 'monitor' | 'finishedAt'
+    >,
+) => {
     return prisma.player.upsert({
         where: { key_roomId: { key: player.id, roomId: room } },
         create: {
@@ -221,7 +227,10 @@ export const createUpdatePlayer = async (room: string, player: Player) => {
     });
 };
 
-export const createUpdateTeam = async (room: string, team: Team) => {
+export const createUpdateTeam = async (
+    room: string,
+    team: Pick<Team, 'id' | 'name' | 'color'>,
+) => {
     return prisma.team.upsert({
         where: { id_roomId: { id: team.id, roomId: room } },
         create: {

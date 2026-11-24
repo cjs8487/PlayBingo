@@ -19,7 +19,7 @@ import {
     Team as TeamData,
     UnmarkAction,
 } from '@playbingo/types';
-import { BingoMode } from '@prisma/client';
+import { BingoMode, Category } from '@prisma/client';
 import EventEmitter from 'events';
 import { DateTime } from 'luxon';
 import { randomUUID } from 'node:crypto';
@@ -31,21 +31,8 @@ import {
     Permissions,
     RoomTokenPayload,
 } from '../auth/RoomAuth';
-import {
-    createUpdatePlayer,
-    createUpdateTeam,
-    updateRaceHandler,
-    updateTeamsEnabled,
-} from '../database/Rooms';
 import { isStaff } from '../database/Users';
-import {
-    getDifficultyGroupCount,
-    getDifficultyVariant,
-    isModerator,
-    useTypedRandom,
-} from '../database/games/Games';
-import { getCategories } from '../database/games/GoalCategories';
-import { goalsForGameFull } from '../database/games/Goals';
+import { isModerator } from '../database/games/Games';
 import { shuffle } from '../util/Array';
 import {
     computeLineMasks,
@@ -97,7 +84,33 @@ export type BoardGenerationOptions =
     | BoardGenerationOptionsSRLv5
     | BoardGenerationOptionsDifficulty;
 
+export interface BoardGenerationInputs {
+    goals: GeneratorGoal[];
+    categories: Category[];
+    typedRandom?: boolean;
+    difficulty?: {
+        groups: number | null | undefined;
+        goalAmounts: number[] | undefined;
+    };
+}
+
 export interface RoomEvents {
+    'board:generationRequested': (
+        options: BoardGenerationOptions,
+        supply: (inputs: Promise<BoardGenerationInputs>) => void,
+    ) => void;
+    'player:membershipChanged': (player: Player, timestamp: Date) => void;
+    'team:renamed': (player: Player, team: Team, timestamp: Date) => void;
+    'race:playerChanged': (player: Player) => void;
+    'race:startChanged': (startedAt: string | null) => void;
+    'race:finishChanged': (finishedAt: string | null) => void;
+    'race:handlerChanged': (handler: ReturnType<RaceHandler['key']>) => void;
+    'room:teamsEnabledChanged': (enabled: boolean) => void;
+    'racetime:created': (
+        url: string,
+        persist: (write: Promise<unknown>) => void,
+    ) => void;
+    'racetime:disconnected': () => void;
     'room:closed': () => void;
     'player:connected': (player: Player, timestamp: Date) => void;
     'player:chat': (player: Player, message: string, timestamp: Date) => void;
@@ -441,10 +454,6 @@ export default class Room extends EventEmitter {
             this.removePlayerFromTeam(player, oldTeam);
             this.spectators.set(player.id, player);
             this.sendChat(`${player.nickname} is now spectating`, timestamp);
-            if (oldTeam) {
-                createUpdateTeam(this.id, oldTeam).then();
-            }
-            createUpdatePlayer(this.id, player).then();
         } else {
             this.spectators.delete(player.id);
             const team = this.createTeamForPlayer(player);
@@ -457,8 +466,8 @@ export default class Room extends EventEmitter {
                 ],
                 timestamp,
             );
-            this.persistPlayer(player);
         }
+        this.emit('player:membershipChanged', player, timestamp);
         player.syncBoard();
         return true;
     }
@@ -488,23 +497,6 @@ export default class Room extends EventEmitter {
         }
     }
 
-    /**
-     * Writes a player and their team to the database. The team is written
-     * first, since the player record references it.
-     */
-    private persistPlayer(player: Player) {
-        const team = player.teamId ? this.teams.get(player.teamId) : undefined;
-        if (!team) {
-            createUpdatePlayer(this.id, player).then();
-            return;
-        }
-        createUpdateTeam(this.id, team)
-            .then(() => createUpdatePlayer(this.id, player))
-            .catch((e) =>
-                this.logError(`Failed to persist player state - ${e}`),
-            );
-    }
-
     spectatorObfuscateBoard(): Cell[][] {
         let exploredGoals = 0n;
         this.teams.forEach((team) => {
@@ -530,9 +522,17 @@ export default class Room extends EventEmitter {
     async generateBoard(options: BoardGenerationOptions) {
         this.lastGenerationMode = options;
         const { mode, seed } = options;
-        const goals = await goalsForGameFull(this.gameSlug);
+        const inputs: Promise<BoardGenerationInputs>[] = [];
+        this.emit(
+            'board:generationRequested',
+            options,
+            (data: Promise<BoardGenerationInputs>) => inputs.push(data),
+        );
+        const [data] = await Promise.all(inputs);
+        if (!data)
+            throw new Error('No board generation input source is subscribed');
+        const { goals, categories } = data;
         let goalList: GeneratorGoal[];
-        const categories = await getCategories(this.gameSlug);
         const categoryMaxes: { [k: string]: number } = {};
         categories.forEach((cat) => {
             categoryMaxes[cat.name] = cat.max <= 0 ? -1 : cat.max;
@@ -595,13 +595,9 @@ export default class Room extends EventEmitter {
                         goalList.shift();
                         break;
                     case BoardGenerationMode.DIFFICULTY:
-                        const { difficulty } = options;
-                        const variant = await getDifficultyVariant(difficulty);
-                        const numGroups = await getDifficultyGroupCount(
-                            this.gameSlug,
-                        );
-
-                        if (!numGroups || !variant) {
+                        const numGroups = data.difficulty?.groups;
+                        const goalAmounts = data.difficulty?.goalAmounts;
+                        if (!numGroups || !goalAmounts) {
                             this.logError(
                                 'Invalid game configuration for difficulty variants',
                             );
@@ -639,10 +635,7 @@ export default class Room extends EventEmitter {
                         goalList = [];
                         groupedGoals.forEach((group, index) => {
                             shuffle(group);
-                            const toAdd = group.splice(
-                                0,
-                                variant.goalAmounts[index],
-                            );
+                            const toAdd = group.splice(0, goalAmounts[index]);
                             goalList.push(...toAdd);
                         });
 
@@ -655,7 +648,7 @@ export default class Room extends EventEmitter {
                         shuffle(goalList, seed);
                         break;
                     case BoardGenerationMode.RANDOM:
-                        if (await useTypedRandom(this.gameSlug)) {
+                        if (data.typedRandom) {
                             goalList = generateRandomTyped(goals, seed);
                             goalList.shift();
                         } else {
@@ -784,7 +777,6 @@ export default class Room extends EventEmitter {
 
         player.addConnection(auth.uuid, socket);
         this.emit('player:connected', player, timestamp);
-        this.persistPlayer(player);
         return {
             action: 'connected',
             board: {
@@ -837,10 +829,9 @@ export default class Room extends EventEmitter {
         if (oldTeam) {
             if (oldTeam.id !== team.id) {
                 this.removePlayerFromTeam(player, oldTeam);
-                createUpdateTeam(this.id, oldTeam).then();
             } else if (action.payload.teamName) {
                 // player changed the team name
-                this.persistPlayer(player);
+                this.emit('team:renamed', player, team, new Date());
                 this.sendChat(
                     [
                         {
@@ -860,7 +851,7 @@ export default class Room extends EventEmitter {
         this.spectators.delete(player.id);
         player.teamId = team.id;
         team.addPlayer(player);
-        this.persistPlayer(player);
+        this.emit('player:membershipChanged', player, new Date());
         this.sendChat(
             [
                 {
@@ -1043,7 +1034,6 @@ export default class Room extends EventEmitter {
         const timestamp = new Date();
         const oldColor = team.color;
         team.color = color;
-        createUpdateTeam(this.id, team).then();
         this.emit('player:colorChanged', player, color, oldColor, timestamp);
         this.sendChat(
             [
@@ -1096,7 +1086,7 @@ export default class Room extends EventEmitter {
                 break;
         }
         this.sendRoomData();
-        updateRaceHandler(this.id, this.raceHandler.key()).then();
+        this.emit('race:handlerChanged', this.raceHandler.key());
     }
 
     handleResetTimer() {
@@ -1120,6 +1110,9 @@ export default class Room extends EventEmitter {
     }
 
     async handleRacetimeRoomCreated(url: string) {
+        const writes: Promise<unknown>[] = [];
+        this.emit('racetime:created', url, (write) => writes.push(write));
+        await Promise.all(writes);
         this.sendServerMessage({
             action: 'updateRoomData',
             roomData: {
@@ -1158,7 +1151,7 @@ export default class Room extends EventEmitter {
 
     handleSetTeamsEnabled(action: SetTeamsEnabledAction) {
         this.teamsEnabled = action.payload.enabled;
-        updateTeamsEnabled(this.id, this.teamsEnabled).then();
+        this.emit('room:teamsEnabledChanged', this.teamsEnabled);
         this.sendRoomData();
     }
     //#endregion

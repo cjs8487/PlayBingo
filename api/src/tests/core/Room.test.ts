@@ -14,6 +14,7 @@ import WebSocket from 'ws';
 import { RoomTokenPayload } from '../../auth/RoomAuth';
 import Player from '../../core/Player';
 import Room from '../../core/Room';
+import { subscribe, unsubscribe } from '../../core/DatabaseEventListeners';
 import { createUpdatePlayer } from '../../database/Rooms';
 
 jest.mock('../../database/Rooms');
@@ -52,6 +53,12 @@ const mockSocket = mockDeep<WebSocket>();
 const mockSocket2 = mockDeep<WebSocket>();
 
 let emitSpy: jest.SpyInstance;
+const flushRoomWrites = () =>
+    new Promise<void>((resolve) =>
+        jest
+            .requireActual<typeof import('timers')>('timers')
+            .setImmediate(resolve),
+    );
 
 beforeEach(() => {
     jest.useFakeTimers();
@@ -77,6 +84,7 @@ beforeEach(() => {
             completedTeams: [],
         })),
     );
+    subscribe(room);
     emitSpy = jest.spyOn(room, 'emit');
 
     mockReset(mockJoinAction);
@@ -91,7 +99,9 @@ beforeEach(() => {
     mockTokenPayloadPlayer2.uuid = 'connection-3';
 });
 
-afterEach(() => {
+afterEach(async () => {
+    unsubscribe(room.id);
+    await flushRoomWrites();
     jest.clearAllMocks();
     jest.useRealTimers();
 });
@@ -100,7 +110,7 @@ describe('handleJoin', () => {
     it('Creates a new player when a new player joins', async () => {
         room.handleJoin(mockJoinAction, mockTokenPayload, mockSocket);
         expect(room.getPlayerById(mockTokenPayload.playerId)).toBeDefined();
-        await Promise.resolve();
+        await flushRoomWrites();
         expect(createUpdatePlayer).toHaveBeenCalled();
         expect(
             room.getPlayerById(mockTokenPayload.playerId)?.connections.size,
@@ -145,7 +155,7 @@ describe('handleJoin', () => {
             room.getPlayerById(mockTokenPayloadPlayer2.playerId)?.connections
                 .size,
         ).toBe(1);
-        await Promise.resolve();
+        await flushRoomWrites();
         expect(createUpdatePlayer).toHaveBeenCalledTimes(2);
     });
 
