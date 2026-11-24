@@ -181,6 +181,51 @@ export type RoomAnnouncement1 =
   | {
       action: "timer:stopped";
       [k: string]: unknown;
+    }
+  | {
+      action: "players:startedSpectating";
+      player: AnnouncementPlayer;
+      [k: string]: unknown;
+    }
+  | {
+      action: "players:startedPlaying";
+      player: AnnouncementPlayer;
+      [k: string]: unknown;
+    }
+  | {
+      action: "team:joined";
+      player: AnnouncementPlayer;
+      [k: string]: unknown;
+    }
+  | {
+      action: "team:renamed";
+      player: AnnouncementPlayer;
+      [k: string]: unknown;
+    }
+  | {
+      action: "player:chat";
+      player: AnnouncementPlayer;
+      message: string;
+      [k: string]: unknown;
+    }
+  | {
+      action: "team:disbanded";
+      team: AnnouncementTeam;
+      teamDisplayName: string;
+      [k: string]: unknown;
+    }
+  | {
+      action: "racetime:created";
+      url: string;
+      [k: string]: unknown;
+    }
+  | {
+      action: "room:inactivityWarning";
+      [k: string]: unknown;
+    }
+  | {
+      action: "room:closing";
+      [k: string]: unknown;
     };
 
 export interface Team {

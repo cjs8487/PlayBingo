@@ -106,8 +106,6 @@ afterEach(async () => {
     );
 });
 
-const chatTimestamp = expect.stringMatching(/^\[\d+:\d{2}:\d{2}\] $/);
-
 describe('Room team workflows', () => {
     afterEach(() => {
         jest.clearAllMocks();
@@ -387,14 +385,16 @@ describe('Room team workflows', () => {
         const team = room.getTeamForPlayer('alice')!;
         expect(team.name).toBe('Alice');
         expect(player.teamId).toBe(team.id);
-        expect(room.chatHistory).toContainEqual([
-            chatTimestamp,
-            { contents: 'Alice', color: 'blue' },
-            ' is now playing.',
-        ]);
-
-        // already playing, nothing to do
-        expect(room.setPlayerSpectating(player, false)).toBe(false);
+        expect(room.chatHistory).toContainEqual(
+            expect.objectContaining({
+                action: 'players:startedPlaying',
+                player: {
+                    nickname: 'Alice',
+                    teamsEnabled: false,
+                    team: { name: 'Alice', color: 'blue' },
+                },
+            }),
+        );
     });
 
     it('tears down the team when a player starts spectating', () => {
@@ -414,6 +414,19 @@ describe('Room team workflows', () => {
         expect(player.teamId).toBeUndefined();
         // the team no longer exists, so its marks must not linger on the board
         expect(room.board[0][0].completedTeams).toEqual([]);
+
+        expect(room.chatHistory).toEqual(
+            expect.arrayContaining([
+                expect.objectContaining({
+                    action: 'team:disbanded',
+                    team: { name: team.name, color: team.color },
+                }),
+                expect.objectContaining({
+                    action: 'players:startedSpectating',
+                    player: expect.objectContaining({ nickname: 'Alice' }),
+                }),
+            ]),
+        );
 
         // already spectating, nothing to do
         expect(room.setPlayerSpectating(player, true)).toBe(false);
@@ -645,11 +658,12 @@ describe('Room team workflows', () => {
         expect(room.teams.size).toBe(2);
         expect(room.getTeamForPlayer('alice')).toBe(team);
         expect(room.board[0][0].completedTeams).toEqual([team.id]);
-        expect(room.chatHistory).not.toContainEqual([
-            chatTimestamp,
-            { contents: team.name, color: team.color },
-            ` ${team.name} has been disbanded.`,
-        ]);
+        expect(room.chatHistory).not.toContainEqual(
+            expect.objectContaining({
+                action: 'team:disbanded',
+                team: { name: team.name, color: team.color },
+            }),
+        );
     });
 
     it('reports team visibility and closes the room once nobody is connected', () => {
@@ -734,6 +748,16 @@ describe('Room handleJoinTeam', () => {
         expect(aliceTeam.name).toBe('Renamed');
         expect(room.teams.size).toBe(2);
         expectOnTeam(room, 'alice', aliceTeam.id);
+        expect(room.chatHistory).toContainEqual(
+            expect.objectContaining({
+                action: 'team:renamed',
+                player: {
+                    nickname: 'Alice',
+                    teamsEnabled: true,
+                    team: { name: 'Renamed', color: aliceTeam.color },
+                },
+            }),
+        );
     });
 
     it('rejects unknown teams and players without changing membership', () => {

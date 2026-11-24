@@ -235,15 +235,14 @@ describe('handleChat', () => {
     it('Sends a chat message to all players', () => {
         const player = new Player(room, 'test', 'Test Player', false);
         room.createTeamForPlayer(player);
-        const sendChatSpy = jest.spyOn(room, 'sendChat');
         room.handleChat(mockChatAction, mockTokenPayload);
-        expect(sendChatSpy).toHaveBeenCalledTimes(1);
-        expect(sendChatSpy).toHaveBeenCalledWith(
-            `${player.nickname}: test message`,
-            new Date(),
+        expect(room.chatHistory).toContainEqual(
+            expect.objectContaining({
+                action: 'player:chat',
+                player: expect.objectContaining({ nickname: player.nickname }),
+                message: 'test message',
+            }),
         );
-        expect(emitSpy).toHaveBeenCalledTimes(2);
-        expect(emitSpy.mock.calls[0][0]).toBe('chatSent');
         expect(emitSpy).toHaveBeenCalledWith(
             'player:chat',
             player,
@@ -470,7 +469,6 @@ describe('handleChangeColor', () => {
     });
 
     it('Does nothing if no color provided', () => {
-        const sendChatSpy = jest.spyOn(room, 'sendChat');
         const mockChangeColorAction = mockDeep<ChangeColorAction>();
         mockChangeColorAction.payload = {
             color: undefined as unknown as ChangeColorAction['payload']['color'],
@@ -482,7 +480,7 @@ describe('handleChangeColor', () => {
         );
 
         expect(result).toBeUndefined();
-        expect(sendChatSpy).not.toHaveBeenCalled();
+        expect(room.chatHistory).toHaveLength(0);
         expect(emitSpy).not.toHaveBeenCalled();
     });
 });

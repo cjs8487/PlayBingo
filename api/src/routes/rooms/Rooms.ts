@@ -1,3 +1,4 @@
+import { DateTime, Duration } from 'luxon';
 import { GeneratorSettings, makeGeneratorSchema } from '@playbingo/shared';
 import { ChatMessage, RoomAnnouncement, RoomData } from '@playbingo/types';
 import {
@@ -82,7 +83,6 @@ rooms.post('/', async (req, res) => {
         variant,
         mode,
         lineCount,
-        generationMode,
         hideCard,
         spectator,
         exploration,
@@ -383,7 +383,11 @@ async function getOrLoadRoom(slug: string): Promise<Room | null> {
     );
     newRoom.computeVictoryMasks();
 
+    const occupiedTeams = new Set(
+        dbRoom.players.map((player) => player.teamId),
+    );
     dbRoom.teams.forEach((dbTeam) => {
+        if (!occupiedTeams.has(dbTeam.id)) return;
         const team = new Team(newRoom, dbTeam.id, dbTeam.name, dbTeam.color);
         newRoom.teams.set(team.id, team);
     });
@@ -472,7 +476,17 @@ export function restoreRoomHistory(room: Room, history: RoomAction[]) {
         const { timestamp } = action;
         if (announcement) room.chatHistory.push(announcement);
         const sendLegacyAnnouncement = (segments: ChatMessage) => {
-            if (announcement === undefined) room.sendChat(segments, timestamp);
+            if (announcement !== undefined) return;
+            const startedAt = room.raceHandler.getStartTime();
+            const elapsed = startedAt
+                ? DateTime.fromJSDate(timestamp)
+                      .diff(DateTime.fromISO(startedAt))
+                      .toMillis()
+                : 0;
+            const prefix = Duration.fromMillis(Math.max(0, elapsed)).toFormat(
+                'h:mm:ss',
+            );
+            room.chatHistory.push([`[${prefix}] `, ...segments]);
         };
 
         const player = playerId ? room.getPlayerById(playerId) : undefined;
@@ -525,7 +539,7 @@ export function restoreRoomHistory(room: Room, history: RoomAction[]) {
                 break;
             }
             case 'CHAT':
-                room.sendChat(`${nickname}: ${message}`, timestamp);
+                sendLegacyAnnouncement([`${nickname}: ${message}`]);
                 break;
             case 'CHANGECOLOR':
                 if (team) {

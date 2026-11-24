@@ -163,11 +163,17 @@ export const addChatAction = (
     nickname: string,
     message: string,
     timestamp: Date,
+    announcement: PlayerAnnouncement | null,
 ) =>
     addRoomAction(
         room,
         RoomActionType.CHAT,
-        { player, nickname, message },
+        {
+            player,
+            nickname,
+            message,
+            announcement: announcementPayload(announcement),
+        },
         timestamp,
     );
 

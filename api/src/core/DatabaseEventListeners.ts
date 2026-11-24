@@ -1,3 +1,6 @@
+import { ConnectionService } from '@prisma/client';
+import { getConnectionForUser } from '../database/Connections';
+import { getAccessToken } from '../lib/RacetimeConnector';
 import {
     addChangeColorAction,
     addChatAction,
@@ -18,6 +21,7 @@ import {
 import {
     getDifficultyGroupCount,
     getDifficultyVariant,
+    getRacetimeConfiguration,
     useTypedRandom,
 } from '../database/games/Games';
 import { getCategories } from '../database/games/GoalCategories';
@@ -116,7 +120,35 @@ export function subscribe(room: Room): void {
     ) => {
         enqueue(room, () => updateTeamsEnabled(room.id, enabled));
     };
-    const onRacetimeCreated: RoomEvents['racetime:created'] = (url) => {
+    const onRacetimeIdentityRequested: RoomEvents['racetime:identityRequested'] =
+        (userId, supply) => {
+            supply(
+                getConnectionForUser(userId, ConnectionService.RACETIME).then(
+                    (connection) => connection?.serviceId,
+                ),
+            );
+        };
+    const onRacetimeCreationInputsRequested: RoomEvents['racetime:creationInputsRequested'] =
+        (userId, supply) => {
+            supply(
+                enqueue(room, async () => {
+                    const configuration = await getRacetimeConfiguration(
+                        room.gameSlug,
+                    );
+                    if (!configuration) return undefined;
+                    const { racetimeCategory: category, racetimeGoal: goal } =
+                        configuration;
+                    const token =
+                        category && goal
+                            ? await getAccessToken(userId)
+                            : undefined;
+                    return { category, goal, token };
+                }),
+            );
+        };
+    const onRacetimeCreated: RoomEvents['racetime:connectionRequested'] = (
+        url,
+    ) => {
         enqueue(room, () => connectRoomToRacetime(room.slug, url));
     };
     const onRacetimeDisconnected = () => {
@@ -174,8 +206,22 @@ export function subscribe(room: Room): void {
         timestamp,
     ) => {
         const { id, nickname } = player;
+        const announcement = room.chatEnabled
+            ? room.createPlayerAnnouncement(
+                  player,
+                  { action: 'player:chat', message },
+                  timestamp,
+              )
+            : null;
         enqueue(room, () =>
-            addChatAction(room.id, id, nickname, message, timestamp),
+            addChatAction(
+                room.id,
+                id,
+                nickname,
+                message,
+                timestamp,
+                announcement,
+            ),
         );
     };
     const onBoardGoalMarked: RoomEvents['board:goalMarked'] = (
@@ -328,7 +374,12 @@ export function subscribe(room: Room): void {
     room.on('race:finishChanged', onRaceFinished);
     room.on('race:handlerChanged', onRaceHandlerChanged);
     room.on('room:teamsEnabledChanged', onTeamsEnabledChanged);
-    room.on('racetime:created', onRacetimeCreated);
+    room.on('racetime:identityRequested', onRacetimeIdentityRequested);
+    room.on(
+        'racetime:creationInputsRequested',
+        onRacetimeCreationInputsRequested,
+    );
+    room.on('racetime:connectionRequested', onRacetimeCreated);
     room.on('racetime:disconnected', onRacetimeDisconnected);
     room.on('player:colorChanged', onColorChanged);
     room.on('player:connected', onPlayerConnected);
@@ -347,7 +398,12 @@ export function subscribe(room: Room): void {
         room.off('race:finishChanged', onRaceFinished);
         room.off('race:handlerChanged', onRaceHandlerChanged);
         room.off('room:teamsEnabledChanged', onTeamsEnabledChanged);
-        room.off('racetime:created', onRacetimeCreated);
+        room.off('racetime:identityRequested', onRacetimeIdentityRequested);
+        room.off(
+            'racetime:creationInputsRequested',
+            onRacetimeCreationInputsRequested,
+        );
+        room.off('racetime:connectionRequested', onRacetimeCreated);
         room.off('racetime:disconnected', onRacetimeDisconnected);
         room.off('player:colorChanged', onColorChanged);
         room.off('player:connected', onPlayerConnected);

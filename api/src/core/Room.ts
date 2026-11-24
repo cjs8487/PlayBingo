@@ -23,7 +23,6 @@ import {
 } from '@playbingo/types';
 import { BingoMode, Category } from '@prisma/client';
 import EventEmitter from 'events';
-import { DateTime } from 'luxon';
 import { randomUUID } from 'node:crypto';
 import { roomCleanupInactive } from '../Environment';
 import { logDebug, logError, logInfo, logWarn } from '../Logger';
@@ -101,7 +100,17 @@ export type PlayerAnnouncement = Extract<
     { player: AnnouncementPlayer }
 >;
 type PlayerAnnouncementAction =
-    | { action: 'players:join' | 'players:leave' | 'board:revealed' }
+    | {
+          action:
+              | 'players:join'
+              | 'players:leave'
+              | 'board:revealed'
+              | 'players:startedSpectating'
+              | 'players:startedPlaying'
+              | 'team:joined'
+              | 'team:renamed';
+      }
+    | { action: 'player:chat'; message: string }
     | { action: 'player:colorChanged'; newColor: string }
     | {
           action: 'board:goalMarked' | 'board:goalUnmarked';
@@ -110,23 +119,41 @@ type PlayerAnnouncementAction =
           goal?: string;
       };
 
+export interface RacetimeCreationInputs {
+    category: string | null;
+    goal: string | null;
+    token?: string;
+}
+
 interface RoomEventArguments {
     'board:generationRequested': [
         options: BoardGenerationOptions,
         supply: (inputs: Promise<BoardGenerationInputs>) => void,
     ];
-    'player:membershipChanged': [player: Player];
+    'player:membershipChanged': [
+        player: Player,
+        kind: 'participation' | 'team',
+    ];
+    'team:disbanded': [team: Team];
     'team:renamed': [player: Player, team: Team];
     'race:playerChanged': [player: Player];
     'race:startChanged': [startedAt: string | null];
     'race:finishChanged': [finishedAt: string | null];
     'race:handlerChanged': [handler: ReturnType<RaceHandler['key']>];
     'room:teamsEnabledChanged': [enabled: boolean];
-    'racetime:created': [
-        url: string,
-        persist: (write: Promise<unknown>) => void,
+    'racetime:identityRequested': [
+        userId: string,
+        supply: (result: Promise<string | undefined>) => void,
     ];
+    'racetime:creationInputsRequested': [
+        userId: string,
+        supply: (result: Promise<RacetimeCreationInputs | undefined>) => void,
+    ];
+    'racetime:connectionRequested': [url: string];
     'racetime:disconnected': [];
+    'racetime:created': [url: string];
+    'room:inactivityWarning': [];
+    'room:closing': [];
     'room:closed': [];
     'chat:announcement': [
         announcement: RoomAnnouncement,
@@ -153,11 +180,9 @@ interface RoomEventArguments {
         options: BoardGenerationOptions,
     ];
     'board:revealed': [player: Player];
-    chatSent: [message: ChatMessage];
     'timer:started': [];
     'timer:reset': [];
     'timer:stopped': [];
-    'system:message': [message: ChatMessage];
 }
 
 export type RoomEvents = {
@@ -481,37 +506,31 @@ export default class Room extends EventEmitter {
         }
         const timestamp = new Date();
         if (spectating) {
-            const oldTeam = this.getTeamForPlayer(player.id);
-            this.removePlayerFromTeam(player, oldTeam);
+            this.removePlayerFromTeam(player, this.getTeamForPlayer(player.id));
             this.spectators.set(player.id, player);
-            this.sendChat(`${player.nickname} is now spectating`, timestamp);
         } else {
             this.spectators.delete(player.id);
-            const team = this.createTeamForPlayer(player);
-            this.sendChat(
-                [
-                    { contents: player.nickname, color: team.color },
-                    this.teamsEnabled
-                        ? ` is now playing for ${team.name}.`
-                        : ' is now playing.',
-                ],
-                timestamp,
-            );
+            this.createTeamForPlayer(player);
         }
-        this.emit('player:membershipChanged', player, timestamp);
+        this.markActive();
+        this.emit(
+            'player:membershipChanged',
+            player,
+            'participation',
+            timestamp,
+        );
         player.syncBoard();
         return true;
     }
 
     deleteTeam(teamId: string) {
-        let team = this.teams.get(teamId);
+        const team = this.teams.get(teamId);
         if (!team) {
             return;
         }
-        this.sendTeamChat(team, `${team.name} has been disbanded.`, new Date());
         team.destroy();
-        team = undefined;
         this.teams.delete(teamId);
+        this.emit('team:disbanded', team);
         // the team no longer exists, so clients can't resolve it from the cell
         let boardChanged = false;
         this.board.forEach((row) => {
@@ -815,18 +834,8 @@ export default class Room extends EventEmitter {
             if (oldTeam.id !== team.id) {
                 this.removePlayerFromTeam(player, oldTeam);
             } else if (action.payload.teamName) {
-                // player changed the team name
-                this.emit('team:renamed', player, team, new Date());
-                this.sendChat(
-                    [
-                        {
-                            contents: player.nickname,
-                            color: team.color,
-                        },
-                        ` changed their team name to ${team.getDisplayName()}`,
-                    ],
-                    new Date(),
-                );
+                this.markActive();
+                this.emit('team:renamed', player, team);
                 return {
                     action: 'updatedTeam',
                     team: team.toClientData(),
@@ -836,17 +845,8 @@ export default class Room extends EventEmitter {
         this.spectators.delete(player.id);
         player.teamId = team.id;
         team.addPlayer(player);
-        this.emit('player:membershipChanged', player, new Date());
-        this.sendChat(
-            [
-                {
-                    contents: player.nickname,
-                    color: team.color,
-                },
-                ` joined ${team.getDisplayName()}`,
-            ],
-            new Date(),
-        );
+        this.markActive();
+        this.emit('player:membershipChanged', player, 'team');
         player.syncBoard();
         return {
             action: 'joinedTeam',
@@ -908,7 +908,7 @@ export default class Room extends EventEmitter {
         const { message: chatMessage } = action.payload;
         if (!chatMessage) return;
         const timestamp = new Date();
-        this.sendChat(`${player.nickname}: ${chatMessage}`, timestamp);
+        if (this.chatEnabled) this.markActive();
         this.emit('player:chat', player, chatMessage, timestamp);
     }
 
@@ -1056,7 +1056,7 @@ export default class Room extends EventEmitter {
     }
 
     handleRacetimeRoomCreated(url: string) {
-        this.emit('racetime:created', url);
+        this.emit('racetime:connectionRequested', url);
         this.sendServerMessage({
             action: 'updateRoomData',
             roomData: {
@@ -1064,9 +1064,9 @@ export default class Room extends EventEmitter {
                 racetimeConnection: { url },
             },
         });
-        this.sendChat(`Racetime.gg room created ${url}`, new Date());
         this.raceHandler.connect(url);
         (this.raceHandler as RacetimeHandler).connectWebsocket();
+        this.emit('racetime:created', url);
     }
 
     handleRacetimeRoomDisconnected() {
@@ -1100,23 +1100,6 @@ export default class Room extends EventEmitter {
     }
     //#endregion
 
-    private getTimestamp(timestamp: Date) {
-        if (this.raceHandler) {
-            const startTime = this.raceHandler.getStartTime();
-            if (startTime) {
-                const start = DateTime.fromISO(startTime);
-                const now = DateTime.fromJSDate(timestamp);
-                const dur = now.diff(start);
-                if (dur.toMillis() < 0) {
-                    return '0:00:00';
-                }
-                return dur.shiftToAll().toFormat('h:mm:ss');
-            }
-            return '0:00:00';
-        }
-        return '';
-    }
-
     getChatHistory(player: Player) {
         const board =
             !player.boardHidden && this.exploration
@@ -1144,6 +1127,61 @@ export default class Room extends EventEmitter {
                     ),
                     action === 'players:join' ? player : undefined,
                 );
+            });
+        }
+        this.on('player:membershipChanged', (player, kind, timestamp) => {
+            const action =
+                kind === 'team'
+                    ? 'team:joined'
+                    : player.teamId
+                      ? 'players:startedPlaying'
+                      : 'players:startedSpectating';
+            this.recordAnnouncement(
+                this.createPlayerAnnouncement(player, { action }, timestamp),
+            );
+        });
+        this.on('team:renamed', (player, _team, timestamp) => {
+            this.recordAnnouncement(
+                this.createPlayerAnnouncement(
+                    player,
+                    { action: 'team:renamed' },
+                    timestamp,
+                ),
+            );
+        });
+        this.on('team:disbanded', (team, timestamp) => {
+            this.recordAnnouncement({
+                action: 'team:disbanded',
+                team: { name: team.name, color: team.color },
+                teamDisplayName: team.getDisplayName(),
+                ...this.announcementTime(timestamp),
+            });
+        });
+        this.on('player:chat', (player, message, timestamp) => {
+            this.recordAnnouncement(
+                this.createPlayerAnnouncement(
+                    player,
+                    { action: 'player:chat', message },
+                    timestamp,
+                ),
+            );
+        });
+        this.on('racetime:created', (url, timestamp) => {
+            this.recordAnnouncement({
+                action: 'racetime:created',
+                url,
+                ...this.announcementTime(timestamp),
+            });
+        });
+        for (const action of [
+            'room:inactivityWarning',
+            'room:closing',
+        ] as const) {
+            this.on(action, (timestamp) => {
+                this.recordAnnouncement({
+                    action,
+                    ...this.announcementTime(timestamp),
+                });
             });
         }
         this.on(
@@ -1240,55 +1278,30 @@ export default class Room extends EventEmitter {
         announcement: RoomAnnouncement,
         exclude?: Player,
     ) {
-        if (this.chatEnabled) {
+        if (
+            this.chatEnabled ||
+            announcement.action === 'room:inactivityWarning' ||
+            announcement.action === 'room:closing'
+        ) {
             this.chatHistory.push(announcement);
             this.emit('chat:announcement', announcement, exclude);
         } else if (
-            ['players:join', 'players:leave', 'player:colorChanged'].includes(
-                announcement.action,
-            )
+            [
+                'players:join',
+                'players:leave',
+                'player:colorChanged',
+                'players:startedPlaying',
+                'players:startedSpectating',
+                'team:joined',
+                'team:renamed',
+                'team:disbanded',
+            ].includes(announcement.action)
         ) {
             this.sendRoomData();
         }
     }
 
     //#region Send Messages
-    sendChat(message: string, timestamp: Date): void;
-    sendChat(message: ChatMessage, timestamp: Date): void;
-
-    sendChat(message: string | ChatMessage, eventTimestamp: Date) {
-        if (!this.chatEnabled) {
-            return;
-        }
-        this.markActive();
-        if (typeof message === 'string') {
-            const timestamp = this.getTimestamp(eventTimestamp);
-            if (timestamp) {
-                this.chatHistory.push([
-                    `[${this.getTimestamp(eventTimestamp)}] ${message}`,
-                ]);
-            } else {
-                this.chatHistory.push([message]);
-            }
-            this.emit('chatSent', [message], eventTimestamp);
-        } else {
-            const timestamp = this.getTimestamp(eventTimestamp);
-            if (timestamp) {
-                message.unshift(`[${this.getTimestamp(eventTimestamp)}] `);
-            }
-            this.chatHistory.push(message);
-            this.emit('chatSent', message, eventTimestamp);
-        }
-    }
-
-    sendSystemMessage(message: string) {
-        const eventTimestamp = new Date();
-        const timestamp = this.getTimestamp(eventTimestamp);
-        const rendered = [timestamp ? `[${timestamp}] ${message}` : message];
-        this.chatHistory.push(rendered);
-        this.emit('system:message', rendered, eventTimestamp);
-    }
-
     sendCellUpdate(row: number, col: number) {
         this.markActive();
         this.emit('board:cellUpdate', this.board[row][col], row, col);
@@ -1341,20 +1354,6 @@ export default class Room extends EventEmitter {
         this.inactivityWarningTimeout?.refresh();
         clearTimeout(this.closeTimeout);
         this.closeTimeout = undefined;
-    }
-
-    /** Sends a chat message attributed to a team */
-    private sendTeamChat(team: Team, message: string, timestamp: Date) {
-        this.sendChat(
-            [
-                {
-                    contents: team.getDisplayName(),
-                    color: team.color,
-                },
-                message,
-            ],
-            timestamp,
-        );
     }
 
     /** Marks a team, and every player on it, as finished or unfinished */
@@ -1555,9 +1554,7 @@ export default class Room extends EventEmitter {
     //#region Utilities
     warnClose() {
         this.logInfo('Sending inactivity warning.');
-        this.sendSystemMessage(
-            'This room close in 5 minutes if no activity is detected.',
-        );
+        this.emit('room:inactivityWarning');
         this.closeTimeout = setTimeout(this.close.bind(this), 5 * 60 * 1000);
     }
 
@@ -1582,7 +1579,7 @@ export default class Room extends EventEmitter {
         if (this.closing) return;
         this.closing = true;
         this.logInfo('Closing room.');
-        this.sendSystemMessage('This room has been closed due to inactivity.');
+        this.emit('room:closing');
         this.getAllPlayers().forEach((player) => {
             player.connections.forEach((connection) => {
                 this.handleSocketClose(connection);

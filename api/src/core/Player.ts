@@ -1,6 +1,5 @@
 import {
     Cell,
-    ChatMessage,
     HiddenCell,
     Player as PlayerClientData,
     RevealedCell,
@@ -9,7 +8,7 @@ import {
 } from '@playbingo/types';
 import { RoomTokenPayload } from '../auth/RoomAuth';
 import Connection from './connection/Connection';
-import Room from './Room';
+import Room, { RoomEvents } from './Room';
 
 /**
  * Represents a player connected to a room. While largely just a data class, this
@@ -190,23 +189,6 @@ export default class Player {
         const onBoardRevealed = (revealedPlayer: Player) => {
             if (revealedPlayer === this) syncBoard();
         };
-        const sendChat = (
-            action: 'chatSent' | 'system:message',
-            message: ChatMessage,
-            timestamp: Date,
-        ) => {
-            this.sendMessage({
-                action,
-                timestamp: timestamp.toISOString(),
-                message,
-                players: room.getPlayerData(),
-            });
-        };
-
-        const onChatSent = (message: ChatMessage, timestamp: Date) =>
-            sendChat('chatSent', message, timestamp);
-        const onSystemMessage = (message: ChatMessage, timestamp: Date) =>
-            sendChat('system:message', message, timestamp);
         const onAnnouncement = (
             announcement: RoomAnnouncement,
             exclude?: Player,
@@ -228,9 +210,7 @@ export default class Player {
         room.on('board:cellUpdate', onCellUpdate);
         room.on('board:regenerated', onBoardRegenerated);
         room.on('board:revealed', onBoardRevealed);
-        room.on('chatSent', onChatSent);
         room.on('chat:announcement', onAnnouncement);
-        room.on('system:message', onSystemMessage);
 
         // TODO: PROTOCOL V2 - implement discrete events for timer events
         room.on('team:finished', sendRoomInfoUpdate);
@@ -245,9 +225,7 @@ export default class Player {
             room.off('board:cellUpdate', onCellUpdate);
             room.off('board:regenerated', onBoardRegenerated);
             room.off('board:revealed', onBoardRevealed);
-            room.off('chatSent', onChatSent);
             room.off('chat:announcement', onAnnouncement);
-            room.off('system:message', onSystemMessage);
             room.off('team:finished', sendRoomInfoUpdate);
             room.off('team:unfinished', sendRoomInfoUpdate);
             room.off('timer:started', sendRoomInfoUpdate);

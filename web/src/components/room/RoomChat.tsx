@@ -25,6 +25,41 @@ function eventMessage(event: ServerMessage): ChatMessage | undefined {
         case 'chatSent':
         case 'system:message':
             return event.message;
+        case 'player:chat':
+            return [`${event.player.nickname}: ${event.message}`];
+        case 'players:startedSpectating':
+            return [`${event.player.nickname} is now spectating`];
+        case 'players:startedPlaying':
+        case 'team:joined':
+        case 'team:renamed': {
+            const team = event.player.team;
+            if (!team) return undefined;
+            const message =
+                event.action === 'team:joined'
+                    ? ` joined ${team.name}`
+                    : event.action === 'team:renamed'
+                      ? ` changed their team name to ${team.name}`
+                      : event.player.teamsEnabled
+                        ? ` is now playing for ${team.name}.`
+                        : ' is now playing.';
+            return [
+                { contents: event.player.nickname, color: team.color },
+                message,
+            ];
+        }
+        case 'team:disbanded':
+            return [
+                { contents: event.teamDisplayName, color: event.team.color },
+                `${event.team.name} has been disbanded.`,
+            ];
+        case 'racetime:created':
+            return [`Racetime.gg room created ${event.url}`];
+        case 'room:inactivityWarning':
+            return [
+                'This room will close in 5 minutes if no activity is detected.',
+            ];
+        case 'room:closing':
+            return ['This room has been closed due to inactivity.'];
         case 'players:join':
             return event.player.team
                 ? [

@@ -1,10 +1,6 @@
-import { ConnectionService } from '@prisma/client';
-import Room from '../../../core/Room';
-import { getRacetimeConfiguration } from '../../../database/games/Games';
+import Room, { RacetimeCreationInputs } from '../../../core/Room';
 import { racetimeHost } from '../../../Environment';
-import { getAccessToken } from '../../../lib/RacetimeConnector';
 import { ActionResult, unknownAction } from './Actions';
-import { getConnectionForUser } from '../../../database/Connections';
 import { RoomTokenPayload } from '../../../auth/RoomAuth';
 
 export const handleRacetimeAction = async (
@@ -13,11 +9,16 @@ export const handleRacetimeAction = async (
     user: string,
     roomToken: RoomTokenPayload,
 ) => {
-    const rtConnection = await getConnectionForUser(
+    let identity: Promise<string | undefined> | undefined;
+    room.emit(
+        'racetime:identityRequested',
         user,
-        ConnectionService.RACETIME,
+        (result: Promise<string | undefined>) => {
+            identity = result;
+        },
     );
-    if (!rtConnection) {
+    const racetimeId = await identity;
+    if (!racetimeId) {
         room.logInfo(
             'Unable to join a user to the racetime room - no racetime connection found',
         );
@@ -45,7 +46,7 @@ export const handleRacetimeAction = async (
                     message: 'Forbidden',
                 };
             }
-            return joinPlayer(room, roomToken, rtConnection.serviceId);
+            return joinPlayer(room, roomToken, racetimeId);
         case 'leave':
             if (roomToken.isSpectating) {
                 return {
@@ -79,12 +80,16 @@ const createRacetimeRoom = async (
     room: Room,
     user: string,
 ): Promise<ActionResult> => {
-    const racetimeConfiguration = await getRacetimeConfiguration(room.gameSlug);
-    if (
-        !racetimeConfiguration ||
-        !racetimeConfiguration.racetimeCategory ||
-        !racetimeConfiguration.racetimeGoal
-    ) {
+    let inputs: Promise<RacetimeCreationInputs | undefined> | undefined;
+    room.emit(
+        'racetime:creationInputsRequested',
+        user,
+        (result: Promise<RacetimeCreationInputs | undefined>) => {
+            inputs = result;
+        },
+    );
+    const configuration = await inputs;
+    if (!configuration?.category || !configuration.goal) {
         return {
             code: 400,
             message:
@@ -92,7 +97,7 @@ const createRacetimeRoom = async (
         };
     }
 
-    const token = await getAccessToken(user);
+    const { category, goal, token } = configuration;
     if (!token) {
         return {
             code: 403,
@@ -100,22 +105,19 @@ const createRacetimeRoom = async (
         };
     }
 
-    const createRes = await fetch(
-        `${racetimeHost}/o/${racetimeConfiguration.racetimeCategory}/startrace`,
-        {
-            method: 'POST',
-            headers: {
-                Authorization: `Bearer ${token}`,
-                'content-type': 'application/x-www-form-urlencoded',
-            },
-            body: new URLSearchParams({
-                start_delay: '15',
-                time_limit: `24`,
-                chat_message_delay: '0',
-                goal: racetimeConfiguration.racetimeGoal,
-            }),
+    const createRes = await fetch(`${racetimeHost}/o/${category}/startrace`, {
+        method: 'POST',
+        headers: {
+            Authorization: `Bearer ${token}`,
+            'content-type': 'application/x-www-form-urlencoded',
         },
-    );
+        body: new URLSearchParams({
+            start_delay: '15',
+            time_limit: `24`,
+            chat_message_delay: '0',
+            goal,
+        }),
+    });
     if (!createRes.ok) {
         return {
             code: 400,

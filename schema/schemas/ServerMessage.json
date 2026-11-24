@@ -540,6 +540,132 @@
                             "const": "timer:stopped"
                         }
                     }
+                },
+                {
+                    "required": [
+                        "action",
+                        "player"
+                    ],
+                    "properties": {
+                        "action": {
+                            "const": "players:startedSpectating"
+                        },
+                        "player": {
+                            "$ref": "#/$defs/AnnouncementPlayer"
+                        }
+                    }
+                },
+                {
+                    "required": [
+                        "action",
+                        "player"
+                    ],
+                    "properties": {
+                        "action": {
+                            "const": "players:startedPlaying"
+                        },
+                        "player": {
+                            "$ref": "#/$defs/AnnouncementPlayer"
+                        }
+                    }
+                },
+                {
+                    "required": [
+                        "action",
+                        "player"
+                    ],
+                    "properties": {
+                        "action": {
+                            "const": "team:joined"
+                        },
+                        "player": {
+                            "$ref": "#/$defs/AnnouncementPlayer"
+                        }
+                    }
+                },
+                {
+                    "required": [
+                        "action",
+                        "player"
+                    ],
+                    "properties": {
+                        "action": {
+                            "const": "team:renamed"
+                        },
+                        "player": {
+                            "$ref": "#/$defs/AnnouncementPlayer"
+                        }
+                    }
+                },
+                {
+                    "required": [
+                        "action",
+                        "player",
+                        "message"
+                    ],
+                    "properties": {
+                        "action": {
+                            "const": "player:chat"
+                        },
+                        "player": {
+                            "$ref": "#/$defs/AnnouncementPlayer"
+                        },
+                        "message": {
+                            "type": "string"
+                        }
+                    }
+                },
+                {
+                    "required": [
+                        "action",
+                        "team",
+                        "teamDisplayName"
+                    ],
+                    "properties": {
+                        "action": {
+                            "const": "team:disbanded"
+                        },
+                        "team": {
+                            "$ref": "#/$defs/AnnouncementTeam"
+                        },
+                        "teamDisplayName": {
+                            "type": "string"
+                        }
+                    }
+                },
+                {
+                    "required": [
+                        "action",
+                        "url"
+                    ],
+                    "properties": {
+                        "action": {
+                            "const": "racetime:created"
+                        },
+                        "url": {
+                            "type": "string"
+                        }
+                    }
+                },
+                {
+                    "required": [
+                        "action"
+                    ],
+                    "properties": {
+                        "action": {
+                            "const": "room:inactivityWarning"
+                        }
+                    }
+                },
+                {
+                    "required": [
+                        "action"
+                    ],
+                    "properties": {
+                        "action": {
+                            "const": "room:closing"
+                        }
+                    }
                 }
             ]
         }
