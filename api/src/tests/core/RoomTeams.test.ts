@@ -154,6 +154,7 @@ describe('Room team workflows', () => {
         const team = room.getTeamForPlayer('alice');
         expect(team).toMatchObject({ name: 'Alice', color: 'blue' });
         expect(room.getPlayerById('alice')?.teamId).toBe(team?.id);
+        await flushPersistence();
         expect(createUpdateTeam).toHaveBeenCalledWith(
             'room-id',
             expect.objectContaining({
@@ -162,7 +163,6 @@ describe('Room team workflows', () => {
                 color: team!.color,
             }),
         );
-        await flushPersistence();
         expect(createUpdatePlayer).toHaveBeenCalledWith(
             'room-id',
             expect.objectContaining({ id: 'alice', teamId: team?.id }),
@@ -264,7 +264,7 @@ describe('Room team workflows', () => {
         expect(team.getDisplayName()).toBe('Alice');
     });
 
-    it('attributes team actions to the acting player when teams are enabled', () => {
+    it('attributes team actions to the acting player when teams are enabled', async () => {
         const room = createRoom(true);
         room.handleJoin(joinAction('Alice'), auth('alice'), socket());
         const player = room.getPlayerById('alice')!;
@@ -285,6 +285,7 @@ describe('Room team workflows', () => {
             { action: 'mark', payload: { row: 1, col: 1 } } as MarkAction,
             auth('alice'),
         );
+        await flushPersistence();
         expect(addMarkAction).toHaveBeenCalledWith(
             'room-id',
             'alice',

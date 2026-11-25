@@ -4,7 +4,8 @@ import express from 'express';
 import session from 'express-session';
 import path from 'path';
 import { port, sessionSecret, testing } from './Environment';
-import { logDebug, logger, logInfo } from './Logger';
+import { logDebug, logError, logger, logInfo } from './Logger';
+import { shutdownRoomDatabaseListeners } from './core/DatabaseEventListeners';
 import { allRooms, roomWebSocketServer } from './core/RoomServer';
 import { disconnect } from './database/Database';
 import mediaServer from './media/MediaServer';
@@ -64,12 +65,12 @@ app.use((req, res, next) => {
         return next();
     }
     const profiler = logger.startTimer();
-    const path = req.path;
+    const requestPath = req.path;
     res.on('finish', () => {
         profiler.done({
             message: `${req.method} ${path} ${res.statusCode}`,
             method: req.method,
-            path,
+            path: requestPath,
             sessionId: req.sessionID,
             userAgent: req.get('User-Agent') ?? '',
             ip: req.ip ?? '',
@@ -95,7 +96,13 @@ const server = app.listen(port, () => {
     logInfo(`API application listening on port ${port}`);
 });
 
+let shuttingDown = false;
+
 server.on('upgrade', (req, socket, head) => {
+    if (shuttingDown) {
+        socket.destroy();
+        return;
+    }
     logInfo('[websocket] Client initiating protocol upgrade');
     if (!req.url) {
         socket.destroy();
@@ -125,40 +132,49 @@ server.on('upgrade', (req, socket, head) => {
 });
 
 const cleanup = async () => {
-    logDebug('Server shutting down');
-    await Promise.all([
-        new Promise((resolve) => {
-            roomWebSocketServer.close(() => {
-                logDebug('Room WebSocket server closed');
-                resolve(undefined);
-            });
-            logDebug('Closing open websocket connections');
-            roomWebSocketServer.clients.forEach((client) => {
-                client.close();
-            });
-        }),
-        new Promise((resolve) => {
-            server.close(() => {
-                logDebug('HTTP server closed');
-                resolve(undefined);
-            });
-            logDebug('Closing open server connections');
-            server.closeAllConnections();
-        }),
-        new Promise(async (resolve) => {
-            logDebug('Closing database connection');
-            await disconnect();
-            logDebug('Database connection closed');
-            resolve(undefined);
-        }),
-        new Promise((resolve) => {
-            logDebug('Closing session database connection');
-            closeSessionDatabase();
-            logDebug('Session database connection closed');
-            resolve(undefined);
-        }),
-    ]);
-    process.exit(0);
+    if (shuttingDown) return;
+    shuttingDown = true;
+    logInfo('Server shutting down');
+
+    try {
+        await Promise.all([
+            new Promise<void>((resolve) => {
+                roomWebSocketServer.close(() => {
+                    logDebug('Room WebSocket server closed');
+                    resolve();
+                });
+                logDebug('Closing open websocket connections');
+                roomWebSocketServer.clients.forEach((client) => {
+                    client.close();
+                });
+            }),
+            new Promise<void>((resolve) => {
+                logDebug('Closing open server connections');
+                server.close(() => {
+                    logDebug('HTTP server closed');
+                    resolve();
+                });
+            }),
+        ]);
+
+        logInfo('Server closed.');
+
+        logDebug('Writing pending room actions to database');
+        await shutdownRoomDatabaseListeners();
+        logDebug('Pending room actions written');
+
+        logDebug('Closing database connection');
+        await disconnect();
+        logDebug('Database connection closed');
+
+        logDebug('Closing session database connection');
+        closeSessionDatabase();
+        logDebug('Session database connection closed');
+        process.exit(0);
+    } catch (error) {
+        logError(`Server shutdown failed - ${error}`);
+        process.exit(1);
+    }
 };
 
 process.on('exit', () => {

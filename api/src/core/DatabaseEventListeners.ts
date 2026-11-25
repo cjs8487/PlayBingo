@@ -27,6 +27,42 @@ import type Player from './Player';
 import type { RoomEvents } from './Room';
 
 const roomListeners = new Map<string, () => void>();
+const roomQueueTails = new Map<
+    string,
+    { result: Promise<unknown>; settled: Promise<void> }
+>();
+
+function enqueue<T>(room: Room, operation: () => Promise<T>): Promise<T> {
+    const roomId = room.id;
+    const previous = roomQueueTails.get(roomId)?.settled ?? Promise.resolve();
+    const result = previous.then(operation);
+
+    const settle = async () => {
+        try {
+            await result;
+        } catch (error) {
+            room.logError(`Failed to process room database event - ${error}`);
+        } finally {
+            if (roomQueueTails.get(roomId)?.result === result) {
+                roomQueueTails.delete(roomId);
+            }
+        }
+    };
+    roomQueueTails.set(roomId, { result, settled: settle() });
+    return result;
+}
+
+/** Drain queued work before detaching the database listeners. */
+export async function shutdownRoomDatabaseListeners(): Promise<void> {
+    while (roomQueueTails.size > 0) {
+        await Promise.all(
+            Array.from(roomQueueTails.values(), (entry) => entry.settled),
+        );
+    }
+    for (const roomId of roomListeners.keys()) {
+        unsubscribe(roomId);
+    }
+}
 
 export function subscribe(room: Room): void {
     if (roomListeners.has(room.id)) {
@@ -35,20 +71,6 @@ export function subscribe(room: Room): void {
 
     const onClose = () => unsubscribe(room.id);
     // Capture state before queuing so rapid actions retain their original order.
-    let pendingStateWrite: Promise<unknown> | undefined;
-    const writeState = (write: () => Promise<unknown>) => {
-        const operation = pendingStateWrite
-            ? pendingStateWrite.then(write)
-            : write();
-        const settled = operation.catch((error) =>
-            room.logError(`Failed to persist room state - ${error}`),
-        );
-        pendingStateWrite = settled;
-        void settled.then(() => {
-            if (pendingStateWrite === settled) pendingStateWrite = undefined;
-        });
-        return operation;
-    };
     const writePlayer = (player: Player) => {
         const { id, nickname, teamId, userId, monitor, finishedAt } = player;
         const playerState = {
@@ -65,70 +87,55 @@ export function subscribe(room: Room): void {
             name: team.name,
             color: team.color,
         };
-        writeState(async () => {
+        enqueue(room, async () => {
             if (teamState) await createUpdateTeam(room.id, teamState);
             await createUpdatePlayer(room.id, playerState);
         });
     };
     const onTeamRenamed: RoomEvents['team:renamed'] = (_player, team) => {
         const { id, name, color } = team;
-        writeState(() => createUpdateTeam(room.id, { id, name, color }));
+        enqueue(room, () => createUpdateTeam(room.id, { id, name, color }));
     };
     const onRaceStarted: RoomEvents['race:startChanged'] = (value) => {
-        writeState(() =>
+        enqueue(room, () =>
             updateStartTime(room.id, value ? new Date(value) : null),
         );
     };
     const onRaceFinished: RoomEvents['race:finishChanged'] = (value) => {
-        writeState(() =>
+        enqueue(room, () =>
             updateFinishTime(room.id, value ? new Date(value) : null),
         );
     };
     const onRaceHandlerChanged: RoomEvents['race:handlerChanged'] = (
         handler,
     ) => {
-        writeState(() => updateRaceHandler(room.id, handler));
+        enqueue(room, () => updateRaceHandler(room.id, handler));
     };
     const onTeamsEnabledChanged: RoomEvents['room:teamsEnabledChanged'] = (
         enabled,
     ) => {
-        writeState(() => updateTeamsEnabled(room.id, enabled));
+        enqueue(room, () => updateTeamsEnabled(room.id, enabled));
     };
-    const onRacetimeCreated: RoomEvents['racetime:created'] = (
-        url,
-        persist,
-    ) => {
-        persist(writeState(() => connectRoomToRacetime(room.slug, url)));
+    const onRacetimeCreated: RoomEvents['racetime:created'] = (url) => {
+        enqueue(room, () => connectRoomToRacetime(room.slug, url));
     };
     const onRacetimeDisconnected = () => {
-        writeState(() => disconnectRoomFromRacetime(room.slug));
+        enqueue(room, () => disconnectRoomFromRacetime(room.slug));
     };
     const onPlayerConnected: RoomEvents['player:connected'] = (
         player,
         timestamp,
     ) => {
-        persistAction(
-            room,
-            addJoinAction(
-                room.id,
-                player.id,
-                player.nickname,
-                player.teamId,
-                timestamp,
-            ),
+        const { id, nickname, teamId } = player;
+        enqueue(room, () =>
+            addJoinAction(room.id, id, nickname, teamId, timestamp),
         );
         writePlayer(player);
     };
     const onPlayersLeave: RoomEvents['players:leave'] = (player, timestamp) => {
-        persistAction(
-            room,
-            addLeaveAction(
-                room.id,
-                player.id,
-                player.nickname,
-                player.teamId,
-                timestamp,
-            ),
+        const { id, nickname, teamId } = player;
+        enqueue(room, () =>
+            addLeaveAction(room.id, id, nickname, teamId, timestamp),
         );
     };
     const onPlayerChat: RoomEvents['player:chat'] = (
@@ -136,15 +143,9 @@ export function subscribe(room: Room): void {
         message,
         timestamp,
     ) => {
-        persistAction(
-            room,
-            addChatAction(
-                room.id,
-                player.id,
-                player.nickname,
-                message,
-                timestamp,
-            ),
+        const { id, nickname } = player;
+        enqueue(room, () =>
+            addChatAction(room.id, id, nickname, message, timestamp),
         );
     };
     const onBoardGoalMarked: RoomEvents['board:goalMarked'] = (
@@ -154,19 +155,11 @@ export function subscribe(room: Room): void {
         player,
         timestamp,
     ) => {
-        if (player.teamId) {
-            persistAction(
-                room,
-                addMarkAction(
-                    room.id,
-                    player.id,
-                    player.teamId,
-                    row,
-                    col,
-                    timestamp,
-                ),
+        const { id, teamId } = player;
+        if (teamId)
+            enqueue(room, () =>
+                addMarkAction(room.id, id, teamId, row, col, timestamp),
             );
-        }
     };
     const onBoardGoalUnmarked: RoomEvents['board:goalUnmarked'] = (
         _cell,
@@ -175,25 +168,18 @@ export function subscribe(room: Room): void {
         player,
         timestamp,
     ) => {
-        if (player.teamId) {
-            persistAction(
-                room,
-                addUnmarkAction(
-                    room.id,
-                    player.id,
-                    player.teamId,
-                    row,
-                    col,
-                    timestamp,
-                ),
+        const { id, teamId } = player;
+        if (teamId)
+            enqueue(room, () =>
+                addUnmarkAction(room.id, id, teamId, row, col, timestamp),
             );
-        }
     };
     const onBoardGenerationRequested: RoomEvents['board:generationRequested'] =
         (options, supply) => {
             const slug = room.gameSlug;
+            const newGenerator = room.newGenerator;
             supply(
-                (async () => {
+                enqueue(room, async () => {
                     const [goals, categories] = await Promise.all([
                         goalsForGameFull(slug),
                         getCategories(slug),
@@ -214,25 +200,17 @@ export function subscribe(room: Room): void {
                     }
                     const typedRandom =
                         options.mode === BoardGenerationMode.RANDOM &&
-                        !room.newGenerator &&
+                        !newGenerator &&
                         (await useTypedRandom(slug));
                     return { goals, categories, typedRandom };
-                })(),
+                }),
             );
         };
-    const onBoardRegenerated: RoomEvents['board:regenerated'] = (
-        board,
-        _options,
-        _timestamp,
-        persist,
-    ) => {
-        persist?.(
-            setRoomBoard(
-                room.id,
-                board.flat().map((cell) => cell.goal.id),
-                room.boardWidth,
-                room.boardHeight,
-            ),
+    const onBoardRegenerated: RoomEvents['board:regenerated'] = (board) => {
+        const goalIds = board.flat().map((cell) => cell.goal.id);
+        const { boardWidth, boardHeight } = room;
+        enqueue(room, () =>
+            setRoomBoard(room.id, goalIds, boardWidth, boardHeight),
         );
     };
     const onColorChanged: RoomEvents['player:colorChanged'] = (
@@ -244,14 +222,14 @@ export function subscribe(room: Room): void {
         const team = room.getTeamForPlayer(player.id);
         if (team) {
             const { id, name } = team;
-            writeState(() => createUpdateTeam(room.id, { id, name, color }));
-            persistAction(
-                room,
+            const playerId = player.id;
+            enqueue(room, () => createUpdateTeam(room.id, { id, name, color }));
+            enqueue(room, () =>
                 addChangeColorAction(
                     room.id,
-                    player.id,
-                    team.id,
-                    team.name,
+                    playerId,
+                    id,
+                    name,
                     oldColor,
                     color,
                     timestamp,
@@ -302,12 +280,6 @@ export function subscribe(room: Room): void {
 export function unsubscribe(roomId: string): void {
     roomListeners.get(roomId)?.();
     roomListeners.delete(roomId);
-}
-
-function persistAction(room: Room, operation: Promise<unknown>) {
-    operation.catch((error) =>
-        room.logError(`Failed to persist room event - ${error}`),
-    );
 }
 
 export function getSubscribedRooms(): string[] {

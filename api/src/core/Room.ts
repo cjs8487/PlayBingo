@@ -106,10 +106,7 @@ export interface RoomEvents {
     'race:finishChanged': (finishedAt: string | null) => void;
     'race:handlerChanged': (handler: ReturnType<RaceHandler['key']>) => void;
     'room:teamsEnabledChanged': (enabled: boolean) => void;
-    'racetime:created': (
-        url: string,
-        persist: (write: Promise<unknown>) => void,
-    ) => void;
+    'racetime:created': (url: string) => void;
     'racetime:disconnected': () => void;
     'room:closed': () => void;
     'player:connected': (player: Player, timestamp: Date) => void;
@@ -146,7 +143,6 @@ export interface RoomEvents {
         board: RevealedCell[][],
         options: BoardGenerationOptions,
         timestamp: Date,
-        persist?: (operation: Promise<void>) => void,
     ) => void;
     'board:revealed': (player: Player, timestamp: Date) => void;
     chatSent: (message: ChatMessage, timestamp: Date) => void;
@@ -671,15 +667,7 @@ export default class Room extends EventEmitter {
         this.raceHandler.resetTimer();
 
         this.sendSyncBoard();
-        const writes: Promise<void>[] = [];
-        this.emit(
-            'board:regenerated',
-            this.board,
-            options,
-            new Date(),
-            (write) => writes.push(write),
-        );
-        await Promise.all(writes);
+        this.emit('board:regenerated', this.board, options, new Date());
     }
 
     getPlayerData(): { teams: TeamData[]; spectators: PlayerData[] } {
@@ -1109,10 +1097,8 @@ export default class Room extends EventEmitter {
         return true;
     }
 
-    async handleRacetimeRoomCreated(url: string) {
-        const writes: Promise<unknown>[] = [];
-        this.emit('racetime:created', url, (write) => writes.push(write));
-        await Promise.all(writes);
+    handleRacetimeRoomCreated(url: string) {
+        this.emit('racetime:created', url);
         this.sendServerMessage({
             action: 'updateRoomData',
             roomData: {
